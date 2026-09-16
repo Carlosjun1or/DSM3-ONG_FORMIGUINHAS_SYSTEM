@@ -1,0 +1,27 @@
+{% extends 'template.html' %}
+
+{% load static %}
+
+{% block titulo %} Quem Somos {% endblock %}
+
+{% block estilos %}
+<link rel="stylesheet" href="{% static 'css/index.css' %}">
+{% endblock %}
+
+{% block conteudo %}
+<section id="quem-somos" class="quem-somos">
+    <div class="quem-somos-texto">
+        <h2>Quem Somos</h2>
+        <p>
+            Somos uma empresa apaixonada por tecnologia, design e soluções digitais que ajudam
+            negócios a crescer de forma inteligente. Unimos criatividade, estratégia e execução
+            para criar experiências que conectam marcas com pessoas.
+        </p>
+        <p>
+            Nossa missão é transformar ideias em produtos digitais com qualidade, funcionalidade
+            e presença no mercado. Trabalhamos com inovação constante e atenção aos detalhes para
+            entregar resultados que fazem diferença.
+        </p>
+    </div>
+</section>
+{% endblock %}

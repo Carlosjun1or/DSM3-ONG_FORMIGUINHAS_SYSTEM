@@ -1,0 +1,11 @@
+# Ambientes virtuais
+venv/
+.venv/
+
+# Cache e arquivos gerados pelo Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Configurações locais
+.env

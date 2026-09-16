@@ -1,0 +1,127 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background: #ededed;
+    color: #1f1f1f;
+}
+
+.site-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    padding: 18px 40px;
+    background: linear-gradient(90deg, #0f3b2e 0%, #1a5a42 100%);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.16);
+}
+
+.brand-link {
+    text-decoration: none;
+    color: inherit;
+}
+
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+    transition: transform 0.2s ease;
+}
+
+.brand-link:hover .brand {
+    transform: scale(1.04);
+}
+
+.brand-icon {
+    display: grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    flex-shrink: 0;
+    background: rgba(255, 255, 255, 0.14);
+    font-size: 1.35rem;
+    line-height: 1;
+    transition: transform 0.2s ease;
+}
+
+.brand-link:hover .brand-icon {
+    transform: scale(1.12);
+}
+
+h1 {
+    font-size: clamp(1.7rem, 2vw, 2.2rem);
+    font-weight: 700;
+    color: #f3f3f3;
+    line-height: 1;
+    margin: 0;
+}
+
+.main-nav {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
+.nav-link {
+    position: relative;
+    color: #ffffff;
+    text-decoration: none;
+    font-size: 1rem;
+    font-weight: 600;
+    transition: opacity 0.2s ease;
+}
+
+.nav-link::after {
+    position: absolute;
+    right: 0;
+    bottom: -7px;
+    left: 0;
+    height: 2px;
+    background: #f5c542;
+    content: "";
+    transform: scaleX(0);
+    transition: transform 0.2s ease;
+}
+
+.nav-link:hover,
+.nav-link:focus-visible {
+    opacity: 0.8;
+}
+
+.nav-link:hover::after,
+.nav-link:focus-visible::after {
+    transform: scaleX(1);
+}
+
+.nav-link:focus-visible,
+.brand-link:focus-visible {
+    outline: 2px solid #f5c542;
+    outline-offset: 5px;
+}
+
+main {
+    padding: 28px 20px 60px;
+    min-height: calc(100vh - 90px);
+}
+
+@media (max-width: 600px) {
+    .site-header {
+        align-items: flex-start;
+        padding: 16px 20px;
+    }
+
+    .main-nav {
+        width: 100%;
+        justify-content: flex-start;
+        gap: 16px;
+    }
+}

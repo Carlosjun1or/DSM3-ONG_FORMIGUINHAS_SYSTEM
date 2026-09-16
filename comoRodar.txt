@@ -1,0 +1,17 @@
+# Como executar o projeto
+cd formiguinhas_projeto
+
+# 1. Cria o ambiente virtual dentro da pasta do projeto.
+python -m venv venv
+
+# 2. Ativa o ambiente virtual.
+venv\Scripts\activate
+
+# 3. Instala o Django, listado no requirements.txt.
+pip install -r requirements.txt
+
+#3.1 Se não tiver, baixe os arquivos de baixo.
+pip install django *dentro do venv voce instala o django*
+
+# 4. Inicia o servidor do projeto.
+python manage.py runserver
