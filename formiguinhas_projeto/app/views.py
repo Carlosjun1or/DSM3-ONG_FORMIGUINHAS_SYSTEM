@@ -10,6 +10,10 @@ def index(request):
     return render(request, "index.html")
 
 
+def formiguinhas(request):
+    return render(request, "formiguinhas-landing-v13.html")
+
+
 def home_view(request):
     usuario_id = request.session.get('usuario_id')
     if not usuario_id:
