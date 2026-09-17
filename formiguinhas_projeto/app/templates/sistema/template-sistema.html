@@ -1,0 +1,60 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block titulo %}Formiguinhas | Sistema{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    {% block estilos %}{% endblock %}
+</head>
+<body class="system-page">
+    <div class="app-shell">
+        {% if request.session.usuario_id %}
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <span class="brand-mark">🐜</span>
+                <div>
+                    <strong>Formiguinhas</strong>
+                    <small>ONG</small>
+                </div>
+            </div>
+
+            <nav class="sidebar-nav" aria-label="Menu do sistema">
+                <a href="{% url 'home' %}" class="sidebar-link {% if request.path == '/home/' %}active{% endif %}">Home</a>
+                <a href="{% url 'perfil' %}" class="sidebar-link {% if request.path == '/perfil/' %}active{% endif %}">Perfil</a>
+                <a href="{% url 'cadastro_voluntario' %}" class="sidebar-link {% if request.path == '/cadastro-voluntario/' %}active{% endif %}">Cadastro de Voluntário</a>
+                <a href="{% url 'cadastro_usuario' %}" class="sidebar-link {% if request.path == '/cadastro-usuario/' %}active{% endif %}">Cadastro de Usuário</a>
+                <a href="{% url 'cadastro' %}" class="sidebar-link {% if request.path == '/cadastro/' %}active{% endif %}">Cadastro Completo</a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <a href="{% url 'logout' %}" class="sidebar-link logout-link">Sair</a>
+            </div>
+        </aside>
+        {% endif %}
+
+        <main class="main-panel">
+            {% if request.session.usuario_id %}
+            <header class="topbar">
+                <div>
+                    <p class="topbar-kicker">Painel administrativo</p>
+                    <h1>{% block page_title %}Dashboard{% endblock %}</h1>
+                </div>
+
+                <div class="topbar-actions">
+                    <span class="user-pill">{{ request.session.usuario_nome|default:'Voluntário' }}</span>
+                    <a class="btn btn-outline" href="{% url 'perfil' %}">Perfil</a>
+                </div>
+            </header>
+            {% endif %}
+
+            {% if mensagem %}
+                <div class="alert-box">{{ mensagem }}</div>
+            {% endif %}
+
+            {% block conteudo %}{% endblock %}
+        </main>
+    </div>
+</body>
+</html>

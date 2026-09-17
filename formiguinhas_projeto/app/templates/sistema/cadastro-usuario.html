@@ -1,0 +1,53 @@
+{% extends 'sistema/template-sistema.html' %}
+
+{% block titulo %}Cadastro de usuário | Sistema{% endblock %}
+{% block page_title %}Cadastro de usuário{% endblock %}
+
+{% block conteudo %}
+<section class="form-shell">
+    <div class="form-card">
+        <h2>Cadastro de usuário</h2>
+        <p class="form-subtitle">Selecione o voluntário já cadastrado e defina os dados do acesso.</p>
+
+        <form method="post">
+            {% csrf_token %}
+            {% if form.non_field_errors %}
+                <div class="error-box">{{ form.non_field_errors|join:', ' }}</div>
+            {% endif %}
+            <div class="form-grid">
+                <div class="form-group full">
+                    {{ form.voluntario.label_tag }}
+                    {{ form.voluntario }}
+                    {% if form.voluntario.errors %}
+                        <small class="error-msg">{{ form.voluntario.errors|join:', ' }}</small>
+                    {% endif %}
+                </div>
+                <div class="form-group">
+                    {{ form.tipo.label_tag }}
+                    {{ form.tipo }}
+                    {% if form.tipo.errors %}<small class="error-msg">{{ form.tipo.errors|join:', ' }}</small>{% endif %}
+                </div>
+                <div class="form-group">
+                    {{ form.senha.label_tag }}
+                    {{ form.senha }}
+                    {% if form.senha.errors %}
+                        <small class="error-msg">{{ form.senha.errors|join:', ' }}</small>
+                    {% endif %}
+                </div>
+                <div class="form-group">
+                    {{ form.confirmar_senha.label_tag }}
+                    {{ form.confirmar_senha }}
+                    {% if form.confirmar_senha.errors %}
+                        <small class="error-msg">{{ form.confirmar_senha.errors|join:', ' }}</small>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Salvar usuário</button>
+                <a href="{% url 'cadastro_voluntario' %}" class="form-link">Voltar para voluntário</a>
+            </div>
+        </form>
+    </div>
+</section>
+{% endblock %}

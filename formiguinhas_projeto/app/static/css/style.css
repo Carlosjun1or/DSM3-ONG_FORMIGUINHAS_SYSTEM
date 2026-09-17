@@ -113,6 +113,365 @@ main {
     min-height: calc(100vh - 90px);
 }
 
+.system-page {
+    background: #f3f7f5;
+    color: #1d2b27;
+}
+
+.app-shell {
+    display: flex;
+    min-height: 100vh;
+}
+
+.sidebar {
+    width: 260px;
+    background: linear-gradient(180deg, #123a2d 0%, #1b5a46 100%);
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    padding: 32px 20px;
+}
+
+.sidebar-brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 8px 28px;
+    border-bottom: 1px solid rgba(255,255,255,0.12);
+    margin-bottom: 24px;
+}
+
+.sidebar-brand strong {
+    display: block;
+    font-size: 1.1rem;
+}
+
+.sidebar-brand small {
+    color: rgba(255,255,255,0.72);
+}
+
+.brand-mark {
+    width: 42px;
+    height: 42px;
+    display: grid;
+    place-items: center;
+    border-radius: 12px;
+    background: rgba(255,255,255,0.12);
+    font-size: 1.4rem;
+}
+
+.sidebar-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.sidebar-link {
+    display: block;
+    padding: 12px 14px;
+    border-radius: 10px;
+    color: #edf6f1;
+    text-decoration: none;
+    font-weight: 600;
+    transition: 0.2s ease;
+}
+
+.sidebar-link:hover,
+.sidebar-link.active {
+    background: rgba(255,255,255,0.12);
+    transform: translateX(2px);
+}
+
+.logout-link {
+    color: #ffd9d9;
+}
+
+.sidebar-footer {
+    margin-top: auto;
+    padding-top: 24px;
+}
+
+.main-panel {
+    flex: 1;
+    padding: 28px 32px 50px;
+}
+
+.topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 18px;
+    margin-bottom: 28px;
+}
+
+.topbar-kicker {
+    color: #4d625d;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+}
+
+.topbar h1 {
+    color: #1d2b27;
+    font-size: clamp(1.8rem, 2vw, 2.5rem);
+}
+
+.topbar-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.user-pill {
+    background: #dff2e6;
+    color: #184936;
+    padding: 10px 14px;
+    border-radius: 999px;
+    font-weight: 700;
+}
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 18px;
+    border-radius: 10px;
+    text-decoration: none;
+    font-weight: 700;
+    cursor: pointer;
+    border: none;
+    transition: 0.2s ease;
+}
+
+.btn-primary {
+    background: #1d785d;
+    color: #fff;
+}
+
+.btn-primary:hover {
+    background: #155642;
+}
+
+.btn-outline {
+    border: 1px solid #d0dad6;
+    background: #fff;
+    color: #123a2d;
+}
+
+.btn-outline:hover {
+    background: #f1f8f4;
+}
+
+.alert-box {
+    background: #eaf8ee;
+    color: #1d5f44;
+    border: 1px solid #bfe5ce;
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-bottom: 24px;
+    font-weight: 600;
+}
+
+.error-msg {
+    color: #b42318;
+    font-size: 0.8rem;
+    margin-top: 6px;
+    display: block;
+}
+
+.error-box {
+    background: #fff1f0;
+    color: #b42318;
+    border: 1px solid #f3b8b3;
+    border-radius: 10px;
+    padding: 12px 14px;
+    margin-bottom: 18px;
+    font-weight: 600;
+}
+
+.card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 18px;
+    margin-bottom: 24px;
+}
+
+.card {
+    background: #fff;
+    border-radius: 18px;
+    padding: 22px;
+    box-shadow: 0 10px 28px rgba(18, 58, 45, 0.06);
+    border: 1px solid #e7efe9;
+}
+
+.card h3 {
+    font-size: 0.82rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #5b6f68;
+    margin-bottom: 16px;
+}
+
+.metric {
+    font-size: 2rem;
+    font-weight: 800;
+    color: #153d31;
+}
+
+.card-list {
+    list-style: none;
+    display: grid;
+    gap: 14px;
+}
+
+.card-list li {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 12px 0;
+    border-bottom: 1px solid #edf1ee;
+}
+
+.card-list li:last-child {
+    border-bottom: none;
+}
+
+.form-shell,
+.auth-shell {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: calc(100vh - 120px);
+    padding: 40px 20px;
+}
+
+.auth-card,
+.form-card {
+    width: min(100%, 620px);
+    background: #fff;
+    border: 1px solid #e7efe9;
+    border-radius: 20px;
+    padding: 32px;
+    box-shadow: 0 18px 38px rgba(19, 44, 36, 0.08);
+}
+
+.auth-card h2,
+.form-card h2 {
+    font-size: 2rem;
+    margin-bottom: 8px;
+    color: #173d31;
+}
+
+.auth-subtitle,
+.form-subtitle {
+    color: #5b6f68;
+    margin-bottom: 24px;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 18px;
+}
+
+.form-group.full {
+    grid-column: 1 / -1;
+}
+
+.form-group label {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #204e42;
+}
+
+.form-control {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1px solid #d7e1dd;
+    border-radius: 10px;
+    background: #f9fbfa;
+    font-size: 1rem;
+    color: #173d31;
+}
+
+.form-control:focus {
+    outline: 2px solid rgba(22, 115, 89, 0.2);
+    border-color: #1d785d;
+}
+
+.form-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 12px;
+}
+
+.form-link {
+    color: #1b5a46;
+    text-decoration: none;
+    font-weight: 700;
+}
+
+.user-detail-box {
+    display: grid;
+    gap: 18px;
+}
+
+.user-detail {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 14px 0;
+    border-bottom: 1px solid #edf1ee;
+}
+
+.user-detail:last-child {
+    border-bottom: none;
+}
+
+.user-detail strong {
+    color: #47615d;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    background: #fff;
+    border-radius: 18px;
+    border: 1px solid #e7efe9;
+}
+
+@media (max-width: 900px) {
+    .app-shell {
+        flex-direction: column;
+    }
+
+    .sidebar {
+        width: 100%;
+        padding: 20px 18px;
+    }
+
+    .sidebar-nav {
+        flex-direction: row;
+        flex-wrap: wrap;
+    }
+
+    .main-panel {
+        padding: 22px 18px 40px;
+    }
+}
+
 @media (max-width: 600px) {
     .site-header {
         align-items: flex-start;
@@ -123,5 +482,19 @@ main {
         width: 100%;
         justify-content: flex-start;
         gap: 16px;
+    }
+
+    .topbar {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .auth-card,
+    .form-card {
+        padding: 22px 18px;
     }
 }

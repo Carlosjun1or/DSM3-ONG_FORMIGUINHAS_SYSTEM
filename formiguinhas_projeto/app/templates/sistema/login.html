@@ -1,0 +1,102 @@
+{% extends 'sistema/template-sistema.html' %}
+
+{% block titulo %}Login | Sistema{% endblock %}
+
+{% block conteudo %}
+<section class="auth-shell" style="display: grid; gap: 24px;">
+    <div class="auth-card">
+        <h2>Bem-vindo de volta</h2>
+        <p class="auth-subtitle">Acesse o painel da ONG Formiguinhas.</p>
+
+        <form method="post">
+            {% csrf_token %}
+            {% if form.non_field_errors %}
+                <div class="error-box">{{ form.non_field_errors|join:', ' }}</div>
+            {% endif %}
+
+            <div class="form-group">
+                {{ form.email.label_tag }}
+                {{ form.email }}
+                {% if form.email.errors %}
+                    <small class="error-msg">{{ form.email.errors|join:', ' }}</small>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                {{ form.senha.label_tag }}
+                {{ form.senha }}
+                {% if form.senha.errors %}
+                    <small class="error-msg">{{ form.senha.errors|join:', ' }}</small>
+                {% endif %}
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Entrar</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="auth-card">
+        <h2>Cadastro de teste</h2>
+        <p class="auth-subtitle">Cria um voluntário e um usuário juntos para testar o sistema.</p>
+
+        <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="acao" value="cadastrar_teste">
+
+            {% if cadastro_form.non_field_errors %}
+                <div class="error-box">{{ cadastro_form.non_field_errors|join:', ' }}</div>
+            {% endif %}
+
+            <div class="form-grid">
+                <div class="form-group">
+                    {{ cadastro_form.nome.label_tag }}
+                    {{ cadastro_form.nome }}
+                    {% if cadastro_form.nome.errors %}<small class="error-msg">{{ cadastro_form.nome.errors|join:', ' }}</small>{% endif %}
+                </div>
+                <div class="form-group">
+                    {{ cadastro_form.telefone.label_tag }}
+                    {{ cadastro_form.telefone }}
+                    {% if cadastro_form.telefone.errors %}<small class="error-msg">{{ cadastro_form.telefone.errors|join:', ' }}</small>{% endif %}
+                </div>
+                <div class="form-group full">
+                    {{ cadastro_form.endereco.label_tag }}
+                    {{ cadastro_form.endereco }}
+                    {% if cadastro_form.endereco.errors %}<small class="error-msg">{{ cadastro_form.endereco.errors|join:', ' }}</small>{% endif %}
+                </div>
+                <div class="form-group">
+                    {{ cadastro_form.dt_nascimento.label_tag }}
+                    {{ cadastro_form.dt_nascimento }}
+                    {% if cadastro_form.dt_nascimento.errors %}<small class="error-msg">{{ cadastro_form.dt_nascimento.errors|join:', ' }}</small>{% endif %}
+                </div>
+                <div class="form-group">
+                    {{ cadastro_form.email.label_tag }}
+                    {{ cadastro_form.email }}
+                    {% if cadastro_form.email.errors %}<small class="error-msg">{{ cadastro_form.email.errors|join:', ' }}</small>{% endif %}
+                </div>
+                <div class="form-group">
+                    {{ cadastro_form.tipo.label_tag }}
+                    {{ cadastro_form.tipo }}
+                    {% if cadastro_form.tipo.errors %}<small class="error-msg">{{ cadastro_form.tipo.errors|join:', ' }}</small>{% endif %}
+                </div>
+                <div class="form-group">
+                    {{ cadastro_form.senha.label_tag }}
+                    {{ cadastro_form.senha }}
+                    {% if cadastro_form.senha.errors %}<small class="error-msg">{{ cadastro_form.senha.errors|join:', ' }}</small>{% endif %}
+                </div>
+                <div class="form-group">
+                    {{ cadastro_form.confirmar_senha.label_tag }}
+                    {{ cadastro_form.confirmar_senha }}
+                    {% if cadastro_form.confirmar_senha.errors %}
+                        <small class="error-msg">{{ cadastro_form.confirmar_senha.errors|join:', ' }}</small>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Salvar cadastro de teste</button>
+            </div>
+        </form>
+    </div>
+</section>
+{% endblock %}
