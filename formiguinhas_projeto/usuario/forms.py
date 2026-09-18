@@ -293,6 +293,8 @@ class CadastroForm(forms.Form):
         return cleaned
 
     def save(self, cadastrado_por=None):
+        cadastrado_por_nome = cadastrado_por.id_voluntario.nome if cadastrado_por else None
+        cadastrado_por_tipo = cadastrado_por.tipo if cadastrado_por else None
         voluntario = Voluntario.objects.create(
             nome=self.cleaned_data['nome'],
             dt_nascimento=self.cleaned_data['dt_nascimento'],
@@ -301,11 +303,15 @@ class CadastroForm(forms.Form):
             email=self.cleaned_data['email'],
             status='ATIVO',
             cadastrado_por=cadastrado_por,
+            cadastrado_por_nome=cadastrado_por_nome,
+            cadastrado_por_tipo=cadastrado_por_tipo,
         )
         usuario = Usuario.objects.create(
             id_voluntario=voluntario,
             tipo=self.cleaned_data['tipo'],
             cadastrado_por=cadastrado_por,
+            cadastrado_por_nome=cadastrado_por_nome,
+            cadastrado_por_tipo=cadastrado_por_tipo,
         )
         usuario.set_password(self.cleaned_data['senha'])
         usuario.save()

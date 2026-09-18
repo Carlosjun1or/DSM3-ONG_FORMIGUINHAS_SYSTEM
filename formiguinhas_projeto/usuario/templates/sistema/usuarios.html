@@ -1,7 +1,7 @@
 {% extends 'sistema/template-sistema.html' %}
 
-{% block titulo %}Usuários cadastrados | Sistema{% endblock %}
-{% block page_title %}Usuários cadastrados{% endblock %}
+{% block titulo %}Controle de Usuários | Sistema{% endblock %}
+{% block page_title %}Controle de Usuários{% endblock %}
 
 {% block conteudo %}
 <section class="card-grid volunteer-metrics">
@@ -14,7 +14,7 @@
 <section class="card volunteer-control">
     <div class="section-heading">
         <div>
-            <h2>Controle de usuários</h2>
+            <h2>Usuários cadastrados</h2>
             <p class="form-subtitle">Consulte os usuários com acesso ao sistema.</p>
         </div>
         <div class="section-heading-actions">
@@ -75,9 +75,9 @@
                     </td>
                     <td>{% if usuario_item.data_ultimo_acesso %}{{ usuario_item.data_ultimo_acesso|date:'d/m/Y H:i' }}{% else %}Nunca acessou{% endif %}</td>
                     <td class="audit-cell">
-                        <strong>{% if usuario_item.cadastrado_por %}Cadastrado por {{ usuario_item.cadastrado_por.id_voluntario.nome }}{% else %}Cadastro anterior{% endif %}</strong>
-                        {% if usuario_item.cadastrado_por %}<small>{{ usuario_item.dt_cadastro|date:'d/m/Y H:i' }}</small>{% endif %}
-                        {% if usuario_item.ultimo_editado_por %}<small>Editado por {{ usuario_item.ultimo_editado_por.id_voluntario.nome }} em {{ usuario_item.dt_ultima_edicao|date:'d/m/Y H:i' }}</small>{% else %}<small>Sem edições</small>{% endif %}
+                        <strong>{% if usuario_item.cadastrado_por_nome %}Cadastrado por {{ usuario_item.cadastrado_por_nome }}{% elif usuario_item.cadastrado_por %}Cadastrado por {{ usuario_item.cadastrado_por.id_voluntario.nome }}{% else %}Cadastro anterior{% endif %}</strong>
+                        {% if usuario_item.cadastrado_por_nome or usuario_item.cadastrado_por %}<small>{{ usuario_item.dt_cadastro|date:'d/m/Y H:i' }}</small>{% endif %}
+                        {% if usuario_item.ultimo_editado_por_nome %}<small>Editado por {{ usuario_item.ultimo_editado_por_nome }} em {{ usuario_item.dt_ultima_edicao|date:'d/m/Y H:i' }}</small>{% elif usuario_item.ultimo_editado_por %}<small>Editado por {{ usuario_item.ultimo_editado_por.id_voluntario.nome }} em {{ usuario_item.dt_ultima_edicao|date:'d/m/Y H:i' }}</small>{% else %}<small>Sem edições</small>{% endif %}
                     </td>
                     <td class="table-actions">
                         <a class="btn btn-outline btn-small" href="{% url 'editar_usuario' usuario_item.id_usuario %}">Editar</a>

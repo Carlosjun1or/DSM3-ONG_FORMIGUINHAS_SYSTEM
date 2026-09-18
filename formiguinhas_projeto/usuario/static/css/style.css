@@ -193,6 +193,7 @@ main {
 
 .main-panel {
     flex: 1;
+    min-width: 0;
     padding: 28px 32px 50px;
 }
 
@@ -377,6 +378,8 @@ main {
 }
 
 .table-wrap {
+    max-width: 100%;
+    min-width: 0;
     overflow-x: auto;
 }
 
@@ -415,9 +418,16 @@ main {
 }
 
 .table-actions {
-    display: flex;
-    align-items: center;
-    gap: 8px;
+    white-space: nowrap !important;
+}
+
+.table-actions form {
+    display: inline;
+    margin: 0 0 0 8px;
+}
+
+.table-actions .btn {
+    vertical-align: middle;
 }
 
 .btn-small {

@@ -1,7 +1,7 @@
 {% extends 'sistema/template-sistema.html' %}
 
-{% block titulo %}Voluntários cadastrados | Sistema{% endblock %}
-{% block page_title %}Voluntários cadastrados{% endblock %}
+{% block titulo %}Controle de Voluntários | Sistema{% endblock %}
+{% block page_title %}Controle de Voluntários{% endblock %}
 
 {% block conteudo %}
 <section class="card-grid volunteer-metrics">
@@ -18,7 +18,7 @@
 <section class="card volunteer-control">
     <div class="section-heading">
         <div>
-            <h2>Controle de voluntários</h2>
+            <h2>Voluntários cadastrados</h2>
             <p class="form-subtitle">Consulte os voluntários registrados na ONG.</p>
         </div>
         <a href="{% url 'cadastro_voluntario' %}" class="btn btn-primary">Novo voluntário</a>
@@ -56,10 +56,8 @@
                     <th>Telefone</th>
                     <th>E-mail</th>
                     <th>Status</th>
-                    <th>Cadastro</th>
-                    <th>Cadastrado por</th>
                     <th>Possui usuário?</th>
-                    <th>Última edição</th>
+                    <th>Auditoria</th>
                     <th>Ações</th>
                 </tr>
             </thead>
@@ -82,10 +80,12 @@
                             </select>
                         </form>
                     </td>
-                    <td>{{ voluntario.dt_cadastro|date:'d/m/Y H:i' }}</td>
-                    <td>{% if voluntario.cadastrado_por %}{{ voluntario.cadastrado_por.id_voluntario.nome }}<br><small>{{ voluntario.cadastrado_por.get_tipo_display }}</small>{% else %}Cadastro anterior{% endif %}</td>
                     <td>{% if voluntario.usuario %}Sim{% else %}Não{% endif %}</td>
-                    <td>{% if voluntario.ultimo_editado_por %}{{ voluntario.ultimo_editado_por.id_voluntario.nome }}<br><small>{{ voluntario.ultimo_editado_por.get_tipo_display }} em {{ voluntario.dt_ultima_edicao|date:'d/m/Y H:i' }}</small>{% else %}Sem alterações{% endif %}</td>
+                    <td class="audit-cell">
+                        <strong>{% if voluntario.cadastrado_por_nome %}Cadastrado por {{ voluntario.cadastrado_por_nome }}{% elif voluntario.cadastrado_por %}Cadastrado por {{ voluntario.cadastrado_por.id_voluntario.nome }}{% else %}Cadastro anterior{% endif %}</strong>
+                        {% if voluntario.cadastrado_por_nome or voluntario.cadastrado_por %}<small>{{ voluntario.dt_cadastro|date:'d/m/Y H:i' }}</small>{% endif %}
+                        {% if voluntario.ultimo_editado_por_nome %}<small>Editado por {{ voluntario.ultimo_editado_por_nome }} em {{ voluntario.dt_ultima_edicao|date:'d/m/Y H:i' }}</small>{% elif voluntario.ultimo_editado_por %}<small>Editado por {{ voluntario.ultimo_editado_por.id_voluntario.nome }} em {{ voluntario.dt_ultima_edicao|date:'d/m/Y H:i' }}</small>{% else %}<small>Sem edições</small>{% endif %}
+                    </td>
                     <td class="table-actions">
                         <a class="btn btn-outline btn-small" href="{% url 'editar_voluntario' voluntario.id_voluntario %}">Editar</a>
                         {% if usuario.tipo == 'ADMIN' %}

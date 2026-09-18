@@ -26,6 +26,8 @@ class Voluntario(models.Model):
         blank=True,
         related_name='voluntarios_cadastrados',
     )
+    cadastrado_por_nome = models.CharField(max_length=150, null=True, blank=True)
+    cadastrado_por_tipo = models.CharField(max_length=20, null=True, blank=True)
     ultimo_editado_por = models.ForeignKey(
         'Usuario',
         on_delete=models.SET_NULL,
@@ -33,6 +35,8 @@ class Voluntario(models.Model):
         blank=True,
         related_name='voluntarios_editados',
     )
+    ultimo_editado_por_nome = models.CharField(max_length=150, null=True, blank=True)
+    ultimo_editado_por_tipo = models.CharField(max_length=20, null=True, blank=True)
     dt_ultima_edicao = models.DateTimeField(null=True, blank=True)
     
     class Meta:
@@ -76,6 +80,8 @@ class Usuario(models.Model):
         blank=True,
         related_name='usuarios_cadastrados',
     )
+    cadastrado_por_nome = models.CharField(max_length=150, null=True, blank=True)
+    cadastrado_por_tipo = models.CharField(max_length=20, null=True, blank=True)
     ultimo_editado_por = models.ForeignKey(
         'self',
         on_delete=models.SET_NULL,
@@ -83,6 +89,8 @@ class Usuario(models.Model):
         blank=True,
         related_name='usuarios_editados',
     )
+    ultimo_editado_por_nome = models.CharField(max_length=150, null=True, blank=True)
+    ultimo_editado_por_tipo = models.CharField(max_length=20, null=True, blank=True)
     dt_ultima_edicao = models.DateTimeField(null=True, blank=True)
     
     class Meta:

@@ -22,9 +22,9 @@
 
             <nav class="sidebar-nav" aria-label="Menu do sistema">
                 <a href="{% url 'home' %}" class="sidebar-link {% if request.path == '/home/' %}active{% endif %}">Home</a>
-                <a href="{% url 'voluntarios' %}" class="sidebar-link {% if request.path == '/voluntarios/' %}active{% endif %}">Voluntários cadastrados</a>
+                <a href="{% url 'voluntarios' %}" class="sidebar-link {% if request.path == '/voluntarios/' %}active{% endif %}">Controle de Voluntários</a>
                 {% if request.session.usuario_tipo == 'ADMIN' %}
-                <a href="{% url 'usuarios' %}" class="sidebar-link {% if request.path == '/usuario/usuarios/' %}active{% endif %}">Usuários cadastrados</a>
+                <a href="{% url 'usuarios' %}" class="sidebar-link {% if request.path == '/usuario/usuarios/' %}active{% endif %}">Controle de Usuários</a>
                 {% endif %}
                 <a href="{% url 'cadastro_voluntario' %}" class="sidebar-link {% if request.path == '/cadastro-voluntario/' %}active{% endif %}">Cadastro de Voluntário</a>
                 {% if request.session.usuario_tipo == 'ADMIN' %}

@@ -155,6 +155,8 @@ def editar_voluntario_view(request, voluntario_id):
             if not email_proibido and not status_proibido:
                 voluntario = form.save(commit=False)
                 voluntario.ultimo_editado_por = usuario
+                voluntario.ultimo_editado_por_nome = usuario.id_voluntario.nome
+                voluntario.ultimo_editado_por_tipo = usuario.tipo
                 voluntario.dt_ultima_edicao = timezone.now()
                 voluntario.save()
                 return redirect('voluntarios')
@@ -200,10 +202,14 @@ def atualizar_status_voluntario_view(request, voluntario_id):
         if status in status_validos and not status_proibido_para_coordenador and not status_proibido_para_admin:
             voluntario.status = status
             voluntario.ultimo_editado_por = usuario
+            voluntario.ultimo_editado_por_nome = usuario.id_voluntario.nome
+            voluntario.ultimo_editado_por_tipo = usuario.tipo
             voluntario.dt_ultima_edicao = timezone.now()
             voluntario.save(update_fields=[
                 'status',
                 'ultimo_editado_por',
+                'ultimo_editado_por_nome',
+                'ultimo_editado_por_tipo',
                 'dt_ultima_edicao',
             ])
 
@@ -285,10 +291,14 @@ def atualizar_tipo_usuario_view(request, usuario_id):
             if usuario_editado:
                 usuario_editado.tipo = novo_tipo
                 usuario_editado.ultimo_editado_por = usuario_logado
+                usuario_editado.ultimo_editado_por_nome = usuario_logado.id_voluntario.nome
+                usuario_editado.ultimo_editado_por_tipo = usuario_logado.tipo
                 usuario_editado.dt_ultima_edicao = timezone.now()
                 usuario_editado.save(update_fields=[
                     'tipo',
                     'ultimo_editado_por',
+                    'ultimo_editado_por_nome',
+                    'ultimo_editado_por_tipo',
                     'dt_ultima_edicao',
                 ])
 
@@ -333,10 +343,14 @@ def editar_usuario_view(request, usuario_id):
             else:
                 voluntario = voluntario_form.save(commit=False)
                 voluntario.ultimo_editado_por = usuario_logado
+                voluntario.ultimo_editado_por_nome = usuario_logado.id_voluntario.nome
+                voluntario.ultimo_editado_por_tipo = usuario_logado.tipo
                 voluntario.dt_ultima_edicao = timezone.now()
                 voluntario.save()
                 usuario_editado.tipo = form.cleaned_data['tipo']
                 usuario_editado.ultimo_editado_por = usuario_logado
+                usuario_editado.ultimo_editado_por_nome = usuario_logado.id_voluntario.nome
+                usuario_editado.ultimo_editado_por_tipo = usuario_logado.tipo
                 usuario_editado.dt_ultima_edicao = timezone.now()
                 usuario_editado.save()
                 return redirect('usuarios')
@@ -393,12 +407,8 @@ def login_view(request):
 
             cadastro_form = CadastroForm(request.POST)
             if cadastro_form.is_valid():
-                cadastro_form.save()
-                return render(request, 'sistema/login.html', {
-                    'form': form,
-                    'cadastro_form': CadastroForm(),
-                    'mensagem': 'Cadastro de teste criado com sucesso!'
-                })
+                cadastro_form.save(cadastrado_por=usuario)
+                return redirect('usuarios')
         else:
             form = LoginForm(request.POST)
             if form.is_valid():
@@ -428,8 +438,10 @@ def cadastro_voluntario_view(request):
         if form.is_valid():
             voluntario = form.save(commit=False)
             voluntario.cadastrado_por = usuario_logado
+            voluntario.cadastrado_por_nome = usuario_logado.id_voluntario.nome
+            voluntario.cadastrado_por_tipo = usuario_logado.tipo
             voluntario.save()
-            return redirect('cadastro_usuario')
+            return redirect('voluntarios')
     else:
         form = VoluntarioForm()
 
@@ -451,10 +463,12 @@ def cadastro_usuario_view(request):
                 id_voluntario=voluntario,
                 tipo=form.cleaned_data['tipo'],
                 cadastrado_por=usuario_logado,
+                cadastrado_por_nome=usuario_logado.id_voluntario.nome,
+                cadastrado_por_tipo=usuario_logado.tipo,
             )
             usuario.set_password(form.cleaned_data['senha'])
             usuario.save()
-            return redirect('login')
+            return redirect('usuarios')
     else:
         form = UsuarioForm()
 
@@ -472,7 +486,7 @@ def cadastro_view(request):
         form = CadastroForm(request.POST)
         if form.is_valid():
             form.save(cadastrado_por=usuario_logado)
-            return redirect('login')
+            return redirect('usuarios')
     else:
         form = CadastroForm()
 
@@ -507,6 +521,8 @@ def perfil_view(request):
             else:
                 voluntario = form.save(commit=False)
                 voluntario.ultimo_editado_por = usuario
+                voluntario.ultimo_editado_por_nome = usuario.id_voluntario.nome
+                voluntario.ultimo_editado_por_tipo = usuario.tipo
                 voluntario.dt_ultima_edicao = timezone.now()
                 voluntario.save()
                 usuario = Usuario.objects.get(id_usuario=usuario_id)
