@@ -36,6 +36,7 @@
         </form>
     </div>
 
+    {% if request.session.usuario_tipo == 'ADMIN' %}
     <div class="auth-card">
         <h2>Cadastro de teste</h2>
         <p class="auth-subtitle">Cria um voluntário e um usuário juntos para testar o sistema.</p>
@@ -98,5 +99,6 @@
             </div>
         </form>
     </div>
+    {% endif %}
 </section>
 {% endblock %}

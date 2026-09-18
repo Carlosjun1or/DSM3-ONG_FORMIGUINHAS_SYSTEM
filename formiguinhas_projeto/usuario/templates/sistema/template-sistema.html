@@ -22,10 +22,16 @@
 
             <nav class="sidebar-nav" aria-label="Menu do sistema">
                 <a href="{% url 'home' %}" class="sidebar-link {% if request.path == '/home/' %}active{% endif %}">Home</a>
-                <a href="{% url 'perfil' %}" class="sidebar-link {% if request.path == '/perfil/' %}active{% endif %}">Perfil</a>
+                <a href="{% url 'voluntarios' %}" class="sidebar-link {% if request.path == '/voluntarios/' %}active{% endif %}">Voluntários cadastrados</a>
+                {% if request.session.usuario_tipo == 'ADMIN' %}
+                <a href="{% url 'usuarios' %}" class="sidebar-link {% if request.path == '/usuario/usuarios/' %}active{% endif %}">Usuários cadastrados</a>
+                {% endif %}
                 <a href="{% url 'cadastro_voluntario' %}" class="sidebar-link {% if request.path == '/cadastro-voluntario/' %}active{% endif %}">Cadastro de Voluntário</a>
-                <a href="{% url 'cadastro_usuario' %}" class="sidebar-link {% if request.path == '/cadastro-usuario/' %}active{% endif %}">Cadastro de Usuário</a>
-                <a href="{% url 'cadastro' %}" class="sidebar-link {% if request.path == '/cadastro/' %}active{% endif %}">Cadastro Completo</a>
+                {% if request.session.usuario_tipo == 'ADMIN' %}
+                <a href="{% url 'cadastro_usuario' %}" class="sidebar-link {% if request.path == '/usuario/cadastro-usuario/' %}active{% endif %}">Cadastro de Usuário</a>
+                <a href="{% url 'cadastro' %}" class="sidebar-link {% if request.path == '/usuario/cadastro/' %}active{% endif %}">Cadastro Completo</a>
+                {% endif %}
+                <a href="{% url 'perfil' %}" class="sidebar-link {% if request.path == '/perfil/' %}active{% endif %}">Perfil</a>
             </nav>
 
             <div class="sidebar-footer">
@@ -56,5 +62,6 @@
             {% block conteudo %}{% endblock %}
         </main>
     </div>
+    <script src="{% static 'js/masks.js' %}"></script>
 </body>
 </html>

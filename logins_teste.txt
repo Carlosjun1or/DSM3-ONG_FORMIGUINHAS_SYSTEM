@@ -1,0 +1,20 @@
+CONTROLE DE LOGINS PARA TESTE
+=============================
+
+Use este arquivo somente localmente.
+Nao compartilhe nem envie ao repositorio com senhas reais.
+
+1. Usuario
+Nome: carlos
+E-mail: carlos@gmail.com
+Tipo: ADMIN
+Senha: carlos
+
+2 - ate infinitos(∞). Usuarios
+Vai sempre seguir esse padrao
+
+
+Observacoes:
+- A senha deve ser a mesma definida no cadastro.
+- O e-mail e usado para entrar no sistema.
+- Remova as senhas deste arquivo quando terminar os testes.

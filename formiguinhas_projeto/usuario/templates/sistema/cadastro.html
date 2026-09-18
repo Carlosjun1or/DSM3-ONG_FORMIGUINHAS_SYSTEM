@@ -33,6 +33,7 @@
                 <div class="form-group">
                     {{ form.dt_nascimento.label_tag }}
                     {{ form.dt_nascimento }}
+                    <small class="field-hint">O responsável deve ter 18 anos ou mais.</small>
                     {% if form.dt_nascimento.errors %}<small class="error-msg">{{ form.dt_nascimento.errors|join:', ' }}</small>{% endif %}
                 </div>
                 <div class="form-group">
@@ -63,6 +64,7 @@
 
             <div class="form-actions">
                 <button type="submit" class="btn btn-primary">Salvar cadastro</button>
+                <a href="{% url 'home' %}" class="btn btn-outline">Cancelar</a>
             </div>
         </form>
     </div>

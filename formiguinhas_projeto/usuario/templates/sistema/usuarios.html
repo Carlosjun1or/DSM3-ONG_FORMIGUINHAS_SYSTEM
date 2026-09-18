@@ -1,0 +1,103 @@
+{% extends 'sistema/template-sistema.html' %}
+
+{% block titulo %}Usuários cadastrados | Sistema{% endblock %}
+{% block page_title %}Usuários cadastrados{% endblock %}
+
+{% block conteudo %}
+<section class="card-grid volunteer-metrics">
+    <article class="card">
+        <h3>Total cadastrados</h3>
+        <div class="metric">{{ total_usuarios }}</div>
+    </article>
+</section>
+
+<section class="card volunteer-control">
+    <div class="section-heading">
+        <div>
+            <h2>Controle de usuários</h2>
+            <p class="form-subtitle">Consulte os usuários com acesso ao sistema.</p>
+        </div>
+        <div class="section-heading-actions">
+            <a href="{% url 'cadastro' %}" class="btn btn-outline">Cadastro completo</a>
+            <a href="{% url 'cadastro_usuario' %}" class="btn btn-primary">Novo usuário</a>
+        </div>
+    </div>
+
+    <form method="get" class="volunteer-filters">
+        <div class="form-group">
+            <label for="id_busca_usuario">Buscar</label>
+            <input id="id_busca_usuario" name="busca" type="search" value="{{ busca }}" class="form-control" placeholder="Nome ou e-mail">
+        </div>
+        <div class="form-group">
+            <label for="id_tipo_usuario">Tipo</label>
+            <select id="id_tipo_usuario" name="tipo" class="form-control">
+                <option value="">Todos os tipos</option>
+                {% for valor, rotulo in tipo_choices %}
+                    <option value="{{ valor }}" {% if tipo_selecionado == valor %}selected{% endif %}>{{ rotulo }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="filter-actions">
+            <button type="submit" class="btn btn-primary">Filtrar</button>
+            {% if busca or tipo_selecionado %}<a href="{% url 'usuarios' %}" class="form-link">Limpar</a>{% endif %}
+        </div>
+    </form>
+
+    {% if usuarios %}
+    <div class="table-wrap">
+        <table class="data-table user-table">
+            <thead>
+                <tr>
+                    <th>Nome</th>
+                    <th>E-mail</th>
+                    <th>Telefone</th>
+                    <th>Tipo</th>
+                    <th>Último acesso</th>
+                    <th>Auditoria</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for usuario_item in usuarios %}
+                <tr>
+                    <td><strong>{{ usuario_item.id_voluntario.nome }}</strong></td>
+                    <td>{{ usuario_item.id_voluntario.email }}</td>
+                    <td class="phone-cell">{{ usuario_item.id_voluntario.telefone }}</td>
+                    <td>
+                        <form method="post" action="{% url 'atualizar_tipo_usuario' usuario_item.id_usuario %}" class="inline-status-form">
+                            {% csrf_token %}
+                            <select name="tipo" class="status-select type-select type-{{ usuario_item.tipo|lower }}" aria-label="Tipo de {{ usuario_item.id_voluntario.nome }}" onchange="this.form.submit()">
+                                {% for valor, rotulo in tipo_choices %}
+                                    <option value="{{ valor }}" {% if usuario_item.tipo == valor %}selected{% endif %}>{{ rotulo }}</option>
+                                {% endfor %}
+                            </select>
+                        </form>
+                    </td>
+                    <td>{% if usuario_item.data_ultimo_acesso %}{{ usuario_item.data_ultimo_acesso|date:'d/m/Y H:i' }}{% else %}Nunca acessou{% endif %}</td>
+                    <td class="audit-cell">
+                        <strong>{% if usuario_item.cadastrado_por %}Cadastrado por {{ usuario_item.cadastrado_por.id_voluntario.nome }}{% else %}Cadastro anterior{% endif %}</strong>
+                        {% if usuario_item.cadastrado_por %}<small>{{ usuario_item.dt_cadastro|date:'d/m/Y H:i' }}</small>{% endif %}
+                        {% if usuario_item.ultimo_editado_por %}<small>Editado por {{ usuario_item.ultimo_editado_por.id_voluntario.nome }} em {{ usuario_item.dt_ultima_edicao|date:'d/m/Y H:i' }}</small>{% else %}<small>Sem edições</small>{% endif %}
+                    </td>
+                    <td class="table-actions">
+                        <a class="btn btn-outline btn-small" href="{% url 'editar_usuario' usuario_item.id_usuario %}">Editar</a>
+                        {% if usuario_item.id_usuario != usuario.id_usuario %}
+                        <form method="post" action="{% url 'excluir_usuario' usuario_item.id_usuario %}" onsubmit="return confirm('Excluir este usuário? O voluntário continuará cadastrado.');">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-danger btn-small">Excluir</button>
+                        </form>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+        <div class="empty-state table-empty">
+            <h3>Nenhum usuário encontrado</h3>
+            <p class="form-subtitle">Tente ajustar os filtros ou cadastre um novo usuário.</p>
+        </div>
+    {% endif %}
+</section>
+{% endblock %}

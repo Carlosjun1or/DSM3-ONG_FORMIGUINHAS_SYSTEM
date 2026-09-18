@@ -33,6 +33,7 @@
                 <div class="form-group">
                     {{ form.dt_nascimento.label_tag }}
                     {{ form.dt_nascimento }}
+                    <small class="field-hint">O responsável deve ter 18 anos ou mais.</small>
                     {% if form.dt_nascimento.errors %}<small class="error-msg">{{ form.dt_nascimento.errors|join:', ' }}</small>{% endif %}
                 </div>
                 <div class="form-group">
@@ -44,7 +45,10 @@
 
             <div class="form-actions">
                 <button type="submit" class="btn btn-primary">Salvar voluntário</button>
-                <a href="{% url 'cadastro_usuario' %}" class="form-link">Ir para cadastro de usuário</a>
+                <a href="{% url 'voluntarios' %}" class="btn btn-outline">Cancelar</a>
+                {% if request.session.usuario_tipo == 'ADMIN' %}
+                <a href="{% url 'cadastro_usuario' %}" class="btn btn-outline">Ir para cadastro de usuário</a>
+                {% endif %}
             </div>
         </form>
     </div>
