@@ -1,14 +1,206 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <title>Formiguinhas</title>
-</head>
-<body>
+{% extends "site_institucional/base.html" %}
 
-    <h1>ONG Formiguinhas</h1>
+{% block conteudo %}
 
-    <p>Site institucional da ONG Formiguinhas.</p>
+<!-- INÍCIO -->
 
-</body>
-</html>
+<section id="inicio">
+    <div class="container">
+
+
+    <div class="cabecalho">
+        <span>Pequenas atitudes, grandes transformações</span>
+
+        <h2>Formiguinhas da Praia</h2>
+
+        <p>
+            A Formiguinhas da Praia reúne pessoas que acreditam que cada
+            resíduo recolhido, cada conversa e cada ação fazem diferença
+            para as praias e para a comunidade.
+        </p>
+    </div>
+
+    <div class="inicio-conteudo">
+        <article>
+            <h3>Junte-se a nós!</h3>
+
+            <p>
+                Seja voluntário, doe materiais ou recursos, divulgue nossas
+                ações ou leve as bags para seu condomínio. Cada ação faz a diferença!
+            </p>
+
+            <div class="referencias">
+                <a href="#">Faça parte da Formiguinha</a>
+                <a href="#">Conheça nossa história</a>
+            </div>
+        </article>
+    </div>
+
+</div>
+
+
+</section>
+
+<!-- HISTÓRIA -->
+
+<section id="historia">
+    <div class="container">
+
+    <div class="historia-conteudo">
+
+        <article>
+            <h3>Como tudo começou</h3>
+
+            <strong>De uma caminhada nasceu um movimento.</strong>
+
+            <p>
+                Uma atitude simples que cresceu com a união de muitas pessoas.
+            </p>
+
+            <p>
+                Durante uma caminhada na praia, Alessandra pisou em um copo
+                plástico e decidiu começar a recolher o lixo encontrado em
+                seus passeios. A iniciativa cresceu e, com o tempo, se
+                transformou em um projeto organizado: a Formiguinhas da Praia.
+            </p>
+
+            <p>
+                Hoje, a ONG atua com limpeza de praias, coleta seletiva,
+                reciclagem, conscientização ambiental e fortalecimento dos
+                vínculos entre as pessoas.
+            </p>
+        </article>
+
+
+        <article>
+            <h3>Missão, visão e valores</h3>
+
+            <h4>Cada mutirão sustenta cinco coisas ao mesmo tempo</h4>
+
+            <p>
+                Recolher o lixo é só a parte visível. O grupo existe pra sustentar isso toda semana, com quem topa caminhar junto.
+            </p>
+
+            <div class="pillar">
+                <div class="badge">01</div>
+                <p>Caminhar pela orla</p>
+            </div>
+
+            <div class="pillar">
+                <div class="badge">02</div>
+                <p>Tomar sol e vitamina D</p>
+            </div>
+
+            <div class="pillar">
+                <div class="badge">03</div>
+                <p>Cuidar da saúde física e mental</p>
+            </div>
+
+            <div class="pillar">
+                <div class="badge">04</div>
+                <p>Fazer amigos e se encontrar</p>
+            </div>
+
+            <div class="pillar">
+                <div class="badge">05</div>
+                <p>Recolher todo lixo do caminho</p>
+            </div>
+
+        </article>
+
+    </div>
+
+</div>
+
+</section>
+
+<!-- MUTIRÕES -->
+
+<section id="multiroes">
+    <div class="container">
+
+
+    <div class="multiroes-conteudo">
+
+        <h2>Juntos, transformamos nossas praias</h2>
+
+        <p>
+            Cada praia limpa carrega uma história de cuidado, união e esperança.
+            Em cada mutirão, pessoas se juntam por um propósito em comum:
+            preservar o lugar que também faz parte das nossas vidas.
+        </p>
+
+        <p>
+            São encontros feitos de pequenas atitudes que, quando realizadas
+            em conjunto, tornam-se grandes transformações.
+        </p>
+
+        <strong>
+            Conheça os mutirões que já realizamos, reviva esses momentos
+            através das nossas fotos e veja como a comunidade vem fazendo
+            parte dessa história.
+        </strong>
+
+
+        <div class="multirao-chamada">
+
+            <article>
+                <div class="multirao-imagem">
+                    <img src="#" alt="Imagem do mutirão">
+                </div>
+
+                <div class="multirao-descricao">
+                    <h3>Mutirão Praia Limpa</h3>
+
+                    <p>Data: 15/03/2024</p>
+
+                    <p>Local: Praia do Gonzaga, Santos</p>
+
+                    <p>Resultado: 50 kg de resíduos coletados</p>
+                </div>
+            </article>
+
+        </div>
+
+        <a href="#">Conheça nossos mutirões</a>
+
+    </div>
+
+</div>
+
+
+</section>
+
+<!-- PRAIAS -->
+
+<section id="praias">
+    <div class="container">
+
+
+    <div class="praias-conteudo">
+
+        <h2>Onde nossas formiguinhas atuam</h2>
+
+        <p>
+            Nossas ações acontecem em diferentes praias, onde cada cuidado
+            faz parte de um propósito maior: preservar o nosso litoral e
+            incentivar a comunidade a fazer parte dessa transformação.
+        </p>
+
+        <p>
+            Conheça as praias onde as Formiguinhas da Praia estão presentes
+            e acompanhe o
+            <a href="#">calendário das próximas ações</a>
+            para saber quando e onde podemos nos encontrar.
+        </p>
+
+        <a href="#">Veja a praia mais próxima de você</a>
+
+    </div>
+
+</div>
+
+
+</section>
+
+{% endblock %}

@@ -1,0 +1,40 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formiguinhas da Praia | Cuidar da praia é cuidar da vida</title>
+    <meta name="description" content="Conheça a história, as ações, os mutirões, as coletas e as formas de apoiar a ONG Formiguinhas da Praia.">
+    <link rel="stylesheet" href="{% static '../static/css/base.css' %}">
+</head>
+<body>
+    <header>
+        <div class="logo">
+            <a href="#"><span>🐜</span><span>Formiguinhas<br>da Praia</span></a>
+            <nav>
+            <a href="#">Nossa história</a>
+            <a href="#">Praias</a>
+            <a href="#">Mutirões</a>
+            <a href="#">Bags</a>
+            <a href="#">Coletas</a>
+            <a href="#">Apoie</a>
+            <a href="#">Bags</a>
+            <a href="#">Ongs Pareiras</a>
+            </nav>
+            <a href="#">Quero participar</a>
+        </div>
+    </header>
+    <main>
+        {% block conteudo %}
+        {% endblock %}
+    </main>
+    <footer>
+        <p>&copy; 2026 Formiguinhas</p>
+    </footer>
+
+    <script src="{% static 'site_institucional/js/script.js' %}"></script>
+
+    
+</body>
+</html>

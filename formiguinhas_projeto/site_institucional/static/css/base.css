@@ -1,0 +1,310 @@
+/* ==============================
+RESET
+============================== */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    line-height: 1.6;
+    color: #333;
+    background-color: #f5f5f5;
+}
+
+a {
+    color: inherit;
+}
+
+
+/* ==============================
+CONTAINER
+============================== */
+
+.container {
+    width: 90%;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+
+/* ==============================
+HEADER
+============================== */
+
+header {
+    background-color: #ffffff;
+    border-bottom: 1px solid #ddd;
+    padding: 20px 5%;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 30px;
+}
+
+.logo > a {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.logo > a span {
+    font-size: 30px;
+}
+
+nav {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+nav a {
+    text-decoration: none;
+}
+
+header > div > a {
+    text-decoration: none;
+    font-weight: bold;
+}
+
+
+/* ==============================
+SEÇÕES
+============================== */
+
+section {
+    padding: 70px 0;
+}
+
+#inicio {
+    background-color: #eeeeee;
+}
+
+#historia {
+    background-color: #ffffff;
+}
+
+#multiroes {
+    background-color: #eeeeee;
+}
+
+#praias {
+    background-color: #ffffff;
+}
+
+section h2 {
+    margin-bottom: 20px;
+}
+
+section h3 {
+    margin-bottom: 10px;
+}
+
+section p {
+    margin-bottom: 15px;
+}
+
+
+/* ==============================
+INÍCIO
+============================== */
+
+#inicio {
+    min-height: 450px;
+}
+
+.cabecalho {
+    max-width: 800px;
+}
+
+.cabecalho span {
+    display: block;
+    margin-bottom: 10px;
+    font-weight: bold;
+}
+
+.cabecalho h2 {
+    font-size: 40px;
+}
+
+.inicio-conteudo {
+    margin-top: 40px;
+}
+
+.inicio-conteudo article {
+    max-width: 600px;
+}
+
+.referencias {
+    display: flex;
+    gap: 15px;
+    margin-top: 25px;
+    flex-wrap: wrap;
+}
+
+.referencias a,
+#praias a,
+#multiroes > .container > div > a {
+    display: inline-block;
+    padding: 10px 18px;
+    border: 1px solid #333;
+    text-decoration: none;
+}
+
+
+/* ==============================
+HISTÓRIA
+============================== */
+
+.historia-conteudo {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 50px;
+}
+
+.historia-conteudo article {
+    padding: 25px;
+    border: 1px solid #ccc;
+    background-color: #fafafa;
+}
+
+.historia-conteudo h3 {
+    font-size: 25px;
+}
+
+.historia-conteudo h4 {
+    margin: 20px 0 10px;
+}
+
+.pillar {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin: 15px 0;
+    padding: 10px;
+    border: 1px solid #ddd;
+    background-color: #ffffff;
+}
+
+.pillar p {
+    margin: 0;
+}
+
+.badge {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 40px;
+    height: 40px;
+
+    border: 1px solid #333;
+    border-radius: 50%;
+
+    font-weight: bold;
+}
+
+
+/* ==============================
+MUTIRÕES
+============================== */
+
+.multiroes-conteudo {
+    max-width: 900px;
+}
+
+.multirao-chamada {
+    margin: 30px 0;
+}
+
+.multirao-chamada article {
+    display: grid;
+    grid-template-columns: 250px 1fr;
+    gap: 25px;
+
+    padding: 20px;
+    border: 1px solid #ccc;
+    background-color: #ffffff;
+}
+
+.multirao-imagem {
+    min-height: 180px;
+    background-color: #ddd;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.multirao-imagem img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.multirao-descricao p {
+    margin-bottom: 8px;
+}
+
+
+/* ==============================
+PRAIAS
+============================== */
+
+.praias-conteudo {
+    max-width: 900px;
+}
+
+.praias-conteudo > a {
+    margin-top: 15px;
+}
+
+
+/* ==============================
+FOOTER
+============================== */
+
+footer {
+    padding: 30px;
+    text-align: center;
+    background-color: #222;
+    color: #ffffff;
+}
+
+
+/* ==============================
+RESPONSIVIDADE
+============================== */
+
+@media (max-width: 768px) {
+
+    .logo {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    nav {
+        width: 100%;
+    }
+
+    .historia-conteudo {
+        grid-template-columns: 1fr;
+    }
+
+    .multirao-chamada article {
+        grid-template-columns: 1fr;
+    }
+
+    .cabecalho h2 {
+        font-size: 32px;
+    }
+
+}
