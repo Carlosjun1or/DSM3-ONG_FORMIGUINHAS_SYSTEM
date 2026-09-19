@@ -1,4 +1,5 @@
 from django.db.models import Q
+from django.contrib import messages
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 
@@ -60,6 +61,25 @@ def cadastrar_praia_view(request):
     if request.method == 'POST':
         form = PraiaForm(request.POST)
         if form.is_valid():
+            nome = (form.cleaned_data['nome'] or '').strip()
+            cidade = (form.cleaned_data['cidade'] or '').strip()
+
+            praia_duplicada = Praia.objects.filter(
+                nome__iexact=nome,
+                cidade__iexact=cidade,
+            ).exists()
+
+            if praia_duplicada:
+                messages.error(
+                    request,
+                    'Praia não cadastrada. Já existe um cadastro igual com esse nome e cidade.'
+                )
+                return render(request, 'sistema/cadastro-praia.html', {
+                    'usuario': usuario,
+                    'form': form,
+                    'modo_edicao': False,
+                })
+
             praia = form.save(commit=False)
             praia.cadastrado_por = usuario
             praia.cadastrado_por_nome = usuario.id_voluntario.nome

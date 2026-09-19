@@ -85,6 +85,29 @@ class PraiaViewsTests(TestCase):
         self.assertEqual(praia.cadastrado_por_nome, self.usuario.id_voluntario.nome)
         self.assertEqual(praia.cadastrado_por_tipo, self.usuario.tipo)
 
+    def test_nao_permite_cadastro_repetido_de_mesma_praia_na_mesma_cidade_ignorando_case(self):
+        Praia.objects.create(
+            nome='Praia Central',
+            cidade='Santos',
+            latitude=-23.967,
+            longitude=-46.328,
+            praia_ativa='ATIVA',
+            descricao='Praia existente',
+        )
+
+        response = self.client.post(reverse('cadastrar_praia'), {
+            'nome': 'praia central',
+            'cidade': 'SANTOS',
+            'latitude': '-23.967000',
+            'longitude': '-46.328000',
+            'praia_ativa': 'ATIVA',
+            'descricao': 'Tentativa de duplicar.',
+        })
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Já existe uma praia cadastrada com esse nome e cidade')
+        self.assertEqual(Praia.objects.filter(nome='Praia Central', cidade='Santos').count(), 1)
+
     def test_praia_exibe_auditoria_na_listagem(self):
         Praia.objects.create(
             nome='Praia Auditada',
