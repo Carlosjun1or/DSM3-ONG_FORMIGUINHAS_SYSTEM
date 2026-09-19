@@ -24,7 +24,10 @@
 
             <div class="form-group">
                 {{ form.senha.label_tag }}
-                {{ form.senha }}
+                <div class="password-field">
+                    {{ form.senha }}
+                    <button type="button" class="password-toggle" aria-label="Mostrar senha" aria-pressed="false">Mostrar</button>
+                </div>
                 {% if form.senha.errors %}
                     <small class="error-msg">{{ form.senha.errors|join:', ' }}</small>
                 {% endif %}
@@ -82,12 +85,18 @@
                 </div>
                 <div class="form-group">
                     {{ cadastro_form.senha.label_tag }}
-                    {{ cadastro_form.senha }}
+                    <div class="password-field">
+                        {{ cadastro_form.senha }}
+                        <button type="button" class="password-toggle" aria-label="Mostrar senha" aria-pressed="false">Mostrar</button>
+                    </div>
                     {% if cadastro_form.senha.errors %}<small class="error-msg">{{ cadastro_form.senha.errors|join:', ' }}</small>{% endif %}
                 </div>
                 <div class="form-group">
                     {{ cadastro_form.confirmar_senha.label_tag }}
-                    {{ cadastro_form.confirmar_senha }}
+                    <div class="password-field">
+                        {{ cadastro_form.confirmar_senha }}
+                        <button type="button" class="password-toggle" aria-label="Mostrar senha" aria-pressed="false">Mostrar</button>
+                    </div>
                     {% if cadastro_form.confirmar_senha.errors %}
                         <small class="error-msg">{{ cadastro_form.confirmar_senha.errors|join:', ' }}</small>
                     {% endif %}

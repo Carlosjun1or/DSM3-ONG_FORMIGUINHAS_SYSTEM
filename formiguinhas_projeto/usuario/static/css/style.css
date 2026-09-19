@@ -733,6 +733,35 @@ main {
     border-color: #1d785d;
 }
 
+.password-field {
+    position: relative;
+}
+
+.password-field .form-control {
+    padding-right: 84px;
+}
+
+.password-toggle {
+    position: absolute;
+    top: 50%;
+    right: 10px;
+    transform: translateY(-50%);
+    padding: 4px;
+    border: 0;
+    background: transparent;
+    color: #1b5a46;
+    font: inherit;
+    font-size: 0.8rem;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.password-toggle:focus-visible {
+    outline: 2px solid rgba(22, 115, 89, 0.35);
+    outline-offset: 2px;
+    border-radius: 4px;
+}
+
 .searchable-select {
     display: grid;
     gap: 8px;

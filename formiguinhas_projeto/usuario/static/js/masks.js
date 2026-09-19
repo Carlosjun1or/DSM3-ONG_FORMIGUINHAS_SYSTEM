@@ -86,4 +86,18 @@ document.addEventListener('DOMContentLoaded', function () {
             if (selected && selected.value) search.value = selected.textContent;
         });
     });
+
+    document.querySelectorAll('.password-toggle').forEach(function (toggle) {
+        var field = toggle.closest('.password-field');
+        var input = field && field.querySelector('input');
+        if (!input) return;
+
+        toggle.addEventListener('click', function () {
+            var isVisible = input.type === 'text';
+            input.type = isVisible ? 'password' : 'text';
+            toggle.textContent = isVisible ? 'Mostrar' : 'Ocultar';
+            toggle.setAttribute('aria-label', isVisible ? 'Mostrar senha' : 'Ocultar senha');
+            toggle.setAttribute('aria-pressed', String(!isVisible));
+        });
+    });
 });
