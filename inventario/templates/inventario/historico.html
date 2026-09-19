@@ -1,0 +1,61 @@
+{% load static %}
+<!doctype html>
+<html>
+  <head>
+    <title>Histórico de Movimentações</title>
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="{% static 'inventario/css/style.css' %}"
+    />
+  </head>
+  <body>
+    <h1>Histórico de Movimentações</h1>
+
+    <form method="get">
+      <label>Material:</label>
+      <select name="material">
+        <option value="">Todos</option>
+        {% for mat in materiais %}
+        <option value="{{ mat.id }}">{{ mat.nome }}</option>
+        {% endfor %}
+      </select>
+
+      <label>Tipo:</label>
+      <select name="tipo">
+        <option value="">Todos</option>
+        <option value="entrada">Entrada</option>
+        <option value="saida">Saída</option>
+      </select>
+
+      <label>Data início:</label>
+      <input type="date" name="data_inicio" />
+
+      <label>Data fim:</label>
+      <input type="date" name="data_fim" />
+
+      <button type="submit">Filtrar</button>
+    </form>
+
+    <table>
+      <tr>
+        <th>Material</th>
+        <th>Tipo</th>
+        <th>Quantidade</th>
+        <th>Data</th>
+      </tr>
+      {% for mov in movimentacoes %}
+      <tr>
+        <td>{{ mov.material.nome }}</td>
+        <td>{{ mov.tipo }}</td>
+        <td>{{ mov.quantidade }}</td>
+        <td>{{ mov.data }}</td>
+      </tr>
+      {% empty %}
+      <tr>
+        <td colspan="4">Nenhuma movimentação encontrada</td>
+      </tr>
+      {% endfor %}
+    </table>
+  </body>
+</html>

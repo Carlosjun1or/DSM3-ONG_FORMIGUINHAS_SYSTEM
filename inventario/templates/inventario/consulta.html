@@ -1,0 +1,36 @@
+{% load static %}
+<!doctype html>
+<html>
+  <head>
+    <title>Consulta de Estoque</title>
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="{% static 'inventario/css/style.css' %}"
+    />
+  </head>
+  <body>
+    <h1>Consulta de Estoque</h1>
+
+    <table>
+      <tr>
+        <th>Nome</th>
+        <th>Código</th>
+        <th>Unidade</th>
+        <th>Saldo</th>
+      </tr>
+      {% for mat in materiais %}
+      <tr>
+        <td>{{ mat.nome }}</td>
+        <td>{{ mat.codigo }}</td>
+        <td>{{ mat.unidade }}</td>
+        <td>{{ mat.saldo }}</td>
+      </tr>
+      {% empty %}
+      <tr>
+        <td colspan="4">Nenhum material encontrado</td>
+      </tr>
+      {% endfor %}
+    </table>
+  </body>
+</html>
