@@ -1,0 +1,106 @@
+{% extends 'sistema/template-sistema.html' %}
+
+{% block titulo %}Controle de Praias | Sistema{% endblock %}
+{% block page_title %}Controle de Praias{% endblock %}
+
+{% block conteudo %}
+<section class="card-grid volunteer-metrics">
+    <article class="card">
+        <h3>Total cadastradas</h3>
+        <div class="metric">{{ total_praias }}</div>
+    </article>
+    <article class="card">
+        <h3>Praias ativas</h3>
+        <div class="metric">{{ total_ativas }}</div>
+    </article>
+</section>
+
+<section class="card volunteer-control">
+    <div class="section-heading">
+        <div>
+            <h2>Praias de atuação</h2>
+            <p class="form-subtitle">Gerencie os locais onde a ONG realiza suas atividades.</p>
+        </div>
+        {% if usuario.tipo == 'ADMIN' %}
+        <a href="{% url 'cadastrar_praia' %}" class="btn btn-primary">Nova praia</a>
+        {% endif %}
+    </div>
+
+    <form method="get" class="volunteer-filters">
+        <div class="form-group">
+            <label for="id_busca">Buscar</label>
+            <input id="id_busca" name="busca" type="search" value="{{ busca }}" class="form-control" placeholder="Nome ou cidade">
+        </div>
+        <div class="form-group">
+            <label for="id_status">Status</label>
+            <select id="id_status" name="status" class="form-control">
+                <option value="">Todos os status</option>
+                <option value="ativa" {% if status_selecionado == 'ativa' %}selected{% endif %}>Ativas</option>
+                <option value="inativa" {% if status_selecionado == 'inativa' %}selected{% endif %}>Inativas</option>
+            </select>
+        </div>
+        <div class="filter-actions">
+            <button type="submit" class="btn btn-primary">Filtrar</button>
+            {% if busca or status_selecionado %}<a href="{% url 'praias' %}" class="form-link">Limpar</a>{% endif %}
+        </div>
+    </form>
+
+    {% if praias %}
+    <div class="table-wrap">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Praia</th>
+                    <th>Cidade</th>
+                    <th>Coordenadas</th>
+                    <th>Descrição</th>
+                    <th>Adicionada por</th>
+                    <th>Status</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for praia in praias %}
+                <tr>
+                    <td><a class="table-link" href="{% url 'editar_praia' praia.id_praia %}"><strong>{{ praia.nome }}</strong></a></td>
+                    <td>{{ praia.cidade }}</td>
+                    <td>{{ praia.latitude }}, {{ praia.longitude }}</td>
+                    <td>{{ praia.descricao|default:'-'|truncatechars:80 }}</td>
+                    <td>
+                        {% if praia.cadastrado_por %}
+                            {{ praia.cadastrado_por.id_voluntario.nome }}
+                        {% else %}
+                            Cadastro anterior
+                        {% endif %}
+                    </td>
+                    <td>
+                        <form method="post" action="{% url 'atualizar_status_praia' praia.id_praia %}" class="inline-status-form">
+                            {% csrf_token %}
+                            <input type="hidden" name="praia_ativa" value="{% if praia.praia_ativa %}false{% else %}true{% endif %}">
+                            <button type="submit" class="status-select status-{% if praia.praia_ativa %}ativo{% else %}inativo{% endif %}">
+                                {% if praia.praia_ativa %}Ativa{% else %}Inativa{% endif %}
+                            </button>
+                        </form>
+                    </td>
+                    <td class="table-actions">
+                        <a class="btn btn-outline btn-small" href="{% url 'editar_praia' praia.id_praia %}">Editar</a>
+                        {% if usuario.tipo == 'ADMIN' %}
+                        <form method="post" action="{% url 'excluir_praia' praia.id_praia %}" onsubmit="return confirm('Excluir esta praia?');">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-danger btn-small">Excluir</button>
+                        </form>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+        <div class="empty-state table-empty">
+            <h3>Nenhuma praia encontrada</h3>
+            <p class="form-subtitle">Ajuste os filtros ou cadastre uma nova praia.</p>
+        </div>
+    {% endif %}
+</section>
+{% endblock %}

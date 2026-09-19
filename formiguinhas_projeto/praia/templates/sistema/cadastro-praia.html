@@ -1,0 +1,151 @@
+{% extends 'sistema/template-sistema.html' %}
+
+{% block titulo %}{% if modo_edicao %}Editar Praia{% else %}Cadastrar Praia{% endif %} | Sistema{% endblock %}
+{% block page_title %}{% if modo_edicao %}Editar Praia{% else %}Cadastrar Praia{% endif %}{% endblock %}
+{% block estilos %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+<style>
+    .map-picker {
+        grid-column: 1 / -1;
+    }
+
+    .map-picker label {
+        display: block;
+        margin-bottom: 8px;
+        font-size: 0.9rem;
+        font-weight: 700;
+        color: #204e42;
+    }
+
+    #praia-map {
+        height: 380px;
+        border: 1px solid #d7e1dd;
+        border-radius: 12px;
+        overflow: hidden;
+        z-index: 0;
+    }
+
+    .map-help,
+    .map-coordinates {
+        color: #5b6f68;
+        font-size: 0.85rem;
+    }
+
+    .map-help {
+        margin: 8px 0 4px;
+    }
+
+    .map-coordinates strong {
+        color: #204e42;
+    }
+
+    .map-error {
+        display: block;
+        margin-top: 8px;
+        color: #b42318;
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+
+    @media (max-width: 600px) {
+        #praia-map {
+            height: 300px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block conteudo %}
+<section class="card form-card">
+    <div class="section-heading">
+        <div>
+            <h2>{% if modo_edicao %}Dados da praia{% else %}Nova praia{% endif %}</h2>
+            <p class="form-subtitle">Informe o local e as coordenadas para a atuação da ONG.</p>
+        </div>
+        <a href="{% url 'praias' %}" class="btn btn-outline">Voltar</a>
+    </div>
+
+    <form method="post" novalidate>
+        {% csrf_token %}
+        {% if form.non_field_errors %}
+            <div class="alert-box">{{ form.non_field_errors }}</div>
+        {% endif %}
+        <div class="form-grid">
+            {% for field in form %}
+            {% if field.name != 'latitude' and field.name != 'longitude' %}
+                <div class="form-group {% if field.name == 'descricao' %}form-group-full{% endif %}">
+                    {% if field.name == 'praia_ativa' %}
+                        <label class="checkbox-label">{{ field }} {{ field.label }}</label>
+                    {% else %}
+                        {{ field.label_tag }}
+                        {{ field }}
+                    {% endif %}
+                    {% for error in field.errors %}<small class="field-error">{{ error }}</small>{% endfor %}
+                </div>
+                {% endif %}
+            {% endfor %}
+            <div class="map-picker">
+                <label for="praia-map">Localização da praia</label>
+                <div id="praia-map" role="application" aria-label="Mapa para selecionar a localização da praia"></div>
+                <p class="map-help">Clique no mapa para marcar a praia. Arraste o marcador para ajustar a posição.</p>
+                <p class="map-coordinates">Coordenadas selecionadas: <strong id="selected-coordinates">Nenhuma localização selecionada</strong></p>
+                {% for error in form.latitude.errors %}<small class="map-error">Latitude: {{ error }}</small>{% endfor %}
+                {% for error in form.longitude.errors %}<small class="map-error">Longitude: {{ error }}</small>{% endfor %}
+            </div>
+            {{ form.latitude }}
+            {{ form.longitude }}
+        </div>
+        <div class="form-actions">
+            <a href="{% url 'praias' %}" class="btn btn-outline">Cancelar</a>
+            <button type="submit" class="btn btn-primary">{% if modo_edicao %}Salvar alterações{% else %}Cadastrar praia{% endif %}</button>
+        </div>
+    </form>
+</section>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script>
+    (() => {
+        const defaultCenter = [-23.967, -46.328];
+        const latitudeInput = document.getElementById('id_latitude');
+        const longitudeInput = document.getElementById('id_longitude');
+        const coordinatesLabel = document.getElementById('selected-coordinates');
+        const initialLatitude = parseFloat(latitudeInput.value);
+        const initialLongitude = parseFloat(longitudeInput.value);
+        const hasInitialLocation = Number.isFinite(initialLatitude) && Number.isFinite(initialLongitude);
+        const initialCenter = hasInitialLocation ? [initialLatitude, initialLongitude] : defaultCenter;
+        const map = L.map('praia-map').setView(initialCenter, hasInitialLocation ? 15 : 11);
+        let marker = null;
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(map);
+
+        const updateLocation = (latitude, longitude) => {
+            latitudeInput.value = latitude.toFixed(6);
+            longitudeInput.value = longitude.toFixed(6);
+            coordinatesLabel.textContent = `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`;
+        };
+
+        const placeMarker = (latitude, longitude) => {
+            if (!marker) {
+                marker = L.marker([latitude, longitude], {draggable: true}).addTo(map);
+                marker.on('dragend', () => {
+                    const position = marker.getLatLng();
+                    updateLocation(position.lat, position.lng);
+                });
+            } else {
+                marker.setLatLng([latitude, longitude]);
+            }
+            updateLocation(latitude, longitude);
+        };
+
+        if (hasInitialLocation) {
+            placeMarker(initialLatitude, initialLongitude);
+        }
+
+        map.on('click', (event) => placeMarker(event.latlng.lat, event.latlng.lng));
+    })();
+</script>
+{% endblock %}
