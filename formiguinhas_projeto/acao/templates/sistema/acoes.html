@@ -1,0 +1,131 @@
+{% extends 'sistema/template-sistema.html' %}
+
+{% block titulo %}Ações | Sistema{% endblock %}
+{% block page_title %}Controle de Ações{% endblock %}
+
+{% block conteudo %}
+<section class="card-grid volunteer-metrics">
+    <article class="card">
+        <h3>Total de ações</h3>
+        <div class="metric">{{ total_acoes }}</div>
+    </article>
+    <article class="card">
+        <h3>Planejadas</h3>
+        <div class="metric">{{ total_planejadas }}</div>
+    </article>
+</section>
+
+<section class="card volunteer-control">
+    <div class="section-heading">
+        <div>
+            <h2>Ações cadastradas</h2>
+            <p class="form-subtitle">Gerencie mutirões e coletas voluntárias da ONG.</p>
+        </div>
+        {% if usuario.tipo == 'ADMIN' %}
+        <a href="{% url 'cadastro_acao' %}" class="btn btn-primary">Nova ação</a>
+        {% endif %}
+    </div>
+
+    <form method="get" class="volunteer-filters acao-filters">
+        <div class="form-group">
+            <label for="id_busca">Buscar</label>
+            <input id="id_busca" name="busca" type="search" value="{{ busca }}" class="form-control" placeholder="Praia, cidade, ponto ou descrição">
+        </div>
+        <div class="form-group">
+            <label for="id_tipo">Tipo</label>
+            <select id="id_tipo" name="tipo" class="form-control">
+                <option value="">Todos os tipos</option>
+                {% for valor, rotulo in tipo_choices %}
+                    <option value="{{ valor }}" {% if tipo_selecionado == valor %}selected{% endif %}>{{ rotulo }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="id_status">Status</label>
+            <select id="id_status" name="status" class="form-control">
+                <option value="">Todos os status</option>
+                {% for valor, rotulo in status_choices %}
+                    <option value="{{ valor }}" {% if status_selecionado == valor %}selected{% endif %}>{{ rotulo }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="id_praia">Praia</label>
+            <select id="id_praia" name="praia" class="form-control">
+                <option value="">Todas as praias</option>
+                {% for praia in praias %}
+                    <option value="{{ praia.id_praia }}" {% if praia_selecionada == praia.id_praia|stringformat:'s' %}selected{% endif %}>{{ praia.nome }} - {{ praia.cidade }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        {% if usuario.tipo == 'ADMIN' or usuario.tipo == 'COORDENADOR' %}
+        <div class="form-group">
+            <label for="id_participacao">Participação</label>
+            <select id="id_participacao" name="participacao" class="form-control">
+                <option value="">Todas as ações</option>
+                <option value="MINHAS" {% if participacao_selecionada == 'MINHAS' %}selected{% endif %}>Minhas ações</option>
+            </select>
+        </div>
+        {% endif %}
+        <div class="filter-actions">
+            <button type="submit" class="btn btn-primary">Filtrar</button>
+            {% if busca or tipo_selecionado or status_selecionado or praia_selecionada or participacao_selecionada %}<a href="{% url 'acoes' %}" class="form-link">Limpar</a>{% endif %}
+        </div>
+    </form>
+
+    {% if acoes %}
+    <div class="table-wrap">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Tipo</th>
+                    <th>Praia</th>
+                    <th>Data / horário</th>
+                    <th>Local</th>
+                    <th>Status</th>
+                    <th>Participantes</th>
+                    <th>Auditoria</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for acao in acoes %}
+                <tr>
+                    <td>
+                        <a class="table-link" href="{% url 'acao_detalhe' acao.id_acao %}">
+                            <strong>{{ acao.get_tipo_display }}</strong>
+                        </a>
+                    </td>
+                    <td>{{ acao.praia.nome }}</td>
+                    <td>{{ acao.data|date:'d/m/Y' }}{% if acao.horario %}<br><small>{{ acao.horario|time:'H:i' }}</small>{% endif %}</td>
+                    <td>{{ acao.local|default:'-' }}</td>
+                    <td><span class="status-pill">{{ acao.get_status_display }}</span></td>
+                    <td>{{ acao.participantes.count }}</td>
+                    <td class="audit-cell">
+                        <strong>{% if acao.cadastrado_por_nome %}Cadastrado por {{ acao.cadastrado_por_nome }}{% elif acao.cadastrado_por %}Cadastrado por {{ acao.cadastrado_por.id_voluntario.nome }}{% else %}Cadastro anterior{% endif %}</strong>
+                        {% if acao.cadastrado_por_nome or acao.cadastrado_por %}<small>{{ acao.dt_cadastro|date:'d/m/Y H:i' }}</small>{% endif %}
+                        {% if acao.ultimo_editado_por_nome %}<small>Editado por {{ acao.ultimo_editado_por_nome }} em {{ acao.dt_ultima_edicao|date:'d/m/Y H:i' }}</small>{% elif acao.ultimo_editado_por %}<small>Editado por {{ acao.ultimo_editado_por.id_voluntario.nome }} em {{ acao.dt_ultima_edicao|date:'d/m/Y H:i' }}</small>{% else %}<small>Sem edições</small>{% endif %}
+                    </td>
+                    <td class="table-actions">
+                        <a class="btn btn-outline btn-small" href="{% url 'acao_detalhe' acao.id_acao %}">Detalhes</a>
+                        {% if usuario.tipo == 'ADMIN' %}
+                        <a class="btn btn-outline btn-small" href="{% url 'editar_acao' acao.id_acao %}">Editar</a>
+                        <form method="post" action="{% url 'excluir_acao' acao.id_acao %}" onsubmit="return confirm('Excluir esta ação e todos os seus vínculos?');">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-danger btn-small">Excluir</button>
+                        </form>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state table-empty">
+        <h3>Nenhuma ação cadastrada</h3>
+        <p class="form-subtitle">Crie o primeiro mutirão ou registro de coleta voluntária.</p>
+    </div>
+    {% endif %}
+</section>
+{% endblock %}

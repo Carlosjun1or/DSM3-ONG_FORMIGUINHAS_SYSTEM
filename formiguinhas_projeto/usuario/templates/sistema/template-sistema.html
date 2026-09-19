@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block titulo %}Formiguinhas | Sistema{% endblock %}</title>
-    <link rel="stylesheet" href="{% static 'css/style.css' %}?v=3">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}?v=6">
     {% block estilos %}{% endblock %}
 </head>
 <body class="system-page">
@@ -30,6 +30,7 @@
                 {% if request.session.usuario_tipo == 'ADMIN' or request.session.usuario_tipo == 'COORDENADOR' %}
                 <a href="{% url 'equipes' %}" class="sidebar-link {% if '/equipe/' in request.path %}active{% endif %}">Controle de Equipes</a>
                 {% endif %}
+                <a href="{% url 'acoes' %}" class="sidebar-link {% if '/acao/' in request.path %}active{% endif %}">Controle de Ações</a>
                 <a href="{% url 'perfil' %}" class="sidebar-link {% if request.path == '/perfil/' %}active{% endif %}">Perfil</a>
             </nav>
 
@@ -66,6 +67,6 @@
             {% block conteudo %}{% endblock %}
         </main>
     </div>
-    <script src="{% static 'js/masks.js' %}"></script>
+    <script src="{% static 'js/masks.js' %}?v=8"></script>
 </body>
 </html>

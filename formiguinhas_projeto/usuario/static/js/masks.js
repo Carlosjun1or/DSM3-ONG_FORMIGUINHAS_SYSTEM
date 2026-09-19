@@ -1,4 +1,56 @@
 document.addEventListener('DOMContentLoaded', function () {
+    var scrollStorageKey = 'system-scroll-position';
+
+    function salvarPosicaoDaPagina() {
+        try {
+            sessionStorage.setItem(scrollStorageKey, JSON.stringify({
+                position: window.scrollY,
+                source: window.location.pathname,
+            }));
+        } catch (error) {
+            // A posição é apenas um aprimoramento; não deve impedir o envio.
+        }
+    }
+
+    function restaurarPosicaoDaPagina() {
+        try {
+            var savedScrollData = sessionStorage.getItem(scrollStorageKey);
+            if (savedScrollData === null) return;
+
+            var savedScroll = JSON.parse(savedScrollData);
+            var currentSource = window.location.pathname;
+            if (
+                !savedScroll
+                || typeof savedScroll.position !== 'number'
+                || savedScroll.source !== currentSource
+            ) {
+                sessionStorage.removeItem(scrollStorageKey);
+                return;
+            }
+
+            window.setTimeout(function () {
+                window.scrollTo(0, savedScroll.position);
+                sessionStorage.removeItem(scrollStorageKey);
+            }, 0);
+        } catch (error) {
+            // A posição é apenas um aprimoramento; não deve impedir a navegação.
+        }
+    }
+
+    document.addEventListener('submit', salvarPosicaoDaPagina, true);
+    document.addEventListener('change', function (event) {
+        if (event.target.closest('form')) salvarPosicaoDaPagina();
+    }, true);
+    document.addEventListener('click', function (event) {
+        if (event.target.closest('form button[type="submit"], form input[type="submit"]')) {
+            salvarPosicaoDaPagina();
+        }
+    }, true);
+
+    window.addEventListener('beforeunload', salvarPosicaoDaPagina);
+    window.addEventListener('pageshow', restaurarPosicaoDaPagina);
+    restaurarPosicaoDaPagina();
+
     document.querySelectorAll('.telefone-input').forEach(function (input) {
         input.addEventListener('input', function () {
             var digits = input.value.replace(/\D/g, '').slice(0, 11);
@@ -37,6 +89,41 @@ document.addEventListener('DOMContentLoaded', function () {
                 input.value = dateParts[3] + '-' + dateParts[2] + '-' + dateParts[1];
             }
         });
+    });
+
+    document.querySelectorAll('.acao-data-input').forEach(function (input) {
+        function aplicarMascaraData() {
+            var digits = input.value.replace(/\D/g, '').slice(0, 8);
+            input.value = digits
+                .replace(/^(\d{2})(\d)/, '$1/$2')
+                .replace(/^(\d{2}\/\d{2})(\d)/, '$1/$2');
+        }
+
+        if (/^\d{4}-\d{2}-\d{2}$/.test(input.value)) {
+            var parts = input.value.split('-');
+            input.value = parts[2] + '/' + parts[1] + '/' + parts[0];
+        }
+
+        input.addEventListener('input', aplicarMascaraData);
+        aplicarMascaraData();
+
+        if (input.form) input.form.addEventListener('submit', function () {
+            var dateParts = input.value.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+            if (dateParts) {
+                input.value = dateParts[3] + '-' + dateParts[2] + '-' + dateParts[1];
+            }
+        });
+    });
+
+    document.querySelectorAll('.acao-horario-input').forEach(function (input) {
+        function aplicarMascaraHorario() {
+            var digits = input.value.replace(/\D/g, '').slice(0, 4);
+            input.value = digits.replace(/^(\d{2})(\d)/, '$1:$2');
+        }
+
+        input.addEventListener('input', aplicarMascaraHorario);
+        input.addEventListener('change', aplicarMascaraHorario);
+        aplicarMascaraHorario();
     });
 
     document.querySelectorAll('.email-input').forEach(function (input) {

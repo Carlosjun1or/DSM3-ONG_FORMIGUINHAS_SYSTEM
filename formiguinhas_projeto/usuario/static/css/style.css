@@ -607,6 +607,172 @@ main {
     box-shadow: 0 8px 22px rgba(18, 58, 45, 0.04);
 }
 
+.action-detail-section {
+    padding: 26px 30px 30px;
+    border: 1px solid #e1ebe4;
+    border-radius: 20px;
+    box-shadow: 0 10px 26px rgba(18, 58, 45, 0.05);
+}
+
+.action-detail-section .section-heading {
+    margin-bottom: 18px;
+}
+
+.action-detail-section .section-heading h2 {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.action-detail-section .table-wrap {
+    margin-top: 4px;
+}
+
+.action-teams-section {
+    background: #fbfdfb;
+}
+
+.action-participants-section {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.action-participants-section > .section-heading {
+    order: 0;
+}
+
+.action-participants-section > .member-form-panel {
+    order: 1;
+    margin: 0 0 20px;
+    padding: 22px;
+    background: linear-gradient(135deg, #eff9f2 0%, #f8fcf9 100%);
+    border: 1px solid #cfe6d7;
+    box-shadow: inset 4px 0 0 #2d8a68;
+}
+
+.action-participants-section > .action-participant-filters {
+    order: 2;
+    margin: 0 0 20px;
+}
+
+.action-participants-section > .table-wrap,
+.action-participants-section > .empty-state {
+    order: 3;
+}
+
+.action-participants-section .member-form-panel h3 {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+}
+
+.action-participants-section .member-form-panel h3::before {
+    content: '+';
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: #2d8a68;
+    color: #fff;
+    font-size: 1rem;
+}
+
+.action-participants-section .member-form-panel h3::after {
+    content: 'Inclua um voluntário manualmente nesta ação';
+    color: #5b6f68;
+    font-size: 0.8rem;
+    font-weight: 400;
+}
+
+.action-participants-section .data-table {
+    min-width: 820px;
+}
+
+.action-detail-hero {
+    margin-bottom: 28px;
+}
+
+.confirmation-modal[hidden] {
+    display: none;
+}
+
+.confirmation-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 20;
+    display: grid;
+    place-items: center;
+    padding: 20px;
+}
+
+.confirmation-modal-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(15, 42, 32, 0.52);
+    backdrop-filter: blur(3px);
+}
+
+.confirmation-modal-card {
+    position: relative;
+    width: min(100%, 440px);
+    padding: 30px;
+    border: 1px solid #d6e6dc;
+    border-radius: 20px;
+    background: #fff;
+    box-shadow: 0 24px 70px rgba(13, 52, 38, 0.24);
+    text-align: center;
+}
+
+.confirmation-modal-icon {
+    display: grid;
+    place-items: center;
+    width: 48px;
+    height: 48px;
+    margin: 0 auto 14px;
+    border-radius: 50%;
+    background: #e4f4e9;
+    color: #237654;
+    font-size: 1.5rem;
+    font-weight: 800;
+}
+
+.confirmation-modal-card h2 {
+    margin-bottom: 10px;
+    color: #173d31;
+    font-size: 1.3rem;
+}
+
+.confirmation-modal-card p {
+    color: #5b6f68;
+    line-height: 1.55;
+}
+
+.confirmation-modal-actions {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 24px;
+}
+
+@media (max-width: 720px) {
+    .action-detail-section {
+        padding: 20px;
+    }
+
+    .action-participants-section > .member-form-panel {
+        padding: 16px;
+    }
+
+    .action-participants-section .member-form-panel h3 {
+        align-items: flex-start;
+        flex-wrap: wrap;
+    }
+}
+
 @media (max-width: 720px) {
     .team-hero {
         display: grid;

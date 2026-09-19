@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'usuario',
     'praia',
     'equipe',
+    'acao',
     'site_institucional',
 ]
 
