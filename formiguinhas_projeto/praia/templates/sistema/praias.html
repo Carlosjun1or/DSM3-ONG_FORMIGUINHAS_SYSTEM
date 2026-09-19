@@ -29,7 +29,16 @@
     <form method="get" class="volunteer-filters">
         <div class="form-group">
             <label for="id_busca">Buscar</label>
-            <input id="id_busca" name="busca" type="search" value="{{ busca }}" class="form-control" placeholder="Nome ou cidade">
+            <input id="id_busca" name="busca" type="search" value="{{ busca }}" class="form-control" placeholder="Nome da praia">
+        </div>
+        <div class="form-group">
+            <label for="id_cidade">Cidade</label>
+            <select id="id_cidade" name="cidade" class="form-control">
+                <option value="">Todas as cidades</option>
+                {% for cidade_opcao in cidades %}
+                    <option value="{{ cidade_opcao }}" {% if cidade_selecionada|lower == cidade_opcao|lower %}selected{% endif %}>{{ cidade_opcao }}</option>
+                {% endfor %}
+            </select>
         </div>
         <div class="form-group">
             <label for="id_status">Status</label>
@@ -42,7 +51,7 @@
         </div>
         <div class="filter-actions">
             <button type="submit" class="btn btn-primary">Filtrar</button>
-            {% if busca or status_selecionado %}<a href="{% url 'praias' %}" class="form-link">Limpar</a>{% endif %}
+            {% if busca or status_selecionado or cidade_selecionada %}<a href="{% url 'praias' %}" class="form-link">Limpar</a>{% endif %}
         </div>
     </form>
 

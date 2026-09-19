@@ -1,12 +1,69 @@
-from django.db.models import Q
+import json
+
 from django.contrib import messages
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
+from urllib.error import HTTPError, URLError
+from urllib.parse import urlencode
+from urllib.request import Request, urlopen
 
 from usuario.models import Usuario
 
 from .forms import PraiaForm
 from .models import Praia
+
+
+def localizar_praia_view(request):
+    usuario = get_session_usuario(request)
+    if not usuario or usuario.tipo != 'ADMIN':
+        return JsonResponse({'erro': 'Não autorizado.'}, status=403)
+    if request.method != 'GET':
+        return JsonResponse({'erro': 'Método não permitido.'}, status=405)
+
+    nome = request.GET.get('nome', '').strip()
+    cidade = request.GET.get('cidade', '').strip()
+    if not nome or not cidade:
+        return JsonResponse(
+            {'erro': 'Informe o nome da praia e a cidade para localizar.'},
+            status=400,
+        )
+
+    parametros = urlencode({
+        'q': f'{nome}, {cidade}, Brasil',
+        'format': 'jsonv2',
+        'limit': 1,
+        'addressdetails': 0,
+    })
+    requisicao = Request(
+        f'https://nominatim.openstreetmap.org/search?{parametros}',
+        headers={
+            'User-Agent': 'Formiguinhas-ONG/1.0',
+            'Accept-Language': 'pt-BR',
+        },
+    )
+
+    try:
+        with urlopen(requisicao, timeout=10) as resposta:
+            resultados = resposta.read().decode('utf-8')
+    except (HTTPError, URLError, TimeoutError):
+        return JsonResponse(
+            {'erro': 'Não foi possível consultar o serviço de localização agora.'},
+            status=502,
+        )
+
+    try:
+        resultado = json.loads(resultados)
+        localizacao = resultado[0]
+        latitude = float(localizacao['lat'])
+        longitude = float(localizacao['lon'])
+    except (ValueError, KeyError, IndexError, TypeError, json.JSONDecodeError):
+        return JsonResponse(
+            {'erro': 'Localização não encontrada para essa praia e cidade.'},
+            status=404,
+        )
+
+    return JsonResponse({'latitude': latitude, 'longitude': longitude})
 
 
 def get_session_usuario(request):
@@ -28,23 +85,31 @@ def praias_view(request):
 
     busca = request.GET.get('busca', '').strip()
     status = request.GET.get('status', '').strip()
+    cidade = request.GET.get('cidade', '').strip()
     praias = Praia.objects.select_related(
         'cadastrado_por__id_voluntario',
         'ultimo_editado_por__id_voluntario',
     ).all().order_by('nome')
 
     if busca:
-        praias = praias.filter(
-            Q(nome__icontains=busca) | Q(cidade__icontains=busca)
-        )
+        praias = praias.filter(nome__icontains=busca)
     if status in dict(Praia.STATUS_CHOICES):
         praias = praias.filter(praia_ativa=status)
+    if cidade:
+        praias = praias.filter(cidade__iexact=cidade)
+
+    cidades_unicas = {}
+    for cidade_cadastrada in Praia.objects.values_list('cidade', flat=True).order_by('cidade'):
+        cidade_limpa = cidade_cadastrada.strip()
+        cidades_unicas.setdefault(cidade_limpa.casefold(), cidade_limpa)
 
     return render(request, 'sistema/praias.html', {
         'usuario': usuario,
         'praias': praias,
         'busca': busca,
         'status_selecionado': status,
+        'cidade_selecionada': cidade,
+        'cidades': sorted(cidades_unicas.values(), key=str.casefold),
         'status_choices': Praia.STATUS_CHOICES,
         'total_praias': Praia.objects.count(),
         'total_ativas': Praia.objects.filter(praia_ativa='ATIVA').count(),
@@ -72,7 +137,7 @@ def cadastrar_praia_view(request):
             if praia_duplicada:
                 messages.error(
                     request,
-                    'Praia não cadastrada. Já existe um cadastro igual com esse nome e cidade.'
+                    'Praia não cadastrada. Já existe uma praia cadastrada com esse nome e cidade.'
                 )
                 return render(request, 'sistema/cadastro-praia.html', {
                     'usuario': usuario,

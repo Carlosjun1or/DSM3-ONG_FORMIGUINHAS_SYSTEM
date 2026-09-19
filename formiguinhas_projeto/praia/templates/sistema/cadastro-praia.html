@@ -48,6 +48,19 @@
         font-weight: 600;
     }
 
+    .map-search {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-bottom: 12px;
+    }
+
+    .map-search-status {
+        color: #5b6f68;
+        font-size: 0.85rem;
+    }
+
     @media (max-width: 600px) {
         #praia-map {
             height: 300px;
@@ -90,6 +103,10 @@
             {% endfor %}
             <div class="map-picker">
                 <label for="praia-map">Localização da praia</label>
+                <div class="map-search">
+                    <button type="button" id="locate-praia" class="btn btn-outline">Localizar no mapa</button>
+                    <span id="locate-praia-status" class="map-search-status" role="status" aria-live="polite"></span>
+                </div>
                 <div id="praia-map" role="application" aria-label="Mapa para selecionar a localização da praia"></div>
                 <p class="map-help">Clique no mapa para marcar a praia. Arraste o marcador para ajustar a posição.</p>
                 <p class="map-coordinates">Coordenadas selecionadas: <strong id="selected-coordinates">Nenhuma localização selecionada</strong></p>
@@ -112,6 +129,10 @@
         const defaultCenter = [-23.967, -46.328];
         const latitudeInput = document.getElementById('id_latitude');
         const longitudeInput = document.getElementById('id_longitude');
+        const nomeInput = document.getElementById('id_nome');
+        const cidadeInput = document.getElementById('id_cidade');
+        const locateButton = document.getElementById('locate-praia');
+        const locateStatus = document.getElementById('locate-praia-status');
         const coordinatesLabel = document.getElementById('selected-coordinates');
         const initialLatitude = parseFloat(latitudeInput.value);
         const initialLongitude = parseFloat(longitudeInput.value);
@@ -149,6 +170,40 @@
         }
 
         map.on('click', (event) => placeMarker(event.latlng.lat, event.latlng.lng));
+
+        locateButton.addEventListener('click', async () => {
+            const nome = nomeInput.value.trim();
+            const cidade = cidadeInput.value.trim();
+
+            if (!nome || !cidade) {
+                locateStatus.textContent = 'Informe o nome da praia e a cidade.';
+                locateStatus.className = 'map-search-status map-error';
+                return;
+            }
+
+            locateButton.disabled = true;
+            locateStatus.textContent = 'Localizando...';
+            locateStatus.className = 'map-search-status';
+
+            try {
+                const parametros = new URLSearchParams({nome, cidade});
+                const resposta = await fetch(`{% url 'localizar_praia' %}?${parametros}`);
+                const dados = await resposta.json();
+
+                if (!resposta.ok) {
+                    throw new Error(dados.erro || 'Localização não encontrada.');
+                }
+
+                placeMarker(dados.latitude, dados.longitude);
+                map.setView([dados.latitude, dados.longitude], 15);
+                locateStatus.textContent = 'Localização encontrada. Ajuste o marcador se necessário.';
+            } catch (error) {
+                locateStatus.textContent = error.message || 'Localização não encontrada.';
+                locateStatus.className = 'map-search-status map-error';
+            } finally {
+                locateButton.disabled = false;
+            }
+        });
     })();
 </script>
 {% endblock %}

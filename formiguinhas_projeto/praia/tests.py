@@ -1,4 +1,5 @@
 from datetime import date
+from unittest.mock import MagicMock, patch
 
 from django import forms
 from django.core.exceptions import ValidationError
@@ -68,6 +69,46 @@ class PraiaViewsTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'sistema/praias.html')
+
+    def test_filtro_de_cidade_ignora_case_e_nao_repete_opcoes(self):
+        Praia.objects.create(
+            nome='Praia Central', cidade='Santos', latitude=-23.967,
+            longitude=-46.328, praia_ativa='ATIVA',
+        )
+        Praia.objects.create(
+            nome='Praia do Gonzaga', cidade='santos', latitude=-23.968,
+            longitude=-46.327, praia_ativa='ATIVA',
+        )
+        Praia.objects.create(
+            nome='Praia Grande', cidade='Praia Grande', latitude=-24.005,
+            longitude=-46.402, praia_ativa='ATIVA',
+        )
+
+        response = self.client.get(reverse('praias'), {'cidade': 'SANTOS'})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            list(response.context['praias'].values_list('nome', flat=True)),
+            ['Praia Central', 'Praia do Gonzaga'],
+        )
+        self.assertEqual(response.context['cidades'], ['Praia Grande', 'Santos'])
+
+    def test_busca_livre_consulta_apenas_nome_da_praia(self):
+        Praia.objects.create(
+            nome='Praia Central', cidade='Santos', latitude=-23.967,
+            longitude=-46.328, praia_ativa='ATIVA',
+        )
+        Praia.objects.create(
+            nome='Praia do Gonzaga', cidade='Central', latitude=-23.968,
+            longitude=-46.327, praia_ativa='ATIVA',
+        )
+
+        response = self.client.get(reverse('praias'), {'busca': 'Central'})
+
+        self.assertEqual(
+            list(response.context['praias'].values_list('nome', flat=True)),
+            ['Praia Central'],
+        )
 
     def test_usuario_autenticado_cadastra_praia(self):
         response = self.client.post(reverse('cadastrar_praia'), {
@@ -234,3 +275,48 @@ class PraiaViewsTests(TestCase):
 
         self.assertFalse(form.is_valid())
         self.assertIn('latitude', form.errors)
+
+    def test_localizacao_exige_nome_e_cidade(self):
+        response = self.client.get(reverse('localizar_praia'))
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(
+            response.json()['erro'],
+            'Informe o nome da praia e a cidade para localizar.',
+        )
+
+    @patch('praia.views.urlopen')
+    def test_localizacao_retorna_coordenadas_do_nominatim(self, mock_urlopen):
+        resposta_nominatim = MagicMock()
+        resposta_nominatim.read.return_value = b'[{"lat": "-23.967", "lon": "-46.328", "display_name": "interno"}]'
+        mock_urlopen.return_value.__enter__.return_value = resposta_nominatim
+
+        response = self.client.get(reverse('localizar_praia'), {
+            'nome': 'Praia Central',
+            'cidade': 'Santos',
+        })
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), {
+            'latitude': -23.967,
+            'longitude': -46.328,
+        })
+        requisicao = mock_urlopen.call_args.args[0]
+        self.assertEqual(requisicao.headers['User-agent'], 'Formiguinhas-ONG/1.0')
+
+    @patch('praia.views.urlopen')
+    def test_localizacao_informa_quando_nominatim_nao_encontra_resultado(self, mock_urlopen):
+        resposta_nominatim = MagicMock()
+        resposta_nominatim.read.return_value = b'[]'
+        mock_urlopen.return_value.__enter__.return_value = resposta_nominatim
+
+        response = self.client.get(reverse('localizar_praia'), {
+            'nome': 'Praia Inexistente',
+            'cidade': 'Santos',
+        })
+
+        self.assertEqual(response.status_code, 404)
+        self.assertEqual(
+            response.json()['erro'],
+            'Localização não encontrada para essa praia e cidade.',
+        )
