@@ -1,0 +1,52 @@
+{% extends 'sistema/template-sistema.html' %}
+
+{% block titulo %}Editar usuário | Sistema{% endblock %}
+{% block page_title %}Editar usuário{% endblock %}
+
+{% block conteudo %}
+<section class="form-shell">
+    <div class="form-card">
+        <h2>Editar usuário</h2>
+        <p class="form-subtitle">Atualize o acesso de {{ usuario_editado.id_voluntario.nome }}.</p>
+
+        <div class="user-edit-summary">
+            <strong>{{ usuario_editado.id_voluntario.nome }}</strong>
+            <span>{{ usuario_editado.id_voluntario.email }}</span>
+        </div>
+
+        <form method="post">
+            {% csrf_token %}
+            {% if voluntario_form.non_field_errors %}<div class="error-box">{{ voluntario_form.non_field_errors|join:', ' }}</div>{% endif %}
+            {% if form.non_field_errors %}<div class="error-box">{{ form.non_field_errors|join:', ' }}</div>{% endif %}
+
+            <div class="profile-section-title">Dados do voluntário</div>
+            <div class="form-grid">
+                {% for field in voluntario_form %}
+                <div class="form-group {% if field.name == 'endereco' %}full{% endif %}">
+                    {{ field.label_tag }}
+                    {{ field }}
+                    {% if field.name == 'dt_nascimento' %}<small class="field-hint">O responsável deve ter 18 anos ou mais.</small>{% endif %}
+                    {% if field.name == 'email' and email_bloqueado %}<small class="field-hint">Coordenadores não podem alterar o e-mail de quem possui usuário.</small>{% endif %}
+                    {% if field.name == 'status' and status_bloqueado %}<small class="field-hint">Somente um administrador pode alterar o status deste coordenador.</small>{% endif %}
+                    {% if field.errors %}<small class="error-msg">{{ field.errors|join:', ' }}</small>{% endif %}
+                </div>
+                {% endfor %}
+            </div>
+
+            <div class="profile-section-title user-access-title">Tipo de acesso</div>
+            {% for field in form %}
+            <div class="form-group">
+                {{ field.label_tag }}
+                {{ field }}
+                {% if field.errors %}<small class="error-msg">{{ field.errors|join:', ' }}</small>{% endif %}
+            </div>
+            {% endfor %}
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Salvar alterações</button>
+                <a href="{% url 'usuarios' %}" class="btn btn-outline">Cancelar</a>
+            </div>
+        </form>
+    </div>
+</section>
+{% endblock %}

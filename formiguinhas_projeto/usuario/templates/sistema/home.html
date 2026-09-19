@@ -1,0 +1,39 @@
+{% extends 'sistema/template-sistema.html' %}
+
+{% block titulo %}Home | Sistema{% endblock %}
+{% block page_title %}Home{% endblock %}
+
+{% block conteudo %}
+<section class="card-grid">
+    <article class="card">
+        <h3>Voluntários ativos</h3>
+        <div class="metric">24</div>
+    </article>
+    <article class="card">
+        <h3>Atividades hoje</h3>
+        <div class="metric">08</div>
+    </article>
+    <article class="card">
+        <h3>Doações</h3>
+        <div class="metric">R$ 3.2k</div>
+    </article>
+</section>
+
+<section class="card">
+    <h3>Próximas ações</h3>
+    <ul class="card-list">
+        <li>
+            <span>Reunião de equipe</span>
+            <strong>09:00</strong>
+        </li>
+        <li>
+            <span>Visita ao projeto</span>
+            <strong>14:30</strong>
+        </li>
+        <li>
+            <span>Distribuição de mantimentos</span>
+            <strong>17:00</strong>
+        </li>
+    </ul>
+</section>
+{% endblock %}

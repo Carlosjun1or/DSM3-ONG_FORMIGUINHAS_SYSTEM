@@ -1,0 +1,56 @@
+{% extends 'sistema/template-sistema.html' %}
+
+{% block titulo %}Cadastro de voluntário | Sistema{% endblock %}
+{% block page_title %}Cadastro de voluntário{% endblock %}
+
+{% block conteudo %}
+<section class="form-shell">
+    <div class="form-card">
+        <h2>Cadastro de voluntário</h2>
+        <p class="form-subtitle">Cadastre primeiro o voluntário, sem criar usuário ainda.</p>
+
+        <form method="post">
+            {% csrf_token %}
+            {% if form.non_field_errors %}
+                <div class="error-box">{{ form.non_field_errors|join:', ' }}</div>
+            {% endif %}
+            <div class="form-grid">
+                <div class="form-group">
+                    {{ form.nome.label_tag }}
+                    {{ form.nome }}
+                    {% if form.nome.errors %}<small class="error-msg">{{ form.nome.errors|join:', ' }}</small>{% endif %}
+                </div>
+                <div class="form-group">
+                    {{ form.telefone.label_tag }}
+                    {{ form.telefone }}
+                    {% if form.telefone.errors %}<small class="error-msg">{{ form.telefone.errors|join:', ' }}</small>{% endif %}
+                </div>
+                <div class="form-group full">
+                    {{ form.endereco.label_tag }}
+                    {{ form.endereco }}
+                    {% if form.endereco.errors %}<small class="error-msg">{{ form.endereco.errors|join:', ' }}</small>{% endif %}
+                </div>
+                <div class="form-group">
+                    {{ form.dt_nascimento.label_tag }}
+                    {{ form.dt_nascimento }}
+                    <small class="field-hint">O responsável deve ter 18 anos ou mais.</small>
+                    {% if form.dt_nascimento.errors %}<small class="error-msg">{{ form.dt_nascimento.errors|join:', ' }}</small>{% endif %}
+                </div>
+                <div class="form-group">
+                    {{ form.email.label_tag }}
+                    {{ form.email }}
+                    {% if form.email.errors %}<small class="error-msg">{{ form.email.errors|join:', ' }}</small>{% endif %}
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Salvar voluntário</button>
+                <a href="{% url 'voluntarios' %}" class="btn btn-outline">Cancelar</a>
+                {% if request.session.usuario_tipo == 'ADMIN' %}
+                <a href="{% url 'cadastro_usuario' %}" class="btn btn-outline">Ir para cadastro de usuário</a>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+</section>
+{% endblock %}

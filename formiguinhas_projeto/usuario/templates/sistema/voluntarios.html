@@ -1,0 +1,110 @@
+{% extends 'sistema/template-sistema.html' %}
+
+{% block titulo %}Controle de Voluntários | Sistema{% endblock %}
+{% block page_title %}Controle de Voluntários{% endblock %}
+
+{% block conteudo %}
+<section class="card-grid volunteer-metrics">
+    <article class="card">
+        <h3>Total cadastrados</h3>
+        <div class="metric">{{ total_voluntarios }}</div>
+    </article>
+    <article class="card">
+        <h3>Voluntários ativos</h3>
+        <div class="metric">{{ total_ativos }}</div>
+    </article>
+</section>
+
+<section class="card volunteer-control">
+    <div class="section-heading">
+        <div>
+            <h2>Voluntários cadastrados</h2>
+            <p class="form-subtitle">Consulte os voluntários registrados na ONG.</p>
+        </div>
+        <a href="{% url 'cadastro_voluntario' %}" class="btn btn-primary">Novo voluntário</a>
+    </div>
+
+    <form method="get" class="volunteer-filters">
+        <div class="form-group">
+            <label for="id_busca">Buscar</label>
+            <input id="id_busca" name="busca" type="search" value="{{ busca }}" class="form-control" placeholder="Nome ou e-mail">
+        </div>
+        <div class="form-group">
+            <label for="id_status">Status</label>
+            <select id="id_status" name="status" class="form-control">
+                <option value="">Todos os status</option>
+                {% for valor, rotulo in status_choices %}
+                    <option value="{{ valor }}" {% if status_selecionado == valor %}selected{% endif %}>{{ rotulo }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="filter-actions">
+            <button type="submit" class="btn btn-primary">Filtrar</button>
+            {% if busca or status_selecionado %}<a href="{% url 'voluntarios' %}" class="form-link">Limpar</a>{% endif %}
+        </div>
+    </form>
+
+    {% if voluntarios %}
+    <div class="table-wrap">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Nome</th>
+                    <th>Nascimento</th>
+                    <th>Idade</th>
+                    <th>Endereço</th>
+                    <th>Telefone</th>
+                    <th>E-mail</th>
+                    <th>Status</th>
+                    <th>Possui usuário?</th>
+                    <th>Auditoria</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for voluntario in voluntarios %}
+                <tr>
+                    <td><a class="table-link" href="{% url 'editar_voluntario' voluntario.id_voluntario %}"><strong>{{ voluntario.nome }}</strong></a></td>
+                    <td class="date-cell">{{ voluntario.dt_nascimento|date:'d/m/Y' }}</td>
+                    <td>{{ voluntario.idade }} anos</td>
+                    <td>{{ voluntario.endereco }}</td>
+                    <td class="phone-cell">{{ voluntario.telefone }}</td>
+                    <td>{{ voluntario.email }}</td>
+                    <td>
+                        <form method="post" action="{% url 'atualizar_status_voluntario' voluntario.id_voluntario %}" class="inline-status-form">
+                            {% csrf_token %}
+                            <select name="status" class="status-select status-{{ voluntario.status|lower }}" aria-label="Status de {{ voluntario.nome }}" onchange="this.form.submit()">
+                                {% for valor, rotulo in status_choices %}
+                                    <option value="{{ valor }}" {% if voluntario.status == valor %}selected{% endif %} {% if voluntario.usuario and voluntario.usuario.tipo == 'ADMIN' and valor != 'ATIVO' %}disabled{% endif %} {% if usuario.tipo != 'ADMIN' and voluntario.usuario and voluntario.usuario.tipo == 'COORDENADOR' and valor != voluntario.status %}disabled{% endif %}>{{ rotulo }}</option>
+                                {% endfor %}
+                            </select>
+                        </form>
+                    </td>
+                    <td>{% if voluntario.usuario %}Sim{% else %}Não{% endif %}</td>
+                    <td class="audit-cell">
+                        <strong>{% if voluntario.cadastrado_por_nome %}Cadastrado por {{ voluntario.cadastrado_por_nome }}{% elif voluntario.cadastrado_por %}Cadastrado por {{ voluntario.cadastrado_por.id_voluntario.nome }}{% else %}Cadastro anterior{% endif %}</strong>
+                        {% if voluntario.cadastrado_por_nome or voluntario.cadastrado_por %}<small>{{ voluntario.dt_cadastro|date:'d/m/Y H:i' }}</small>{% endif %}
+                        {% if voluntario.ultimo_editado_por_nome %}<small>Editado por {{ voluntario.ultimo_editado_por_nome }} em {{ voluntario.dt_ultima_edicao|date:'d/m/Y H:i' }}</small>{% elif voluntario.ultimo_editado_por %}<small>Editado por {{ voluntario.ultimo_editado_por.id_voluntario.nome }} em {{ voluntario.dt_ultima_edicao|date:'d/m/Y H:i' }}</small>{% else %}<small>Sem edições</small>{% endif %}
+                    </td>
+                    <td class="table-actions">
+                        <a class="btn btn-outline btn-small" href="{% url 'editar_voluntario' voluntario.id_voluntario %}">Editar</a>
+                        {% if usuario.tipo == 'ADMIN' %}
+                        <form method="post" action="{% url 'excluir_voluntario' voluntario.id_voluntario %}" onsubmit="return confirm('Excluir este voluntário?');">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-danger btn-small">Excluir</button>
+                        </form>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+        <div class="empty-state table-empty">
+            <h3>Nenhum voluntário encontrado</h3>
+            <p class="form-subtitle">Tente ajustar os filtros ou cadastre um novo voluntário.</p>
+        </div>
+    {% endif %}
+</section>
+{% endblock %}
