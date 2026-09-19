@@ -29,8 +29,8 @@ class PraiaForm(forms.ModelForm):
             'longitude': forms.HiddenInput(attrs={
                 'id': 'id_longitude',
             }),
-            'praia_ativa': forms.CheckboxInput(attrs={
-                'class': 'form-checkbox',
+            'praia_ativa': forms.Select(attrs={
+                'class': 'form-control',
             }),
             'descricao': forms.Textarea(attrs={
                 'class': 'form-control',
@@ -39,5 +39,5 @@ class PraiaForm(forms.ModelForm):
             }),
         }
         labels = {
-            'praia_ativa': 'Praia ativa para atuação da ONG',
+            'praia_ativa': 'Status',
         }

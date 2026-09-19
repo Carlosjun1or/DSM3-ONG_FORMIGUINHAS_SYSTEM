@@ -495,12 +495,14 @@ main {
     outline: 2px solid rgba(22, 115, 89, 0.25);
 }
 
-.status-select.status-ativo {
+.status-select.status-ativo,
+.status-select.status-ativa {
     background: #e1f4e7;
     color: #1d7048;
 }
 
-.status-select.status-inativo {
+.status-select.status-inativo,
+.status-select.status-inativa {
     background: #fce5e3;
     color: #a6382e;
 }

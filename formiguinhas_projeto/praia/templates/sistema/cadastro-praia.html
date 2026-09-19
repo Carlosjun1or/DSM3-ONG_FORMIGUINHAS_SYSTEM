@@ -66,7 +66,7 @@
         <a href="{% url 'praias' %}" class="btn btn-outline">Voltar</a>
     </div>
 
-    <form method="post" novalidate>
+    <form method="post" novalidate action="{% if modo_edicao %}{% url 'editar_praia' praia.id_praia %}{% else %}{% url 'cadastrar_praia' %}{% endif %}">
         {% csrf_token %}
         {% if form.non_field_errors %}
             <div class="alert-box">{{ form.non_field_errors }}</div>
@@ -75,12 +75,8 @@
             {% for field in form %}
             {% if field.name != 'latitude' and field.name != 'longitude' %}
                 <div class="form-group {% if field.name == 'descricao' %}form-group-full{% endif %}">
-                    {% if field.name == 'praia_ativa' %}
-                        <label class="checkbox-label">{{ field }} {{ field.label }}</label>
-                    {% else %}
-                        {{ field.label_tag }}
-                        {{ field }}
-                    {% endif %}
+                    {{ field.label_tag }}
+                    {{ field }}
                     {% for error in field.errors %}<small class="field-error">{{ error }}</small>{% endfor %}
                 </div>
                 {% endif %}
