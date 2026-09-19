@@ -1,0 +1,190 @@
+{% extends 'sistema/template-sistema.html' %}
+
+{% block titulo %}{{ equipe.nome }} | Sistema{% endblock %}
+{% block page_title %}{{ equipe.nome }}{% endblock %}
+
+{% block conteudo %}
+<section class="team-detail volunteer-control">
+    <div class="team-hero">
+        <div>
+            <span class="team-eyebrow">Equipe cadastrada</span>
+            <h2>{{ equipe.nome }}</h2>
+            <span class="team-location">{% if equipe.praia %}{{ equipe.praia.nome }} - {{ equipe.praia.cidade }}{% else %}Praia ainda não definida{% endif %}</span>
+            <p>{{ equipe.descricao|default:'Esta equipe ainda não possui uma descrição.' }}</p>
+        </div>
+        <div class="team-hero-side">
+            <span class="team-status team-status-{{ equipe.status|lower }}">{{ equipe.get_status_display }}</span>
+            <small>{{ membros|length }} membro{{ membros|length|pluralize }} ativo{{ membros|length|pluralize }}</small>
+        </div>
+    </div>
+
+    <div class="section-heading">
+        <div>
+            <h2>Membros ativos</h2>
+            <p class="form-subtitle">Consulte e gerencie as pessoas vinculadas a esta equipe.</p>
+        </div>
+        <div class="table-actions">
+            {% if pode_editar_equipe %}<a href="{% url 'editar_equipe' equipe.id_equipe %}" class="btn btn-outline">Editar equipe</a>{% endif %}
+            <a href="{% url 'equipes' %}" class="btn btn-outline">Voltar</a>
+        </div>
+    </div>
+
+    {% if pode_adicionar %}
+    <div class="member-form-panel">
+        <h3>Adicionar membro</h3>
+        <form method="post" action="{% url 'adicionar_membro_equipe' equipe.id_equipe %}">
+            {% csrf_token %}
+            {% if form.non_field_errors %}<div class="error-box">{{ form.non_field_errors|join:', ' }}</div>{% endif %}
+            <div class="form-grid">
+                {% for field in form %}
+                <div class="form-group">
+                    {{ field.label_tag }}
+                    {% if field.name == 'voluntario' %}
+                    <div class="searchable-select">
+                        <input type="search" class="form-control volunteer-search" placeholder="Pesquise por nome ou e-mail" autocomplete="off" aria-label="Pesquisar voluntário">
+                        {{ field }}
+                    </div>
+                    <small class="field-hint">Digite para filtrar e selecione o voluntário encontrado.</small>
+                    {% else %}
+                    {{ field }}
+                    {% endif %}
+                    {% if field.errors %}<small class="error-msg">{{ field.errors|join:', ' }}</small>{% endif %}
+                </div>
+                {% endfor %}
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Adicionar à equipe</button>
+            </div>
+        </form>
+    </div>
+    {% endif %}
+
+    <form method="get" class="volunteer-filters team-member-filters">
+        <div class="form-group">
+            <label for="id_busca_membro">Buscar membro</label>
+            <input id="id_busca_membro" name="busca_membro" type="search" value="{{ busca_membro }}" class="form-control" placeholder="Nome ou e-mail">
+        </div>
+        <div class="form-group">
+            <label for="id_papel_membro">Função</label>
+            <select id="id_papel_membro" name="papel_membro" class="form-control">
+                <option value="">Todas as funções</option>
+                {% for valor, rotulo in papel_choices %}
+                    <option value="{{ valor }}" {% if papel_membro == valor %}selected{% endif %}>{{ rotulo }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="filter-actions">
+            <button type="submit" class="btn btn-primary">Filtrar</button>
+            {% if busca_membro or papel_membro %}<a href="{% url 'equipe_detalhe' equipe.id_equipe %}" class="form-link">Limpar</a>{% endif %}
+        </div>
+    </form>
+
+    {% if membros %}
+    <div class="table-wrap">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Voluntário</th>
+                    <th>Função</th>
+                    <th>Entrada</th>
+                    <th>Auditoria</th>
+                    {% if pode_adicionar or pode_editar_equipe %}
+                    <th>Ações</th>
+                    {% endif %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for membro in membros %}
+                <tr>
+                    <td><strong>{{ membro.voluntario.nome }}</strong><br><small>{{ membro.voluntario.email }}</small></td>
+                    <td>
+                        {% if usuario.tipo == 'ADMIN' %}
+                        <form method="post" action="{% url 'atualizar_funcao_membro' equipe.id_equipe membro.id_equipe_membro %}" class="inline-status-form">
+                            {% csrf_token %}
+                            <select name="papel" class="status-select funcao-select funcao-{{ membro.papel|lower }}" aria-label="Função de {{ membro.voluntario.nome }}" onchange="this.form.submit()">
+                                {% for valor, rotulo in membro.PAPEL_CHOICES %}
+                                    <option value="{{ valor }}" {% if membro.papel == valor %}selected{% endif %}>{{ rotulo }}</option>
+                                {% endfor %}
+                            </select>
+                        </form>
+                        {% else %}
+                            {{ membro.get_papel_display }}
+                        {% endif %}
+                    </td>
+                    <td>{{ membro.dt_entrada|date:'d/m/Y H:i' }}</td>
+                    <td class="audit-cell">
+                        <strong>{% if membro.cadastrado_por_nome %}Adicionado por {{ membro.cadastrado_por_nome }}{% elif membro.cadastrado_por %}Adicionado por {{ membro.cadastrado_por.id_voluntario.nome }}{% else %}Cadastro anterior{% endif %}</strong>
+                        <small>{{ membro.dt_cadastro|date:'d/m/Y H:i' }}</small>
+                        {% if membro.ultimo_editado_por_nome %}<small>Editado por {{ membro.ultimo_editado_por_nome }} em {{ membro.dt_ultima_edicao|date:'d/m/Y H:i' }}</small>{% elif membro.ultimo_editado_por %}<small>Editado por {{ membro.ultimo_editado_por.id_voluntario.nome }} em {{ membro.dt_ultima_edicao|date:'d/m/Y H:i' }}</small>{% else %}<small>Sem edições</small>{% endif %}
+                    </td>
+                    {% if pode_adicionar or pode_editar_equipe %}
+                    <td class="table-actions">
+                        {% if pode_adicionar %}
+                        <form method="post" action="{% url 'remover_membro_equipe' equipe.id_equipe membro.id_equipe_membro %}" onsubmit="return confirm('Remover este membro da equipe?');">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-danger btn-small">Remover</button>
+                        </form>
+                        {% else %}
+                        <span class="field-hint">Somente leitura</span>
+                        {% endif %}
+                    </td>
+                    {% endif %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+        <div class="empty-state table-empty">
+            <h3>Nenhum membro ativo</h3>
+            <p class="form-subtitle">Adicione voluntários ou coordenadores a esta equipe.</p>
+        </div>
+    {% endif %}
+</section>
+
+{% if historico_membros %}
+<section class="card volunteer-control team-history-section">
+    <div class="section-heading">
+        <div>
+            <h2>Histórico de membros <span class="section-count">{{ historico_membros|length }}</span></h2>
+            <p class="form-subtitle">Pessoas que já fizeram parte desta equipe.</p>
+        </div>
+    </div>
+    <div class="table-wrap">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Voluntário</th>
+                    <th>Função</th>
+                    <th>Entrada</th>
+                    <th>Saída</th>
+                    <th>Registrado por</th>
+                    {% if usuario.tipo == 'ADMIN' %}<th>Ações</th>{% endif %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for membro in historico_membros %}
+                <tr>
+                    <td><strong>{{ membro.voluntario.nome }}</strong><br><small>{{ membro.voluntario.email }}</small></td>
+                    <td>{{ membro.get_papel_display }}</td>
+                    <td>{{ membro.dt_entrada|date:'d/m/Y H:i' }}</td>
+                    <td>{{ membro.dt_saida|date:'d/m/Y H:i' }}</td>
+                    <td class="audit-cell">
+                        {% if membro.ultimo_editado_por_nome %}{{ membro.ultimo_editado_por_nome }}{% elif membro.ultimo_editado_por %}{{ membro.ultimo_editado_por.id_voluntario.nome }}{% else %}-{% endif %}
+                    </td>
+                    {% if usuario.tipo == 'ADMIN' %}
+                    <td class="table-actions">
+                        <form method="post" action="{% url 'excluir_historico_membro' equipe.id_equipe membro.id_equipe_membro %}" onsubmit="return confirm('Excluir este registro do histórico? Esta ação não pode ser desfeita.');">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-danger btn-small">Excluir</button>
+                        </form>
+                    </td>
+                    {% endif %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endif %}
+{% endblock %}

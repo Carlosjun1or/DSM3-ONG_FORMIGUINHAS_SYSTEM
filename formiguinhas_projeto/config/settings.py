@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'usuario',
     'praia',
+    'equipe',
     'site_institucional',
 ]
 

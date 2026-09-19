@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block titulo %}Formiguinhas | Sistema{% endblock %}</title>
-    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}?v=3">
     {% block estilos %}{% endblock %}
 </head>
 <body class="system-page">
@@ -23,9 +23,12 @@
             <nav class="sidebar-nav" aria-label="Menu do sistema">
                 <a href="{% url 'home' %}" class="sidebar-link {% if request.path == '/home/' %}active{% endif %}">Home</a>
                 <a href="{% url 'voluntarios' %}" class="sidebar-link {% if request.path == '/voluntarios/' %}active{% endif %}">Controle de Voluntários</a>
-                <a href="{% url 'praias' %}" class="sidebar-link {% if '/praia/' in request.path %}active{% endif %}">Controle de Praias</a>
                 {% if request.session.usuario_tipo == 'ADMIN' %}
                 <a href="{% url 'usuarios' %}" class="sidebar-link {% if request.path == '/usuario/usuarios/' %}active{% endif %}">Controle de Usuários</a>
+                {% endif %}
+                <a href="{% url 'praias' %}" class="sidebar-link {% if '/praia/' in request.path %}active{% endif %}">Controle de Praias</a>
+                {% if request.session.usuario_tipo == 'ADMIN' or request.session.usuario_tipo == 'COORDENADOR' %}
+                <a href="{% url 'equipes' %}" class="sidebar-link {% if '/equipe/' in request.path %}active{% endif %}">Controle de Equipes</a>
                 {% endif %}
                 <a href="{% url 'perfil' %}" class="sidebar-link {% if request.path == '/perfil/' %}active{% endif %}">Perfil</a>
             </nav>
@@ -53,6 +56,11 @@
 
             {% if mensagem %}
                 <div class="alert-box">{{ mensagem }}</div>
+            {% endif %}
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert-box">{{ message }}</div>
+                {% endfor %}
             {% endif %}
 
             {% block conteudo %}{% endblock %}

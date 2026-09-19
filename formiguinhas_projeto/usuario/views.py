@@ -159,6 +159,10 @@ def editar_voluntario_view(request, voluntario_id):
                 voluntario.ultimo_editado_por_tipo = usuario.tipo
                 voluntario.dt_ultima_edicao = timezone.now()
                 voluntario.save()
+                if voluntario.status == 'INATIVO':
+                    from equipe.services import encerrar_vinculos_voluntario
+
+                    encerrar_vinculos_voluntario(voluntario, usuario)
                 return redirect('voluntarios')
     else:
         form = VoluntarioEdicaoForm(instance=voluntario)
@@ -212,6 +216,10 @@ def atualizar_status_voluntario_view(request, voluntario_id):
                 'ultimo_editado_por_tipo',
                 'dt_ultima_edicao',
             ])
+            if voluntario.status == 'INATIVO':
+                from equipe.services import encerrar_vinculos_voluntario
+
+                encerrar_vinculos_voluntario(voluntario, usuario)
 
     return redirect('voluntarios')
 
@@ -347,6 +355,10 @@ def editar_usuario_view(request, usuario_id):
                 voluntario.ultimo_editado_por_tipo = usuario_logado.tipo
                 voluntario.dt_ultima_edicao = timezone.now()
                 voluntario.save()
+                if voluntario.status == 'INATIVO':
+                    from equipe.services import encerrar_vinculos_voluntario
+
+                    encerrar_vinculos_voluntario(voluntario, usuario_logado)
                 usuario_editado.tipo = form.cleaned_data['tipo']
                 usuario_editado.ultimo_editado_por = usuario_logado
                 usuario_editado.ultimo_editado_por_nome = usuario_logado.id_voluntario.nome
