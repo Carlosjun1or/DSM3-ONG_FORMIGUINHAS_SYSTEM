@@ -17,7 +17,11 @@
             <div class="form-grid">
                 <div class="form-group full">
                     {{ form.voluntario.label_tag }}
-                    {{ form.voluntario }}
+                    <div class="searchable-select">
+                        <input type="search" class="form-control volunteer-search" placeholder="Pesquise por nome ou e-mail" autocomplete="off" aria-label="Pesquisar voluntário">
+                        {{ form.voluntario }}
+                    </div>
+                    <small class="field-hint">Digite para filtrar e o voluntário encontrado aparecerá no campo.</small>
                     {% if form.voluntario.errors %}
                         <small class="error-msg">{{ form.voluntario.errors|join:', ' }}</small>
                     {% endif %}
@@ -29,14 +33,20 @@
                 </div>
                 <div class="form-group">
                     {{ form.senha.label_tag }}
-                    {{ form.senha }}
+                    <div class="password-field">
+                        {{ form.senha }}
+                        <button type="button" class="password-toggle" aria-label="Mostrar senha" aria-pressed="false">Mostrar</button>
+                    </div>
                     {% if form.senha.errors %}
                         <small class="error-msg">{{ form.senha.errors|join:', ' }}</small>
                     {% endif %}
                 </div>
                 <div class="form-group">
                     {{ form.confirmar_senha.label_tag }}
-                    {{ form.confirmar_senha }}
+                    <div class="password-field">
+                        {{ form.confirmar_senha }}
+                        <button type="button" class="password-toggle" aria-label="Mostrar senha" aria-pressed="false">Mostrar</button>
+                    </div>
                     {% if form.confirmar_senha.errors %}
                         <small class="error-msg">{{ form.confirmar_senha.errors|join:', ' }}</small>
                     {% endif %}
@@ -45,7 +55,8 @@
 
             <div class="form-actions">
                 <button type="submit" class="btn btn-primary">Salvar usuário</button>
-                <a href="{% url 'cadastro_voluntario' %}" class="form-link">Voltar para voluntário</a>
+                <a href="{% url 'usuarios' %}" class="btn btn-outline">Cancelar</a>
+                <a href="{% url 'voluntarios' %}" class="btn btn-outline">Voltar para voluntários</a>
             </div>
         </form>
     </div>

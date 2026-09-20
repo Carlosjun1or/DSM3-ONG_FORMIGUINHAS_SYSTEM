@@ -1,0 +1,31 @@
+{% extends 'sistema/template-sistema.html' %}
+
+{% block titulo %}{% if modo == 'cadastro' %}Cadastro de ação{% else %}Editar ação{% endif %} | Sistema{% endblock %}
+{% block page_title %}{% if modo == 'cadastro' %}Cadastro de ação{% else %}Editar ação{% endif %}{% endblock %}
+
+{% block conteudo %}
+<section class="form-shell">
+    <div class="form-card">
+        <h2>{% if modo == 'cadastro' %}Cadastro de ação{% else %}Editar ação{% endif %}</h2>
+        <p class="form-subtitle">Cadastre o mutirão ou a coleta voluntária, incluindo a praia e o ponto específico de encontro na orla.</p>
+
+        <form method="post">
+            {% csrf_token %}
+            {% if form.non_field_errors %}<div class="error-box">{{ form.non_field_errors|join:', ' }}</div>{% endif %}
+            <div class="form-grid">
+                {% for field in form %}
+                <div class="form-group {% if field.name == 'descricao' %}full{% endif %}">
+                    {{ field.label_tag }}
+                    {{ field }}
+                    {% if field.errors %}<small class="error-msg">{{ field.errors|join:', ' }}</small>{% endif %}
+                </div>
+                {% endfor %}
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Salvar ação</button>
+                <a href="{% if acao %}{% url 'acao_detalhe' acao.id_acao %}{% else %}{% url 'acoes' %}{% endif %}" class="btn btn-outline">Cancelar</a>
+            </div>
+        </form>
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,481 @@
+{% extends 'sistema/template-sistema.html' %}
+
+{% block titulo %}{{ acao.get_tipo_display }} | Sistema{% endblock %}
+{% block page_title %}{{ acao.get_tipo_display }}{% endblock %}
+
+{% block conteudo %}
+<section class="team-detail volunteer-control action-detail-hero">
+    <div class="team-hero">
+        <div>
+            <span class="team-eyebrow">Ação cadastrada</span>
+            <h2>{{ acao.get_tipo_display }}</h2>
+            <a class="team-location table-link" href="{% url 'praias' %}?praia={{ acao.praia.id_praia }}">{{ acao.praia.nome }} · {{ acao.praia.cidade }}</a>
+            <p>{{ acao.descricao|default:'Esta ação ainda não possui uma descrição detalhada.' }}</p>
+        </div>
+        <div class="team-hero-side">
+            <span class="team-status team-status-{{ acao.status|lower }}">{{ acao.get_status_display }}</span>
+            <small>{{ participantes|length }} participante{{ participantes|length|pluralize }}</small>
+        </div>
+    </div>
+
+    <div class="section-heading">
+        <div>
+            <h2>Detalhes da ação</h2>
+            <p class="form-subtitle">Data, local, status e informações da atividade.</p>
+        </div>
+        <div class="table-actions">
+            {% if usuario.tipo == 'ADMIN' %}
+            <a href="{% url 'editar_acao' acao.id_acao %}" class="btn btn-outline">Editar ação</a>
+            {% endif %}
+            <a href="{% url 'acoes' %}" class="btn btn-outline">Voltar</a>
+        </div>
+    </div>
+
+    <div class="form-card detail-summary">
+        <div class="form-grid">
+            <div class="form-group">
+                <label>Tipo</label>
+                <div class="field-value">{{ acao.get_tipo_display }}</div>
+            </div>
+            <div class="form-group">
+                <label>Praia</label>
+                <div class="field-value">
+                    <a class="table-link" href="{% url 'praias' %}?praia={{ acao.praia.id_praia }}">{{ acao.praia.nome }}</a>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Data</label>
+                <div class="field-value">{{ acao.data|date:'d/m/Y' }}</div>
+            </div>
+            <div class="form-group">
+                <label>Horário</label>
+                <div class="field-value">{% if acao.horario %}{{ acao.horario|time:'H:i' }}{% else %}-{% endif %}</div>
+            </div>
+            <div class="form-group full">
+                <label>Local</label>
+                <div class="field-value">{{ acao.local|default:'-' }}</div>
+            </div>
+            <div class="form-group full">
+                <label>Descrição</label>
+                <div class="field-value">{{ acao.descricao|default:'Sem descrição.' }}</div>
+            </div>
+            <div class="form-group">
+                <label>Cadastrado por</label>
+                <div class="field-value">
+                    {% if acao.cadastrado_por_nome %}{{ acao.cadastrado_por_nome }}{% elif acao.cadastrado_por %}{{ acao.cadastrado_por.id_voluntario.nome }}{% else %}Cadastro anterior{% endif %}
+                    {% if acao.dt_cadastro %}<br><small>{{ acao.dt_cadastro|date:'d/m/Y H:i' }}</small>{% endif %}
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Última edição</label>
+                <div class="field-value">
+                    {% if acao.ultimo_editado_por_nome %}{{ acao.ultimo_editado_por_nome }}{% elif acao.ultimo_editado_por %}{{ acao.ultimo_editado_por.id_voluntario.nome }}{% else %}Sem edições{% endif %}
+                    {% if acao.dt_ultima_edicao %}<br><small>{{ acao.dt_ultima_edicao|date:'d/m/Y H:i' }}</small>{% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="card volunteer-control action-detail-section">
+    <div class="section-heading">
+        <div>
+            <h2>Imagens da ação <span class="section-count">{{ imagens_acao|length }}</span></h2>
+            <p class="form-subtitle">Adicione registros fotográficos da atividade. Até 10 imagens de 5 MB por envio.</p>
+        </div>
+    </div>
+    {% if usuario.tipo == 'ADMIN' %}
+    <div class="member-form-panel">
+        <h3>Adicionar imagens</h3>
+        <form method="post" action="{% url 'adicionar_imagens_acao' acao.id_acao %}" enctype="multipart/form-data">
+            {% csrf_token %}
+            {% if imagem_form.non_field_errors %}<div class="error-box">{{ imagem_form.non_field_errors|join:', ' }}</div>{% endif %}
+            <div class="form-grid">
+                <div class="form-group full">
+                    {{ imagem_form.imagens.label_tag }}
+                    {{ imagem_form.imagens }}
+                    {% if imagem_form.imagens.errors %}<small class="error-msg">{{ imagem_form.imagens.errors|join:', ' }}</small>{% endif %}
+                </div>
+                <div class="form-group full">
+                    {{ imagem_form.descricao.label_tag }}
+                    {{ imagem_form.descricao }}
+                    {% if imagem_form.descricao.errors %}<small class="error-msg">{{ imagem_form.descricao.errors|join:', ' }}</small>{% endif %}
+                </div>
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Enviar imagens</button>
+            </div>
+        </form>
+    </div>
+    {% endif %}
+    {% if imagens_acao %}
+    <div class="action-image-grid">
+        {% for imagem in imagens_acao %}
+        <figure class="action-image-card">
+            <img src="{{ imagem.imagem.url }}" alt="{{ imagem.descricao|default:'Imagem da ação' }}" loading="lazy" decoding="async">
+            {% if imagem.descricao %}<figcaption>{{ imagem.descricao }}</figcaption>{% endif %}
+            {% if usuario.tipo == 'ADMIN' %}
+            <form method="post" action="{% url 'excluir_imagem_acao' acao.id_acao imagem.id_acao_imagem %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-outline btn-small">Excluir imagem</button>
+            </form>
+            {% endif %}
+        </figure>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state table-empty">
+        <h3>Nenhuma imagem cadastrada</h3>
+        <p class="form-subtitle">Adicione fotos para registrar esta ação.</p>
+    </div>
+    {% endif %}
+</section>
+
+<section class="card volunteer-control action-detail-section">
+    <div class="section-heading">
+        <div>
+            <h2>Responsáveis pela ação <span class="section-count">{{ responsaveis|length }}</span></h2>
+            <p class="form-subtitle">Voluntários responsáveis pela organização e acompanhamento desta atividade.</p>
+        </div>
+    </div>
+    {% if usuario.tipo == 'ADMIN' %}
+    <div class="member-form-panel">
+        <h3>Adicionar responsável</h3>
+        <form method="post" action="{% url 'adicionar_responsavel_acao' acao.id_acao %}">
+            {% csrf_token %}
+            <div class="form-grid">
+                <div class="form-group">
+                    {{ responsavel_form.voluntario.label_tag }}
+                    <div class="searchable-select">
+                        <input type="search" class="form-control volunteer-search" placeholder="Pesquise por nome ou e-mail" autocomplete="off" aria-label="Pesquisar responsável">
+                        {{ responsavel_form.voluntario }}
+                    </div>
+                    {% if responsavel_form.voluntario.errors %}<small class="error-msg">{{ responsavel_form.voluntario.errors|join:', ' }}</small>{% endif %}
+                </div>
+                <div class="form-group">
+                    {{ responsavel_form.papel.label_tag }}
+                    {{ responsavel_form.papel }}
+                    {% if responsavel_form.papel.errors %}<small class="error-msg">{{ responsavel_form.papel.errors|join:', ' }}</small>{% endif %}
+                </div>
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Adicionar responsável</button>
+            </div>
+        </form>
+    </div>
+    {% endif %}
+    <form method="get" class="volunteer-filters team-member-filters responsible-filters">
+        <div class="form-group">
+            <label for="id_busca_responsavel">Buscar responsável</label>
+            <input id="id_busca_responsavel" name="busca_responsavel" type="search" value="{{ busca_responsavel }}" class="form-control" placeholder="Nome ou e-mail">
+        </div>
+        <div class="filter-actions">
+            <button type="submit" class="btn btn-primary">Filtrar</button>
+            {% if busca_responsavel %}<a href="{% url 'acao_detalhe' acao.id_acao %}" class="form-link">Limpar</a>{% endif %}
+        </div>
+    </form>
+    {% if responsaveis %}
+    <div class="table-wrap action-responsibles-list">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Voluntário</th>
+                    <th>Papel</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for responsavel in responsaveis %}
+                <tr>
+                    <td>
+                        <a class="table-link" href="{% url 'voluntarios' %}?voluntario={{ responsavel.voluntario.id_voluntario }}">
+                            <strong>{{ responsavel.voluntario.nome }}</strong>
+                        </a>
+                        <br><small>{{ responsavel.voluntario.email }}</small>
+                    </td>
+                    <td>{{ responsavel.get_papel_display }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state table-empty">
+        <h3>Nenhum responsável cadastrado</h3>
+        <p class="form-subtitle">Edite a ação para adicionar os responsáveis.</p>
+    </div>
+    {% endif %}
+</section>
+
+{% if equipes or acao.tipo == 'MUTIRAO' %}
+<section class="card volunteer-control action-detail-section action-teams-section">
+    <div class="section-heading">
+        <div>
+            <h2>Equipes vinculadas</h2>
+            <p class="form-subtitle">Equipes associadas a este mutirão e à praia da ação.</p>
+        </div>
+    </div>
+
+    <form method="get" class="volunteer-filters team-member-filters">
+        <div class="form-group">
+            <label for="id_busca_equipe">Buscar equipe</label>
+            <input id="id_busca_equipe" name="busca_equipe" type="search" value="{{ busca_equipe }}" class="form-control" placeholder="Nome da equipe, praia ou cidade">
+        </div>
+        <div class="filter-actions">
+            <button type="submit" class="btn btn-primary">Filtrar</button>
+            {% if busca_equipe %}<a href="{% url 'acao_detalhe' acao.id_acao %}" class="form-link">Limpar</a>{% endif %}
+        </div>
+    </form>
+
+    {% if equipes %}
+    <div class="table-wrap action-teams-list">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Equipe</th>
+                    <th>Praia</th>
+                    <th>Status</th>
+                    <th>Auditoria da ação</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for vinculada in equipes %}
+                <tr>
+                    <td><a class="table-link" href="{% url 'equipe_detalhe' vinculada.equipe.id_equipe %}"><strong>{{ vinculada.equipe.nome }}</strong></a></td>
+                    <td>{{ vinculada.equipe.praia.nome }} - {{ vinculada.equipe.praia.cidade }}</td>
+                    <td>{{ vinculada.equipe.get_status_display }}</td>
+                    <td class="audit-cell">
+                        <strong>{% if acao.cadastrado_por_nome %}Ação cadastrada por {{ acao.cadastrado_por_nome }}{% elif acao.cadastrado_por %}Ação cadastrada por {{ acao.cadastrado_por.id_voluntario.nome }}{% else %}Cadastro anterior{% endif %}</strong>
+                        <small>{{ acao.dt_cadastro|date:'d/m/Y H:i' }}</small>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state table-empty">
+        <h3>Nenhuma equipe encontrada</h3>
+        <p class="form-subtitle">Esta ação não possui equipes vinculadas ou nenhum resultado corresponde ao filtro.</p>
+    </div>
+    {% endif %}
+</section>
+{% endif %}
+
+<section class="card volunteer-control action-detail-section action-participants-section">
+    <div class="section-heading">
+        <div>
+            <h2>Participantes <span class="section-count">{{ participantes|length }}</span></h2>
+            <p class="form-subtitle">Adicione voluntários e acompanhe confirmação e comparecimento.</p>
+        </div>
+    </div>
+
+    <form method="get" class="volunteer-filters team-member-filters action-participant-filters">
+        <div class="form-group">
+            <label for="id_busca_participante">Buscar participante</label>
+            <input id="id_busca_participante" name="busca_participante" type="search" value="{{ busca_participante }}" class="form-control" placeholder="Nome ou e-mail">
+        </div>
+        <div class="form-group">
+            <label for="id_status_participante">Status da participação</label>
+            <select id="id_status_participante" name="status_participante" class="form-control">
+                <option value="">Todos os status</option>
+                {% for valor, rotulo in status_participante_choices %}
+                    <option value="{{ valor }}" {% if status_participante == valor %}selected{% endif %}>{{ rotulo }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="filter-actions">
+            <button type="submit" class="btn btn-primary">Filtrar</button>
+            {% if busca_participante or status_participante %}<a href="{% url 'acao_detalhe' acao.id_acao %}" class="form-link">Limpar</a>{% endif %}
+        </div>
+    </form>
+
+    {% if usuario.tipo == 'ADMIN' %}
+    <div class="member-form-panel">
+        <h3>Adicionar participante</h3>
+        <form method="post" action="{% url 'adicionar_participante_acao' acao.id_acao %}">
+            {% csrf_token %}
+            <div class="form-grid">
+                {% for field in form %}
+                <div class="form-group {% if field.name == 'observacao' %}full{% endif %}">
+                    {{ field.label_tag }}
+                    {% if field.name == 'voluntario' %}
+                    <div class="searchable-select">
+                        <input type="search" class="form-control volunteer-search" placeholder="Pesquise pelo nome ou e-mail" autocomplete="off" aria-label="Pesquisar voluntário">
+                        {{ field }}
+                    </div>
+                    <small class="field-hint">Digite para localizar o voluntário e selecione o nome.</small>
+                    {% else %}
+                    {{ field }}
+                    {% endif %}
+                    {% if field.errors %}<small class="error-msg">{{ field.errors|join:', ' }}</small>{% endif %}
+                </div>
+                {% endfor %}
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Adicionar participante</button>
+            </div>
+        </form>
+    </div>
+    {% endif %}
+
+    {% if participantes %}
+    <div class="table-wrap action-participants-list">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Voluntário</th>
+                    <th>Status</th>
+                    <th>Compareceu</th>
+                    <th>Confirmação</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for participante in participantes %}
+                <tr>
+                    <td>
+                        <a class="table-link" href="{% url 'voluntarios' %}?voluntario={{ participante.voluntario.id_voluntario }}">
+                            <strong>{{ participante.voluntario.nome }}</strong>
+                        </a>
+                        <br><small>{{ participante.voluntario.email }}</small>
+                    </td>
+                    <td>
+                        {% if usuario.tipo == 'ADMIN' %}
+                        <form method="post" action="{% url 'confirmar_participacao_acao' acao.id_acao participante.id_acao_participante %}" class="inline-status-form">
+                            {% csrf_token %}
+                            <select name="status" class="status-select" onchange="this.form.submit()">
+                                {% for valor, rotulo in participante.STATUS_CHOICES %}
+                                    <option value="{{ valor }}" {% if participante.status == valor %}selected{% endif %}>{{ rotulo }}</option>
+                                {% endfor %}
+                            </select>
+                        </form>
+                        {% else %}
+                        {{ participante.get_status_display }}
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if usuario.tipo == 'ADMIN' %}
+                        <form method="post" action="{% url 'registrar_comparecimento_acao' acao.id_acao participante.id_acao_participante %}" class="inline-status-form">
+                            {% csrf_token %}
+                            <label class="checkbox-inline">
+                                <input type="checkbox" name="compareceu" {% if participante.compareceu %}checked{% endif %} onchange="this.form.submit()">
+                                Presente
+                            </label>
+                        </form>
+                        {% else %}
+                        {% if participante.compareceu %}Sim{% else %}Não{% endif %}
+                        {% endif %}
+                    </td>
+                    <td>{{ participante.dt_confirmacao|date:'d/m/Y H:i'|default:'- ' }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state table-empty">
+        <h3>Nenhum participante vinculado</h3>
+        <p class="form-subtitle">Para mutirões, o sistema inclui automaticamente os voluntários das equipes da praia.</p>
+    </div>
+    {% endif %}
+</section>
+
+{% if historico_participantes %}
+<section class="card volunteer-control team-history-section">
+    <div class="section-heading">
+        <div>
+            <h2>Histórico de participantes</h2>
+            <p class="form-subtitle">Pessoas que recusaram ou não compareceram à ação.</p>
+        </div>
+    </div>
+    <div class="table-wrap">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Voluntário</th>
+                    <th>Resultado</th>
+                    <th>Movimentado em</th>
+                    <th>Auditoria</th>
+                    <th>Observação</th>
+                    <th>Ação</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for historico in historico_participantes %}
+                <tr>
+                    <td>
+                        <a class="table-link" href="{% url 'voluntarios' %}?voluntario={{ historico.voluntario.id_voluntario }}">
+                            <strong>{{ historico.voluntario.nome }}</strong>
+                        </a>
+                        <br><small>{{ historico.voluntario.email }}</small>
+                    </td>
+                    <td>{{ historico.get_status_display }}</td>
+                    <td>{{ historico.dt_movimentacao|date:'d/m/Y H:i' }}</td>
+                    <td class="audit-cell">
+                        <strong>{% if historico.movido_por_nome %}Movido por {{ historico.movido_por_nome }}{% elif historico.movido_por %}Movido por {{ historico.movido_por.id_voluntario.nome }}{% else %}Registro anterior{% endif %}</strong>
+                        {% if historico.movido_por_tipo %}<small>{{ historico.movido_por_tipo }}</small>{% endif %}
+                        {% if historico.restaurado %}<small>Restaurado por {{ historico.restaurado_por_nome }} em {{ historico.restaurado_em|date:'d/m/Y H:i' }}</small>{% endif %}
+                    </td>
+                    <td>{{ historico.observacao|default:'-' }}</td>
+                    <td class="table-actions">
+                        {% if usuario.tipo == 'ADMIN' %}
+                        {% if historico.restaurado %}
+                            <span class="field-hint">Já restaurado</span>
+                        {% else %}
+                            <form method="post" action="{% url 'restaurar_participante_acao' acao.id_acao historico.id_historico %}" class="restore-participant-form">
+                                {% csrf_token %}
+                                <button type="button" class="btn btn-outline btn-small restore-participant-button" data-volunteer-name="{{ historico.voluntario.nome }}">Restaurar participante</button>
+                            </form>
+                        {% endif %}
+                        {% else %}
+                        <span class="field-hint">Somente visualização</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endif %}
+
+<div class="confirmation-modal" id="restore-confirmation-modal" hidden>
+    <div class="confirmation-modal-backdrop" data-close-restore-modal></div>
+    <section class="confirmation-modal-card" role="dialog" aria-modal="true" aria-labelledby="restore-confirmation-title">
+        <div class="confirmation-modal-icon">↩</div>
+        <h2 id="restore-confirmation-title">Restaurar participante?</h2>
+        <p>O voluntário <strong id="restore-volunteer-name"></strong> voltará para a lista de participantes com status pendente.</p>
+        <div class="confirmation-modal-actions">
+            <button type="button" class="btn btn-outline" data-close-restore-modal>Cancelar</button>
+            <button type="button" class="btn btn-primary" id="confirm-restore-participant">Restaurar</button>
+        </div>
+    </section>
+</div>
+
+<script>
+    (function () {
+        var modal = document.getElementById('restore-confirmation-modal');
+        var volunteerName = document.getElementById('restore-volunteer-name');
+        var confirmButton = document.getElementById('confirm-restore-participant');
+        var selectedForm = null;
+
+        document.querySelectorAll('.restore-participant-button').forEach(function (button) {
+            button.addEventListener('click', function () {
+                selectedForm = button.closest('form');
+                volunteerName.textContent = button.dataset.volunteerName;
+                modal.hidden = false;
+            });
+        });
+
+        document.querySelectorAll('[data-close-restore-modal]').forEach(function (element) {
+            element.addEventListener('click', function () {
+                modal.hidden = true;
+                selectedForm = null;
+            });
+        });
+
+        confirmButton.addEventListener('click', function () {
+            if (selectedForm) selectedForm.submit();
+        });
+    }());
+</script>
+{% endblock %}

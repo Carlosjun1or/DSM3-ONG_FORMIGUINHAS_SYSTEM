@@ -1,0 +1,131 @@
+{% extends 'sistema/template-sistema.html' %}
+
+{% block titulo %}Controle de Equipes | Sistema{% endblock %}
+{% block page_title %}Controle de Equipes{% endblock %}
+
+{% block conteudo %}
+<section class="card-grid volunteer-metrics">
+    <article class="card">
+        <h3>Equipes visíveis</h3>
+        <div class="metric">{{ total_equipes }}</div>
+    </article>
+    <article class="card">
+        <h3>Equipes ativas</h3>
+        <div class="metric">{{ total_ativas }}</div>
+    </article>
+</section>
+
+<section class="card volunteer-control">
+    <div class="section-heading">
+        <div>
+            <h2>Equipes cadastradas</h2>
+            <p class="form-subtitle">Consulte as equipes e gerencie seus membros.</p>
+        </div>
+        {% if usuario.tipo == 'ADMIN' %}
+        <a href="{% url 'cadastro_equipe' %}" class="btn btn-primary">Nova equipe</a>
+        {% endif %}
+    </div>
+
+    <form method="get" class="volunteer-filters equipe-filters">
+        <div class="form-group">
+            <label for="id_busca">Buscar</label>
+            <input id="id_busca" name="busca" type="search" value="{{ busca }}" class="form-control" placeholder="Nome ou descrição">
+        </div>
+        <div class="form-group">
+            <label for="id_status">Status</label>
+            <select id="id_status" name="status" class="form-control">
+                <option value="">Todos os status</option>
+                {% for valor, rotulo in status_choices %}
+                    <option value="{{ valor }}" {% if status_selecionado == valor %}selected{% endif %}>{{ rotulo }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        {% if usuario.tipo == 'COORDENADOR' %}
+        <div class="form-group">
+            <label for="id_participacao">Participação</label>
+            <select id="id_participacao" name="participacao" class="form-control">
+                <option value="">Todas as equipes</option>
+                <option value="MINHAS" {% if participacao_selecionada == 'MINHAS' %}selected{% endif %}>Minhas equipes</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="id_papel_equipe">Minha função</label>
+            <select id="id_papel_equipe" name="papel_equipe" class="form-control">
+                <option value="">Todas as funções</option>
+                {% for valor, rotulo in papel_equipe_choices %}
+                    <option value="{{ valor }}" {% if papel_equipe_selecionado == valor %}selected{% endif %}>{{ rotulo }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        {% endif %}
+        <div class="filter-actions">
+            <button type="submit" class="btn btn-primary">Filtrar</button>
+            {% if busca or status_selecionado or participacao_selecionada or papel_equipe_selecionado %}<a href="{% url 'equipes' %}" class="form-link">Limpar</a>{% endif %}
+        </div>
+    </form>
+
+    {% if equipes %}
+    <div class="table-wrap">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Nome</th>
+                    <th>Praia</th>
+                    <th>Cidade</th>
+                    <th>Descrição</th>
+                    <th>Membros ativos</th>
+                    <th>Status</th>
+                    <th>Auditoria</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for equipe in equipes %}
+                <tr>
+                    <td><a class="table-link" href="{% url 'equipe_detalhe' equipe.id_equipe %}"><strong>{{ equipe.nome }}</strong></a></td>
+                    <td>{% if equipe.praia %}{{ equipe.praia.nome }}{% else %}<span class="field-hint">Sem praia</span>{% endif %}</td>
+                    <td>{% if equipe.praia %}{{ equipe.praia.cidade }}{% else %}<span class="field-hint">-</span>{% endif %}</td>
+                    <td>{{ equipe.descricao|default:'-'|truncatechars:80 }}</td>
+                    <td>{{ equipe.total_membros }}</td>
+                    <td>
+                        {% if usuario.tipo == 'ADMIN' %}
+                        <form method="post" action="{% url 'atualizar_status_equipe' equipe.id_equipe %}" class="inline-status-form">
+                            {% csrf_token %}
+                            <select name="status" class="status-select status-{{ equipe.status|lower }}" onchange="this.form.submit()" aria-label="Status de {{ equipe.nome }}">
+                                {% for valor, rotulo in status_choices %}
+                                    <option value="{{ valor }}" {% if equipe.status == valor %}selected{% endif %}>{{ rotulo }}</option>
+                                {% endfor %}
+                            </select>
+                        </form>
+                        {% else %}
+                            {{ equipe.get_status_display }}
+                        {% endif %}
+                    </td>
+                    <td class="audit-cell">
+                        <strong>{% if equipe.cadastrado_por_nome %}Cadastrado por {{ equipe.cadastrado_por_nome }}{% elif equipe.cadastrado_por %}Cadastrado por {{ equipe.cadastrado_por.id_voluntario.nome }}{% else %}Cadastro anterior{% endif %}</strong>
+                        <small>{{ equipe.dt_cadastro|date:'d/m/Y H:i' }}</small>
+                        {% if equipe.ultimo_editado_por_nome %}<small>Editado por {{ equipe.ultimo_editado_por_nome }} em {{ equipe.dt_ultima_edicao|date:'d/m/Y H:i' }}</small>{% elif equipe.ultimo_editado_por %}<small>Editado por {{ equipe.ultimo_editado_por.id_voluntario.nome }} em {{ equipe.dt_ultima_edicao|date:'d/m/Y H:i' }}</small>{% else %}<small>Sem edições</small>{% endif %}
+                    </td>
+                    <td class="table-actions">
+                        <a class="btn btn-outline btn-small" href="{% url 'equipe_detalhe' equipe.id_equipe %}">Membros</a>
+                        {% if usuario.tipo == 'ADMIN' %}
+                        <a class="btn btn-outline btn-small" href="{% url 'editar_equipe' equipe.id_equipe %}">Editar</a>
+                        <form method="post" action="{% url 'excluir_equipe' equipe.id_equipe %}" onsubmit="return confirm('Excluir esta equipe?');">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-danger btn-small">Excluir</button>
+                        </form>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+        <div class="empty-state table-empty">
+            <h3>Nenhuma equipe encontrada</h3>
+            <p class="form-subtitle">{% if usuario.tipo == 'ADMIN' %}Cadastre uma equipe para começar.{% else %}Você ainda não coordena nenhuma equipe.{% endif %}</p>
+        </div>
+    {% endif %}
+</section>
+{% endblock %}
