@@ -1,10 +1,19 @@
 from django import forms
 from django.db.models import Q
+from PIL import Image
 
 from praia.models import Praia
 from usuario.models import Voluntario
 
-from .models import Acao, AcaoParticipante, AcaoParticipanteHistorico
+from .models import (
+    Acao,
+    AcaoImagem,
+    AcaoParticipante,
+    AcaoParticipanteHistorico,
+    AcaoResponsavel,
+)
+
+MAX_IMAGE_SIZE = 5 * 1024 * 1024
 
 
 class AcaoForm(forms.ModelForm):
@@ -76,6 +85,57 @@ class AcaoForm(forms.ModelForm):
         )
 
 
+class MultipleFileInput(forms.ClearableFileInput):
+    allow_multiple_selected = True
+
+
+class MultipleImageField(forms.FileField):
+    def clean(self, data, initial=None):
+        if not data:
+            raise forms.ValidationError('Selecione pelo menos uma imagem.')
+        if not isinstance(data, (list, tuple)):
+            data = [data]
+        if len(data) > 10:
+            raise forms.ValidationError('Envie no máximo 10 imagens por vez.')
+
+        imagens = []
+        for imagem in data:
+            imagem = super().clean(imagem, initial)
+            if imagem.size > MAX_IMAGE_SIZE:
+                raise forms.ValidationError(
+                    f'A imagem "{imagem.name}" deve ter no máximo 5 MB.'
+                )
+            try:
+                with Image.open(imagem) as imagem_aberta:
+                    imagem_aberta.verify()
+            except (Image.Error, OSError) as error:
+                raise forms.ValidationError(
+                    f'O arquivo "{imagem.name}" não é uma imagem válida.'
+                ) from error
+            imagem.seek(0)
+            imagens.append(imagem)
+        return imagens
+
+
+class AcaoImagemForm(forms.Form):
+    imagens = MultipleImageField(
+        label='Imagens',
+        widget=MultipleFileInput(attrs={
+            'accept': 'image/jpeg,image/png,image/webp',
+        }),
+    )
+    descricao = forms.CharField(
+        label='Descrição',
+        required=False,
+        max_length=255,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Descrição opcional das imagens',
+        }),
+    )
+
+
+
 class AcaoParticipanteForm(forms.ModelForm):
     class Meta:
         model = AcaoParticipante
@@ -99,6 +159,29 @@ class AcaoParticipanteForm(forms.ModelForm):
             id_voluntario__in=participantes.values('voluntario_id')
         ).exclude(
             id_voluntario__in=historico.values('voluntario_id')
+        ).order_by('nome')
+        self.fields['voluntario'].empty_label = 'Selecione um voluntário'
+        self.fields['voluntario'].label_from_instance = (
+            lambda voluntario: f'{voluntario.nome} - {voluntario.email}'
+        )
+
+
+class AcaoResponsavelForm(forms.ModelForm):
+    class Meta:
+        model = AcaoResponsavel
+        fields = ['voluntario', 'papel']
+        widgets = {
+            'voluntario': forms.Select(attrs={'class': 'form-control'}),
+            'papel': forms.Select(attrs={'class': 'form-control'}),
+        }
+
+    def __init__(self, *args, acao=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        cadastrados = AcaoResponsavel.objects.filter(acao=acao)
+        self.fields['voluntario'].queryset = Voluntario.objects.filter(
+            status='ATIVO'
+        ).exclude(
+            id_voluntario__in=cadastrados.values('voluntario_id')
         ).order_by('nome')
         self.fields['voluntario'].empty_label = 'Selecione um voluntário'
         self.fields['voluntario'].label_from_instance = (

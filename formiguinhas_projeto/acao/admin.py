@@ -3,6 +3,7 @@ from django.contrib import admin
 from .models import (
     Acao,
     AcaoEquipe,
+    AcaoImagem,
     AcaoParticipante,
     AcaoParticipanteHistorico,
     AcaoResponsavel,
@@ -14,6 +15,13 @@ class AcaoAdmin(admin.ModelAdmin):
     list_display = ('id_acao', 'tipo', 'praia', 'data', 'status')
     list_filter = ('tipo', 'status', 'praia')
     search_fields = ('local', 'descricao')
+
+
+@admin.register(AcaoImagem)
+class AcaoImagemAdmin(admin.ModelAdmin):
+    list_display = ('id_acao_imagem', 'acao', 'descricao', 'dt_cadastro')
+    list_filter = ('acao__tipo',)
+    search_fields = ('acao__local', 'descricao')
 
 
 @admin.register(AcaoEquipe)

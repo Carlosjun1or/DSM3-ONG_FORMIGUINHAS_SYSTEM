@@ -387,6 +387,81 @@ main {
     overflow-x: auto;
 }
 
+.action-responsibles-list,
+.action-teams-list,
+.action-participants-list {
+    overflow-y: auto;
+    scrollbar-color: #b8cec1 #f3f8f4;
+    scrollbar-width: thin;
+}
+
+.action-responsibles-list {
+    max-height: 280px;
+}
+
+.action-teams-list {
+    max-height: 320px;
+}
+
+.action-participants-list {
+    max-height: 430px;
+}
+
+.action-image-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 12px;
+    max-height: 360px;
+    overflow-y: auto;
+    padding: 2px 6px 2px 2px;
+    scrollbar-color: #b8cec1 #f3f8f4;
+    scrollbar-width: thin;
+}
+
+.action-image-card {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin: 0;
+    overflow: hidden;
+    border: 1px solid #e1ebe4;
+    border-radius: 10px;
+    background: #f7fbf8;
+}
+
+.action-image-card img {
+    display: block;
+    width: 100%;
+    height: 120px;
+    object-fit: cover;
+}
+
+.action-image-card figcaption {
+    padding: 0 8px;
+    color: #52665e;
+    font-size: 0.78rem;
+    line-height: 1.25;
+}
+
+.action-image-card form {
+    padding: 0 8px 8px;
+}
+
+.action-image-card .btn-small {
+    width: 100%;
+    padding: 7px 8px;
+    font-size: 0.75rem;
+}
+
+.action-responsibles-list thead th,
+.action-teams-list thead th,
+.action-participants-list thead th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background: #ffffff;
+}
+
 .data-table {
     width: 100%;
     border-collapse: collapse;

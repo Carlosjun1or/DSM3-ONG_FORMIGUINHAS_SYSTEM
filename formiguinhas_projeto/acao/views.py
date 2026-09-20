@@ -1,17 +1,26 @@
 from django.db import transaction
 from django.db.models import Q
+from django.contrib import messages
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 
 from praia.models import Praia
 from usuario.views import get_session_usuario
 
-from .forms import AcaoForm, AcaoParticipanteForm
+from .forms import (
+    AcaoForm,
+    AcaoImagemForm,
+    AcaoParticipanteForm,
+    AcaoResponsavelForm,
+)
 from .models import (
     Acao,
     AcaoEquipe,
+    AcaoImagem,
     AcaoParticipante,
     AcaoParticipanteHistorico,
+    AcaoResponsavel,
+    adicionar_coordenadores_automaticos_para_mutirao,
     adicionar_participantes_automaticos_para_mutirao,
 )
 
@@ -84,6 +93,7 @@ def acoes_view(request):
     })
 
 
+@transaction.atomic
 def cadastro_acao_view(request):
     usuario = get_session_usuario(request)
     if not usuario:
@@ -102,6 +112,7 @@ def cadastro_acao_view(request):
                 for equipe in acao.praia.equipes.filter(status='ATIVA'):
                     AcaoEquipe.objects.get_or_create(acao=acao, equipe=equipe)
                 adicionar_participantes_automaticos_para_mutirao(acao)
+                adicionar_coordenadores_automaticos_para_mutirao(acao)
 
             return redirect('acao_detalhe', acao_id=acao.id_acao)
     else:
@@ -114,6 +125,7 @@ def cadastro_acao_view(request):
     })
 
 
+@transaction.atomic
 def editar_acao_view(request, acao_id):
     usuario = get_session_usuario(request)
     if not usuario:
@@ -128,6 +140,11 @@ def editar_acao_view(request, acao_id):
             acao = form.save(commit=False)
             preencher_auditoria(acao, usuario)
             acao.save()
+            if acao.tipo == Acao.TIPO_MUTIRAO:
+                for equipe in acao.praia.equipes.filter(status='ATIVA'):
+                    AcaoEquipe.objects.get_or_create(acao=acao, equipe=equipe)
+                adicionar_participantes_automaticos_para_mutirao(acao)
+                adicionar_coordenadores_automaticos_para_mutirao(acao)
             return redirect('acao_detalhe', acao_id=acao.id_acao)
     else:
         form = AcaoForm(instance=acao)
@@ -148,12 +165,17 @@ def acao_detalhe_view(request, acao_id):
         return redirect('home')
 
     acao = get_object_or_404(
-        Acao.objects.select_related('praia', 'cadastrado_por__id_voluntario', 'ultimo_editado_por__id_voluntario'),
+        Acao.objects.select_related(
+            'praia',
+            'cadastrado_por__id_voluntario',
+            'ultimo_editado_por__id_voluntario',
+        ).prefetch_related('imagens_acao'),
         id_acao=acao_id,
     )
     busca_participante = request.GET.get('busca_participante', '').strip()
     status_participante = request.GET.get('status_participante', '').strip()
     busca_equipe = request.GET.get('busca_equipe', '').strip()
+    busca_responsavel = request.GET.get('busca_responsavel', '').strip()
 
     participantes = acao.participantes.select_related('voluntario').order_by(
         'voluntario__nome'
@@ -183,6 +205,17 @@ def acao_detalhe_view(request, acao_id):
         )
 
     form = AcaoParticipanteForm(acao=acao)
+    responsavel_form = AcaoResponsavelForm(acao=acao)
+    imagem_form = AcaoImagemForm()
+    responsaveis = acao.responsaveis.select_related('voluntario').order_by(
+        'papel',
+        'voluntario__nome',
+    )
+    if busca_responsavel:
+        responsaveis = responsaveis.filter(
+            Q(voluntario__nome__icontains=busca_responsavel)
+            | Q(voluntario__email__icontains=busca_responsavel)
+        )
 
     return render(request, 'sistema/detalhe-acao.html', {
         'usuario': usuario,
@@ -194,7 +227,12 @@ def acao_detalhe_view(request, acao_id):
         'status_participante': status_participante,
         'status_participante_choices': AcaoParticipante.STATUS_CHOICES,
         'busca_equipe': busca_equipe,
+        'busca_responsavel': busca_responsavel,
         'form': form,
+        'responsavel_form': responsavel_form,
+        'responsaveis': responsaveis,
+        'imagens_acao': acao.imagens_acao.all(),
+        'imagem_form': imagem_form,
     })
 
 
@@ -214,6 +252,66 @@ def adicionar_participante_view(request, acao_id):
             participante.status = AcaoParticipante.STATUS_PENDENTE
             participante.save()
     return redirect('acao_detalhe', acao_id=acao.id_acao)
+
+
+def adicionar_responsavel_view(request, acao_id):
+    usuario = get_session_usuario(request)
+    if not usuario:
+        return redirect('login')
+    if usuario.tipo != 'ADMIN':
+        return redirect('acao_detalhe', acao_id=acao_id)
+
+    acao = get_object_or_404(Acao, id_acao=acao_id)
+    if request.method == 'POST':
+        form = AcaoResponsavelForm(request.POST, acao=acao)
+        if form.is_valid():
+            responsavel = form.save(commit=False)
+            responsavel.acao = acao
+            responsavel.save()
+    return redirect('acao_detalhe', acao_id=acao.id_acao)
+
+
+def adicionar_imagens_acao_view(request, acao_id):
+    usuario = get_session_usuario(request)
+    if not usuario:
+        return redirect('login')
+    if usuario.tipo != 'ADMIN':
+        return redirect('acao_detalhe', acao_id=acao_id)
+
+    acao = get_object_or_404(Acao, id_acao=acao_id)
+    if request.method == 'POST':
+        form = AcaoImagemForm(request.POST, request.FILES)
+        if form.is_valid():
+            descricao = form.cleaned_data['descricao']
+            for imagem in form.cleaned_data['imagens']:
+                AcaoImagem.objects.create(
+                    acao=acao,
+                    imagem=imagem,
+                    descricao=descricao,
+                )
+            messages.success(request, 'Imagens adicionadas à ação com sucesso.')
+        else:
+            messages.error(request, 'Não foi possível adicionar as imagens. Verifique os arquivos selecionados.')
+    return redirect('acao_detalhe', acao_id=acao.id_acao)
+
+
+def excluir_imagem_acao_view(request, acao_id, imagem_id):
+    usuario = get_session_usuario(request)
+    if not usuario:
+        return redirect('login')
+    if usuario.tipo != 'ADMIN':
+        return redirect('acao_detalhe', acao_id=acao_id)
+
+    imagem = get_object_or_404(
+        AcaoImagem,
+        id_acao_imagem=imagem_id,
+        acao_id=acao_id,
+    )
+    if request.method == 'POST':
+        imagem.imagem.delete(save=False)
+        imagem.delete()
+        messages.success(request, 'Imagem excluída com sucesso.')
+    return redirect('acao_detalhe', acao_id=acao_id)
 
 
 def atualizar_status_acao_view(request, acao_id):

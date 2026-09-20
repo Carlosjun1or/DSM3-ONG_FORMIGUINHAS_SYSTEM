@@ -1,8 +1,20 @@
 from django.db import models
+from pathlib import Path
+from uuid import uuid4
 
-from equipe.models import Equipe
+from equipe.models import Equipe, EquipeMembro
 from praia.models import Praia
 from usuario.models import Usuario, Voluntario
+
+
+def caminho_imagem_acao(instance, filename):
+    extensao = Path(filename).suffix.lower()
+    nome_unico = f'{uuid4().hex}{extensao}'
+    return (
+        f'acoes/{instance.acao.data.year}/'
+        f'{instance.acao.data.month:02d}/'
+        f'acao-{instance.acao_id}/{nome_unico}'
+    )
 
 
 class Acao(models.Model):
@@ -62,6 +74,27 @@ class Acao(models.Model):
 
     def __str__(self):
         return f'{self.get_tipo_display()} - {self.praia} - {self.data}'
+
+
+class AcaoImagem(models.Model):
+    id_acao_imagem = models.AutoField(primary_key=True)
+    acao = models.ForeignKey(
+        Acao,
+        on_delete=models.CASCADE,
+        related_name='imagens_acao',
+    )
+    imagem = models.ImageField(upload_to=caminho_imagem_acao)
+    descricao = models.CharField(max_length=255, blank=True)
+    dt_cadastro = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'acao_imagem'
+        verbose_name = 'Imagem da ação'
+        verbose_name_plural = 'Imagens da ação'
+        ordering = ('-dt_cadastro',)
+
+    def __str__(self):
+        return f'Imagem da ação {self.acao_id}'
 
 
 class AcaoEquipe(models.Model):
@@ -181,6 +214,36 @@ class AcaoResponsavel(models.Model):
 
     def __str__(self):
         return f'{self.voluntario.nome} - {self.acao}'
+
+
+def adicionar_coordenadores_automaticos_para_mutirao(acao):
+    if acao.tipo != Acao.TIPO_MUTIRAO:
+        return []
+
+    coordenadores = (
+        acao.equipes_vinculadas
+        .filter(equipe__status='ATIVA')
+        .values_list('equipe_id', flat=True)
+    )
+    membros = EquipeMembro.objects.filter(
+        equipe_id__in=coordenadores,
+        papel=EquipeMembro.PAPEL_COORDENADOR,
+        status='ATIVO',
+    )
+
+    responsaveis = []
+    for membro in membros:
+        responsavel, _ = AcaoResponsavel.objects.get_or_create(
+            acao=acao,
+            voluntario_id=membro.voluntario_id,
+            defaults={'papel': AcaoResponsavel.PAPEL_COORDENADOR},
+        )
+        if responsavel.papel != AcaoResponsavel.PAPEL_COORDENADOR:
+            responsavel.papel = AcaoResponsavel.PAPEL_COORDENADOR
+            responsavel.save(update_fields=['papel'])
+        responsaveis.append(responsavel)
+
+    return responsaveis
 
 
 def adicionar_participantes_automaticos_para_mutirao(acao):

@@ -54,9 +54,11 @@ class Equipe(models.Model):
 
 
 class EquipeMembro(models.Model):
+    PAPEL_VOLUNTARIO = 'VOLUNTARIO'
+    PAPEL_COORDENADOR = 'COORDENADOR'
     PAPEL_CHOICES = [
-        ('VOLUNTARIO', 'Voluntário'),
-        ('COORDENADOR', 'Coordenador'),
+        (PAPEL_VOLUNTARIO, 'Voluntário'),
+        (PAPEL_COORDENADOR, 'Coordenador'),
     ]
     STATUS_CHOICES = [
         ('ATIVO', 'Ativo'),
