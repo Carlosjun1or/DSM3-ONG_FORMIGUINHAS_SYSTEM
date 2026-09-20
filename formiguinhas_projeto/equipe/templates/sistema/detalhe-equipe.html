@@ -9,7 +9,11 @@
         <div>
             <span class="team-eyebrow">Equipe cadastrada</span>
             <h2>{{ equipe.nome }}</h2>
-            <span class="team-location">{% if equipe.praia %}{{ equipe.praia.nome }} - {{ equipe.praia.cidade }}{% else %}Praia ainda não definida{% endif %}</span>
+            {% if equipe.praia %}
+            <a class="team-location table-link" href="{% url 'praias' %}?praia={{ equipe.praia.id_praia }}">{{ equipe.praia.nome }} - {{ equipe.praia.cidade }}</a>
+            {% else %}
+            <span class="team-location">Praia ainda não definida</span>
+            {% endif %}
             <p>{{ equipe.descricao|default:'Esta equipe ainda não possui uma descrição.' }}</p>
         </div>
         <div class="team-hero-side">
@@ -95,8 +99,13 @@
             </thead>
             <tbody>
                 {% for membro in membros %}
-                <tr>
-                    <td><strong>{{ membro.voluntario.nome }}</strong><br><small>{{ membro.voluntario.email }}</small></td>
+                <tr id="voluntario-{{ membro.voluntario.id_voluntario }}">
+                    <td>
+                        <a class="table-link" href="{% url 'voluntarios' %}?voluntario={{ membro.voluntario.id_voluntario }}">
+                            <strong>{{ membro.voluntario.nome }}</strong>
+                        </a>
+                        <br><small>{{ membro.voluntario.email }}</small>
+                    </td>
                     <td>
                         {% if usuario.tipo == 'ADMIN' %}
                         <form method="post" action="{% url 'atualizar_funcao_membro' equipe.id_equipe membro.id_equipe_membro %}" class="inline-status-form">
@@ -165,7 +174,12 @@
             <tbody>
                 {% for membro in historico_membros %}
                 <tr>
-                    <td><strong>{{ membro.voluntario.nome }}</strong><br><small>{{ membro.voluntario.email }}</small></td>
+                    <td>
+                        <a class="table-link" href="{% url 'voluntarios' %}?voluntario={{ membro.voluntario.id_voluntario }}">
+                            <strong>{{ membro.voluntario.nome }}</strong>
+                        </a>
+                        <br><small>{{ membro.voluntario.email }}</small>
+                    </td>
                     <td>{{ membro.get_papel_display }}</td>
                     <td>{{ membro.dt_entrada|date:'d/m/Y H:i' }}</td>
                     <td>{{ membro.dt_saida|date:'d/m/Y H:i' }}</td>

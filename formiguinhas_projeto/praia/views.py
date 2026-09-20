@@ -86,6 +86,7 @@ def praias_view(request):
     busca = request.GET.get('busca', '').strip()
     status = request.GET.get('status', '').strip()
     cidade = request.GET.get('cidade', '').strip()
+    praia_id = request.GET.get('praia', '').strip()
     praias = Praia.objects.select_related(
         'cadastrado_por__id_voluntario',
         'ultimo_editado_por__id_voluntario',
@@ -97,6 +98,10 @@ def praias_view(request):
         praias = praias.filter(praia_ativa=status)
     if cidade:
         praias = praias.filter(cidade__iexact=cidade)
+    praia_destacada = None
+    if praia_id.isdigit():
+        praia_destacada = int(praia_id)
+        praias = praias.filter(id_praia=praia_destacada)
 
     cidades_unicas = {}
     for cidade_cadastrada in Praia.objects.values_list('cidade', flat=True).order_by('cidade'):
@@ -109,6 +114,7 @@ def praias_view(request):
         'busca': busca,
         'status_selecionado': status,
         'cidade_selecionada': cidade,
+        'praia_destacada': praia_destacada,
         'cidades': sorted(cidades_unicas.values(), key=str.casefold),
         'status_choices': Praia.STATUS_CHOICES,
         'total_praias': Praia.objects.count(),

@@ -1,6 +1,10 @@
-from django.db.models import Q
+from django.db.models import Prefetch, Q
 from django.shortcuts import render, redirect
 from django.utils import timezone
+
+from acao.services import calcular_frequencias_voluntarios
+from equipe.models import EquipeMembro
+
 from .forms import (
     LoginForm,
     VoluntarioForm,
@@ -88,6 +92,7 @@ def voluntarios_view(request):
 
     busca = request.GET.get('busca', '').strip()
     status = request.GET.get('status', '').strip()
+    voluntario_id = request.GET.get('voluntario', '').strip()
     voluntarios = Voluntario.objects.select_related(
         'usuario',
         'cadastrado_por__id_voluntario',
@@ -100,12 +105,32 @@ def voluntarios_view(request):
         )
     if status in dict(Voluntario.STATUS_CHOICES):
         voluntarios = voluntarios.filter(status=status)
+    voluntario_destacado = None
+    if voluntario_id.isdigit():
+        voluntario_destacado = int(voluntario_id)
+        voluntarios = voluntarios.filter(id_voluntario=voluntario_destacado)
+
+    frequencias = calcular_frequencias_voluntarios(
+        voluntarios.values_list('id_voluntario', flat=True),
+    )
+    for voluntario in voluntarios:
+        frequencia = frequencias.get(voluntario.id_voluntario, {
+            'total': 0,
+            'presencas': 0,
+            'percentual': None,
+            'nivel': 'Sem participação',
+        })
+        voluntario.frequencia_total = frequencia['total']
+        voluntario.frequencia_presencas = frequencia['presencas']
+        voluntario.frequencia_percentual = frequencia['percentual']
+        voluntario.frequencia_nivel = frequencia['nivel']
 
     return render(request, 'sistema/voluntarios.html', {
         'usuario': usuario,
         'voluntarios': voluntarios,
         'busca': busca,
         'status_selecionado': status,
+        'voluntario_destacado': voluntario_destacado,
         'status_choices': Voluntario.STATUS_CHOICES,
         'total_voluntarios': Voluntario.objects.count(),
         'total_ativos': Voluntario.objects.filter(status='ATIVO').count(),
@@ -265,6 +290,18 @@ def usuarios_view(request):
         'id_voluntario',
         'cadastrado_por__id_voluntario',
         'ultimo_editado_por__id_voluntario',
+    ).prefetch_related(
+        Prefetch(
+            'id_voluntario__equipes',
+            queryset=EquipeMembro.objects.filter(
+                papel=EquipeMembro.PAPEL_COORDENADOR,
+                status='ATIVO',
+            ).select_related('equipe__praia').order_by(
+                'equipe__praia__nome',
+                'equipe__nome',
+            ),
+            to_attr='equipes_coordenadas',
+        ),
     ).all().order_by('id_voluntario__nome')
 
     if busca:
@@ -274,6 +311,15 @@ def usuarios_view(request):
         )
     if tipo in dict(Usuario.TIPO_CHOICES):
         usuarios = usuarios.filter(tipo=tipo)
+
+    for usuario_item in usuarios:
+        praias = {}
+        for membro in usuario_item.id_voluntario.equipes_coordenadas:
+            if membro.equipe.praia_id:
+                praias[membro.equipe.praia_id] = membro.equipe.praia
+        usuario_item.praias_coordenador = list(
+            sorted(praias.values(), key=lambda praia: praia.nome.casefold())
+        )
 
     return render(request, 'sistema/usuarios.html', {
         'usuario': usuario,
@@ -582,4 +628,3 @@ def alterar_senha_view(request):
         return render(request, 'sistema/perfil.html', {'usuario': usuario, 'mensagem': 'Senha alterada com sucesso!'})
 
     return render(request, 'sistema/alterar-senha.html')
-

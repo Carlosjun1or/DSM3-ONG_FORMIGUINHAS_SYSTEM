@@ -52,6 +52,7 @@
                     <th>E-mail</th>
                     <th>Telefone</th>
                     <th>Tipo</th>
+                    <th>Praia do coordenador</th>
                     <th>Último acesso</th>
                     <th>Auditoria</th>
                     <th>Ações</th>
@@ -60,7 +61,11 @@
             <tbody>
                 {% for usuario_item in usuarios %}
                 <tr>
-                    <td><strong>{{ usuario_item.id_voluntario.nome }}</strong></td>
+                    <td>
+                        <a class="table-link" href="{% url 'voluntarios' %}?voluntario={{ usuario_item.id_voluntario.id_voluntario }}">
+                            <strong>{{ usuario_item.id_voluntario.nome }}</strong>
+                        </a>
+                    </td>
                     <td>{{ usuario_item.id_voluntario.email }}</td>
                     <td class="phone-cell">{{ usuario_item.id_voluntario.telefone }}</td>
                     <td>
@@ -72,6 +77,19 @@
                                 {% endfor %}
                             </select>
                         </form>
+                    </td>
+                    <td>
+                        {% if usuario_item.tipo == 'COORDENADOR' %}
+                            {% if usuario_item.praias_coordenador %}
+                                {% for praia in usuario_item.praias_coordenador %}
+                                <a class="table-link" href="{% url 'praias' %}?praia={{ praia.id_praia }}">{{ praia.nome }}</a>{% if not forloop.last %}<br>{% endif %}
+                                {% endfor %}
+                            {% else %}
+                                <span class="field-hint">Sem equipe ativa</span>
+                            {% endif %}
+                        {% else %}
+                            <span class="field-hint">Não se aplica</span>
+                        {% endif %}
                     </td>
                     <td>{% if usuario_item.data_ultimo_acesso %}{{ usuario_item.data_ultimo_acesso|date:'d/m/Y H:i' }}{% else %}Nunca acessou{% endif %}</td>
                     <td class="audit-cell">

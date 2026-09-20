@@ -40,7 +40,7 @@
         </div>
         <div class="filter-actions">
             <button type="submit" class="btn btn-primary">Filtrar</button>
-            {% if busca or status_selecionado %}<a href="{% url 'voluntarios' %}" class="form-link">Limpar</a>{% endif %}
+            {% if busca or status_selecionado or voluntario_destacado %}<a href="{% url 'voluntarios' %}" class="form-link">Limpar</a>{% endif %}
         </div>
     </form>
 
@@ -56,6 +56,7 @@
                     <th>Telefone</th>
                     <th>E-mail</th>
                     <th>Status</th>
+                    <th>Frequência</th>
                     <th>Possui usuário?</th>
                     <th>Auditoria</th>
                     <th>Ações</th>
@@ -63,7 +64,7 @@
             </thead>
             <tbody>
                 {% for voluntario in voluntarios %}
-                <tr>
+                <tr id="voluntario-{{ voluntario.id_voluntario }}" {% if voluntario.id_voluntario == voluntario_destacado %}class="voluntario-destacado"{% endif %}>
                     <td><a class="table-link" href="{% url 'editar_voluntario' voluntario.id_voluntario %}"><strong>{{ voluntario.nome }}</strong></a></td>
                     <td class="date-cell">{{ voluntario.dt_nascimento|date:'d/m/Y' }}</td>
                     <td>{{ voluntario.idade }} anos</td>
@@ -79,6 +80,14 @@
                                 {% endfor %}
                             </select>
                         </form>
+                    </td>
+                    <td>
+                        <strong>{{ voluntario.frequencia_nivel }}</strong>
+                        {% if voluntario.frequencia_percentual is not None %}
+                        <small>{{ voluntario.frequencia_percentual|floatformat:1 }}% ({{ voluntario.frequencia_presencas }}/{{ voluntario.frequencia_total }})</small>
+                        {% else %}
+                        <small>Sem ações consideradas</small>
+                        {% endif %}
                     </td>
                     <td>{% if voluntario.usuario %}Sim{% else %}Não{% endif %}</td>
                     <td class="audit-cell">

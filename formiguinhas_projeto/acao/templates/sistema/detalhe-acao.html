@@ -9,7 +9,7 @@
         <div>
             <span class="team-eyebrow">Ação cadastrada</span>
             <h2>{{ acao.get_tipo_display }}</h2>
-            <span class="team-location">{{ acao.praia.nome }} · {{ acao.praia.cidade }}</span>
+            <a class="team-location table-link" href="{% url 'praias' %}?praia={{ acao.praia.id_praia }}">{{ acao.praia.nome }} · {{ acao.praia.cidade }}</a>
             <p>{{ acao.descricao|default:'Esta ação ainda não possui uma descrição detalhada.' }}</p>
         </div>
         <div class="team-hero-side">
@@ -39,7 +39,9 @@
             </div>
             <div class="form-group">
                 <label>Praia</label>
-                <div class="field-value">{{ acao.praia.nome }}</div>
+                <div class="field-value">
+                    <a class="table-link" href="{% url 'praias' %}?praia={{ acao.praia.id_praia }}">{{ acao.praia.nome }}</a>
+                </div>
             </div>
             <div class="form-group">
                 <label>Data</label>
@@ -47,7 +49,7 @@
             </div>
             <div class="form-group">
                 <label>Horário</label>
-                <div class="field-value">{{ acao.horario|default:'-' }}</div>
+                <div class="field-value">{% if acao.horario %}{{ acao.horario|time:'H:i' }}{% else %}-{% endif %}</div>
             </div>
             <div class="form-group full">
                 <label>Local</label>
@@ -184,7 +186,12 @@
             <tbody>
                 {% for responsavel in responsaveis %}
                 <tr>
-                    <td><strong>{{ responsavel.voluntario.nome }}</strong><br><small>{{ responsavel.voluntario.email }}</small></td>
+                    <td>
+                        <a class="table-link" href="{% url 'voluntarios' %}?voluntario={{ responsavel.voluntario.id_voluntario }}">
+                            <strong>{{ responsavel.voluntario.nome }}</strong>
+                        </a>
+                        <br><small>{{ responsavel.voluntario.email }}</small>
+                    </td>
                     <td>{{ responsavel.get_papel_display }}</td>
                 </tr>
                 {% endfor %}
@@ -233,7 +240,7 @@
             <tbody>
                 {% for vinculada in equipes %}
                 <tr>
-                    <td><a class="table-link" href="{% url 'equipe_detalhe' vinculada.equipe.id_equipe %}">{{ vinculada.equipe.nome }}</a></td>
+                    <td><a class="table-link" href="{% url 'equipe_detalhe' vinculada.equipe.id_equipe %}"><strong>{{ vinculada.equipe.nome }}</strong></a></td>
                     <td>{{ vinculada.equipe.praia.nome }} - {{ vinculada.equipe.praia.cidade }}</td>
                     <td>{{ vinculada.equipe.get_status_display }}</td>
                     <td class="audit-cell">
@@ -325,7 +332,12 @@
             <tbody>
                 {% for participante in participantes %}
                 <tr>
-                    <td><strong>{{ participante.voluntario.nome }}</strong><br><small>{{ participante.voluntario.email }}</small></td>
+                    <td>
+                        <a class="table-link" href="{% url 'voluntarios' %}?voluntario={{ participante.voluntario.id_voluntario }}">
+                            <strong>{{ participante.voluntario.nome }}</strong>
+                        </a>
+                        <br><small>{{ participante.voluntario.email }}</small>
+                    </td>
                     <td>
                         {% if usuario.tipo == 'ADMIN' %}
                         <form method="post" action="{% url 'confirmar_participacao_acao' acao.id_acao participante.id_acao_participante %}" class="inline-status-form">
@@ -390,7 +402,12 @@
             <tbody>
                 {% for historico in historico_participantes %}
                 <tr>
-                    <td><strong>{{ historico.voluntario.nome }}</strong><br><small>{{ historico.voluntario.email }}</small></td>
+                    <td>
+                        <a class="table-link" href="{% url 'voluntarios' %}?voluntario={{ historico.voluntario.id_voluntario }}">
+                            <strong>{{ historico.voluntario.nome }}</strong>
+                        </a>
+                        <br><small>{{ historico.voluntario.email }}</small>
+                    </td>
                     <td>{{ historico.get_status_display }}</td>
                     <td>{{ historico.dt_movimentacao|date:'d/m/Y H:i' }}</td>
                     <td class="audit-cell">

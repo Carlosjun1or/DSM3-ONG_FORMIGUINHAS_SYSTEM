@@ -476,6 +476,16 @@ main {
     white-space: nowrap;
 }
 
+.voluntario-destacado {
+    background: #e8f5ec;
+    box-shadow: inset 4px 0 0 #2f8f57;
+}
+
+.praia-destacada {
+    background: #e8f5ec;
+    box-shadow: inset 4px 0 0 #2f8f57;
+}
+
 .data-table th {
     color: #5b6f68;
     font-size: 0.76rem;

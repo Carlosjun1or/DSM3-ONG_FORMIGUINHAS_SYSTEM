@@ -51,7 +51,7 @@
         </div>
         <div class="filter-actions">
             <button type="submit" class="btn btn-primary">Filtrar</button>
-            {% if busca or status_selecionado or cidade_selecionada %}<a href="{% url 'praias' %}" class="form-link">Limpar</a>{% endif %}
+            {% if busca or status_selecionado or cidade_selecionada or praia_destacada %}<a href="{% url 'praias' %}" class="form-link">Limpar</a>{% endif %}
         </div>
     </form>
 
@@ -73,7 +73,7 @@
             </thead>
             <tbody>
                 {% for praia in praias %}
-                <tr>
+                <tr id="praia-{{ praia.id_praia }}" {% if praia.id_praia == praia_destacada %}class="praia-destacada"{% endif %}>
                     <td><a class="table-link" href="{% url 'editar_praia' praia.id_praia %}"><strong>{{ praia.nome }}</strong></a></td>
                     <td>{{ praia.cidade }}</td>
                     <td>{{ praia.latitude }}, {{ praia.longitude }}</td>
