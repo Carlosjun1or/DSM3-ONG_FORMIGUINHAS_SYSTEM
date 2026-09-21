@@ -12,8 +12,6 @@ from usuario.models import Usuario
 
 from .forms import PraiaForm
 from .models import Praia
-
-
 def localizar_praia_view(request):
     usuario = get_session_usuario(request)
     if not usuario or usuario.tipo != 'ADMIN':

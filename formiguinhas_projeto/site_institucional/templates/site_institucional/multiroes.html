@@ -1,0 +1,54 @@
+{% extends "site_institucional/base.html" %}
+
+{% block conteudo %}
+<section id="multiroes-pagina">
+    <div class="container">
+        <div class="multiroes-cabecalho">
+            <span>Faça parte da transformação</span>
+            <h1>Mutirões que deixam marcas positivas</h1>
+            <p>
+                Nossos mutirões reúnem voluntários para cuidar das praias,
+                conscientizar a comunidade e transformar pequenas atitudes em
+                grandes resultados.
+            </p>
+            <a class="botao-participar" href="{% url 'cadastro_voluntario' %}">
+                Quero participar das próximas ações
+            </a>
+        </div>
+
+        <div class="multiroes-lista">
+            <h2>Mutirões que já aconteceram</h2>
+            {% for mutirao in mutiroes %}
+            <article class="multirao-card">
+                <div class="multirao-card-imagens">
+                    {% for imagem in mutirao.imagens_acao.all %}
+                        <figure>
+                            <img src="{{ imagem.imagem.url }}" alt="{{ imagem.descricao|default:mutirao.descricao|default:'Foto do mutirão' }}" loading="lazy">
+                            {% if imagem.descricao %}<figcaption>{{ imagem.descricao }}</figcaption>{% endif %}
+                        </figure>
+                    {% empty %}
+                        <div class="multirao-sem-imagem">Ainda não há fotos cadastradas para este mutirão.</div>
+                    {% endfor %}
+                </div>
+                <div class="multirao-card-conteudo">
+                    <h3>{{ mutirao.get_tipo_display }} em {{ mutirao.praia.nome }}</h3>
+                    <p class="multirao-data">{{ mutirao.data|date:'d/m/Y' }}{% if mutirao.horario %} às {{ mutirao.horario|time:'H:i' }}{% endif %}</p>
+                    <p><strong>Local:</strong> {{ mutirao.local|default:mutirao.praia.cidade }}</p>
+                    {% if mutirao.descricao %}
+                        <p>{{ mutirao.descricao }}</p>
+                    {% else %}
+                        <p>Uma ação coletiva de cuidado com a praia e com o nosso litoral.</p>
+                    {% endif %}
+                </div>
+            </article>
+            {% empty %}
+                <div class="mutiroes-vazio">
+                    <h3>Em breve, novos registros</h3>
+                    <p>Os próximos mutirões concluídos aparecerão aqui. Enquanto isso, cadastre-se para participar das nossas ações.</p>
+                    <a class="botao-participar" href="{% url 'cadastro_voluntario' %}">Quero ser voluntário</a>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endblock %}

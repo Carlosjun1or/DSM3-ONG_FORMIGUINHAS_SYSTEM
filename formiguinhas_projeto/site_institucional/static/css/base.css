@@ -254,6 +254,98 @@ MUTIRÕES
     margin-bottom: 8px;
 }
 
+#multiroes-pagina {
+    background-color: #eeeeee;
+}
+
+#multiroes-pagina .container {
+    max-width: 1000px;
+}
+
+.multiroes-cabecalho {
+    max-width: 720px;
+    margin-bottom: 45px;
+}
+
+.multiroes-cabecalho span {
+    font-weight: bold;
+}
+
+.multiroes-cabecalho h1 {
+    margin: 10px 0 15px;
+    font-size: 40px;
+}
+
+.botao-participar {
+    display: inline-block;
+    padding: 12px 20px;
+    background-color: #333;
+    color: #ffffff;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.multiroes-lista h2 {
+    margin-bottom: 20px;
+}
+
+.multirao-card {
+    display: grid;
+    grid-template-columns: minmax(220px, 0.8fr) 1fr;
+    gap: 25px;
+    margin-bottom: 25px;
+    padding: 20px;
+    border: 1px solid #ccc;
+    background-color: #ffffff;
+}
+
+.multirao-card-imagens {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    align-content: start;
+}
+
+.multirao-card-imagens figure {
+    margin: 0;
+}
+
+.multirao-card-imagens figure:only-child {
+    grid-column: 1 / -1;
+}
+
+.multirao-card-imagens img {
+    display: block;
+    width: 100%;
+    height: 150px;
+    object-fit: cover;
+}
+
+.multirao-card-imagens figcaption {
+    padding: 5px;
+    font-size: 0.85rem;
+}
+
+.multirao-sem-imagem {
+    min-height: 150px;
+    padding: 20px;
+    background-color: #dddddd;
+}
+
+.multirao-card-conteudo h3 {
+    margin-bottom: 10px;
+}
+
+.multirao-data {
+    font-weight: bold;
+}
+
+.mutiroes-vazio {
+    padding: 25px;
+    border: 1px solid #ccc;
+    background-color: #ffffff;
+}
+
 
 /* ==============================
 PRAIAS
@@ -265,6 +357,156 @@ PRAIAS
 
 .praias-conteudo > a {
     margin-top: 15px;
+}
+
+.praias-resumo {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 15px;
+    margin: 25px 0;
+}
+
+.praia-resumo-card {
+    padding: 18px;
+    border: 1px solid #ccc;
+    background-color: #fafafa;
+}
+
+.praia-resumo-card h3 {
+    margin-bottom: 5px;
+}
+
+.praia-resumo-card p {
+    margin-bottom: 5px;
+}
+
+#praias-pagina {
+    background-color: #ffffff;
+}
+
+.praias-cabecalho {
+    max-width: 760px;
+    margin-bottom: 35px;
+}
+
+.praias-cabecalho span {
+    font-weight: bold;
+}
+
+.praias-cabecalho h1 {
+    margin: 10px 0 15px;
+    font-size: 40px;
+}
+
+.localizacao-status {
+    min-height: 24px;
+    margin-top: 12px;
+    font-size: 0.9rem;
+}
+
+.praias-lista {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px;
+}
+
+.praia-card {
+    padding: 22px;
+    border: 1px solid #ccc;
+    background-color: #fafafa;
+}
+
+.praia-card-cabecalho {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 15px;
+}
+
+.praia-card h2 {
+    margin-bottom: 5px;
+}
+
+.praia-cidade {
+    font-weight: bold;
+}
+
+.praia-distancia {
+    color: #555;
+    font-size: 0.9rem;
+    white-space: nowrap;
+}
+
+.praia-mapa {
+    display: inline-block;
+    margin-top: 8px;
+    text-decoration: underline;
+}
+
+
+/* ==============================
+SEÇÃO CONTATO WHATSAPP
+============================== */
+
+.secao-contato-whatsapp {
+    background: linear-gradient(135deg, #25d366 0%, #128c7e 100%);
+    padding: 60px 0;
+    margin-top: 40px;
+}
+
+.container-contato {
+    width: 90%;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.contato-conteudo {
+    max-width: 600px;
+    margin: 0 auto;
+    text-align: center;
+    color: #ffffff;
+}
+
+.contato-conteudo h2 {
+    font-size: 32px;
+    margin-bottom: 20px;
+    font-weight: bold;
+}
+
+.contato-conteudo p {
+    font-size: 16px;
+    line-height: 1.8;
+    margin-bottom: 30px;
+    color: #ffffff;
+}
+
+.botao-whatsapp {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 16px 40px;
+    background-color: #ffffff;
+    color: #25d366;
+    text-decoration: none;
+    font-weight: bold;
+    font-size: 16px;
+    border-radius: 50px;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.botao-whatsapp:hover {
+    background-color: #f0f0f0;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+}
+
+.botao-whatsapp:active {
+    transform: translateY(0);
+}
+
+.icone-whatsapp {
+    font-size: 24px;
 }
 
 
@@ -303,8 +545,38 @@ RESPONSIVIDADE
         grid-template-columns: 1fr;
     }
 
+    .multirao-card {
+        grid-template-columns: 1fr;
+    }
+
+    .multiroes-cabecalho h1 {
+        font-size: 32px;
+    }
+
+    .praias-lista {
+        grid-template-columns: 1fr;
+    }
+
+    .praias-resumo {
+        grid-template-columns: 1fr;
+    }
+
+    .praias-cabecalho h1 {
+        font-size: 32px;
+    }
+
     .cabecalho h2 {
         font-size: 32px;
+    }
+
+    .contato-conteudo h2 {
+        font-size: 24px;
+    }
+
+    .botao-whatsapp {
+        width: 100%;
+        justify-content: center;
+        padding: 14px 20px;
     }
 
 }

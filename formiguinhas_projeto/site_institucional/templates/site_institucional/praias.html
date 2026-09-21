@@ -1,0 +1,216 @@
+{% extends "site_institucional/base.html" %}
+
+{% block conteudo %}
+<style>
+    .secao-contato-whatsapp {
+        background: linear-gradient(135deg, #25d366 0%, #128c7e 100%);
+        padding: 60px 0;
+        margin-top: 40px;
+    }
+
+    .container-contato {
+        width: 90%;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    .contato-conteudo {
+        max-width: 600px;
+        margin: 0 auto;
+        text-align: center;
+        color: #ffffff;
+    }
+
+    .contato-conteudo h2 {
+        font-size: 32px;
+        margin-bottom: 20px;
+        font-weight: bold;
+    }
+
+    .contato-conteudo p {
+        font-size: 16px;
+        line-height: 1.8;
+        margin-bottom: 30px;
+        color: #ffffff;
+    }
+
+    .botao-whatsapp {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        padding: 16px 40px;
+        background-color: #ffffff;
+        color: #25d366;
+        text-decoration: none;
+        font-weight: bold;
+        font-size: 16px;
+        border-radius: 50px;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    }
+
+    .botao-whatsapp:hover {
+        background-color: #f0f0f0;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    .botao-whatsapp:active {
+        transform: translateY(0);
+    }
+
+    .icone-whatsapp {
+        font-size: 24px;
+    }
+
+    @media (max-width: 768px) {
+        .contato-conteudo h2 {
+            font-size: 24px;
+        }
+
+        .botao-whatsapp {
+            width: 100%;
+            justify-content: center;
+            padding: 14px 20px;
+        }
+    }
+</style>
+
+<section id="praias-pagina">
+    <div class="container">
+        <div class="praias-cabecalho">
+            <span>Onde atuamos</span>
+            <h1>Praias de atuação</h1>
+            <p>
+                Conheça os locais onde as Formiguinhas da Praia realizam suas
+                ações. Autorize o acesso à sua localização para encontrar as
+                praias mais próximas de você.
+            </p>
+            <button type="button" id="localizar-praias" class="botao-participar">
+                Encontrar praias próximas
+            </button>
+            <p id="localizacao-status" class="localizacao-status" role="status">
+                As praias estão organizadas por nome. Sua localização não é armazenada.
+            </p>
+        </div>
+
+        <div id="lista-praias" class="praias-lista">
+            {% for praia in praias %}
+            <article
+                class="praia-card"
+                data-latitude="{{ praia.latitude }}"
+                data-longitude="{{ praia.longitude }}"
+            >
+                <div class="praia-card-cabecalho">
+                    <h2>{{ praia.nome }}</h2>
+                    <span class="praia-distancia" aria-live="polite"></span>
+                </div>
+                <p class="praia-cidade">{{ praia.cidade }}</p>
+                {% if praia.descricao %}<p>{{ praia.descricao }}</p>{% endif %}
+                <a
+                    class="praia-mapa"
+                    href="https://www.google.com/maps/search/?api=1&query={{ praia.latitude }},{{ praia.longitude }}"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                >
+                    Ver localização no mapa
+                </a>
+            </article>
+            {% empty %}
+            <div class="mutiroes-vazio">
+                <h2>Nenhuma praia cadastrada</h2>
+                <p>As praias de atuação serão exibidas aqui quando forem cadastradas pela ONG.</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<section class="secao-contato-whatsapp">
+    <div class="container-contato">
+        <div class="contato-conteudo">
+            <h2>Quer conhecer melhor nossas ações?</h2>
+            <p>
+                Tem interesse em participar dos nossos mutirões nas praias ou quer saber mais sobre a 
+                Formiguinhas da Praia? Fale diretamente com nossos coordenadores! Estamos sempre prontos 
+                para receber sua mensagem e ajudar você a fazer a diferença no cuidado com nossas praias.
+            </p>
+            <a 
+                href="https://wa.me/5513997284132?text=Olá!%20Quero%20mais%20informações%20sobre%20ONG" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                class="botao-whatsapp"
+                aria-label="Fale com nossos coordenadores no WhatsApp"
+            >
+                <span class="icone-whatsapp">💬</span>
+                Fale com nossos coordenadores
+            </a>
+        </div>
+    </div>
+</section>
+
+<script>
+    (() => {
+        const botao = document.getElementById('localizar-praias');
+        const status = document.getElementById('localizacao-status');
+        const lista = document.getElementById('lista-praias');
+        const praias = Array.from(document.querySelectorAll('.praia-card'));
+
+        if (!botao || !status || !lista || !praias.length) {
+            return;
+        }
+
+        const distanciaEmKm = (latitudeUsuario, longitudeUsuario, praia) => {
+            const latitudePraia = Number(praia.dataset.latitude);
+            const longitudePraia = Number(praia.dataset.longitude);
+            const raioTerraKm = 6371;
+            const latitudeDelta = (latitudePraia - latitudeUsuario) * Math.PI / 180;
+            const longitudeDelta = (longitudePraia - longitudeUsuario) * Math.PI / 180;
+            const latitudeMedia = (latitudeUsuario + latitudePraia) * Math.PI / 360;
+            const distancia = Math.sqrt(
+                latitudeDelta * latitudeDelta +
+                Math.cos(latitudeMedia) * Math.cos(latitudeMedia) *
+                longitudeDelta * longitudeDelta
+            );
+            return raioTerraKm * distancia;
+        };
+
+        botao.addEventListener('click', () => {
+            if (!navigator.geolocation) {
+                status.textContent = 'Seu navegador não oferece localização. Veja as praias no mapa.';
+                return;
+            }
+
+            status.textContent = 'Solicitando sua localização...';
+            navigator.geolocation.getCurrentPosition(
+                (posicao) => {
+                    const { latitude, longitude } = posicao.coords;
+                    const praiasOrdenadas = praias
+                        .map((praia) => ({
+                            elemento: praia,
+                            distancia: distanciaEmKm(latitude, longitude, praia),
+                        }))
+                        .sort((a, b) => a.distancia - b.distancia);
+
+                    praiasOrdenadas.forEach(({ elemento, distancia }) => {
+                        elemento.querySelector('.praia-distancia').textContent =
+                            `${distancia.toFixed(1).replace('.', ',')} km de você`;
+                        lista.appendChild(elemento);
+                    });
+                    praiasOrdenadas[0].elemento.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'nearest',
+                    });
+                    status.textContent = 'Praias ordenadas pela distância em relação à sua localização.';
+                    botao.textContent = 'Atualizar praias próximas';
+                },
+                () => {
+                    status.textContent =
+                        'Não foi possível acessar sua localização. Você ainda pode consultar todas as praias no mapa.';
+                },
+                { enableHighAccuracy: false, timeout: 10000, maximumAge: 300000 }
+            );
+        });
+    })();
+</script>
+{% endblock %}

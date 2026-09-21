@@ -30,8 +30,12 @@
             </p>
 
             <div class="referencias">
-                <a href="#">Faça parte da Formiguinha</a>
-                <a href="#">Conheça nossa história</a>
+                <a href="https://wa.me/5513997284132?text=Olá!%20Quero%20mais%20informações%20sobre%20ONG" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                class="botao-whatsapp"
+                aria-label="Fale com nossos coordenadores no WhatsApp">Faça parte da Formiguinha</a>
+                
             </div>
         </article>
     </div>
@@ -143,26 +147,35 @@
 
 
         <div class="multirao-chamada">
-
+            {% for mutirao in mutiroes %}
             <article>
                 <div class="multirao-imagem">
-                    <img src="#" alt="Imagem do mutirão">
+                    {% with imagem=mutirao.imagens_acao.all|first %}
+                        {% if imagem %}
+                            <img src="{{ imagem.imagem.url }}" alt="{{ imagem.descricao|default:mutirao.descricao|default:'Imagem do mutirão' }}" loading="lazy">
+                        {% else %}
+                            <span>Registro do mutirão</span>
+                        {% endif %}
+                    {% endwith %}
                 </div>
 
                 <div class="multirao-descricao">
-                    <h3>Mutirão Praia Limpa</h3>
+                    <h3>{{ mutirao.get_tipo_display }} em {{ mutirao.praia.nome }}</h3>
 
-                    <p>Data: 15/03/2024</p>
+                    <p>Data: {{ mutirao.data|date:'d/m/Y' }}</p>
 
-                    <p>Local: Praia do Gonzaga, Santos</p>
+                    <p>Local: {{ mutirao.local|default:mutirao.praia.cidade }}</p>
 
-                    <p>Resultado: 50 kg de resíduos coletados</p>
+                    {% if mutirao.descricao %}<p>{{ mutirao.descricao }}</p>{% endif %}
                 </div>
             </article>
+            {% empty %}
+                <p class="mutiroes-vazio">Em breve, novos registros dos nossos mutirões.</p>
+            {% endfor %}
 
         </div>
 
-        <a href="#">Conheça nossos mutirões</a>
+        <a href="{% url 'multiroes' %}">Conheça nossos mutirões</a>
 
     </div>
 
@@ -188,13 +201,35 @@
         </p>
 
         <p>
-            Conheça as praias onde as Formiguinhas da Praia estão presentes
-            e acompanhe o
-            <a href="#">calendário das próximas ações</a>
-            para saber quando e onde podemos nos encontrar.
+            Conheça as praias onde as Formiguinhas da Praia estão presentes.
+            Podemos usar a localização do seu dispositivo, com sua autorização,
+            para mostrar primeiro a praia mais próxima de você.
         </p>
 
-        <a href="#">Veja a praia mais próxima de você</a>
+        <button type="button" id="localizar-praias-index" class="botao-participar">
+            Encontrar a praia mais próxima
+        </button>
+        <p id="localizacao-status-index" class="localizacao-status" role="status">
+            Sua localização não é armazenada.
+        </p>
+
+        <div id="lista-praias-index" class="praias-resumo">
+            {% for praia in praias %}
+            <article
+                class="praia-resumo-card"
+                data-latitude="{{ praia.latitude }}"
+                data-longitude="{{ praia.longitude }}"
+            >
+                <h3>{{ praia.nome }}</h3>
+                <p>{{ praia.cidade }}</p>
+                <span class="praia-distancia" aria-live="polite"></span>
+            </article>
+            {% empty %}
+            <p>Nenhuma praia de atuação cadastrada no momento.</p>
+            {% endfor %}
+        </div>
+
+        <a href="{% url 'praias_atuacao' %}">Veja as praias e encontre a mais próxima</a>
 
     </div>
 
@@ -202,5 +237,59 @@
 
 
 </section>
+
+<script>
+    (() => {
+        const botao = document.getElementById('localizar-praias-index');
+        const status = document.getElementById('localizacao-status-index');
+        const lista = document.getElementById('lista-praias-index');
+        const praias = Array.from(document.querySelectorAll('#lista-praias-index .praia-resumo-card'));
+
+        if (!botao || !status || !lista || !praias.length) {
+            return;
+        }
+
+        botao.addEventListener('click', () => {
+            if (!navigator.geolocation) {
+                status.textContent = 'Seu navegador não oferece localização. Consulte a página completa de praias.';
+                return;
+            }
+
+            status.textContent = 'Solicitando sua localização...';
+            navigator.geolocation.getCurrentPosition(
+                (posicao) => {
+                    const { latitude, longitude } = posicao.coords;
+                    const distancia = (praia) => {
+                        const latitudePraia = Number(praia.dataset.latitude);
+                        const longitudePraia = Number(praia.dataset.longitude);
+                        const latitudeDelta = (latitudePraia - latitude) * Math.PI / 180;
+                        const longitudeDelta = (longitudePraia - longitude) * Math.PI / 180;
+                        const latitudeMedia = (latitude + latitudePraia) * Math.PI / 360;
+                        return 6371 * Math.sqrt(
+                            latitudeDelta * latitudeDelta +
+                            Math.cos(latitudeMedia) * Math.cos(latitudeMedia) *
+                            longitudeDelta * longitudeDelta
+                        );
+                    };
+
+                    praias
+                        .map((praia) => ({ praia, distancia: distancia(praia) }))
+                        .sort((a, b) => a.distancia - b.distancia)
+                        .forEach(({ praia, distancia: distanciaKm }) => {
+                            praia.querySelector('.praia-distancia').textContent =
+                                `${distanciaKm.toFixed(1).replace('.', ',')} km de você`;
+                            lista.appendChild(praia);
+                        });
+                    status.textContent = 'Praias ordenadas pela distância em relação à sua localização.';
+                    botao.textContent = 'Atualizar praia mais próxima';
+                },
+                () => {
+                    status.textContent = 'Não foi possível acessar sua localização. Você ainda pode ver todas as praias.';
+                },
+                { enableHighAccuracy: false, timeout: 10000, maximumAge: 300000 }
+            );
+        });
+    })();
+</script>
 
 {% endblock %}
