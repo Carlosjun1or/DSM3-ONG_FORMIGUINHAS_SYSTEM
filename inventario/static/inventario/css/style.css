@@ -63,7 +63,7 @@ table td {
 }
 
 table th {
-  background-color: #3498db;
+  background-color: #d9e1e7;
   color: white;
   text-transform: uppercase;
   letter-spacing: 1px;
@@ -81,4 +81,78 @@ table tr:hover {
 td[colspan] {
   font-style: italic;
   color: #888;
+}
+/* Substitui o texto do botão "+ Adicionar" por "➕ Cadastrar" */
+.model-material .addlink {
+  font-size: 0 !important;
+}
+.model-material .addlink::before {
+  content: "➕ Cadastrar" !important;
+  font-size: 13px !important;
+}
+/* Troca o texto do botão "+ Adicionar" por "➕ Cadastrar" na seção de Materiais */
+.model-material .addlink {
+  font-size: 0 !important;
+}
+.model-material .addlink::before {
+  content: "➕ Cadastrar" !important;
+  font-size: 13px !important;
+}
+
+/* Troca o texto do botão "+ Adicionar" por "➕ Registrar" na seção de Movimentações */
+.model-movimentacao .addlink {
+  font-size: 0 !important;
+}
+.model-movimentacao .addlink::before {
+  content: "➕ Registrar" !important;
+  font-size: 13px !important;
+}
+/* Moldura completa para as tabelas do admin */
+.results table {
+  border-collapse: collapse;
+  width: 100%;
+  border: 1px solid #ccc; /* borda externa */
+}
+
+/* Bordas internas das colunas e linhas */
+.results table th,
+.results table td {
+  border: 1px solid #ccc;
+  padding: 6px 8px;
+  text-align: left;
+}
+
+/* Cabeçalho da tabela com fundo suave */
+.results table th {
+  background-color: #f0f0f0;
+  font-weight: bold;
+}
+/* Moldura completa para tabelas do Django Admin */
+.results table {
+  border-collapse: collapse;
+  width: 100%;
+  border: 2px solid #333; /* borda externa */
+}
+
+/* Bordas internas das colunas e linhas */
+.results table th,
+.results table td {
+  border: 1px solid #333; /* bordas internas */
+  padding: 8px 12px;
+  text-align: left;
+}
+
+/* Cabeçalho da tabela */
+.results table th {
+  background-color: #f2f2f2; /* fundo cinza claro */
+  color: #000; /* texto preto visível */
+  font-weight: bold;
+}
+
+/* Linhas alternadas (efeito zebra) */
+.results table tr:nth-child(even) td {
+  background-color: #fafafa;
+}
+.results table tr:nth-child(odd) td {
+  background-color: #fff;
 }
