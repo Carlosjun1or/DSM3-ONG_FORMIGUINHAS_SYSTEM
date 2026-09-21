@@ -1,31 +1,25 @@
-# Como executar o projeto
+=====================================================
+  COMO EXECUTAR O PROJETO ONG FORMIGUINHAS
+=====================================================
 
-# Opcao mais simples (Windows):
-# Na pasta raiz do projeto, execute o arquivo 
-iniciar.bat
-# Ele cria o ambiente virtual, instala as dependencias,
-# executa as migrations e inicia o servidor automaticamente.
-# Depois acesse: http://127.0.0.1:8000/
+Forma mais simples (Automática):
+--------------------------------
+1. Abre o terminal na pasta raiz do projeto.
+2. Executa o comando:
+   .\iniciar.bat
 
-# ----------------------------------------
+O script vai criar o ambiente virtual (venv), instalar as dependências, 
+aplicar as migrações na base de dados e iniciar o servidor sozinho.
 
-# Opcao manual pelo terminal:
-cd formiguinhas_projeto
+3. Acede ao sistema pelo navegador no endereço:
+   http://127.0.0.1:8000/
 
-# 1. Cria o ambiente virtual dentro da pasta do projeto.
-python -m venv venv
 
-# 2. Ativa o ambiente virtual.
-venv\Scripts\activate
-
-# 3. Instala o Django, listado no requirements.txt.
-pip install -r requirements.txt
-
-# 3.1 Se não tiver, baixe os arquivos de baixo.
-pip install django *dentro do venv voce instala o django*
-
-# 4. Cria/atualiza as tabelas do banco de dados.
-python manage.py migrate
-
-# 5. Inicia o servidor do projeto.
-python manage.py runserver
+Caso precise rodar manualmente:
+-----------------------------------
+1. cd formiguinhas_projeto
+2. python -m venv venv
+3. .\venv\Scripts\activate
+4. pip install -r requirements.txt
+5. python manage.py migrate
+6. python manage.py runserver
