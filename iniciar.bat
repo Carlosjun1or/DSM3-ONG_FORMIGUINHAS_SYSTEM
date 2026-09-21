@@ -1,23 +1,58 @@
 @echo off
-echo ==========================================
-echo A iniciar o ambiente da ONG Formiguinhas...
-echo ==========================================
+setlocal
+title Formiguinhas - Inicializacao
 
-REM 1. Cria o venv se nao existir
-if not exist "venv" (
-    echo Criando ambiente virtual...
-    python -m venv venv
+set "ROOT_DIR=%~dp0"
+set "PROJECT_DIR=%ROOT_DIR%formiguinhas_projeto"
+
+if not exist "%PROJECT_DIR%\manage.py" (
+    echo ERRO: nao foi encontrada a pasta do projeto em:
+    echo %PROJECT_DIR%
+    pause
+    exit /b 1
 )
 
-REM 2. Ativa o venv e instala requisitos
-call venv\Scripts\activate
+where python >nul 2>&1
+if not errorlevel 1 (
+    set "PYTHON_CMD=python"
+) else (
+    where py >nul 2>&1
+    if not errorlevel 1 (
+        set "PYTHON_CMD=py -3"
+    ) else (
+        echo ERRO: Python nao foi encontrado no computador.
+        pause
+        exit /b 1
+    )
+)
+
+cd /d "%PROJECT_DIR%"
+
+if not exist "venv\Scripts\python.exe" (
+    echo Criando ambiente virtual...
+    %PYTHON_CMD% -m venv venv
+    if errorlevel 1 goto :erro
+)
+
 echo Instalando dependencias...
-pip install -r requirements.txt
+"%CD%\venv\Scripts\python.exe" -m pip install --disable-pip-version-check -r requirements.txt
+if errorlevel 1 goto :erro
 
-REM 3. Aplica migracoes no banco de dados
 echo Atualizando banco de dados...
-python manage.py migrate
+"%CD%\venv\Scripts\python.exe" manage.py migrate
+if errorlevel 1 goto :erro
 
-REM 4. Inicia o servidor
-echo Iniciando o servidor Django...
-python manage.py runserver
+echo Iniciando sistema...
+echo Acesse http://127.0.0.1:8000/
+"%CD%\venv\Scripts\python.exe" manage.py runserver
+if errorlevel 1 goto :erro
+
+endlocal
+exit /b 0
+
+:erro
+echo.
+echo O sistema nao foi iniciado. Verifique a mensagem acima.
+pause
+endlocal
+exit /b 1
