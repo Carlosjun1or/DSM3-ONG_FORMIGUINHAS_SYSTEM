@@ -6,7 +6,8 @@ from django.urls import reverse
 from praia.models import Praia
 from usuario.models import Usuario, Voluntario
 
-from .models import AuditoriaControle, Bag, Condominio, MovimentacaoBag
+from auditoria.models import EventoAuditoria
+from .models import Bag, Condominio, MovimentacaoBag
 
 
 class ControleCondominioPermissoesTests(TestCase):
@@ -253,7 +254,9 @@ class ControleCondominioPermissoesTests(TestCase):
             },
         )
 
-        auditorias = AuditoriaControle.objects.all()
+        auditorias = EventoAuditoria.objects.filter(
+            entidade__in=('CONDOMINIO', 'BAG', 'MOVIMENTACAO'),
+        )
         self.assertEqual(
             set(auditorias.values_list('acao', flat=True)),
             {'CRIACAO', 'EDICAO', 'MUDANCA_STATUS', 'MOVIMENTACAO'},

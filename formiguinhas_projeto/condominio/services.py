@@ -1,6 +1,6 @@
 from django.forms.models import model_to_dict
 
-from .models import AuditoriaControle, Bag, Condominio, MovimentacaoBag
+from .models import Bag, Condominio, MovimentacaoBag
 
 
 def _label(instance, field_name, value):
@@ -60,21 +60,9 @@ def registrar_auditoria(
     valores_anteriores=None,
     valores_novos=None,
 ):
-    registro = AuditoriaControle.objects.create(
-        entidade=entidade,
-        id_registro=instancia.pk,
-        acao=acao,
-        usuario=usuario,
-        usuario_nome=usuario.id_voluntario.nome,
-        resumo=resumo,
-        valores_anteriores=valores_anteriores or {},
-        valores_novos=valores_novos or snapshot(instancia),
-    )
-    # Mantém a tabela histórica legada e alimenta a auditoria global.
     from auditoria.services import registrar_evento
-    registrar_evento(
+    return registrar_evento(
         entidade=entidade, instancia=instancia, acao=acao, usuario=usuario,
         resumo=resumo, valores_anteriores=valores_anteriores,
         valores_novos=valores_novos or snapshot(instancia),
     )
-    return registro

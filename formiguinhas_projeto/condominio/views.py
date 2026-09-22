@@ -6,7 +6,9 @@ from django.utils import timezone
 from usuario.models import Usuario
 
 from .forms import BagForm, CondominioForm, MovimentacaoBagForm
-from .models import AuditoriaControle, Bag, Condominio, MovimentacaoBag
+from auditoria.models import EventoAuditoria
+
+from .models import Bag, Condominio, MovimentacaoBag
 from .services import registrar_auditoria, snapshot
 
 
@@ -177,7 +179,7 @@ def detalhe_condominio_view(request, condominio_id):
         'movimentacoes': MovimentacaoBag.objects.filter(
             bag__condominio=condominio,
         ).select_related('bag').order_by('-data_movimentacao')[:20],
-        'auditorias': AuditoriaControle.objects.filter(
+        'auditorias': EventoAuditoria.objects.filter(
             entidade='CONDOMINIO',
             id_registro=condominio.id_condominio,
         ).select_related('usuario')[:30],
@@ -252,7 +254,7 @@ def detalhe_bag_view(request, bag_id):
         'usuario': usuario,
         'bag': bag,
         'movimentacoes': bag.movimentacoes.select_related('registrado_por').all(),
-        'auditorias': AuditoriaControle.objects.filter(
+        'auditorias': EventoAuditoria.objects.filter(
             entidade__in=('BAG', 'MOVIMENTACAO'),
             id_registro__in=(
                 [bag.id_bag]

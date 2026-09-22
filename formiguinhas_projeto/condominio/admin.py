@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import AuditoriaControle, Bag, Condominio, MovimentacaoBag
+from .models import Bag, Condominio, MovimentacaoBag
 
 
 @admin.register(Condominio)
@@ -24,13 +24,3 @@ class MovimentacaoBagAdmin(admin.ModelAdmin):
     search_fields = ('bag__codigo', 'registrado_por_nome')
     readonly_fields = ('status_anterior', 'registrado_por', 'registrado_por_nome')
 
-
-@admin.register(AuditoriaControle)
-class AuditoriaControleAdmin(admin.ModelAdmin):
-    list_display = ('entidade', 'id_registro', 'acao', 'usuario_nome', 'data_evento', 'resumo')
-    list_filter = ('entidade', 'acao', 'data_evento')
-    search_fields = ('usuario_nome', 'resumo')
-    readonly_fields = (
-        'entidade', 'id_registro', 'acao', 'usuario', 'usuario_nome',
-        'data_evento', 'resumo', 'valores_anteriores', 'valores_novos',
-    )
