@@ -1,0 +1,42 @@
+{% extends 'inventario/base.html' %} {% block content %}
+<h2>Painel de Controle - ONG Formiguinhas</h2>
+<p>Bem-vindo ao sistema de inventário!</p>
+
+<div class="dashboard">
+  <a href="{% url 'usuarios' %}" class="card">
+    <h3>👤 Usuários</h3>
+    <p>Gerenciar cadastro e remoção de usuários.</p>
+  </a>
+
+  <a href="{% url 'movimentacoes' %}" class="card">
+    <h3>📦 Movimentações</h3>
+    <p>Registrar entradas e saídas de materiais.</p>
+  </a>
+
+  <a href="{% url 'consulta_estoque' %}" class="card">
+    <h3>🧹 Estoque</h3>
+    <p>Consultar saldo atual de materiais.</p>
+  </a>
+</div>
+
+<style>
+  .dashboard {
+    display: flex;
+    gap: 20px;
+    margin-top: 20px;
+  }
+  .card {
+    flex: 1;
+    padding: 20px;
+    background: #f0f0f0;
+    border-radius: 8px;
+    text-align: center;
+    text-decoration: none;
+    color: #333;
+    transition: 0.3s;
+  }
+  .card:hover {
+    background: #d9edf7;
+  }
+</style>
+{% endblock %}

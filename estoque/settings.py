@@ -135,5 +135,10 @@ STATICFILES_DIRS = [
 MAILERS = {
     'default': {
         'BACKEND': 'django.core.mail.backends.console.EmailBackend',
-    },
+    }
 }
+
+# Configurações de autenticação
+LOGIN_URL = 'login'
+LOGIN_REDIRECT_URL = 'dashboard'  # página inicial após login
+LOGOUT_REDIRECT_URL = 'login'

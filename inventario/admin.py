@@ -1,19 +1,19 @@
+from django.contrib.admin import AdminSite
 from django.contrib import admin
 from .models import Material, Movimentacao
 
-
-#  AdminSite customizado
-class CustomAdminSite(admin.AdminSite):
+# AdminSite customizado
+class CustomAdminSite(AdminSite):
     site_header = "ONG Formiguinhas - Controle de Estoque"
     site_title = "Formiguinhas Admin"
     index_title = "Bem-vindo ao Sistema de Inventário"
 
-
 # Instância do nosso Admin customizado
 custom_admin_site = CustomAdminSite(name="custom_admin")
 
-
-#  Materiais
+# -----------------------------
+# Materiais
+# -----------------------------
 @admin.register(Material, site=custom_admin_site)
 class MaterialAdmin(admin.ModelAdmin):
     list_display = ('nome', 'codigo', 'quantidade_inicial', 'saldo', 'unidade')
@@ -40,16 +40,20 @@ class MaterialAdmin(admin.ModelAdmin):
         return super().change_view(request, object_id, form_url, extra_context=extra_context)
 
 
-#  Movimentações
+# -----------------------------
+# Movimentações
+# -----------------------------
 @admin.register(Movimentacao, site=custom_admin_site)
 class MovimentacaoAdmin(admin.ModelAdmin):
     list_display = ('material', 'tipo', 'quantidade', 'usuario', 'data')
     list_filter = ('tipo', 'data')
     exclude = ('usuario',)
-class Media:
-    css = {
+
+    class Media:
+        css = {
             'all': ('inventario/css/style.css',)
-    }
+        }
+
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         if db_field.name == "material":
             kwargs["empty_label"] = "Selecione um material"

@@ -1,0 +1,30 @@
+{% extends 'inventario/base.html' %} {% block content %}
+<h2>📦 Histórico de Movimentações</h2>
+
+<table border="1" cellpadding="8" cellspacing="0">
+  <thead>
+    <tr>
+      <th>Material</th>
+      <th>Tipo</th>
+      <th>Quantidade</th>
+      <th>Usuário</th>
+      <th>Data</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for mov in movimentacoes %}
+    <tr>
+      <td>{{ mov.material.nome }}</td>
+      <td>{{ mov.tipo }}</td>
+      <td>{{ mov.quantidade }}</td>
+      <td>{{ mov.usuario.username }}</td>
+      <td>{{ mov.data }}</td>
+    </tr>
+    {% empty %}
+    <tr>
+      <td colspan="5">Nenhuma movimentação registrada.</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}
