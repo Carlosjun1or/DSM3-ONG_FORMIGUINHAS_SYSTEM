@@ -1,0 +1,30 @@
+{% extends 'sistema/template-sistema.html' %}
+{% block titulo %}Auditoria do controle | Sistema{% endblock %}
+{% block page_title %}Auditoria do controle{% endblock %}
+{% block conteudo %}
+<section class="card volunteer-control">
+    <div class="section-heading">
+        <div><h2>Histórico completo</h2><p class="form-subtitle">Registros de cadastros, edições, mudanças de status e movimentações feitos no controle.</p></div>
+    </div>
+    <form method="get" class="volunteer-filters">
+        <div class="form-group"><label for="id_entidade">Entidade</label><select id="id_entidade" name="entidade" class="form-control"><option value="">Todas as entidades</option>{% for valor, rotulo in entidade_choices %}<option value="{{ valor }}" {% if entidade_selecionada == valor %}selected{% endif %}>{{ rotulo }}</option>{% endfor %}</select></div>
+        <div class="form-group"><label for="id_acao">Ação</label><select id="id_acao" name="acao" class="form-control"><option value="">Todas as ações</option>{% for valor, rotulo in acao_choices %}<option value="{{ valor }}" {% if acao_selecionada == valor %}selected{% endif %}>{{ rotulo }}</option>{% endfor %}</select></div>
+        <div class="form-group"><label for="id_usuario">Usuário</label><select id="id_usuario" name="usuario" class="form-control"><option value="">Todos</option>{% for item in usuarios_filtro %}<option value="{{ item.pk }}" {% if usuario_selecionado == item.pk|stringformat:'s' %}selected{% endif %}>{{ item.id_voluntario.nome }}</option>{% endfor %}</select></div>
+        <div class="form-group"><label for="id_inicio">De</label><input id="id_inicio" type="date" name="inicio" value="{{ inicio }}" class="form-control"></div>
+        <div class="form-group"><label for="id_fim">Até</label><input id="id_fim" type="date" name="fim" value="{{ fim }}" class="form-control"></div>
+        <div class="filter-actions"><button type="submit" class="btn btn-primary">Filtrar</button>{% if entidade_selecionada or acao_selecionada or usuario_selecionado or inicio or fim %}<a href="{% url 'auditoria_global' %}" class="form-link">Limpar</a>{% endif %}</div>
+    </form>
+    <div class="table-wrap"><table class="data-table audit-history-table"><thead><tr><th>Data</th><th>Entidade</th><th>Ação</th><th>Resumo</th><th>Usuário</th><th>Alterações</th></tr></thead><tbody>
+    {% for auditoria in auditorias %}
+    <tr>
+        <td>{{ auditoria.data_evento|date:'d/m/Y H:i' }}</td>
+        <td>{{ auditoria.get_entidade_display }}<small class="table-secondary">Registro #{{ auditoria.id_registro }}</small></td>
+        <td><span class="audit-action audit-action-{{ auditoria.acao|lower }}">{{ auditoria.get_acao_display }}</span></td>
+        <td>{{ auditoria.resumo }}</td>
+        <td>{{ auditoria.usuario_nome }}</td>
+        <td><details><summary>Ver dados</summary><div class="audit-json"><strong>Antes:</strong> {{ auditoria.valores_anteriores }}<br><strong>Depois:</strong> {{ auditoria.valores_novos }}</div></details></td>
+    </tr>
+    {% empty %}<tr><td colspan="6">Nenhum evento de auditoria registrado.</td></tr>{% endfor %}
+    </tbody></table></div>
+</section>
+{% endblock %}

@@ -41,7 +41,9 @@ INSTALLED_APPS = [
     'praia',
     'equipe',
     'acao',
+    'condominio',
     'site_institucional',
+    'auditoria',
 ]
 
 MIDDLEWARE = [

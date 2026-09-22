@@ -70,6 +70,61 @@ document.addEventListener('DOMContentLoaded', function () {
         input.dispatchEvent(new Event('input'));
     });
 
+    document.querySelectorAll('.cep-input').forEach(function (input) {
+        var ultimaConsulta = '';
+        var endereco = document.getElementById('id_endereco');
+        var bairro = document.getElementById('id_bairro');
+        var cidade = document.getElementById('id_cidade');
+        var estado = document.getElementById('id_estado');
+        var status = document.getElementById('cep-status');
+
+        function formatarCep() {
+            var digits = input.value.replace(/\D/g, '').slice(0, 8);
+            input.value = digits.replace(/^(\d{5})(\d)/, '$1-$2');
+            return digits;
+        }
+
+        function preencherEndereco() {
+            var digits = formatarCep();
+            if (digits.length !== 8 || digits === ultimaConsulta) return;
+
+            ultimaConsulta = digits;
+            if (status) status.textContent = 'Buscando endereço...';
+            fetch('https://viacep.com.br/ws/' + digits + '/json/')
+                .then(function (response) {
+                    if (!response.ok) {
+                        throw new Error('Falha na consulta do CEP.');
+                    }
+                    return response.json();
+                })
+                .then(function (data) {
+                    if (data.erro) {
+                        throw new Error('CEP não encontrado.');
+                    }
+
+                    if (endereco && data.logradouro) endereco.value = data.logradouro;
+                    if (bairro && data.bairro) bairro.value = data.bairro;
+                    if (cidade && data.localidade) cidade.value = data.localidade;
+                    if (estado && data.uf) estado.value = data.uf;
+                    if (status) status.textContent = 'Endereço preenchido. Confira os dados.';
+                })
+                .catch(function () {
+                    ultimaConsulta = '';
+                    if (status) status.textContent = 'CEP não encontrado. Preencha o endereço manualmente.';
+                });
+        }
+
+        input.addEventListener('input', preencherEndereco);
+        input.addEventListener('blur', preencherEndereco);
+        formatarCep();
+    });
+
+    document.querySelectorAll('.estado-input').forEach(function (input) {
+        input.addEventListener('input', function () {
+            input.value = input.value.replace(/[^a-zA-Z]/g, '').slice(0, 2).toUpperCase();
+        });
+    });
+
     document.querySelectorAll('.data-nascimento-input').forEach(function (input) {
         if (/^\d{4}-\d{2}-\d{2}$/.test(input.value)) {
             var parts = input.value.split('-');
@@ -124,6 +179,40 @@ document.addEventListener('DOMContentLoaded', function () {
         input.addEventListener('input', aplicarMascaraHorario);
         input.addEventListener('change', aplicarMascaraHorario);
         aplicarMascaraHorario();
+    });
+
+    document.querySelectorAll('.data-hora-input').forEach(function (input) {
+        function formatarDataHora(valor) {
+            var digits = valor.replace(/\D/g, '').slice(0, 12);
+            var data = digits.slice(0, 8)
+                .replace(/^(\d{2})(\d)/, '$1/$2')
+                .replace(/^(\d{2}\/\d{2})(\d)/, '$1/$2');
+            var horario = digits.slice(8)
+                .replace(/^(\d{2})(\d)/, '$1:$2');
+            input.value = horario ? data + ' ' + horario : data;
+        }
+
+        if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(input.value)) {
+            var partes = input.value.split(/[-T:]/);
+            input.value = partes[2] + '/' + partes[1] + '/' + partes[0]
+                + ' ' + partes[3] + ':' + partes[4];
+        }
+
+        input.addEventListener('input', function () {
+            formatarDataHora(input.value);
+        });
+
+        if (input.form) {
+            input.form.addEventListener('submit', function () {
+                var partes = input.value.match(
+                    /^(\d{2})\/(\d{2})\/(\d{4})\s(\d{2}):(\d{2})$/
+                );
+                if (partes) {
+                    input.value = partes[3] + '-' + partes[2] + '-' + partes[1]
+                        + 'T' + partes[4] + ':' + partes[5];
+                }
+            });
+        }
     });
 
     document.querySelectorAll('.email-input').forEach(function (input) {

@@ -1,0 +1,38 @@
+{% extends 'sistema/template-sistema.html' %}
+{% block titulo %}{% if modo_edicao %}Editar condomínio{% else %}Novo condomínio{% endif %} | Sistema{% endblock %}
+{% block page_title %}{% if modo_edicao %}Editar condomínio{% else %}Cadastrar condomínio{% endif %}{% endblock %}
+{% block conteudo %}
+<section class="form-card">
+    <div class="section-heading"><div><h2>Dados do condomínio</h2><p class="form-subtitle">A praia é opcional: o endereço do condomínio é sempre independente.</p></div><a href="{% url 'condominios' %}" class="btn btn-outline">Voltar</a></div>
+    <form method="post" class="system-form">{% csrf_token %}
+        {% if form.non_field_errors %}<div class="alert-box">{{ form.non_field_errors }}</div>{% endif %}
+        <h3 class="form-section-title">Contato do condomínio</h3>
+        <div class="form-grid">
+            <div class="form-group"><label for="{{ form.nome.id_for_label }}">{{ form.nome.label }}</label>{{ form.nome }}{% for error in form.nome.errors %}<small class="field-error">{{ error }}</small>{% endfor %}</div>
+            <div class="form-group"><label for="{{ form.responsavel_nome.id_for_label }}">{{ form.responsavel_nome.label }}</label>{{ form.responsavel_nome }}{% for error in form.responsavel_nome.errors %}<small class="field-error">{{ error }}</small>{% endfor %}</div>
+            <div class="form-group"><label for="{{ form.responsavel_telefone.id_for_label }}">{{ form.responsavel_telefone.label }}</label>{{ form.responsavel_telefone }}{% for error in form.responsavel_telefone.errors %}<small class="field-error">{{ error }}</small>{% endfor %}</div>
+            <div class="form-group"><label for="{{ form.responsavel_email.id_for_label }}">{{ form.responsavel_email.label }}</label>{{ form.responsavel_email }}{% for error in form.responsavel_email.errors %}<small class="field-error">{{ error }}</small>{% endfor %}</div>
+        </div>
+        <h3 class="form-section-title">Endereço</h3>
+        <p class="form-help">Informe o CEP para preencher automaticamente os dados do endereço. Você poderá revisar e ajustar os campos antes de salvar.</p>
+        <div class="form-grid">
+            <div class="form-group"><label for="{{ form.cep.id_for_label }}">{{ form.cep.label }}</label>{{ form.cep }}<small id="cep-status" class="form-help" aria-live="polite"></small>{% for error in form.cep.errors %}<small class="field-error">{{ error }}</small>{% endfor %}</div>
+            <div class="form-group"><label for="{{ form.endereco.id_for_label }}">{{ form.endereco.label }}</label>{{ form.endereco }}{% for error in form.endereco.errors %}<small class="field-error">{{ error }}</small>{% endfor %}</div>
+            <div class="form-group"><label for="{{ form.numero.id_for_label }}">{{ form.numero.label }}</label>{{ form.numero }}{% for error in form.numero.errors %}<small class="field-error">{{ error }}</small>{% endfor %}</div>
+            <div class="form-group"><label for="{{ form.complemento.id_for_label }}">{{ form.complemento.label }}</label>{{ form.complemento }}{% for error in form.complemento.errors %}<small class="field-error">{{ error }}</small>{% endfor %}</div>
+            <div class="form-group"><label for="{{ form.bairro.id_for_label }}">{{ form.bairro.label }}</label>{{ form.bairro }}{% for error in form.bairro.errors %}<small class="field-error">{{ error }}</small>{% endfor %}</div>
+            <div class="form-group"><label for="{{ form.cidade.id_for_label }}">{{ form.cidade.label }}</label>{{ form.cidade }}{% for error in form.cidade.errors %}<small class="field-error">{{ error }}</small>{% endfor %}</div>
+            <div class="form-group"><label for="{{ form.estado.id_for_label }}">{{ form.estado.label }}</label>{{ form.estado }}{% for error in form.estado.errors %}<small class="field-error">{{ error }}</small>{% endfor %}</div>
+        </div>
+        <h3 class="form-section-title">Classificação e observações</h3>
+        <div class="form-grid">
+            <div class="form-group"><label for="{{ form.praia.id_for_label }}">{{ form.praia.label }}</label>{{ form.praia }}{% for error in form.praia.errors %}<small class="field-error">{{ error }}</small>{% endfor %}</div>
+            <div class="form-group"><label for="{{ form.porte.id_for_label }}">{{ form.porte.label }}</label>{{ form.porte }}{% for error in form.porte.errors %}<small class="field-error">{{ error }}</small>{% endfor %}</div>
+            <div class="form-group"><label for="{{ form.confiabilidade.id_for_label }}">{{ form.confiabilidade.label }}</label>{{ form.confiabilidade }}{% for error in form.confiabilidade.errors %}<small class="field-error">{{ error }}</small>{% endfor %}</div>
+            <div class="form-group"><label for="{{ form.status.id_for_label }}">{{ form.status.label }}</label>{{ form.status }}{% for error in form.status.errors %}<small class="field-error">{{ error }}</small>{% endfor %}</div>
+            <div class="form-group form-group-full"><label for="{{ form.observacoes.id_for_label }}">{{ form.observacoes.label }}</label>{{ form.observacoes }}{% for error in form.observacoes.errors %}<small class="field-error">{{ error }}</small>{% endfor %}</div>
+        </div>
+        <div class="form-actions"><button type="submit" class="btn btn-primary">Salvar condomínio</button><a href="{% url 'condominios' %}" class="btn btn-outline">Cancelar</a></div>
+    </form>
+</section>
+{% endblock %}

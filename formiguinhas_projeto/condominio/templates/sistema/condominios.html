@@ -1,0 +1,49 @@
+{% extends 'sistema/template-sistema.html' %}
+{% block titulo %}Controle de Condomínios e Bags | Sistema{% endblock %}
+{% block page_title %}Controle de Condomínios e Bags{% endblock %}
+{% block conteudo %}
+<section class="card-grid volunteer-metrics">
+    <article class="card"><h3>Condomínios</h3><div class="metric">{{ total_condominios }}</div></article>
+    <article class="card"><h3>Bags cadastradas</h3><div class="metric">{{ total_bags }}</div></article>
+    <article class="card"><h3>Bags cheias</h3><div class="metric">{{ bags_cheias }}</div></article>
+</section>
+
+<section class="card volunteer-control">
+    <div class="section-heading">
+        <div>
+            <h2>Condomínios parceiros</h2>
+            <p class="form-subtitle">Acompanhe os condomínios e as bags grandes sob controle da ONG.</p>
+        </div>
+        {% if usuario.tipo == 'ADMIN' %}
+        <div class="table-actions">
+            <a href="{% url 'cadastrar_condominio' %}" class="btn btn-primary">Novo condomínio</a>
+            <a href="{% url 'cadastrar_bag' %}" class="btn btn-outline">Nova bag</a>
+        </div>
+        {% endif %}
+    </div>
+    <form method="get" class="volunteer-filters">
+        <div class="form-group"><label for="id_busca">Buscar</label><input id="id_busca" name="busca" type="search" value="{{ busca }}" class="form-control" placeholder="Nome do condomínio"></div>
+        <div class="form-group"><label for="id_status">Status</label><select id="id_status" name="status" class="form-control"><option value="">Todos os status</option>{% for valor, rotulo in status_choices %}<option value="{{ valor }}" {% if status_selecionado == valor %}selected{% endif %}>{{ rotulo }}</option>{% endfor %}</select></div>
+        <div class="filter-actions"><button type="submit" class="btn btn-primary">Filtrar</button>{% if busca or status_selecionado %}<a href="{% url 'condominios' %}" class="form-link">Limpar</a>{% endif %}</div>
+    </form>
+    {% if condominios %}
+    <div class="table-wrap"><table class="data-table"><thead><tr><th>Condomínio</th><th>Localização</th><th>Praia</th><th>Porte</th><th>Confiabilidade</th><th>Bags</th><th>Status</th><th>Auditoria</th></tr></thead><tbody>
+    {% for condominio in condominios %}
+    <tr>
+        <td><a class="table-link" href="{% url 'detalhe_condominio' condominio.id_condominio %}"><strong>{{ condominio.nome }}</strong></a><small class="table-secondary">{{ condominio.responsavel_nome }}</small></td>
+        <td><span>{{ condominio.endereco }}, {{ condominio.numero }}</span><small class="table-secondary">{{ condominio.bairro }} - {{ condominio.cidade }}/{{ condominio.estado }}</small></td>
+        <td>{% if condominio.praia %}{{ condominio.praia.nome }}{% else %}<span class="muted">Não vinculada</span>{% endif %}</td>
+        <td>{{ condominio.get_porte_display }}</td><td>{{ condominio.get_confiabilidade_display }}</td>
+        <td>{% for bag in condominio.bags.all %}<span class="bag-summary"><a class="table-link" href="{% url 'detalhe_bag' bag.id_bag %}">{{ bag.codigo }}</a><small class="table-secondary">{{ bag.get_status_display }}</small></span>{% empty %}<span class="muted">Nenhuma</span>{% endfor %}</td>
+        <td>{{ condominio.get_status_display }}</td>
+        <td class="audit-cell">
+            <strong>{% if condominio.cadastrado_por_nome %}Cadastrado por {{ condominio.cadastrado_por_nome }}{% elif condominio.cadastrado_por %}Cadastrado por {{ condominio.cadastrado_por.id_voluntario.nome }}{% else %}Cadastro anterior{% endif %}</strong>
+            <small>{{ condominio.dt_cadastro|date:'d/m/Y H:i' }}</small>
+            {% if condominio.ultimo_editado_por_nome %}<small>Editado por {{ condominio.ultimo_editado_por_nome }} em {{ condominio.dt_ultima_edicao|date:'d/m/Y H:i' }}</small>{% elif condominio.ultimo_editado_por %}<small>Editado por {{ condominio.ultimo_editado_por.id_voluntario.nome }} em {{ condominio.dt_ultima_edicao|date:'d/m/Y H:i' }}</small>{% else %}<small>Sem edições</small>{% endif %}
+        </td>
+    </tr>
+    {% endfor %}
+    </tbody></table></div>
+    {% else %}<div class="empty-state table-empty"><h3>Nenhum condomínio encontrado</h3><p class="form-subtitle">Cadastre o primeiro condomínio parceiro.</p></div>{% endif %}
+</section>
+{% endblock %}

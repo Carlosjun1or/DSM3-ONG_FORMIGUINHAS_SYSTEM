@@ -23,6 +23,7 @@ from .models import (
     adicionar_coordenadores_automaticos_para_mutirao,
     adicionar_participantes_automaticos_para_mutirao,
 )
+from auditoria.services import registrar_evento, snapshot
 
 
 def preencher_auditoria(acao, usuario, criacao=False):
@@ -107,6 +108,8 @@ def cadastro_acao_view(request):
             acao = form.save(commit=False)
             preencher_auditoria(acao, usuario, criacao=True)
             acao.save()
+            registrar_evento(entidade='ACAO', instancia=acao, acao='CRIACAO', usuario=usuario,
+                             resumo=f'Ação #{acao.pk} cadastrada.')
 
             if acao.tipo == Acao.TIPO_MUTIRAO:
                 for equipe in acao.praia.equipes.filter(status='ATIVA'):
@@ -134,12 +137,15 @@ def editar_acao_view(request, acao_id):
         return redirect('acao_detalhe', acao_id=acao_id)
 
     acao = get_object_or_404(Acao, id_acao=acao_id)
+    valores_anteriores = snapshot(acao)
     if request.method == 'POST':
         form = AcaoForm(request.POST, instance=acao)
         if form.is_valid():
             acao = form.save(commit=False)
             preencher_auditoria(acao, usuario)
             acao.save()
+            registrar_evento(entidade='ACAO', instancia=acao, acao='EDICAO', usuario=usuario,
+                             resumo=f'Ação #{acao.pk} editada.', valores_anteriores=valores_anteriores)
             if acao.tipo == Acao.TIPO_MUTIRAO:
                 for equipe in acao.praia.equipes.filter(status='ATIVA'):
                     AcaoEquipe.objects.get_or_create(acao=acao, equipe=equipe)

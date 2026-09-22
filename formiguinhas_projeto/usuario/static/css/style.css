@@ -497,6 +497,122 @@ main {
     color: #30463f;
 }
 
+.data-table td > small.table-secondary,
+.data-table td > .bag-summary {
+    display: block;
+    margin-top: 5px;
+}
+
+.bag-summary {
+    min-width: 105px;
+    white-space: normal;
+}
+
+.bag-summary .table-link {
+    display: inline-block;
+    white-space: nowrap;
+}
+
+.bag-summary .table-secondary {
+    display: block;
+    margin-top: 4px;
+    white-space: nowrap;
+}
+
+.table-secondary {
+    color: #6b7d76;
+    font-size: 0.78rem;
+}
+
+.bag-summary + .bag-summary {
+    margin-top: 8px;
+}
+
+.bags-table {
+    min-width: 1380px;
+}
+
+.bag-status {
+    display: inline-block;
+    padding: 5px 9px;
+    border-radius: 999px;
+    background: #edf2ef;
+    color: #3d554b;
+    font-size: 0.78rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.bag-status-cheia {
+    background: #fff0d8;
+    color: #9a5b00;
+}
+
+.bag-status-em_uso {
+    background: #e1f2e7;
+    color: #176247;
+}
+
+.bag-status-em_transito,
+.bag-status-retirada {
+    background: #e4eef8;
+    color: #245d8c;
+}
+
+.bag-status-danificada,
+.bag-status-perdida {
+    background: #fbe3e3;
+    color: #a33c3c;
+}
+
+.audit-history-table {
+    min-width: 1100px;
+}
+
+.audit-action {
+    display: inline-block;
+    padding: 5px 9px;
+    border-radius: 999px;
+    background: #edf2ef;
+    color: #3d554b;
+    font-size: 0.78rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.audit-action-criacao {
+    background: #e1f2e7;
+    color: #176247;
+}
+
+.audit-action-edicao {
+    background: #e4eef8;
+    color: #245d8c;
+}
+
+.audit-action-mudanca_status,
+.audit-action-movimentacao {
+    background: #fff0d8;
+    color: #9a5b00;
+}
+
+.audit-json {
+    max-width: 440px;
+    margin-top: 8px;
+    color: #5b6f68;
+    font-size: 0.76rem;
+    line-height: 1.5;
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+
+details summary {
+    color: #1d785d;
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-weight: 700;
+}
+
 .table-link {
     color: #1b5a46;
     text-decoration: none;
@@ -1155,6 +1271,59 @@ main {
     grid-column: 1 / -1;
 }
 
+.form-group-full {
+    grid-column: 1 / -1;
+}
+
+.form-section-title {
+    margin: 24px 0 6px;
+    color: #173d31;
+    font-size: 1rem;
+}
+
+.form-section-title:first-of-type {
+    margin-top: 0;
+}
+
+.form-help {
+    display: block;
+    color: #6b7d76;
+    font-size: 0.8rem;
+    line-height: 1.4;
+}
+
+.detail-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+}
+
+.detail-grid > div {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    padding: 14px;
+    border: 1px solid #e3ede7;
+    border-radius: 12px;
+    background: #f7faf8;
+}
+
+.detail-grid strong {
+    color: #5b6f68;
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.detail-grid span {
+    color: #173d31;
+    font-weight: 700;
+}
+
+.muted {
+    color: #6b7d76;
+}
+
 .form-group label {
     font-size: 0.9rem;
     font-weight: 700;
@@ -1171,9 +1340,49 @@ main {
     color: #173d31;
 }
 
+select.form-control,
+select.select-control {
+    appearance: none;
+    padding-right: 42px;
+    background-color: #f9fbfa;
+    background-image:
+        linear-gradient(45deg, transparent 50%, #1d785d 50%),
+        linear-gradient(135deg, #1d785d 50%, transparent 50%);
+    background-position:
+        calc(100% - 19px) 52%,
+        calc(100% - 13px) 52%;
+    background-repeat: no-repeat;
+    background-size: 6px 6px, 6px 6px;
+    cursor: pointer;
+}
+
+select.form-control:hover,
+select.select-control:hover {
+    border-color: #a9c7b8;
+}
+
+select.form-control:disabled,
+select.select-control:disabled {
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
 .form-control:focus {
     outline: 2px solid rgba(22, 115, 89, 0.2);
     border-color: #1d785d;
+}
+
+.data-hora-input {
+    min-height: 46px;
+}
+
+.current-status {
+    display: inline-block;
+    padding: 4px 9px;
+    border-radius: 999px;
+    background: #e1f2e7;
+    color: #176247;
+    font-size: 0.9rem;
 }
 
 .password-field {

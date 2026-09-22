@@ -1,0 +1,52 @@
+{% extends 'sistema/template-sistema.html' %}
+{% block titulo %}{% if modo_edicao %}Editar bag{% else %}Nova bag{% endif %} | Sistema{% endblock %}
+{% block page_title %}{% if modo_edicao %}Editar bag{% else %}Cadastrar bag grande{% endif %}{% endblock %}
+{% block conteudo %}
+<section class="form-card">
+    <div class="section-heading"><div><h2>Bag grande</h2><p class="form-subtitle">Todas as bags deste controle são consideradas grandes. O código identifica a bag durante todo o ciclo de uso.</p></div><a href="{% url 'condominios' %}" class="btn btn-outline">Voltar</a></div>
+    <form method="post" class="system-form">{% csrf_token %}
+        <h3 class="form-section-title">Identificação e vínculo</h3>
+        <div class="form-grid">
+            <div class="form-group">
+                <label for="{{ form.codigo.id_for_label }}">{{ form.codigo.label }}</label>
+                {{ form.codigo }}
+                <small class="form-help">Use um código único, como BAG-0001.</small>
+                {% for error in form.codigo.errors %}<small class="field-error">{{ error }}</small>{% endfor %}
+            </div>
+            <div class="form-group">
+                <label for="{{ form.condominio.id_for_label }}">{{ form.condominio.label }}</label>
+                {{ form.condominio }}
+                <small class="form-help">A bag ficará vinculada a este condomínio.</small>
+                {% for error in form.condominio.errors %}<small class="field-error">{{ error }}</small>{% endfor %}
+            </div>
+        </div>
+        <h3 class="form-section-title">Acompanhamento operacional</h3>
+        <div class="form-grid">
+            <div class="form-group">
+                <label for="{{ form.status.id_for_label }}">{{ form.status.label }}</label>
+                {{ form.status }}
+                <small class="form-help">O status também é atualizado ao registrar uma movimentação.</small>
+                {% for error in form.status.errors %}<small class="field-error">{{ error }}</small>{% endfor %}
+            </div>
+            <div class="form-group">
+                <label for="{{ form.peso_atual_kg.id_for_label }}">{{ form.peso_atual_kg.label }}</label>
+                {{ form.peso_atual_kg }}
+                <small class="form-help">Informe o peso atual em quilogramas.</small>
+                {% for error in form.peso_atual_kg.errors %}<small class="field-error">{{ error }}</small>{% endfor %}
+            </div>
+            <div class="form-group">
+                <label for="{{ form.percentual_ocupacao.id_for_label }}">{{ form.percentual_ocupacao.label }}</label>
+                {{ form.percentual_ocupacao }}
+                <small class="form-help">Use um valor entre 0 e 100%.</small>
+                {% for error in form.percentual_ocupacao.errors %}<small class="field-error">{{ error }}</small>{% endfor %}
+            </div>
+            <div class="form-group form-group-full">
+                <label for="{{ form.observacoes.id_for_label }}">{{ form.observacoes.label }}</label>
+                {{ form.observacoes }}
+                {% for error in form.observacoes.errors %}<small class="field-error">{{ error }}</small>{% endfor %}
+            </div>
+        </div>
+        <div class="form-actions"><button type="submit" class="btn btn-primary">Salvar bag</button><a href="{% url 'condominios' %}" class="btn btn-outline">Cancelar</a></div>
+    </form>
+</section>
+{% endblock %}

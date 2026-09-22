@@ -15,6 +15,7 @@ from .forms import (
     PerfilForm,
 )
 from .models import Usuario, Voluntario
+from auditoria.services import registrar_evento, snapshot
 
 
 # Create your views here.
@@ -150,6 +151,7 @@ def editar_voluntario_view(request, voluntario_id):
         return redirect('login')
 
     if request.method == 'POST':
+        valores_anteriores = snapshot(voluntario)
         form = VoluntarioEdicaoForm(request.POST, instance=voluntario)
         email_bloqueado, status_bloqueado = aplicar_restricoes_edicao(
             form, usuario, voluntario
@@ -184,6 +186,9 @@ def editar_voluntario_view(request, voluntario_id):
                 voluntario.ultimo_editado_por_tipo = usuario.tipo
                 voluntario.dt_ultima_edicao = timezone.now()
                 voluntario.save()
+                registrar_evento(entidade='VOLUNTARIO', instancia=voluntario, acao='EDICAO',
+                                 usuario=usuario, resumo=f'Voluntário "{voluntario.nome}" editado.',
+                                 valores_anteriores=valores_anteriores)
                 if voluntario.status == 'INATIVO':
                     from equipe.services import encerrar_vinculos_voluntario
 
@@ -229,6 +234,7 @@ def atualizar_status_voluntario_view(request, voluntario_id):
             and status != 'ATIVO'
         )
         if status in status_validos and not status_proibido_para_coordenador and not status_proibido_para_admin:
+            valores_anteriores = snapshot(voluntario)
             voluntario.status = status
             voluntario.ultimo_editado_por = usuario
             voluntario.ultimo_editado_por_nome = usuario.id_voluntario.nome
@@ -241,6 +247,9 @@ def atualizar_status_voluntario_view(request, voluntario_id):
                 'ultimo_editado_por_tipo',
                 'dt_ultima_edicao',
             ])
+            registrar_evento(entidade='VOLUNTARIO', instancia=voluntario, acao='MUDANCA_STATUS',
+                             usuario=usuario, resumo=f'Status de "{voluntario.nome}" alterado.',
+                             valores_anteriores=valores_anteriores)
             if voluntario.status == 'INATIVO':
                 from equipe.services import encerrar_vinculos_voluntario
 
@@ -265,7 +274,11 @@ def excluir_voluntario_view(request, voluntario_id):
         return redirect('voluntarios')
 
     if request.method == 'POST':
+        valores_anteriores = snapshot(voluntario)
         voluntario.delete()
+        registrar_evento(entidade='VOLUNTARIO', id_registro=voluntario_id, acao='EXCLUSAO',
+                         usuario=usuario, resumo=f'Voluntário "{valores_anteriores.get("nome", voluntario_id)}" excluído.',
+                         valores_anteriores=valores_anteriores)
 
     return redirect('voluntarios')
 
