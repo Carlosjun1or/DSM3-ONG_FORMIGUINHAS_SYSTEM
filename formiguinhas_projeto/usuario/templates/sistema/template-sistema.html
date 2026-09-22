@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block titulo %}Formiguinhas | Sistema{% endblock %}</title>
-    <link rel="stylesheet" href="{% static 'css/style.css' %}?v=6">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}?v=10">
     {% block estilos %}{% endblock %}
 </head>
 <body class="system-page">
@@ -31,6 +31,9 @@
                 <a href="{% url 'equipes' %}" class="sidebar-link {% if '/equipe/' in request.path %}active{% endif %}">Controle de Equipes</a>
                 {% endif %}
                 <a href="{% url 'acoes' %}" class="sidebar-link {% if '/acao/' in request.path %}active{% endif %}">Controle de Ações</a>
+                <a href="{% url 'condominios' %}" class="sidebar-link {% if '/condominio/' in request.path %}active{% endif %}">Controle de Condomínios</a>
+                <a href="{% url 'bags' %}" class="sidebar-link {% if request.path == '/condominio/bags/' %}active{% endif %}">Controle de Bags</a>
+                <a href="{% url 'auditoria_global' %}" class="sidebar-link {% if '/auditoria/' in request.path or '/condominio/auditoria/' in request.path %}active{% endif %}">Auditoria global</a>
                 <a href="{% url 'perfil' %}" class="sidebar-link {% if request.path == '/perfil/' %}active{% endif %}">Perfil</a>
             </nav>
 
@@ -67,6 +70,6 @@
             {% block conteudo %}{% endblock %}
         </main>
     </div>
-    <script src="{% static 'js/masks.js' %}?v=8"></script>
+    <script src="{% static 'js/masks.js' %}?v=11"></script>
 </body>
 </html>

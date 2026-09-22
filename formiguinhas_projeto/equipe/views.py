@@ -8,6 +8,7 @@ from usuario.views import get_session_usuario
 
 from .forms import EquipeForm, EquipeMembroForm
 from .models import Equipe, EquipeMembro
+from auditoria.services import registrar_evento, snapshot
 
 
 def preencher_auditoria(objeto, usuario, criacao=False):
@@ -113,6 +114,8 @@ def cadastro_equipe_view(request):
             equipe = form.save(commit=False)
             preencher_auditoria(equipe, usuario, criacao=True)
             equipe.save()
+            registrar_evento(entidade='EQUIPE', instancia=equipe, acao='CRIACAO', usuario=usuario,
+                             resumo=f'Equipe "{equipe.nome}" cadastrada.')
             return redirect('equipe_detalhe', equipe_id=equipe.id_equipe)
     else:
         form = EquipeForm(initial={'status': 'ATIVA'})
@@ -136,11 +139,15 @@ def editar_equipe_view(request, equipe_id):
         id_equipe=equipe_id,
     )
     if request.method == 'POST':
+        valores_anteriores = snapshot(equipe)
         form = EquipeForm(request.POST, instance=equipe)
         if form.is_valid():
             equipe = form.save(commit=False)
             preencher_auditoria(equipe, usuario)
             equipe.save()
+            registrar_evento(entidade='EQUIPE', instancia=equipe, acao='EDICAO', usuario=usuario,
+                             resumo=f'Equipe "{equipe.nome}" editada.',
+                             valores_anteriores=valores_anteriores)
             return redirect('equipe_detalhe', equipe_id=equipe.id_equipe)
     else:
         form = EquipeForm(instance=equipe)
@@ -226,6 +233,8 @@ def adicionar_membro_view(request, equipe_id):
             membro.papel = 'VOLUNTARIO'
         preencher_auditoria(membro, usuario, criacao=True)
         membro.save()
+        registrar_evento(entidade='EQUIPE_MEMBRO', instancia=membro, acao='VINCULO', usuario=usuario,
+                         resumo=f'{membro.voluntario.nome} vinculado à equipe "{equipe.nome}".')
         preencher_auditoria(equipe, usuario)
         equipe.save(update_fields=[
             'ultimo_editado_por',

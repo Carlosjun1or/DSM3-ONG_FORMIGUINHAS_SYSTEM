@@ -12,6 +12,7 @@ from usuario.models import Usuario
 
 from .forms import PraiaForm
 from .models import Praia
+from auditoria.services import registrar_evento, snapshot
 
 
 def localizar_praia_view(request):
@@ -160,6 +161,8 @@ def cadastrar_praia_view(request):
             praia.ultimo_editado_por_tipo = None
             praia.dt_ultima_edicao = None
             praia.save()
+            registrar_evento(entidade='PRAIA', instancia=praia, acao='CRIACAO', usuario=usuario,
+                             resumo=f'Praia "{praia.nome}" cadastrada.')
             return redirect('praias')
     else:
         form = PraiaForm()
@@ -179,6 +182,7 @@ def editar_praia_view(request, praia_id):
         return redirect('praias')
 
     praia = get_object_or_404(Praia, id_praia=praia_id)
+    valores_anteriores = snapshot(praia)
     if request.method == 'POST':
         form = PraiaForm(request.POST, instance=praia)
         if form.is_valid():
@@ -188,6 +192,9 @@ def editar_praia_view(request, praia_id):
             praia.ultimo_editado_por_tipo = usuario.tipo
             praia.dt_ultima_edicao = timezone.now()
             praia.save()
+            registrar_evento(entidade='PRAIA', instancia=praia, acao='EDICAO', usuario=usuario,
+                             resumo=f'Praia "{praia.nome}" editada.',
+                             valores_anteriores=valores_anteriores)
             return redirect('praias')
     else:
         form = PraiaForm(instance=praia)
@@ -209,6 +216,7 @@ def atualizar_status_praia_view(request, praia_id):
 
     if request.method == 'POST':
         praia = get_object_or_404(Praia, id_praia=praia_id)
+        anterior = snapshot(praia)
         status = request.POST.get('praia_ativa')
         if status in dict(Praia.STATUS_CHOICES):
             praia.praia_ativa = status
@@ -217,6 +225,9 @@ def atualizar_status_praia_view(request, praia_id):
             praia.ultimo_editado_por_tipo = usuario.tipo
             praia.dt_ultima_edicao = timezone.now()
             praia.save(update_fields=['praia_ativa', 'ultimo_editado_por', 'ultimo_editado_por_nome', 'ultimo_editado_por_tipo', 'dt_ultima_edicao'])
+            registrar_evento(entidade='PRAIA', instancia=praia, acao='MUDANCA_STATUS', usuario=usuario,
+                             resumo=f'Status da praia "{praia.nome}" alterado.',
+                             valores_anteriores=anterior)
 
     return redirect('praias')
 
@@ -230,6 +241,10 @@ def excluir_praia_view(request, praia_id):
 
     if request.method == 'POST':
         praia = get_object_or_404(Praia, id_praia=praia_id)
+        anterior = snapshot(praia)
         praia.delete()
+        registrar_evento(entidade='PRAIA', id_registro=praia_id, acao='EXCLUSAO', usuario=usuario,
+                         resumo=f'Praia "{anterior.get("nome", praia_id)}" excluída.',
+                         valores_anteriores=anterior)
 
     return redirect('praias')

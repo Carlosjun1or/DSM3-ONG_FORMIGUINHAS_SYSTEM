@@ -1,0 +1,95 @@
+{% extends 'sistema/template-sistema.html' %}
+{% block titulo %}Controle de Bags | Sistema{% endblock %}
+{% block page_title %}Controle de Bags{% endblock %}
+{% block conteudo %}
+<section class="card-grid volunteer-metrics">
+    <article class="card"><h3>Total de bags</h3><div class="metric">{{ total_bags }}</div></article>
+    <article class="card"><h3>Bags cheias</h3><div class="metric">{{ bags_cheias }}</div></article>
+    <article class="card"><h3>Bags em uso</h3><div class="metric">{{ bags_em_uso }}</div></article>
+</section>
+
+<section class="card volunteer-control">
+    <div class="section-heading">
+        <div>
+            <h2>Todas as bags</h2>
+            <p class="form-subtitle">Consulte em uma única tela o status, a ocupação, o peso e o condomínio de cada bag.</p>
+        </div>
+        <div class="table-actions">
+            <a href="{% url 'condominios' %}" class="btn btn-outline">Ver condomínios</a>
+            {% if usuario.tipo == 'ADMIN' %}<a href="{% url 'cadastrar_bag' %}" class="btn btn-primary">Nova bag</a>{% endif %}
+        </div>
+    </div>
+
+    <form method="get" class="volunteer-filters">
+        <div class="form-group">
+            <label for="id_busca">Buscar</label>
+            <input id="id_busca" name="busca" type="search" value="{{ busca }}" class="form-control" placeholder="Código da bag ou condomínio">
+        </div>
+        <div class="form-group">
+            <label for="id_status">Status da bag</label>
+            <select id="id_status" name="status" class="form-control">
+                <option value="">Todos os status</option>
+                {% for valor, rotulo in status_choices %}<option value="{{ valor }}" {% if status_selecionado == valor %}selected{% endif %}>{{ rotulo }}</option>{% endfor %}
+            </select>
+        </div>
+        <div class="filter-actions">
+            <button type="submit" class="btn btn-primary">Filtrar</button>
+            {% if busca or status_selecionado %}<a href="{% url 'bags' %}" class="form-link">Limpar</a>{% endif %}
+        </div>
+    </form>
+
+    {% if bags %}
+    <div class="table-wrap">
+        <table class="data-table bags-table">
+            <thead>
+                <tr>
+                    <th>Bag</th>
+                    <th>Condomínio</th>
+                    <th>Praia</th>
+                    <th>Status</th>
+                    <th>Ocupação</th>
+                    <th>Peso atual</th>
+                    <th>Última movimentação</th>
+                    <th>Auditoria</th>
+                    {% if usuario.tipo == 'ADMIN' %}<th>Ações</th>{% endif %}
+                </tr>
+            </thead>
+            <tbody>
+            {% for bag in bags %}
+                <tr>
+                    <td>
+                        <a class="table-link" href="{% url 'detalhe_bag' bag.id_bag %}"><strong>{{ bag.codigo }}</strong></a>
+                        <small class="table-secondary">Bag grande</small>
+                    </td>
+                    <td>
+                        <a class="table-link" href="{% url 'detalhe_condominio' bag.condominio.id_condominio %}">{{ bag.condominio.nome }}</a>
+                        <small class="table-secondary">{{ bag.condominio.cidade }}/{{ bag.condominio.estado }}</small>
+                    </td>
+                    <td>{% if bag.condominio.praia %}{{ bag.condominio.praia.nome }}{% else %}<span class="muted">Não vinculada</span>{% endif %}</td>
+                    <td><span class="bag-status bag-status-{{ bag.status|lower }}">{{ bag.get_status_display }}</span></td>
+                    <td><strong>{{ bag.percentual_ocupacao }}%</strong></td>
+                    <td>{{ bag.peso_atual_kg|floatformat:2 }} kg</td>
+                    <td>
+                        {% with ultima=bag.movimentacoes.all|first %}
+                            {% if ultima %}
+                                <span>{{ ultima.get_tipo_display }}</span>
+                                <small class="table-secondary">{{ ultima.data_movimentacao|date:'d/m/Y H:i' }} · {{ ultima.get_status_novo_display }}</small>
+                            {% else %}<span class="muted">Sem movimentações</span>{% endif %}
+                        {% endwith %}
+                    </td>
+                    <td class="audit-cell">
+                        <strong>{% if bag.cadastrado_por_nome %}Cadastrada por {{ bag.cadastrado_por_nome }}{% elif bag.cadastrado_por %}Cadastrada por {{ bag.cadastrado_por.id_voluntario.nome }}{% else %}Cadastro anterior{% endif %}</strong>
+                        <small>{{ bag.dt_cadastro|date:'d/m/Y H:i' }}</small>
+                        {% if bag.ultimo_editado_por_nome %}<small>Editada por {{ bag.ultimo_editado_por_nome }} em {{ bag.dt_ultima_edicao|date:'d/m/Y H:i' }}</small>{% elif bag.ultimo_editado_por %}<small>Editada por {{ bag.ultimo_editado_por.id_voluntario.nome }} em {{ bag.dt_ultima_edicao|date:'d/m/Y H:i' }}</small>{% else %}<small>Sem edições</small>{% endif %}
+                    </td>
+                    {% if usuario.tipo == 'ADMIN' %}<td><a class="btn btn-outline btn-small" href="{% url 'cadastrar_movimentacao_bag' bag.id_bag %}">Movimentar</a></td>{% endif %}
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+        <div class="empty-state table-empty"><h3>Nenhuma bag encontrada</h3><p class="form-subtitle">Ajuste os filtros ou cadastre uma nova bag.</p></div>
+    {% endif %}
+</section>
+{% endblock %}
