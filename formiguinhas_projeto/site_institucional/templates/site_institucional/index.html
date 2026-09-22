@@ -176,12 +176,60 @@
         </div>
 
         <a href="{% url 'multiroes' %}">Conheça nossos mutirões</a>
+        <a href="{% url 'calendario' %}">Veja o calendário e participe</a>
 
     </div>
 
 </div>
 
 
+</section>
+
+<!-- CALENDÁRIO -->
+
+<section id="calendario-index">
+    <div class="container">
+        <div class="calendario-index-conteudo">
+            <span>Próxima oportunidade</span>
+            <h2>Participe do nosso próximo mutirão</h2>
+
+            {% if proximo_mutirao %}
+            <article class="calendario-index-card">
+                <div class="calendario-index-data">
+                    <strong>{{ proximo_mutirao.data|date:'d' }}</strong>
+                    <span>{{ proximo_mutirao.data|date:'M' }}</span>
+                </div>
+
+                <div>
+                    <h3>{{ proximo_mutirao.praia.nome }}</h3>
+                    <p class="mutirao-cidade">{{ proximo_mutirao.praia.cidade }}</p>
+                    {% if proximo_mutirao.horario %}
+                    <p>Horário: {{ proximo_mutirao.horario|time:'H:i' }}</p>
+                    {% endif %}
+                    {% if proximo_mutirao.local %}
+                    <p>Local: {{ proximo_mutirao.local }}</p>
+                    {% endif %}
+                    {% if proximo_mutirao.descricao %}
+                    <p>{{ proximo_mutirao.descricao }}</p>
+                    {% endif %}
+                </div>
+
+                <a
+                    href="https://wa.me/5513997284132?text=Olá!%20Quero%20participar%20do%20próximo%20mutirão%20em%20{{ proximo_mutirao.praia.nome }}%20no%20dia%20{{ proximo_mutirao.data|date:'d/m/Y' }}"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="botao-participar-mutirao"
+                >
+                    Quero participar
+                </a>
+            </article>
+            {% else %}
+            <p class="mutiroes-vazio">Ainda não há um próximo mutirão agendado.</p>
+            {% endif %}
+
+            <a href="{% url 'calendario' %}">Ver calendário completo</a>
+        </div>
+    </div>
 </section>
 
 <!-- PRAIAS -->

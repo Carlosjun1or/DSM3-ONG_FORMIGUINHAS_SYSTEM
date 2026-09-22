@@ -1,0 +1,129 @@
+{% extends "site_institucional/base.html" %}
+
+{% block conteudo %}
+<section id="calendario-pagina">
+    <div class="container">
+        <div class="calendario-cabecalho">
+            <span>Participar é fazer a diferença</span>
+            <h1>Calendário de Mutirões</h1>
+            <p>
+                Conheça os próximos mutirões onde as Formiguinhas da Praia estarão em ação. 
+                Escolha um local e data que funcione para você e venha fazer parte dessa transformação!
+            </p>
+        </div>
+
+        <h2 class="calendario-secao-titulo">Próximos mutirões</h2>
+        <div id="lista-mutiroes" class="mutiroes-calendario-lista">
+            {% for mutirao in mutiroes %}
+            <article class="mutirao-calendario-card">
+                <div class="mutirao-data-info">
+                    <div class="mutirao-data-box">
+                        <span class="mutirao-dia">{{ mutirao.data|date:"d" }}</span>
+                        <span class="mutirao-mes">{{ mutirao.data|date:"M" }}</span>
+                    </div>
+                    {% if mutirao.horario %}
+                    <span class="mutirao-horario">{{ mutirao.horario|time:"H:i" }}</span>
+                    {% endif %}
+                </div>
+
+                <div class="mutirao-conteudo">
+                    <h2>{{ mutirao.praia.nome }}</h2>
+                    <p class="mutirao-cidade">{{ mutirao.praia.cidade }}</p>
+                    
+                    {% if mutirao.descricao %}
+                    <p class="mutirao-descricao">{{ mutirao.descricao }}</p>
+                    {% endif %}
+
+                    <div class="mutirao-detalhes">
+                        {% if mutirao.local %}
+                        <span class="mutirao-detalhe">
+                            <strong>Local:</strong> {{ mutirao.local }}
+                        </span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <a 
+                    href="https://wa.me/5513997284132?text=Olá!%20Gostaria%20de%20participar%20do%20mutirão%20em%20{{ mutirao.praia.nome }}%20no%20dia%20{{ mutirao.data|date:'d/m/Y' }}" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    class="botao-participar-mutirao"
+                    aria-label="Participar do mutirão via WhatsApp"
+                >
+                    Quero participar
+                </a>
+            </article>
+            {% empty %}
+            <div class="mutiroes-vazio">
+                <h2>Nenhum mutirão agendado</h2>
+                <p>No momento não há mutirões planejados. Em breve haverá novas ações! Acompanhe-nos nas redes sociais para não perder nenhuma oportunidade de participar.</p>
+            </div>
+            {% endfor %}
+        </div>
+
+        {% if mutiroes %}
+        <section class="secao-chamada-voluntario">
+            <div class="container-chamada">
+                <div class="chamada-conteudo">
+                    <h2>Quer se voluntariar regularmente?</h2>
+                    <p>
+                        Se você se interessa em participar de mutirões com frequência ou ajudar na organização das ações, 
+                        fale conosco! Temos várias formas de contribuir com a Formiguinhas da Praia.
+                    </p>
+                    <a 
+                        href="https://wa.me/5513997284132?text=Olá!%20Gostaria%20de%20ser%20voluntário%20regular%20na%20Formiguinhas%20da%20Praia" 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        class="botao-voluntario"
+                        aria-label="Fale com nossos coordenadores sobre voluntariado"
+                    >
+                        <span class="icone-voluntario">🤝</span>
+                        Fale com a gente
+                    </a>
+                </div>
+            </div>
+        </section>
+        {% endif %}
+
+        {% if mutiroes_realizados %}
+        <section class="calendario-realizados">
+            <h2 class="calendario-secao-titulo">Mutirões já realizados</h2>
+            <p class="calendario-secao-introducao">
+                Confira algumas ações que já aconteceram e fizeram parte da nossa história.
+            </p>
+
+            <div class="mutiroes-calendario-lista">
+                {% for mutirao in mutiroes_realizados %}
+                <article class="mutirao-calendario-card mutirao-realizado-card">
+                    <div class="mutirao-data-info">
+                        <div class="mutirao-data-box">
+                            <span class="mutirao-dia">{{ mutirao.data|date:"d" }}</span>
+                            <span class="mutirao-mes">{{ mutirao.data|date:"M" }}</span>
+                        </div>
+                        {% if mutirao.horario %}
+                        <span class="mutirao-horario">{{ mutirao.horario|time:"H:i" }}</span>
+                        {% endif %}
+                    </div>
+
+                    <div class="mutirao-conteudo">
+                        <h2>{{ mutirao.praia.nome }}</h2>
+                        <p class="mutirao-cidade">{{ mutirao.praia.cidade }}</p>
+                        {% if mutirao.descricao %}
+                        <p class="mutirao-descricao">{{ mutirao.descricao }}</p>
+                        {% endif %}
+                        {% if mutirao.local %}
+                        <div class="mutirao-detalhes">
+                            <strong>Local:</strong> {{ mutirao.local }}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <span class="mutirao-status-realizado">Realizado</span>
+                </article>
+                {% endfor %}
+            </div>
+        </section>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

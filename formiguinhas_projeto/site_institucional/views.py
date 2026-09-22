@@ -1,6 +1,5 @@
 from django.shortcuts import render
 from django.utils import timezone
-from datetime import datetime
 
 from acao.models import Acao
 from praia.models import Praia
@@ -35,6 +34,7 @@ def mutiroes_futuros():
 def index(request):
     return render(request, 'site_institucional/index.html', {
         'mutiroes': mutiroes_concluidos()[:1],
+        'proximo_mutirao': mutiroes_futuros().first(),
         'praias': praias_de_atuacao(),
     })
 
@@ -48,6 +48,7 @@ def multiroes(request):
 def calendario(request):
     return render(request, 'site_institucional/calendario.html', {
         'mutiroes': mutiroes_futuros(),
+        'mutiroes_realizados': mutiroes_concluidos(),
     })
 
 
