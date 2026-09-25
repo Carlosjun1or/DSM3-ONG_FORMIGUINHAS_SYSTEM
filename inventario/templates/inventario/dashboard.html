@@ -2,30 +2,95 @@
 <h2>Painel de Controle - ONG Formiguinhas</h2>
 <p>Bem-vindo ao sistema de inventário!</p>
 
+<!-- Resumo rápido -->
+<div class="resumo">
+  <div class="card resumo-card">
+    <h3>📊 Materiais</h3>
+    <p>Total cadastrados: {{ total_materiais }}</p>
+  </div>
+  <div class="card resumo-card">
+    <h3>👥 Usuários</h3>
+    <p>Total ativos: {{ total_usuarios }}</p>
+  </div>
+  <div class="card resumo-card">
+    <h3>📦 Últimas Movimentações</h3>
+    <ul>
+      {% for mov in ultimas_movimentacoes %}
+      <li>
+        {{ mov.get_tipo_display }} de {{ mov.quantidade }} {{
+        mov.material.get_unidade_display }} de {{ mov.material.nome }}
+      </li>
+      {% empty %}
+      <li>Nenhuma movimentação registrada</li>
+      {% endfor %}
+    </ul>
+  </div>
+</div>
+
+<!-- Atalhos -->
 <div class="dashboard">
   <a href="{% url 'usuarios' %}" class="card">
     <h3>👤 Usuários</h3>
     <p>Gerenciar cadastro e remoção de usuários.</p>
   </a>
 
-  <a href="{% url 'movimentacoes' %}" class="card">
-    <h3>📦 Movimentações</h3>
-    <p>Registrar entradas e saídas de materiais.</p>
+  <a href="{% url 'movimentacao' %}" class="card">
+    <h3>➕ Movimentação</h3>
+    <p>Registrar entrada ou saída de materiais.</p>
   </a>
 
   <a href="{% url 'consulta_estoque' %}" class="card">
     <h3>🧹 Estoque</h3>
     <p>Consultar saldo atual de materiais.</p>
   </a>
+
+  <a href="{% url 'movimentacoes' %}" class="card">
+    <h3>📜 Histórico</h3>
+    <p>Ver movimentações com filtros e paginação.</p>
+  </a>
+
+  <!-- Novo card para relatório -->
+  <a href="{% url 'relatorio_estoque' %}" class="card">
+    <h3>📑 Relatório</h3>
+    <p>Resumo de donativos e comprados.</p>
+  </a>
+
+  <!-- Novo card de Cadastro -->
+  <a href="{% url 'cadastro_material' %}" class="card">
+    <h3>📝 Cadastro</h3>
+    <p>Cadastrar novos materiais no sistema.</p>
+  </a>
 </div>
 
 <style>
-  .dashboard {
+  h2 {
+    margin-bottom: 10px;
+  }
+  .resumo {
     display: flex;
     gap: 20px;
     margin-top: 20px;
   }
-  .card {
+  .resumo-card {
+    flex: 1;
+    padding: 15px;
+    background: #f9f9f9;
+    border-radius: 8px;
+    text-align: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  .resumo-card ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    font-size: 14px;
+  }
+  .dashboard {
+    display: flex;
+    gap: 20px;
+    margin-top: 30px;
+  }
+  .dashboard .card {
     flex: 1;
     padding: 20px;
     background: #f0f0f0;
@@ -34,8 +99,9 @@
     text-decoration: none;
     color: #333;
     transition: 0.3s;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   }
-  .card:hover {
+  .dashboard .card:hover {
     background: #d9edf7;
   }
 </style>

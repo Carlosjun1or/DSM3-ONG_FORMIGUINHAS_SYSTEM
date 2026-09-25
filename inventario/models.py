@@ -1,21 +1,32 @@
 from django.db import models
-from django.contrib.auth.models import User  # IMPORTANTE: Necessário para o campo de usuário funcionar
+from django.contrib.auth.models import User
+from django.db.models import Sum
 
-# 4.1 Cadastro de Materiais
+# Cadastro de Materiais
 class Material(models.Model):
+    UNIDADES = [
+        ('litro', 'Litro'),
+        ('metro', 'Metro'),
+        ('quilo', 'Quilo'),
+        ('peça', 'Peça'),
+    ]
+
     nome = models.CharField(max_length=100, verbose_name="Nome")
     codigo = models.CharField(max_length=50, unique=True, verbose_name="Código")
     descricao = models.TextField(blank=True, verbose_name="Descrição")
     quantidade_inicial = models.IntegerField(default=0, verbose_name="Quantidade inicial")
-    unidade = models.CharField(max_length=20, verbose_name="Unidade")
+    unidade = models.CharField(max_length=20, choices=UNIDADES, verbose_name="Unidade")
+    is_donativo = models.BooleanField(default=False, verbose_name="É donativo?")
+    doador = models.CharField(max_length=100, blank=True, null=True, verbose_name="Doador")
 
     def __str__(self):
-        return f"{self.nome} ({self.codigo})"
+        origem = "Donativo" if self.is_donativo else "Comprado"
+        return f"{self.nome} ({self.codigo}) - {origem}"
 
     @property
     def saldo(self):
-        entradas = sum(m.quantidade for m in self.movimentacao_set.filter(tipo='entrada'))
-        saidas = sum(m.quantidade for m in self.movimentacao_set.filter(tipo='saida'))
+        entradas = self.movimentacao_set.filter(tipo='entrada').aggregate(total=Sum('quantidade'))['total'] or 0
+        saidas = self.movimentacao_set.filter(tipo='saida').aggregate(total=Sum('quantidade'))['total'] or 0
         return self.quantidade_inicial + entradas - saidas
 
     class Meta:
@@ -23,13 +34,9 @@ class Material(models.Model):
         verbose_name_plural = "Materiais"
 
 
-# 4.2 Movimentação de Estoque
+# Movimentação de Estoque
 class Movimentacao(models.Model):
-    material = models.ForeignKey(
-        Material,
-        on_delete=models.CASCADE,
-        verbose_name="Material"
-    )
+    material = models.ForeignKey(Material, on_delete=models.CASCADE, verbose_name="Material")
     tipo = models.CharField(
         max_length=10,
         choices=[('entrada', 'Entrada'), ('saida', 'Saída')],
@@ -37,19 +44,17 @@ class Movimentacao(models.Model):
     )
     quantidade = models.IntegerField(verbose_name="Quantidade")
     data = models.DateTimeField(auto_now_add=True, verbose_name="Data")
-    
-    # Movido para dentro da classe e perfeitamente alinhado:
-    usuario = models.ForeignKey(
-        User, 
-        on_delete=models.SET_NULL, 
-        null=True, 
-        blank=True, 
-        verbose_name="Administrador"
-    )
+    usuario = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Administrador")
 
     def __str__(self):
-        return f"{self.tipo} - {self.material.nome} ({self.quantidade})"
+        return f"{self.tipo} - {self.material.nome} ({self.quantidade}) por {self.usuario} em {self.data.strftime('%d/%m/%Y %H:%M')}"
+
+    def save(self, *args, **kwargs):
+        if self.tipo == 'saida' and self.quantidade > self.material.saldo:
+            raise ValueError("Movimentação inválida: saldo insuficiente.")
+        super().save(*args, **kwargs)
 
     class Meta:
         verbose_name = "Movimentação"
         verbose_name_plural = "Movimentações"
+        ordering = ['-data']

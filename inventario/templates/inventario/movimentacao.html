@@ -1,7 +1,67 @@
 {% extends 'inventario/base.html' %} {% block content %}
-<h2>Movimentações</h2>
-<form method="post">
-  {% csrf_token %} {{ form.as_p }}
-  <button type="submit">Registrar</button>
+<h2>Registrar Movimentação</h2>
+<p>Preencha os dados abaixo para registrar uma entrada ou saída de material.</p>
+
+<form method="post" class="form-movimentacao">
+  {% csrf_token %} {{ form.non_field_errors }}
+
+  <div class="form-group">
+    <label for="id_material">Material:</label>
+    {{ form.material }}
+  </div>
+
+  <div class="form-group">
+    <label for="id_tipo">Tipo de movimentação:</label>
+    {{ form.tipo }}
+  </div>
+
+  <div class="form-group">
+    <label for="id_quantidade">Quantidade:</label>
+    {{ form.quantidade }}
+    <small class="hint"
+      >A unidade será exibida automaticamente (Litro, Metro, Quilo ou
+      Peça).</small
+    >
+  </div>
+
+  <button type="submit" class="btn">Registrar</button>
+  <a href="{% url 'dashboard' %}" class="btn btn-secondary">Cancelar</a>
 </form>
+
+<style>
+  .form-movimentacao {
+    max-width: 500px;
+    margin-top: 20px;
+  }
+  .form-group {
+    margin-bottom: 15px;
+  }
+  label {
+    font-weight: bold;
+    display: block;
+    margin-bottom: 5px;
+  }
+  .hint {
+    font-size: 12px;
+    color: #666;
+  }
+  .btn {
+    padding: 8px 16px;
+    border-radius: 4px;
+    background: #28a745;
+    color: white;
+    border: none;
+    cursor: pointer;
+  }
+  .btn:hover {
+    background: #218838;
+  }
+  .btn-secondary {
+    background: #6c757d;
+    margin-left: 10px;
+  }
+  .btn-secondary:hover {
+    background: #5a6268;
+  }
+</style>
 {% endblock %}

@@ -1,7 +1,94 @@
 {% extends 'inventario/base.html' %} {% block content %}
 <h2>Cadastro de Materiais</h2>
-<form method="post">
-  {% csrf_token %} {{ form.as_p }}
-  <button type="submit">Salvar</button>
+<p>Preencha os dados abaixo para adicionar um novo material ao estoque.</p>
+
+<form method="post" class="form-cadastro">
+  {% csrf_token %} {{ form.non_field_errors }}
+
+  <div class="form-group">
+    <label for="id_nome">Nome:</label>
+    {{ form.nome }}
+  </div>
+
+  <div class="form-group">
+    <label for="id_codigo">Código:</label>
+    {{ form.codigo }}
+  </div>
+
+  <div class="form-group">
+    <label for="id_descricao">Descrição:</label>
+    {{ form.descricao }}
+  </div>
+
+  <div class="form-group">
+    <label for="id_quantidade_inicial">Quantidade inicial:</label>
+    {{ form.quantidade_inicial }}
+  </div>
+
+  <div class="form-group">
+    <label for="id_unidade">Unidade:</label>
+    {{ form.unidade }}
+  </div>
+
+  <div class="form-group">
+    <label for="id_is_donativo">É donativo?</label>
+    {{ form.is_donativo }}
+  </div>
+
+  <div class="form-group" id="doador-field" style="display: none">
+    <label for="id_doador">Doador:</label>
+    {{ form.doador }}
+  </div>
+
+  <button type="submit" class="btn">Salvar</button>
+  <a href="{% url 'consulta_estoque' %}" class="btn btn-secondary">Cancelar</a>
 </form>
+
+<script>
+  const checkbox = document.getElementById("id_is_donativo");
+  const doadorField = document.getElementById("doador-field");
+
+  function toggleDoador() {
+    doadorField.style.display = checkbox.checked ? "block" : "none";
+  }
+
+  if (checkbox) {
+    checkbox.addEventListener("change", toggleDoador);
+    toggleDoador(); // inicializa corretamente
+  }
+</script>
+
+<style>
+  .form-cadastro {
+    max-width: 600px;
+    margin-top: 20px;
+  }
+  .form-group {
+    margin-bottom: 15px;
+  }
+  label {
+    font-weight: bold;
+    display: block;
+    margin-bottom: 5px;
+  }
+  .btn {
+    padding: 8px 16px;
+    border-radius: 4px;
+    background: #007bff;
+    color: white;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+  }
+  .btn:hover {
+    background: #0056b3;
+  }
+  .btn-secondary {
+    background: #6c757d;
+    margin-left: 10px;
+  }
+  .btn-secondary:hover {
+    background: #5a6268;
+  }
+</style>
 {% endblock %}

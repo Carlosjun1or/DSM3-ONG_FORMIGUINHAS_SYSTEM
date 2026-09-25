@@ -3,20 +3,23 @@
 <html lang="pt-br">
   <head>
     <meta charset="UTF-8" />
-    <title>Sistema de Estoque</title>
+    <title>Sistema de Estoque - ONG Formiguinhas</title>
     <link rel="stylesheet" href="{% static 'inventario/style.css' %}" />
   </head>
   <body>
     <nav>
       <ul>
-        <li><a href="{% url 'cadastro_material' %}">Materiais</a></li>
-        <li><a href="{% url 'movimentacao' %}">Movimentações</a></li>
-        <li><a href="{% url 'historico' %}">Histórico</a></li>
-        <li><a href="{% url 'usuarios' %}">Usuários</a></li>
-        <li><a href="{% url 'logout' %}">Sair</a></li>
+        <li><a href="{% url 'usuarios' %}">👤 Usuários</a></li>
+        <li><a href="{% url 'dashboard' %}">🏠 Dashboard</a></li>
+        <li><a href="{% url 'consulta_estoque' %}">📊 Materiais</a></li>
+        <li><a href="{% url 'movimentacao' %}">➕ Movimentação</a></li>
+        <li><a href="{% url 'movimentacoes' %}">📋 Histórico</a></li>
+        <li><a href="{% url 'cadastro_material' %}">Cadastro</a></li>
+        <!-- Novo item -->
+        <li><a href="{% url 'logout' %}">🚪 Sair</a></li>
       </ul>
     </nav>
 
-    <div class="container">{% block content %} {% endblock %}</div>
+    <div class="container">{% block content %}{% endblock %}</div>
   </body>
 </html>

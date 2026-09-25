@@ -14,55 +14,20 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+from django.contrib import admin
 from django.urls import path, include
+from inventario.admin import custom_admin_site
 from django.contrib.auth import views as auth_views
-from inventario.views import remover_usuario, dashboard, movimentacoes, usuarios, consulta_estoque
-from inventario.admin import custom_admin_site   # importa o admin customizado
 
 urlpatterns = [
-    # Admin customizado
-    path('admin/', custom_admin_site.urls),
+    path("admin/", admin.site.urls),
+    path("formiguinhas-admin/", custom_admin_site.urls),
+    path("inventario/", include("inventario.urls")),  # agora com prefixo
+    path("", include("inventario.urls")),
+    path("logout/", auth_views.LogoutView.as_view(next_page="login"), name="logout"),
+    path("login/", auth_views.LoginView.as_view(template_name="inventario/login.html"), name="login"),
 
-    # Rotas do app inventario
-    path('inventario/', include('inventario.urls')),
-
-    # Se quiser manter também o prefixo "estoque"
-    path('estoque/', include('inventario.urls')),
-
-    # Login e logout
-   path('login/', auth_views.LoginView.as_view(template_name='inventario/login.html'), name='login'),
-   path('logout/', auth_views.LogoutView.as_view(next_page='login'), name='logout'),
-
-
-    # Remover usuário
-    path('usuarios/remover/<int:usuario_id>/', remover_usuario, name='remover_usuario'),
-
-    # Dashboard inicial
-    path('', dashboard, name='dashboard'),
-
-    # Rotas diretas para os atalhos do dashboard
-    path('movimentacoes/', movimentacoes, name='movimentacoes'),
-    path('usuarios/', usuarios, name='usuarios'),
-    path('estoque/consulta/', consulta_estoque, name='consulta_estoque'),
 ]
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

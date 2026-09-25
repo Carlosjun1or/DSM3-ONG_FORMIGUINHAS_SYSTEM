@@ -1,0 +1,74 @@
+{% extends 'inventario/base.html' %} {% block content %}
+<h2>📊 Relatório de Estoque</h2>
+<p>Aqui você pode visualizar o resumo dos materiais por origem.</p>
+
+<table class="relatorio-table">
+  <thead>
+    <tr>
+      <th>Origem</th>
+      <th>Total de Materiais</th>
+      <th>Quantidade Total</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Donativos</td>
+      <td>{{ total_donativos }}</td>
+      <td>{{ quantidade_donativos }}</td>
+    </tr>
+    <tr>
+      <td>Comprados</td>
+      <td>{{ total_comprados }}</td>
+      <td>{{ quantidade_comprados }}</td>
+    </tr>
+    <tr>
+      <td><strong>Total Geral</strong></td>
+      <td><strong>{{ total_materiais }}</strong></td>
+      <td><strong>{{ quantidade_total }}</strong></td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="acoes">
+  <a href="{% url 'dashboard' %}" class="btn btn-secondary"
+    >⬅️ Voltar ao Dashboard</a
+  >
+</div>
+
+<style>
+  .relatorio-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+  }
+  .relatorio-table th,
+  .relatorio-table td {
+    border: 1px solid #ccc;
+    padding: 8px;
+    text-align: center;
+  }
+  .relatorio-table th {
+    background: #f0f0f0;
+  }
+  .acoes {
+    margin-top: 20px;
+  }
+  .btn {
+    padding: 8px 16px;
+    border-radius: 4px;
+    background: #007bff;
+    color: white;
+    text-decoration: none;
+    margin-right: 10px;
+  }
+  .btn:hover {
+    background: #0056b3;
+  }
+  .btn-secondary {
+    background: #6c757d;
+  }
+  .btn-secondary:hover {
+    background: #5a6268;
+  }
+</style>
+{% endblock %}

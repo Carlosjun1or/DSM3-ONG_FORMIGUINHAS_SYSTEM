@@ -41,6 +41,16 @@ nav ul li a:hover {
   color: #3498db;
 }
 
+.donativo {
+  background-color: #d4edda; /* verde claro */
+  color: #155724; /* verde escuro */
+}
+
+.comprado {
+  background-color: #cce5ff; /* azul claro */
+  color: #004085; /* azul escuro */
+}
+
 /* Container */
 .container {
   max-width: 1000px;
@@ -81,6 +91,26 @@ form button {
 }
 form button:hover {
   background-color: #2980b9;
+}
+
+/* Botões genéricos */
+.btn {
+  padding: 8px 16px;
+  border-radius: 4px;
+  background: #3498db;
+  color: white;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+}
+.btn:hover {
+  background: #2980b9;
+}
+.btn-secondary {
+  background: #6c757d;
+}
+.btn-secondary:hover {
+  background: #5a6268;
 }
 
 /* Tabelas */
@@ -127,5 +157,18 @@ table tr:hover {
 }
 .pagination span {
   margin: 0 10px;
+  font-weight: bold;
+}
+
+/* Admin customizado */
+#header {
+  background-color: #28a745; /* verde ONG */
+  color: white;
+}
+#header a,
+#header h1 {
+  color: white !important;
+}
+#site-name {
   font-weight: bold;
 }

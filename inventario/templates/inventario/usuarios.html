@@ -1,7 +1,97 @@
 {% extends 'inventario/base.html' %} {% block content %}
 <h2>Cadastro de Usuários</h2>
-<form method="post">
-  {% csrf_token %} {{ form.as_p }}
-  <button type="submit">Criar Usuário</button>
+<p>Preencha os dados abaixo para criar um novo usuário.</p>
+
+<form method="post" class="form-usuarios">
+  {% csrf_token %} {{ form.non_field_errors }}
+
+  <div class="form-group">
+    <label for="id_username">Usuário:</label>
+    {{ form.username }}
+  </div>
+
+  <div class="form-group">
+    <label for="id_email">Email:</label>
+    {{ form.email }}
+  </div>
+
+  <div class="form-group">
+    <label for="id_password">Senha:</label>
+    {{ form.password }}
+  </div>
+
+  <button type="submit" class="btn">Criar Usuário</button>
+  <a href="{% url 'dashboard' %}" class="btn btn-secondary">Cancelar</a>
 </form>
+
+<h3>Usuários cadastrados</h3>
+<table class="usuarios-table">
+  <thead>
+    <tr>
+      <th>Usuário</th>
+      <th>Email</th>
+      <th>Data de criação</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for usuario in usuarios %}
+    <tr>
+      <td>{{ usuario.username }}</td>
+      <td>{{ usuario.email }}</td>
+      <td>{{ usuario.date_joined|date:"d/m/Y H:i" }}</td>
+    </tr>
+    {% empty %}
+    <tr>
+      <td colspan="3">Nenhum usuário cadastrado.</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<style>
+  .form-usuarios {
+    max-width: 500px;
+    margin-top: 20px;
+  }
+  .form-group {
+    margin-bottom: 15px;
+  }
+  label {
+    font-weight: bold;
+    display: block;
+    margin-bottom: 5px;
+  }
+  .usuarios-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+  }
+  .usuarios-table th,
+  .usuarios-table td {
+    border: 1px solid #ccc;
+    padding: 8px;
+    text-align: center;
+  }
+  .usuarios-table th {
+    background: #f0f0f0;
+  }
+  .btn {
+    padding: 8px 16px;
+    border-radius: 4px;
+    background: #007bff;
+    color: white;
+    border: none;
+    cursor: pointer;
+  }
+  .btn:hover {
+    background: #0056b3;
+  }
+  .btn-secondary {
+    background: #6c757d;
+    margin-left: 10px;
+  }
+  .btn-secondary:hover {
+    background: #5a6268;
+  }
+</style>
 {% endblock %}

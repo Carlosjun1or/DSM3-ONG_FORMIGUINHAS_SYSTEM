@@ -1,7 +1,7 @@
 # apps.py
 from django.apps import AppConfig
 
-class SeuAppConfig(AppConfig):
+class InventarioConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
     name = 'inventario'
-    verbose_name = 'Controle de Estoque'  
+    verbose_name = 'Controle de Estoque'

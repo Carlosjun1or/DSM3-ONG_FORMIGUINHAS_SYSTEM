@@ -1,36 +1,80 @@
-{% load static %}
-<!doctype html>
-<html>
-  <head>
-    <title>Consulta de Estoque</title>
-    <link
-      rel="stylesheet"
-      type="text/css"
-      href="{% static 'inventario/css/style.css' %}"
-    />
-  </head>
-  <body>
-    <h1>Consulta de Estoque</h1>
+{% extends 'inventario/base.html' %} {% block content %}
+<h2>Consulta de Estoque</h2>
+<p>
+  Aqui você pode visualizar todos os materiais cadastrados e seus saldos atuais.
+</p>
 
-    <table>
-      <tr>
-        <th>Nome</th>
-        <th>Código</th>
-        <th>Unidade</th>
-        <th>Saldo</th>
-      </tr>
-      {% for mat in materiais %}
-      <tr>
-        <td>{{ mat.nome }}</td>
-        <td>{{ mat.codigo }}</td>
-        <td>{{ mat.unidade }}</td>
-        <td>{{ mat.saldo }}</td>
-      </tr>
-      {% empty %}
-      <tr>
-        <td colspan="4">Nenhum material encontrado</td>
-      </tr>
-      {% endfor %}
-    </table>
-  </body>
-</html>
+<table class="estoque-table">
+  <thead>
+    <tr>
+      <th>Nome</th>
+      <th>Código</th>
+      <th>Unidade</th>
+      <th>Saldo</th>
+      <th>Origem</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for mat in materiais %}
+    <tr class="{% if mat.is_donativo %}donativo{% else %}comprado{% endif %}"></tr>
+      <td>{{ mat.nome }}</td>
+      <td>{{ mat.codigo }}</td>
+      <td>{{ mat.get_unidade_display }}</td>
+      <td>{{ mat.saldo }} {{ mat.get_unidade_display }}</td>
+      <td>
+        {% if mat.is_donativo %} Donativo{% if mat.doador %} ({{ mat.doador
+        }}){% endif %} {% else %} Comprado {% endif %}
+      </td>
+    </tr>
+    {% empty %}
+    <tr>
+      <td colspan="5">Nenhum material encontrado</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<div class="acoes">
+  <a href="{% url 'cadastro_material' %}" class="btn">➕ Cadastrar Material</a>
+  <a href="{% url 'dashboard' %}" class="btn btn-secondary"
+    >⬅️ Voltar ao Dashboard</a
+  >
+</div>
+
+<style>
+  .estoque-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+  }
+  .estoque-table th,
+  .estoque-table td {
+    border: 1px solid #ccc;
+    padding: 8px;
+    text-align: center;
+  }
+  .estoque-table th {
+    background: #f0f0f0;
+  }
+  .acoes {
+    margin-top: 20px;
+  }
+  .btn {
+    padding: 8px 16px;
+    border-radius: 4px;
+    background: #007bff;
+    color: white;
+    text-decoration: none;
+    margin-right: 10px;
+  }
+  .btn:hover {
+    background: #0056b3;
+  }
+  .btn-secondary {
+    background: #6c757d;
+  }
+  .btn-secondary:hover {
+    background: #5a6268;
+  }
+</style>
+{% endblock %}

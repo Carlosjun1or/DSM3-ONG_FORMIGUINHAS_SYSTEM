@@ -1,84 +1,107 @@
-{% load static %}
-<!doctype html>
-<html lang="pt-br">
-  <head>
-    <meta charset="UTF-8" />
-    <title>Histórico de Movimentações</title>
-    <link
-      rel="stylesheet"
-      type="text/css"
-      href="{% static 'inventario/style.css' %}"
-    />
-  </head>
-  <body>
-    <h1>Histórico de Movimentações</h1>
+{% extends 'inventario/base.html' %}
+{% block content %}
+<h2>Histórico de Movimentações</h2>
+<p>Use os filtros abaixo para refinar sua busca.</p>
 
-    <!-- Formulário de filtros -->
-    <form method="get">
-      <label>Material:</label>
-      <select name="material">
-        <option value="">Todos</option>
-        {% for mat in materiais %}
-        <option value="{{ mat.id }}">{{ mat.nome }}</option>
-        {% endfor %}
-      </select>
+<!-- Formulário de filtros -->
+<form method="get" class="filtros">
+  <label>Material:</label>
+  <select name="material">
+    <option value="">Todos</option>
+    {% for mat in materiais %}
+      <option value="{{ mat.id }}" {% if request.GET.material == mat.id|stringformat:"s" %}selected{% endif %}>{{ mat.nome }}</option>
+    {% endfor %}
+  </select>
 
-      <label>Tipo:</label>
-      <select name="tipo">
-        <option value="">Todos</option>
-        <option value="entrada">Entrada</option>
-        <option value="saida">Saída</option>
-      </select>
+  <label>Tipo:</label>
+  <select name="tipo">
+    <option value="">Todos</option>
+    <option value="entrada" {% if request.GET.tipo == "entrada" %}selected{% endif %}>Entrada</option>
+    <option value="saida" {% if request.GET.tipo == "saida" %}selected{% endif %}>Saída</option>
+  </select>
 
-      <label>Data início:</label>
-      <input type="date" name="data_inicio" />
+  <label>Data início:</label>
+  <input type="date" name="data_inicio" value="{{ request.GET.data_inicio }}"/>
 
-      <label>Data fim:</label>
-      <input type="date" name="data_fim" />
+  <label>Data fim:</label>
+  <input type="date" name="data_fim" value="{{ request.GET.data_fim }}"/>
 
-      <button type="submit">Filtrar</button>
-    </form>
+  <button type="submit" class="btn">Filtrar</button>
+</form>
 
-    <!-- Tabela de resultados -->
-    <table>
-      <thead>
-        <tr>
-          <th>Material</th>
-          <th>Tipo</th>
-          <th>Quantidade</th>
-          <th>Data</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for mov in page_obj %}
-        <tr>
-          <td>{{ mov.material.nome }}</td>
-          <td>{{ mov.tipo }}</td>
-          <td>{{ mov.quantidade }}</td>
-          <td>{{ mov.data|date:"d/m/Y H:i" }}</td>
-        </tr>
-        {% empty %}
-        <tr>
-          <td colspan="4">Nenhuma movimentação encontrada</td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+<!-- Tabela de resultados -->
+<table class="historico-table">
+  <thead>
+    <tr>
+      <th>Material</th>
+      <th>Tipo</th>
+      <th>Quantidade</th>
+      <th>Data</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for mov in page_obj %}
+    <tr>
+      <td>{{ mov.material.nome }}</td>
+      <td>{{ mov.tipo }}</td>
+      <td>{{ mov.quantidade }}</td>
+      <td>{{ mov.data|date:"d/m/Y H:i" }}</td>
+    </tr>
+    {% empty %}
+    <tr>
+      <td colspan="4">Nenhuma movimentação encontrada</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
 
-    <!-- Controles de paginação -->
-    <div class="pagination">
-      {% if page_obj.has_previous %}
-      <a href="?page={{ page_obj.previous_page_number }}">&laquo; Anterior</a>
-      {% endif %}
+<!-- Controles de paginação -->
+<div class="pagination">
+  {% if page_obj.has_previous %}
+    <a href="?page={{ page_obj.previous_page_number }}">&laquo; Anterior</a>
+  {% endif %}
+  <span>Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span>
+  {% if page_obj.has_next %}
+    <a href="?page={{ page_obj.next_page_number }}">Próxima &raquo;</a>
+  {% endif %}
+</div>
 
-      <span
-        >Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages
-        }}</span
-      >
-
-      {% if page_obj.has_next %}
-      <a href="?page={{ page_obj.next_page_number }}">Próxima &raquo;</a>
-      {% endif %}
-    </div>
-  </body>
-</html>
+<style>
+  .filtros {
+    margin-bottom: 20px;
+  }
+  .filtros label {
+    margin-right: 5px;
+    font-weight: bold;
+  }
+  .filtros select, .filtros input {
+    margin-right: 10px;
+    padding: 5px;
+  }
+  .historico-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+  }
+  .historico-table th, .historico-table td {
+    border: 1px solid #ccc;
+    padding: 8px;
+    text-align: center;
+  }
+  .historico-table th {
+    background: #f0f0f0;
+  }
+  .pagination {
+    margin-top: 15px;
+    text-align: center;
+  }
+  .pagination a {
+    margin: 0 10px;
+    text-decoration: none;
+    color: #007bff;
+  }
+  .pagination a:hover {
+    text-decoration: underline;
+  }
+</style>
+{% endblock %}
