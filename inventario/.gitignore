@@ -1,0 +1,32 @@
+# Ambiente virtual
+venv/
+ENV/
+
+# Arquivos compilados do Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Banco de dados local
+db.sqlite3
+
+# Arquivos de migração (opcional, se não quiser versionar)
+*/migrations/*.py
+*/migrations/*.pyc
+
+# Configurações locais
+*.env
+.env
+
+# Arquivos de log
+*.log
+
+# Arquivos temporários
+*.tmp
+*.swp
+*.bak
+
+# Arquivos do sistema operacional
+.DS_Store
+Thumbs.db
