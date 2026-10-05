@@ -1,0 +1,324 @@
+{% extends 'sistema/template-sistema.html' %}
+
+{% block titulo %}{% if comunicado %}Editar comunicado{% else %}Cadastro de comunicado{% endif %} | Sistema{% endblock %}
+{% block page_title %}{% if comunicado %}Editar comunicado{% else %}Cadastro de comunicado{% endif %}{% endblock %}
+
+{% block conteudo %}
+<section class="card form-card">
+    <div class="section-heading"><div><h2>{% if comunicado %}Dados do comunicado{% else %}Novo comunicado{% endif %}</h2><p class="form-subtitle">Cadastre um aviso para a equipe ou uma notícia para o site institucional. A data de publicação será registrada automaticamente quando você publicar.</p></div><a href="{% url 'comunicados_admin' %}" class="btn btn-outline">Voltar</a></div>
+    <form method="post" novalidate>{% csrf_token %}
+        {% if form.non_field_errors %}<div class="error-box">{{ form.non_field_errors|join:', ' }}</div>{% endif %}
+        <div class="form-grid">
+            {% for field in form %}
+            <div class="form-group {% if field.name == 'conteudo' or field.name == 'resumo' or field.name == 'praias' or field.name == 'equipes' or field.name == 'acoes' %}form-group-full{% endif %}" data-field="{{ field.name }}">
+                {{ field.label_tag }}
+                {% if field.name == 'praias' or field.name == 'equipes' or field.name == 'acoes' %}
+                <input type="search" class="form-control relationship-search" data-target="{{ field.id_for_label }}" placeholder="Pesquisar {{ field.label|lower }}" aria-label="Pesquisar {{ field.label|lower }}">
+                {% endif %}
+                {{ field }}
+                {% if field.name == 'unidade_duracao_expiracao' %}
+                <div class="expiration-preview" aria-live="polite">
+                    <div><strong>Publicação prevista:</strong> <span data-publication-now></span></div>
+                    <div><strong>Expiração prevista:</strong> <span data-expiration-preview>Sem expiração definida.</span></div>
+                    <small>O prazo começa a contar no momento em que o comunicado for publicado.</small>
+                </div>
+                {% endif %}
+                {% if field.name == 'praias' or field.name == 'equipes' or field.name == 'acoes' %}
+                <div class="relationship-selected" data-selected-for="{{ field.id_for_label }}" aria-live="polite">
+                    <span class="relationship-selected-title">Selecionados: <strong data-selected-count>0</strong></span>
+                    <div class="relationship-chips" data-selected-chips></div>
+                    <small class="form-help" data-selected-empty>Nenhum item selecionado.</small>
+                </div>
+                {% endif %}
+                {% if field.help_text %}<small class="form-help">{{ field.help_text }}</small>{% endif %}
+                {% for error in field.errors %}<small class="field-error">{{ error }}</small>{% endfor %}
+            </div>
+            {% endfor %}
+        </div>
+        <div class="relationship-help" data-field="relationship-help">
+            <strong>Relacionamentos automáticos</strong>
+            <p>Clique uma vez para selecionar e clique novamente para remover. Você pode escolher nenhuma, uma ou várias opções. Ao escolher uma equipe, sua praia será adicionada. Ao escolher uma ação, a praia e as equipes participantes serão adicionadas automaticamente. Você ainda pode ajustar as seleções.</p>
+            <small class="relationship-warning" data-relacionamento-aviso hidden></small>
+            <small class="field-error" data-relacionamento-erro hidden>Não foi possível atualizar os relacionamentos automaticamente. Você ainda pode selecionar as opções manualmente.</small>
+        </div>
+        <div class="form-actions"><button type="submit" class="btn btn-primary">Salvar comunicado</button><a href="{% url 'comunicados_admin' %}" class="btn btn-outline">Cancelar</a></div>
+    </form>
+</section>
+{% endblock %}
+{% block scripts %}<script>
+const tipo = document.getElementById('id_tipo');
+const publico = document.getElementById('id_publico');
+const praias = document.getElementById('id_praias');
+const equipes = document.getElementById('id_equipes');
+const acoes = document.getElementById('id_acoes');
+const relacionamentosUrl = '{% url "comunicado_relacionamentos" %}';
+let relacionamentosController = null;
+let relacionamentosVersao = 0;
+let praiasObrigatoriasPorAcao = new Set();
+let equipesObrigatoriasPorAcao = new Set();
+let praiasObrigatoriasPorEquipe = new Set();
+let avisoRelacionamento = null;
+function adicionarOpcoes(select, ids) {
+    if (!select) return;
+    ids.forEach((id) => {
+        const valor = String(id);
+        const option = Array.from(select.options).find((item) => item.value === valor);
+        if (option) {
+            option.selected = true;
+            option.defaultSelected = true;
+            option.setAttribute('selected', 'selected');
+        }
+    });
+    select.dispatchEvent(new Event('input', {bubbles: true}));
+    atualizarResumo(select);
+}
+function atualizarResumo(select) {
+    if (!select) return;
+    const resumo = document.querySelector('[data-selected-for="' + select.id + '"]');
+    if (!resumo) return;
+    const selecionadas = Array.from(select.selectedOptions);
+    const contador = resumo.querySelector('[data-selected-count]');
+    const chips = resumo.querySelector('[data-selected-chips]');
+    const vazio = resumo.querySelector('[data-selected-empty]');
+    contador.textContent = selecionadas.length;
+    chips.innerHTML = '';
+    vazio.hidden = selecionadas.length > 0;
+    selecionadas.forEach((option) => {
+        const chip = document.createElement('button');
+        chip.type = 'button';
+        chip.className = 'relationship-chip';
+        chip.title = 'Remover ' + option.textContent;
+        const texto = document.createElement('span');
+        texto.textContent = option.textContent;
+        const remover = document.createElement('b');
+        remover.setAttribute('aria-hidden', 'true');
+        remover.textContent = '×';
+        chip.append(texto, remover);
+        chip.addEventListener('click', () => {
+            option.selected = false;
+            atualizarResumo(select);
+            if (select === equipes || select === acoes) atualizarRelacionamentos();
+        });
+        chips.appendChild(chip);
+    });
+}
+function mostrarAvisoRelacionamento(mensagem) {
+    if (!avisoRelacionamento) {
+        avisoRelacionamento = document.querySelector('[data-relacionamento-aviso]');
+    }
+    if (!avisoRelacionamento) return;
+    avisoRelacionamento.textContent = mensagem;
+    avisoRelacionamento.hidden = false;
+    window.setTimeout(() => { avisoRelacionamento.hidden = true; }, 4500);
+}
+function podeRemoverOpcao(select, option) {
+    const valor = Number(option.value);
+    if (select === acoes) return true;
+    if (select === equipes && equipesObrigatoriasPorAcao.has(valor)) {
+        mostrarAvisoRelacionamento('Remova primeiro a ação que utiliza esta equipe.');
+        return false;
+    }
+    if (select === praias && (
+        praiasObrigatoriasPorAcao.has(valor) || praiasObrigatoriasPorEquipe.has(valor)
+    )) {
+        mostrarAvisoRelacionamento(
+            praiasObrigatoriasPorAcao.has(valor)
+                ? 'Remova primeiro a ação que utiliza esta praia.'
+                : 'Remova primeiro a equipe vinculada a esta praia.'
+        );
+        return false;
+    }
+    return true;
+}
+function restaurarRelacoesObrigatorias(select) {
+    if (!select || select === acoes) return;
+    Array.from(select.options).forEach((option) => {
+        if (!option.selected && !podeRemoverOpcao(select, option)) {
+            option.selected = true;
+        }
+    });
+}
+function configurarSelecaoPorClique(select) {
+    if (!select) return;
+    const alternarOpcao = (event) => {
+        const option = event.target.closest('option');
+        if (!option) return;
+        event.preventDefault();
+        event.stopPropagation();
+        select.focus();
+        if (option.selected && !podeRemoverOpcao(select, option)) return;
+        option.selected = !option.selected;
+        select.dispatchEvent(new Event('input', {bubbles: true}));
+        select.dispatchEvent(new Event('change', {bubbles: true}));
+    };
+    select.addEventListener('change', () => {
+        restaurarRelacoesObrigatorias(select);
+    }, true);
+    select.addEventListener('pointerdown', alternarOpcao);
+    select.addEventListener('keydown', (event) => {
+        if (event.key !== ' ' || !select.options[select.selectedIndex]) return;
+        event.preventDefault();
+        const option = select.options[select.selectedIndex];
+        if (option.selected && !podeRemoverOpcao(select, option)) return;
+        option.selected = !option.selected;
+        select.dispatchEvent(new Event('input', {bubbles: true}));
+        select.dispatchEvent(new Event('change', {bubbles: true}));
+    });
+}
+function atualizarRelacionamentos() {
+    if (!equipes || !acoes) return;
+    const versaoAtual = ++relacionamentosVersao;
+    if (relacionamentosController) relacionamentosController.abort();
+    const params = new URLSearchParams();
+    const valoresSelecionados = (select) => Array.from(select.selectedOptions)
+        .map((option) => option.value)
+        .sort();
+    const equipesSelecionadas = valoresSelecionados(equipes);
+    const acoesSelecionadas = valoresSelecionados(acoes);
+    equipesSelecionadas.forEach((valor) => params.append('equipe', valor));
+    acoesSelecionadas.forEach((valor) => params.append('acao', valor));
+    const aviso = document.querySelector('[data-relacionamento-erro]');
+    if (aviso) aviso.hidden = true;
+    relacionamentosController = new AbortController();
+    fetch(relacionamentosUrl + '?' + params.toString(), {
+        credentials: 'same-origin',
+        headers: {'X-Requested-With': 'XMLHttpRequest'},
+        signal: relacionamentosController.signal
+    })
+        .then((response) => {
+            if (!response.ok) throw new Error('Não foi possível carregar os relacionamentos.');
+            return response.json();
+        })
+        .then((dados) => {
+            const equipesAtuais = new Set(valoresSelecionados(equipes));
+            const acoesAtuais = new Set(valoresSelecionados(acoes));
+            if (
+                !equipesSelecionadas.every((valor) => equipesAtuais.has(valor))
+                || !acoesSelecionadas.every((valor) => acoesAtuais.has(valor))
+            ) return;
+            praiasObrigatoriasPorAcao = new Set((dados.acao_praia_ids || []).map(Number));
+            equipesObrigatoriasPorAcao = new Set((dados.acao_equipe_ids || []).map(Number));
+            praiasObrigatoriasPorEquipe = new Set((dados.equipe_praia_ids || []).map(Number));
+            adicionarOpcoes(equipes, dados.equipe_ids || []);
+            adicionarOpcoes(praias, dados.praia_ids || []);
+            atualizarResumo(praias);
+            atualizarResumo(equipes);
+            atualizarResumo(acoes);
+        })
+        .catch((erro) => {
+            if (erro.name === 'AbortError' || versaoAtual !== relacionamentosVersao) return;
+            if (aviso) aviso.hidden = false;
+        });
+}
+function atualizarCampos() {
+    const noticia = tipo && tipo.value === 'NOTICIA';
+    if (publico) {
+        publico.disabled = noticia;
+        if (noticia) publico.value = 'TODOS';
+    }
+    const campoPublico = document.querySelector('[data-field="publico"]');
+    const campoTema = document.querySelector('[data-field="tema"]');
+    if (campoPublico) campoPublico.hidden = noticia;
+    if (campoTema) campoTema.hidden = !noticia;
+    const tema = document.getElementById('id_tema');
+    if (tema) {
+        tema.disabled = !noticia;
+        if (!noticia) tema.value = '';
+    }
+    ['praias', 'equipes', 'acoes'].forEach((nome) => {
+        const campo = document.querySelector('[data-field="' + nome + '"]');
+        const elemento = document.getElementById('id_' + nome);
+        if (campo) campo.hidden = false;
+        if (elemento) elemento.disabled = false;
+    });
+    const ajuda = document.querySelector('[data-field="relationship-help"]');
+    if (ajuda) ajuda.hidden = false;
+    atualizarResumo(praias);
+    atualizarResumo(equipes);
+    atualizarResumo(acoes);
+}
+tipo && tipo.addEventListener('change', () => {
+    atualizarCampos();
+    atualizarRelacionamentos();
+});
+praias && praias.addEventListener('change', () => atualizarResumo(praias));
+equipes && equipes.addEventListener('change', () => {
+    atualizarResumo(equipes);
+    atualizarRelacionamentos();
+});
+acoes && acoes.addEventListener('change', () => {
+    atualizarResumo(acoes);
+    atualizarRelacionamentos();
+});
+configurarSelecaoPorClique(praias);
+configurarSelecaoPorClique(equipes);
+configurarSelecaoPorClique(acoes);
+atualizarCampos();
+atualizarResumo(praias);
+atualizarResumo(equipes);
+atualizarResumo(acoes);
+
+const duracao = document.getElementById('id_duracao_expiracao');
+const unidadeDuracao = document.getElementById('id_unidade_duracao_expiracao');
+const publicacaoAgora = document.querySelector('[data-publication-now]');
+const expiracaoPreview = document.querySelector('[data-expiration-preview]');
+const nomesUnidade = {
+    DIAS: 'dia(s)',
+    SEMANAS: 'semana(s)',
+    MESES: 'mês(es)',
+    ANOS: 'ano(s)'
+};
+function doisDigitos(numero) {
+    return String(numero).padStart(2, '0');
+}
+function formatarDataHora(data) {
+    return doisDigitos(data.getDate()) + '/' + doisDigitos(data.getMonth() + 1)
+        + '/' + data.getFullYear() + ' às '
+        + doisDigitos(data.getHours()) + ':' + doisDigitos(data.getMinutes());
+}
+function calcularExpiracaoPreview(inicio, quantidade, unidade) {
+    const resultado = new Date(inicio);
+    if (unidade === 'DIAS') {
+        resultado.setDate(resultado.getDate() + quantidade);
+    } else if (unidade === 'SEMANAS') {
+        resultado.setDate(resultado.getDate() + quantidade * 7);
+    } else if (unidade === 'MESES') {
+        const dia = resultado.getDate();
+        resultado.setDate(1);
+        resultado.setMonth(resultado.getMonth() + quantidade);
+        const ultimoDia = new Date(
+            resultado.getFullYear(), resultado.getMonth() + 1, 0
+        ).getDate();
+        resultado.setDate(Math.min(dia, ultimoDia));
+    } else if (unidade === 'ANOS') {
+        const mes = resultado.getMonth();
+        const dia = resultado.getDate();
+        resultado.setDate(1);
+        resultado.setFullYear(resultado.getFullYear() + quantidade);
+        resultado.setMonth(mes);
+        const ultimoDia = new Date(
+            resultado.getFullYear(), mes + 1, 0
+        ).getDate();
+        resultado.setDate(Math.min(dia, ultimoDia));
+    }
+    return resultado;
+}
+function atualizarPreviaExpiracao() {
+    if (!publicacaoAgora || !expiracaoPreview) return;
+    const agora = new Date();
+    publicacaoAgora.textContent = formatarDataHora(agora);
+    const quantidade = Number(duracao && duracao.value);
+    const unidade = unidadeDuracao && unidadeDuracao.value;
+    if (!quantidade || quantidade < 1 || !unidade) {
+        expiracaoPreview.textContent = 'Sem expiração definida.';
+        return;
+    }
+    const expiracao = calcularExpiracaoPreview(agora, quantidade, unidade);
+    expiracaoPreview.textContent = formatarDataHora(expiracao)
+        + ' (' + quantidade + ' ' + nomesUnidade[unidade] + ')';
+}
+duracao && duracao.addEventListener('input', atualizarPreviaExpiracao);
+unidadeDuracao && unidadeDuracao.addEventListener('change', atualizarPreviaExpiracao);
+atualizarPreviaExpiracao();
+window.setInterval(atualizarPreviaExpiracao, 30000);
+</script>{% endblock %}

@@ -1,0 +1,10 @@
+{% extends 'sistema/template-sistema.html' %}
+{% block titulo %}Acesso negado | Sistema{% endblock %}
+{% block page_title %}Acesso negado{% endblock %}
+{% block conteudo %}
+<section class="card empty-state">
+    <h2>Você não tem permissão para gerenciar comunicados</h2>
+    <p class="form-subtitle">Apenas administradores podem cadastrar, editar, publicar, arquivar ou gerenciar temas.</p>
+    <a href="{% url 'central_comunicados' %}" class="btn btn-primary">Ir para a central</a>
+</section>
+{% endblock %}

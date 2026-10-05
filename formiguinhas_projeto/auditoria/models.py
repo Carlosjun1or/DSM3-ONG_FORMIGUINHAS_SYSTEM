@@ -6,6 +6,7 @@ class EventoAuditoria(models.Model):
         'USUARIO': 'Usuário', 'VOLUNTARIO': 'Voluntário', 'PRAIA': 'Praia',
         'EQUIPE': 'Equipe', 'EQUIPE_MEMBRO': 'Membro de equipe', 'ACAO': 'Ação',
         'CONDOMINIO': 'Condomínio', 'BAG': 'Bag', 'MOVIMENTACAO': 'Movimentação de bag',
+        'COMUNICADO': 'Comunicado', 'TEMA_COMUNICADO': 'Tema de comunicado',
     }
     ACAO_CHOICES = [
         ('CRIACAO', 'Criação'), ('EDICAO', 'Edição'), ('MUDANCA_STATUS', 'Mudança de status'),

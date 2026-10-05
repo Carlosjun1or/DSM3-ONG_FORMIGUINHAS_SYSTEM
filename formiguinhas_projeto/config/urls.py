@@ -27,6 +27,7 @@ urlpatterns = [
     path('acao/', include('acao.urls')),
     path('condominio/', include('condominio.urls')),
     path('auditoria/', include('auditoria.urls')),
+    path('comunicado/', include('comunicado.urls')),
     path('', include('site_institucional.urls')),
 ]
 

@@ -1,0 +1,42 @@
+{% extends 'sistema/template-sistema.html' %}
+
+{% block titulo %}Controle de Comunicados | Sistema{% endblock %}
+{% block page_title %}Controle de Comunicados{% endblock %}
+
+{% block conteudo %}
+<section class="card-grid volunteer-metrics">
+    <article class="card"><h3>Total cadastrados</h3><div class="metric">{{ total_comunicados }}</div></article>
+    <article class="card"><h3>Publicados</h3><div class="metric">{{ total_publicados }}</div></article>
+    <article class="card"><h3>Rascunhos</h3><div class="metric">{{ total_rascunhos }}</div></article>
+</section>
+
+<section class="card volunteer-control">
+    <div class="section-heading">
+        <div><h2>Comunicados cadastrados</h2><p class="form-subtitle">Gerencie avisos internos e notícias do site institucional.</p></div>
+        <div class="section-heading-actions">
+            <a href="{% url 'temas_comunicados' %}" class="btn btn-outline">Gerenciar temas</a>
+            <a href="{% url 'comunicado_cadastrar' %}" class="btn btn-primary">Novo comunicado</a>
+        </div>
+    </div>
+    <form method="get" class="volunteer-filters">
+        <div class="form-group"><label for="id_tipo">Tipo</label><select id="id_tipo" name="tipo" class="form-control"><option value="">Todos os tipos</option>{% for valor, rotulo in tipos %}<option value="{{ valor }}" {% if filtro_tipo == valor %}selected{% endif %}>{{ rotulo }}</option>{% endfor %}</select></div>
+        <div class="form-group"><label for="id_status">Status</label><select id="id_status" name="status" class="form-control"><option value="">Todos os status</option>{% for valor, rotulo in status_choices %}<option value="{{ valor }}" {% if filtro_status == valor %}selected{% endif %}>{{ rotulo }}</option>{% endfor %}</select></div>
+        <div class="filter-actions"><button type="submit" class="btn btn-primary">Filtrar</button>{% if filtro_tipo or filtro_status %}<a href="{% url 'comunicados_admin' %}" class="form-link">Limpar</a>{% endif %}</div>
+    </form>
+    {% if comunicados %}
+    <div class="table-wrap"><table class="data-table"><thead><tr><th>Tipo</th><th>Título</th><th>Público</th><th>Status</th><th>Publicação</th><th>Auditoria</th><th>Ações</th></tr></thead><tbody>
+    {% for comunicado in comunicados %}<tr>
+        <td><strong>{{ comunicado.get_tipo_display }}</strong></td>
+        <td><a class="table-link" href="{% url 'comunicado_editar' comunicado.id_comunicado %}">{{ comunicado.titulo }}</a>{% if comunicado.tema %}<small class="table-secondary">{{ comunicado.tema.nome }}</small>{% endif %}</td>
+        <td>{{ comunicado.get_publico_display }}</td><td><span class="current-status status-{{ comunicado.status|lower }}">{{ comunicado.get_status_display }}</span></td>
+        <td>{% if comunicado.dt_publicacao %}{{ comunicado.dt_publicacao|date:'d/m/Y H:i' }}{% else %}<span class="muted">Não publicada</span>{% endif %}</td>
+        <td class="audit-cell">
+            <strong>{% if comunicado.autor %}Cadastrado por {{ comunicado.autor.id_voluntario.nome }}{% else %}Cadastro anterior{% endif %}</strong>
+            {% if comunicado.autor %}<small>{{ comunicado.criado_em|date:'d/m/Y H:i' }}</small>{% endif %}
+            {% if comunicado.ultimo_editado_por %}<small>Editado por {{ comunicado.ultimo_editado_por.id_voluntario.nome }} em {{ comunicado.dt_ultima_edicao|date:'d/m/Y H:i' }}</small>{% else %}<small>Sem edições</small>{% endif %}
+        </td>
+        <td class="table-actions"><a class="btn btn-action-edit btn-small" href="{% url 'comunicado_editar' comunicado.id_comunicado %}">Editar</a>{% if comunicado.status == 'RASCUNHO' %}<form method="post" action="{% url 'comunicado_status' comunicado.id_comunicado 'publicar' %}" onsubmit="return confirm('Publicar este comunicado?');">{% csrf_token %}<button class="btn btn-action-publish btn-small" type="submit">Publicar</button></form>{% elif comunicado.status == 'PUBLICADO' %}<form method="post" action="{% url 'comunicado_status' comunicado.id_comunicado 'despublicar' %}" onsubmit="return confirm('Despublicar este comunicado?');">{% csrf_token %}<button class="btn btn-action-unpublish btn-small" type="submit">Despublicar</button></form>{% elif comunicado.status == 'ARQUIVADO' %}<form method="post" action="{% url 'comunicado_status' comunicado.id_comunicado 'desarquivar' %}" onsubmit="return confirm('Desarquivar este comunicado como rascunho?');">{% csrf_token %}<button class="btn btn-action-restore btn-small" type="submit">Desarquivar</button></form>{% endif %}{% if comunicado.status != 'ARQUIVADO' %}<form method="post" action="{% url 'comunicado_status' comunicado.id_comunicado 'arquivar' %}" onsubmit="return confirm('Arquivar este comunicado?');">{% csrf_token %}<button class="btn btn-action-archive btn-small" type="submit">Arquivar</button></form>{% endif %}</td>
+    </tr>{% endfor %}</tbody></table></div>
+    {% else %}<div class="empty-state table-empty"><h3>Nenhum comunicado encontrado</h3><p class="form-subtitle">Ajuste os filtros ou cadastre um novo comunicado.</p></div>{% endif %}
+</section>
+{% endblock %}

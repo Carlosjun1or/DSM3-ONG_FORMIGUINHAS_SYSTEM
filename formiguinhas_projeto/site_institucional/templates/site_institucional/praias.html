@@ -98,6 +98,7 @@
             {% for praia in praias %}
             <article
                 class="praia-card"
+                id="praia-{{ praia.id_praia }}"
                 data-latitude="{{ praia.latitude }}"
                 data-longitude="{{ praia.longitude }}"
             >

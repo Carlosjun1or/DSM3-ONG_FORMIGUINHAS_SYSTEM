@@ -822,3 +822,51 @@ RESPONSIVIDADE
     }
 
 }
+ .comunicado-modal[hidden] {
+     display: none;
+ }
+
+ .comunicado-modal {
+     position: fixed;
+     inset: 0;
+     z-index: 1000;
+     display: grid;
+     place-items: center;
+     padding: 20px;
+ }
+
+ .comunicado-modal-backdrop {
+     position: absolute;
+     inset: 0;
+     background: rgba(18, 48, 39, 0.62);
+ }
+
+ .comunicado-modal-dialog {
+     position: relative;
+     width: min(520px, 100%);
+     padding: 30px;
+     border-radius: 18px;
+     background: #fff;
+     box-shadow: 0 22px 70px rgba(0, 0, 0, 0.24);
+ }
+
+ .comunicado-modal-dialog h2 {
+     margin: 10px 0;
+ }
+
+ .comunicado-modal-data {
+     color: #5b6f68;
+     font-size: 0.9rem;
+ }
+
+ .comunicado-modal-fechar {
+     position: absolute;
+     top: 10px;
+     right: 14px;
+     border: 0;
+     background: transparent;
+     color: #315b4c;
+     cursor: pointer;
+     font-size: 1.8rem;
+     line-height: 1;
+ }

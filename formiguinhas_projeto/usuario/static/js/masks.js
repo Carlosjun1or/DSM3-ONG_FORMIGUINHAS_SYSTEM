@@ -192,14 +192,27 @@ document.addEventListener('DOMContentLoaded', function () {
             input.value = horario ? data + ' ' + horario : data;
         }
 
-        if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(input.value)) {
-            var partes = input.value.split(/[-T:]/);
+        if (/^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}/.test(input.value)) {
+            var partes = input.value.split(/[-T: :.]/);
             input.value = partes[2] + '/' + partes[1] + '/' + partes[0]
                 + ' ' + partes[3] + ':' + partes[4];
         }
 
         input.addEventListener('input', function () {
             formatarDataHora(input.value);
+        });
+
+        document.querySelectorAll('.relationship-search').forEach(function (search) {
+            var select = document.getElementById(search.dataset.target);
+            if (!select) return;
+
+            search.addEventListener('input', function () {
+                var query = search.value.trim().toLowerCase();
+                Array.from(select.options).forEach(function (option) {
+                    option.hidden = query !== ''
+                        && !option.textContent.toLowerCase().includes(query);
+                });
+            });
         });
 
         if (input.form) {

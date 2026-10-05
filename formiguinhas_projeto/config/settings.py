@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'condominio',
     'site_institucional',
     'auditoria',
+    'comunicado',
 ]
 
 MIDDLEWARE = [
@@ -68,6 +69,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'comunicado.context_processors.notificacoes_comunicados',
             ],
         },
     },

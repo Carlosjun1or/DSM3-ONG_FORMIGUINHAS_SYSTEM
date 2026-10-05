@@ -1,0 +1,19 @@
+{% extends 'sistema/template-sistema.html' %}
+{% block titulo %}{{ comunicado.titulo }} | Sistema{% endblock %}
+{% block page_title %}Detalhe do comunicado{% endblock %}
+{% block conteudo %}
+<section class="card detail-card">
+    <div class="section-heading"><div><h2>{{ comunicado.titulo }}</h2><p class="form-subtitle">{{ comunicado.get_tipo_display }} · {{ comunicado.get_publico_display }} · {{ comunicado.dt_publicacao|date:'d/m/Y H:i' }}</p></div><a href="{% url 'central_comunicados' %}" class="btn btn-outline">Voltar</a></div>
+    <div class="detail-content">{{ comunicado.conteudo|linebreaks }}</div>
+    {% if comunicado.praias.all or comunicado.equipes.all or comunicado.acoes.all %}
+    <div class="detail-relations">
+        <h3>Relacionado a</h3>
+        <ul>
+            {% for item in comunicado.praias.all %}<li><a class="table-link" href="{% url 'editar_praia' item.praia.id_praia %}">{{ item.praia.nome }}</a> <span class="muted">({{ item.praia.cidade }})</span></li>{% endfor %}
+            {% for item in comunicado.equipes.all %}<li><a class="table-link" href="{% url 'equipe_detalhe' item.equipe.id_equipe %}">{{ item.equipe.nome }}</a></li>{% endfor %}
+            {% for item in comunicado.acoes.all %}<li><a class="table-link" href="{% url 'acao_detalhe' item.acao.id_acao %}">{{ item.acao }}</a></li>{% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+</section>
+{% endblock %}

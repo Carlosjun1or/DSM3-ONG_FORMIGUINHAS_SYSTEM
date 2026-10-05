@@ -2,6 +2,20 @@
 
 {% block conteudo %}
 
+{% if ultimo_comunicado %}
+<div class="comunicado-modal" data-comunicado-modal hidden>
+    <div class="comunicado-modal-backdrop" data-fechar-comunicado></div>
+    <section class="comunicado-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="comunicado-modal-titulo">
+        <button type="button" class="comunicado-modal-fechar" data-fechar-comunicado aria-label="Fechar comunicado">×</button>
+        <small>{{ ultimo_comunicado.get_tipo_display }}{% if ultimo_comunicado.tema %} · {{ ultimo_comunicado.tema.nome }}{% endif %}</small>
+        <h2 id="comunicado-modal-titulo">{{ ultimo_comunicado.titulo }}</h2>
+        {% if ultimo_comunicado.resumo %}<p>{{ ultimo_comunicado.resumo }}</p>{% endif %}
+        <p class="comunicado-modal-data">{{ ultimo_comunicado.dt_publicacao|date:'d/m/Y H:i' }}</p>
+        <a class="botao-participar" href="{% url 'comunicado_publico_detalhe' ultimo_comunicado.id_comunicado %}">Ver comunicado</a>
+    </section>
+</div>
+{% endif %}
+
 <!-- INÍCIO -->
 
 <section id="inicio">
@@ -339,5 +353,27 @@
         });
     })();
 </script>
+
+{% if ultimo_comunicado %}
+<script>
+(() => {
+    const modal = document.querySelector('[data-comunicado-modal]');
+    if (!modal) return;
+    const chave = 'comunicado-visto-{{ ultimo_comunicado.id_comunicado }}';
+    if (window.localStorage.getItem(chave)) return;
+    modal.hidden = false;
+    const fechar = () => {
+        modal.hidden = true;
+        window.localStorage.setItem(chave, '1');
+    };
+    modal.querySelectorAll('[data-fechar-comunicado]').forEach((elemento) => {
+        elemento.addEventListener('click', fechar);
+    });
+    document.addEventListener('keydown', (evento) => {
+        if (evento.key === 'Escape' && !modal.hidden) fechar();
+    });
+})();
+</script>
+{% endif %}
 
 {% endblock %}

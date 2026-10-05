@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block titulo %}Formiguinhas | Sistema{% endblock %}</title>
-    <link rel="stylesheet" href="{% static 'css/style.css' %}?v=10">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}?v=11">
     {% block estilos %}{% endblock %}
 </head>
 <body class="system-page">
@@ -34,6 +34,12 @@
                 <a href="{% url 'condominios' %}" class="sidebar-link {% if '/condominio/' in request.path %}active{% endif %}">Controle de Condomínios</a>
                 <a href="{% url 'bags' %}" class="sidebar-link {% if request.path == '/condominio/bags/' %}active{% endif %}">Controle de Bags</a>
                 <a href="{% url 'auditoria_global' %}" class="sidebar-link {% if '/auditoria/' in request.path or '/condominio/auditoria/' in request.path %}active{% endif %}">Auditoria global</a>
+                {% if request.session.usuario_tipo == 'ADMIN' or request.session.usuario_tipo == 'COORDENADOR' %}
+                <a href="{% url 'central_comunicados' %}" class="sidebar-link {% if '/comunicado/central/' in request.path %}active{% endif %}">Central de comunicados</a>
+                {% endif %}
+                {% if request.session.usuario_tipo == 'ADMIN' %}
+                <a href="{% url 'comunicados_admin' %}" class="sidebar-link {% if '/comunicado/admin/' in request.path %}active{% endif %}">Gerenciar comunicados</a>
+                {% endif %}
                 <a href="{% url 'perfil' %}" class="sidebar-link {% if request.path == '/perfil/' %}active{% endif %}">Perfil</a>
             </nav>
 
@@ -53,6 +59,10 @@
 
                 <div class="topbar-actions">
                     <span class="user-pill">{{ request.session.usuario_nome|default:'Voluntário' }}</span>
+                    <a href="{% url 'central_comunicados' %}" class="notification-link" aria-label="Central de comunicados{% if comunicados_nao_lidos_count %}, {{ comunicados_nao_lidos_count }} não lidos{% endif %}" title="Central de comunicados">
+                        <span class="notification-icon" aria-hidden="true">🔔</span>
+                        {% if comunicados_nao_lidos_count %}<span class="notification-badge">{{ comunicados_nao_lidos_count }}</span>{% endif %}
+                    </a>
                     <a class="btn btn-outline" href="{% url 'perfil' %}">Perfil</a>
                 </div>
             </header>
@@ -71,5 +81,6 @@
         </main>
     </div>
     <script src="{% static 'js/masks.js' %}?v=11"></script>
+    {% block scripts %}{% endblock %}
 </body>
 </html>

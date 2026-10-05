@@ -1,0 +1,9 @@
+{% extends 'sistema/template-sistema.html' %}
+{% block titulo %}Central de comunicados | Sistema{% endblock %}
+{% block page_title %}Central de comunicados{% endblock %}
+{% block conteudo %}
+<section class="card volunteer-control">
+    <div class="section-heading"><div><h2>Comunicados publicados</h2><p class="form-subtitle">Avisos e notícias vigentes para acompanhamento da equipe.</p></div></div>
+    {% if comunicados %}<div class="table-wrap"><table class="data-table"><thead><tr><th>Tipo</th><th>Título</th><th>Público</th><th>Publicado em</th><th>Ação</th></tr></thead><tbody>{% for comunicado in comunicados %}<tr><td><strong>{{ comunicado.get_tipo_display }}</strong></td><td><a class="table-link" href="{% url 'comunicado_interno_detalhe' comunicado.id_comunicado %}">{{ comunicado.titulo }}</a></td><td>{{ comunicado.get_publico_display }}</td><td>{{ comunicado.dt_publicacao|date:'d/m/Y H:i' }}</td><td class="table-actions"><a class="btn btn-outline btn-small" href="{% url 'comunicado_interno_detalhe' comunicado.id_comunicado %}">Ler</a></td></tr>{% endfor %}</tbody></table></div>{% else %}<div class="empty-state table-empty"><h3>Nenhum comunicado no momento</h3><p class="form-subtitle">Quando houver um comunicado vigente, ele aparecerá aqui.</p></div>{% endif %}
+</section>
+{% endblock %}

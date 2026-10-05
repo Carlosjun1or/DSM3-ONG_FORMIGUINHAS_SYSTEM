@@ -1,7 +1,9 @@
 from django.shortcuts import render
 from django.utils import timezone
+from django.db.models import Q
 
 from acao.models import Acao
+from comunicado.models import Comunicado
 from praia.models import Praia
 
 
@@ -32,10 +34,20 @@ def mutiroes_futuros():
 
 
 def index(request):
+    agora = timezone.now()
+    ultimo_comunicado = Comunicado.objects.filter(
+        status=Comunicado.PUBLICADO,
+        publico=Comunicado.TODOS,
+        dt_publicacao__isnull=False,
+        dt_publicacao__lte=agora,
+    ).filter(
+        Q(dt_expiracao__isnull=True) | Q(dt_expiracao__gt=agora)
+    ).select_related('tema').order_by('-dt_publicacao').first()
     return render(request, 'site_institucional/index.html', {
         'mutiroes': mutiroes_concluidos()[:1],
         'proximo_mutirao': mutiroes_futuros().first(),
         'praias': praias_de_atuacao(),
+        'ultimo_comunicado': ultimo_comunicado,
     })
 
 
