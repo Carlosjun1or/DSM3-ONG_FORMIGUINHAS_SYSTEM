@@ -80,6 +80,110 @@
 <section class="card volunteer-control action-detail-section">
     <div class="section-heading">
         <div>
+            <h2>Resíduos coletados <span class="section-count">{{ residuos|length }}</span></h2>
+            <p class="form-subtitle">Registre o tipo, a categoria e a quantidade coletada. Cada registro pode ter mais de uma destinação.</p>
+        </div>
+    </div>
+    {% if usuario.tipo == 'ADMIN' %}
+    <div class="member-form-panel">
+        <h3>Registrar resíduo</h3>
+        <form method="post" action="{% url 'registrar_residuo' acao.id_acao %}">
+            {% csrf_token %}
+            {% if residuo_form.non_field_errors %}<div class="error-box">{{ residuo_form.non_field_errors|join:', ' }}</div>{% endif %}
+            <div class="form-grid">
+                <div class="form-group">
+                    {{ residuo_form.tipo.label_tag }}
+                    {{ residuo_form.tipo }}
+                    {% if residuo_form.tipo.help_text %}<small class="form-help">{{ residuo_form.tipo.help_text }}</small>{% endif %}
+                    {% for error in residuo_form.tipo.errors %}<small class="field-error">{{ error }}</small>{% endfor %}
+                </div>
+                <div class="form-group">
+                    {{ residuo_form.categoria.label_tag }}
+                    {{ residuo_form.categoria }}
+                    {% if residuo_form.categoria.help_text %}<small class="form-help">{{ residuo_form.categoria.help_text }}</small>{% endif %}
+                    {% for error in residuo_form.categoria.errors %}<small class="field-error">{{ error }}</small>{% endfor %}
+                </div>
+                <div class="form-group">
+                    {{ residuo_form.quantidade.label_tag }}
+                    {{ residuo_form.quantidade }}
+                    {% if residuo_form.quantidade.help_text %}<small class="form-help">{{ residuo_form.quantidade.help_text }}</small>{% endif %}
+                    {% for error in residuo_form.quantidade.errors %}<small class="field-error">{{ error }}</small>{% endfor %}
+                </div>
+                <div class="form-group">
+                    {{ residuo_form.unidade.label_tag }}
+                    {{ residuo_form.unidade }}
+                    {% if residuo_form.unidade.help_text %}<small class="form-help">{{ residuo_form.unidade.help_text }}</small>{% endif %}
+                    {% for error in residuo_form.unidade.errors %}<small class="field-error">{{ error }}</small>{% endfor %}
+                </div>
+                <div class="form-group full">
+                    {{ residuo_form.observacao.label_tag }}
+                    {{ residuo_form.observacao }}
+                    {% if residuo_form.observacao.help_text %}<small class="form-help">{{ residuo_form.observacao.help_text }}</small>{% endif %}
+                    {% for error in residuo_form.observacao.errors %}<small class="field-error">{{ error }}</small>{% endfor %}
+                </div>
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Registrar resíduo</button>
+            </div>
+        </form>
+    </div>
+    {% endif %}
+    {% if residuos %}
+    <div class="table-wrap">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Tipo / categoria</th>
+                    <th>Quantidade</th>
+                    <th>Registro</th>
+                    <th>Destinações</th>
+                    {% if usuario.tipo == 'ADMIN' %}<th>Ação</th>{% endif %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for residuo in residuos %}
+                <tr>
+                    <td><strong>{{ residuo.get_tipo_display }}</strong><br><small>{{ residuo.get_categoria_display }}</small></td>
+                    <td>{{ residuo.quantidade }} {{ residuo.get_unidade_display }}</td>
+                    <td>
+                        {{ residuo.registrado_por_nome }}<br><small>{{ residuo.dt_registro|date:'d/m/Y H:i' }}</small>
+                        {% if residuo.ultimo_editado_por_nome %}<br><small>Editado por {{ residuo.ultimo_editado_por_nome }} em {{ residuo.dt_ultima_edicao|date:'d/m/Y H:i' }}</small>{% else %}<br><small>Sem edições</small>{% endif %}
+                    </td>
+                    <td>
+                        {% for destinacao in residuo.destinacoes.all %}
+                            <span>{{ destinacao.get_tipo_display }}{% if destinacao.quantidade %} ({{ destinacao.quantidade }} {{ destinacao.get_unidade_display }}){% endif %}</span>
+                            {% if usuario.tipo == 'ADMIN' %}
+                            <a class="btn btn-outline btn-small" href="{% url 'editar_destinacao' acao.id_acao residuo.id_residuo destinacao.id_destinacao %}">Editar</a>
+                            <form method="post" action="{% url 'excluir_destinacao' acao.id_acao residuo.id_residuo destinacao.id_destinacao %}" style="display:inline" onsubmit="return confirm('Excluir esta destinação?');">{% csrf_token %}<button type="submit" class="btn btn-danger btn-small">Excluir</button></form>
+                            {% endif %}
+                            {% if not forloop.last %}<br>{% endif %}
+                        {% empty %}
+                            <span class="field-hint">Ainda não informada</span>
+                        {% endfor %}
+                    </td>
+                    {% if usuario.tipo == 'ADMIN' %}
+                    <td>
+                        <a class="btn btn-outline btn-small" href="{% url 'registrar_destinacao' acao.id_acao residuo.id_residuo %}">Adicionar destinação</a>
+                        <a class="btn btn-outline btn-small" href="{% url 'editar_residuo' acao.id_acao residuo.id_residuo %}">Editar resíduo</a>
+                        <form method="post" action="{% url 'excluir_residuo' acao.id_acao residuo.id_residuo %}" onsubmit="return confirm('Excluir este resíduo e suas destinações?');">{% csrf_token %}<button type="submit" class="btn btn-danger btn-small">Excluir resíduo</button></form>
+                    </td>
+                    {% endif %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state table-empty">
+        <h3>Nenhum resíduo registrado</h3>
+        <p class="form-subtitle">Os registros desta ação aparecerão aqui.</p>
+    </div>
+    {% endif %}
+</section>
+
+<section class="card volunteer-control action-detail-section">
+    <div class="section-heading">
+        <div>
             <h2>Imagens da ação <span class="section-count">{{ imagens_acao|length }}</span></h2>
             <p class="form-subtitle">Adicione registros fotográficos da atividade. Até 10 imagens de 5 MB por envio.</p>
         </div>

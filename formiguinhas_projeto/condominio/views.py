@@ -250,6 +250,7 @@ def detalhe_bag_view(request, bag_id):
     if not usuario:
         return redirect('login')
     bag = get_object_or_404(Bag.objects.select_related('condominio', 'condominio__praia'), id_bag=bag_id)
+    from residuo.models import ColetaResiduo
     return render(request, 'sistema/detalhe-bag.html', {
         'usuario': usuario,
         'bag': bag,
@@ -261,6 +262,9 @@ def detalhe_bag_view(request, bag_id):
                 + list(bag.movimentacoes.values_list('id_movimentacao', flat=True))
             ),
         ).select_related('usuario')[:50],
+        'coletas_residuos': ColetaResiduo.objects.filter(
+            bag=bag,
+        ).prefetch_related('itens').order_by('-data_coleta'),
     })
 
 

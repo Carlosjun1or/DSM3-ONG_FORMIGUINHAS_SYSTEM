@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'praia',
     'equipe',
     'acao',
+    'residuo',
     'condominio',
     'site_institucional',
     'auditoria',

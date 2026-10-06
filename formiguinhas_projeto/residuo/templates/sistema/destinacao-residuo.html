@@ -1,0 +1,35 @@
+{% extends 'sistema/template-sistema.html' %}
+
+{% block titulo %}Destinação de resíduo | Sistema{% endblock %}
+{% block page_title %}Destinação de resíduo{% endblock %}
+
+{% block conteudo %}
+<section class="form-card">
+    <div class="section-heading">
+        <div>
+            <h2>{% if destinacao %}Editar destinação{% else %}Registrar destinação{% endif %}</h2>
+            <p class="form-subtitle">{{ residuo.get_tipo_display }} · {{ residuo.get_categoria_display }} · {{ residuo.quantidade }} {{ residuo.get_unidade_display }}</p>
+        </div>
+        <a href="{% url 'acao_detalhe' acao.id_acao %}" class="btn btn-outline">Voltar para a ação</a>
+    </div>
+    <form method="post" class="system-form">
+            {% csrf_token %}
+            {% if form.non_field_errors %}<div class="error-box">{{ form.non_field_errors|join:', ' }}</div>{% endif %}
+            <h3 class="form-section-title">Dados da destinação</h3>
+            <div class="form-grid">
+                {% for field in form %}
+                <div class="form-group{% if field.name == 'observacao' %} form-group-full{% endif %}">
+                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    {{ field }}
+                    {% if field.help_text %}<small class="form-help">{{ field.help_text }}</small>{% endif %}
+                    {% for error in field.errors %}<small class="field-error">{{ error }}</small>{% endfor %}
+                </div>
+                {% endfor %}
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">{% if destinacao %}Salvar alterações{% else %}Salvar destinação{% endif %}</button>
+                <a href="{% url 'acao_detalhe' acao.id_acao %}" class="btn btn-outline">Cancelar</a>
+            </div>
+        </form>
+</section>
+{% endblock %}

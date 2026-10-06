@@ -1,0 +1,118 @@
+{% extends 'sistema/template-sistema.html' %}
+
+{% block titulo %}Controle de Resíduos | Sistema{% endblock %}
+{% block page_title %}Controle de Resíduos{% endblock %}
+
+{% block conteudo %}
+<section class="card-grid volunteer-metrics">
+    <article class="card"><h3>Registros coletados</h3><div class="metric">{{ total_residuos }}</div></article>
+    <article class="card"><h3>Destinações registradas</h3><div class="metric">{{ total_destinacoes }}</div></article>
+    <article class="card"><h3>Ações com resíduos</h3><div class="metric">{{ total_acoes_com_residuos }}</div></article>
+    <article class="card"><h3>Coletas</h3><div class="metric">{{ total_coletas }}</div></article>
+</section>
+
+<section class="card volunteer-control">
+    <div class="section-heading"><div><h2>Coletas unificadas</h2><p class="form-subtitle">Ações e bags podem ter várias coletas. Cada coleta pode conter vários tipos de resíduos.</p></div></div>
+    <div class="table-wrap"><table class="data-table"><thead><tr><th>Origem</th><th>Data</th><th>Itens</th><th>Responsável</th><th>Ação</th></tr></thead><tbody>
+    {% for coleta in coletas %}
+    <tr><td>{% if coleta.bag %}Bag {{ coleta.bag.codigo }}{% else %}Ação #{{ coleta.acao_id }}{% endif %}</td><td>{{ coleta.data_coleta|date:'d/m/Y H:i' }}</td><td>{% for item in coleta.itens.all %}{{ item.get_tipo_display|default:'Tipo não informado' }}{% if not forloop.last %}, {% endif %}{% empty %}Sem itens{% endfor %}</td><td>{{ coleta.registrado_por_nome }}</td><td><a href="{% url 'detalhe_coleta_residuo' coleta.id_coleta %}" class="btn btn-outline btn-small">Detalhes</a></td></tr>
+    {% empty %}<tr><td colspan="5">Nenhuma coleta unificada registrada.</td></tr>{% endfor %}
+    </tbody></table></div>
+</section>
+
+<section class="card volunteer-control">
+    <div class="section-heading">
+        <div>
+            <h2>Todos os resíduos registrados</h2>
+            <p class="form-subtitle">Consulte coleta, classificação, destinação, ação vinculada e responsáveis em uma única tela.</p>
+        </div>
+        <a href="{% url 'acoes' %}" class="btn btn-outline">Ver ações</a>
+    </div>
+
+    <form method="get" class="volunteer-filters">
+        <div class="form-group">
+            <label for="id_busca">Buscar</label>
+            <input id="id_busca" name="busca" type="search" value="{{ busca }}" class="form-control" placeholder="Tipo, categoria, ação ou responsável">
+        </div>
+        <div class="form-group">
+            <label for="id_tipo">Tipo de resíduo</label>
+            <select id="id_tipo" name="tipo" class="form-control">
+                <option value="">Todos os tipos</option>
+                {% for valor, rotulo in tipo_choices %}<option value="{{ valor }}" {% if tipo_selecionado == valor %}selected{% endif %}>{{ rotulo }}</option>{% endfor %}
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="id_categoria">Categoria</label>
+            <select id="id_categoria" name="categoria" class="form-control">
+                <option value="">Todas as categorias</option>
+                {% for valor, rotulo in categoria_choices %}<option value="{{ valor }}" {% if categoria_selecionada == valor %}selected{% endif %}>{{ rotulo }}</option>{% endfor %}
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="id_destinacao">Destinação</label>
+            <select id="id_destinacao" name="destinacao" class="form-control">
+                <option value="">Todas as destinações</option>
+                {% for valor, rotulo in destinacao_choices %}<option value="{{ valor }}" {% if destinacao_selecionada == valor %}selected{% endif %}>{{ rotulo }}</option>{% endfor %}
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="id_acao">Ação</label>
+            <select id="id_acao" name="acao" class="form-control">
+                <option value="">Todas as ações</option>
+                {% for acao in acoes %}<option value="{{ acao.id_acao }}" {% if acao_selecionada == acao.id_acao|stringformat:'s' %}selected{% endif %}>{{ acao.get_tipo_display }} · {{ acao.data|date:'d/m/Y' }} · {{ acao.praia.nome }}</option>{% endfor %}
+            </select>
+        </div>
+        <div class="filter-actions">
+            <button type="submit" class="btn btn-primary">Filtrar</button>
+            {% if busca or tipo_selecionado or categoria_selecionada or destinacao_selecionada or acao_selecionada %}<a href="{% url 'residuos' %}" class="form-link">Limpar</a>{% endif %}
+        </div>
+    </form>
+
+    {% if residuos %}
+    <div class="table-wrap">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Resíduo</th>
+                    <th>Quantidade</th>
+                    <th>Ação vinculada</th>
+                    <th>Destinação</th>
+                    <th>Registro</th>
+                    <th>Observação</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for residuo in residuos %}
+                <tr>
+                    <td><strong>{{ residuo.get_tipo_display }}</strong><small class="table-secondary">{{ residuo.get_categoria_display }}</small></td>
+                    <td><strong>{{ residuo.quantidade }}</strong><small class="table-secondary">{{ residuo.get_unidade_display }}</small></td>
+                    <td>
+                        <a class="table-link" href="{% url 'acao_detalhe' residuo.acao.id_acao %}">{{ residuo.acao.get_tipo_display }}</a>
+                        <small class="table-secondary">{{ residuo.acao.praia.nome }} · {{ residuo.acao.data|date:'d/m/Y' }}{% if residuo.acao.local %} · {{ residuo.acao.local }}{% endif %}</small>
+                    </td>
+                    <td>
+                        {% for destinacao in residuo.destinacoes.all %}
+                            <strong>{{ destinacao.get_tipo_display }}</strong>
+                            {% if destinacao.quantidade %}<small class="table-secondary">{{ destinacao.quantidade }} {{ destinacao.get_unidade_display }}</small>{% endif %}
+                            {% if destinacao.observacao %}<small class="table-secondary">{{ destinacao.observacao }}</small>{% endif %}
+                            <small class="table-secondary">{{ destinacao.registrado_por_nome }} · {{ destinacao.dt_registro|date:'d/m/Y H:i' }}</small>
+                        {% empty %}
+                            <span class="muted">Não informada</span>
+                        {% endfor %}
+                    </td>
+                    <td class="audit-cell">
+                        <strong>{{ residuo.registrado_por_nome }}</strong>
+                        <small>{{ residuo.registrado_por_tipo }} · {{ residuo.dt_registro|date:'d/m/Y H:i' }}</small>
+                        {% if residuo.ultimo_editado_por_nome %}<small>Editado por {{ residuo.ultimo_editado_por_nome }} em {{ residuo.dt_ultima_edicao|date:'d/m/Y H:i' }}</small>{% else %}<small>Sem edições</small>{% endif %}
+                    </td>
+                    <td>{{ residuo.observacao|default:'-' }}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state table-empty"><h3>Nenhum resíduo encontrado</h3><p class="form-subtitle">Cadastre resíduos no detalhe de uma ação ou ajuste os filtros.</p></div>
+    {% endif %}
+</section>
+{% endblock %}

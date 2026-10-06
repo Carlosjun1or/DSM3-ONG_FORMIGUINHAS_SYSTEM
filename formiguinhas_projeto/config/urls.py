@@ -25,6 +25,7 @@ urlpatterns = [
     path('praia/', include('praia.urls')),
     path('equipe/', include('equipe.urls')),
     path('acao/', include('acao.urls')),
+    path('residuo/', include('residuo.urls')),
     path('condominio/', include('condominio.urls')),
     path('auditoria/', include('auditoria.urls')),
     path('comunicado/', include('comunicado.urls')),

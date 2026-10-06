@@ -7,6 +7,9 @@ class EventoAuditoria(models.Model):
         'EQUIPE': 'Equipe', 'EQUIPE_MEMBRO': 'Membro de equipe', 'ACAO': 'Ação',
         'CONDOMINIO': 'Condomínio', 'BAG': 'Bag', 'MOVIMENTACAO': 'Movimentação de bag',
         'COMUNICADO': 'Comunicado', 'TEMA_COMUNICADO': 'Tema de comunicado',
+        'RESIDUO': 'Resíduo coletado', 'DESTINACAO_RESIDUO': 'Destinação de resíduo',
+        'COLETA_RESIDUO': 'Coleta de resíduos',
+        'ITEM_COLETA_RESIDUO': 'Item de coleta de resíduos',
     }
     ACAO_CHOICES = [
         ('CRIACAO', 'Criação'), ('EDICAO', 'Edição'), ('MUDANCA_STATUS', 'Mudança de status'),

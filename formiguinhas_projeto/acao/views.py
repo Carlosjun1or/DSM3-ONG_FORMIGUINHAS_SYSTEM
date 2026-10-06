@@ -23,6 +23,7 @@ from .models import (
     adicionar_coordenadores_automaticos_para_mutirao,
     adicionar_participantes_automaticos_para_mutirao,
 )
+from residuo.forms import DestinacaoResiduoForm, ResiduoColetadoForm
 from auditoria.services import registrar_evento, snapshot
 
 
@@ -175,7 +176,7 @@ def acao_detalhe_view(request, acao_id):
             'praia',
             'cadastrado_por__id_voluntario',
             'ultimo_editado_por__id_voluntario',
-        ).prefetch_related('imagens_acao'),
+        ).prefetch_related('imagens_acao', 'residuos_coletados__destinacoes'),
         id_acao=acao_id,
     )
     busca_participante = request.GET.get('busca_participante', '').strip()
@@ -213,6 +214,7 @@ def acao_detalhe_view(request, acao_id):
     form = AcaoParticipanteForm(acao=acao)
     responsavel_form = AcaoResponsavelForm(acao=acao)
     imagem_form = AcaoImagemForm()
+    residuo_form = ResiduoColetadoForm()
     responsaveis = acao.responsaveis.select_related('voluntario').order_by(
         'papel',
         'voluntario__nome',
@@ -239,6 +241,9 @@ def acao_detalhe_view(request, acao_id):
         'responsaveis': responsaveis,
         'imagens_acao': acao.imagens_acao.all(),
         'imagem_form': imagem_form,
+        'residuos': acao.residuos_coletados.all(),
+        'residuo_form': residuo_form,
+        'destinacao_form': DestinacaoResiduoForm(),
     })
 
 
