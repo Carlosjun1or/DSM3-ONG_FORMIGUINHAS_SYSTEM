@@ -1,0 +1,91 @@
+{% extends 'sistema/template-sistema.html' %}
+
+{% block page_title %}Detalhes da doação{% endblock %}
+
+{% block conteudo %}
+<section class="card donation-detail">
+    <div class="section-heading">
+        <div>
+            <p class="eyebrow">Doação #{{ doacao.id_doacao }}</p>
+            <h2>{{ doacao.get_tipo_display }}</h2>
+        </div>
+        <div class="button-group"><a class="btn btn-outline" href="{% url 'doacoes' %}">Voltar</a><a
+                class="btn btn-primary" href="{% url 'editar_doacao' doacao.id_doacao %}">Editar</a></div>
+    </div>
+    <div class="detail-grid donation-summary">
+        <div>
+            <span>Doador</span>
+            <p>{% if doacao.anonima %}Anônima{% else %}{{ doacao.doador.nome }}{% endif %}</p>
+        </div>
+        <div>
+            <span>Recebimento</span>
+            <p>{{ doacao.data_recebimento|date:"d/m/Y" }}</p>
+        </div>
+        <div>
+            <span>Situação</span>
+            <p><strong class="status-badge status-{{ doacao.status|lower }}">{{doacao.get_status_display }}</strong>
+            </p>
+        </div>
+        <div>
+            <span>Finalidade</span>
+            <p>{{ doacao.get_finalidade_display }}{% if doacao.descricao_finalidade %}: {{doacao.descricao_finalidade}}{% endif %}</p>
+        </div>
+        <div>
+            <span>Praia</span>
+            <p>{% if doacao.praia %}{{ doacao.praia.nome }}{% else %}Não informada{% endif %}</p>
+        </div>
+        <div>
+            <span>Ação</span>
+            <p>{% if doacao.acao %}{{ doacao.acao }}{% else %}Não informada{% endif %}</p>
+        </div>      
+        <div><span>Descrição</span>
+            <p>{% if doacao.tipo == 'FINANCEIRA' %}
+                <h3>Dados financeiros</h3>
+                <p><strong>Valor:</strong> R$ {{ doacao.financeira.valor|floatformat:2 }} | <strong>Forma:</strong>{{doacao.financeira.get_forma_recebimento_display }}</p>
+            {% else %}
+            <h3>Materiais</h3>
+            <div class="table-wrap">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Material</th>
+                            <th>Categoria</th>
+                            <th>Quantidade</th>
+                            <th>Condição</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in doacao.itens_materiais.all %}<tr>
+                            <td>{{ item.nome }}</td>
+                            <td>{{ item.categoria }}</td>
+                            <td>{{ item.quantidade }} {{ item.unidade }}</td>
+                            <td>{{ item.get_condicao_display }}</td>
+                        </tr>{% empty %}<tr>
+                            <td colspan="4">Nenhum item informado.</td>
+                        </tr>{% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% endif %}</p>
+        </div>
+        <div><span>Observações</span>
+            <p>{{ doacao.observacoes|default:'Nenhuma' }}</p>
+        </div>
+    </div>
+    <section class="card volunteer-control">
+        <div class="section-heading">
+        <div>
+            <h2>Auditoria de Doação</h2>
+            <p class="form-subtitle">Cadastro e alterações feitas neste registro.</p>
+        </div>
+        <a href="{% url 'auditorias' %}?entidade=DOACAO" class="btn btn-outline">Ver auditoria completa</a></div><div class="table-wrap"><table class="data-table"><thead><tr><th>Data</th><th>Ação</th><th>Resumo</th><th>Usuário</th></tr></thead><tbody>{% for auditoria in auditorias %}<tr><td>{{ auditoria.data_evento|date:'d/m/Y H:i' }}</td><td>{{ auditoria.get_acao_display }}</td><td>{{ auditoria.resumo }}</td><td>{{ auditoria.usuario_nome }}</td></tr>{% empty %}<tr><td colspan="4">Nenhum evento de auditoria registrado.</td></tr>{% endfor %}</tbody></table></div>
+    </section>
+    <form method="post" action="{% url 'atualizar_status_doacao' doacao.id_doacao %}" class="button-group">
+        {% csrf_token %}
+        {% if doacao.status == 'PENDENTE' %}<button class="btn btn-primary" name="status" value="CONFIRMADA">Confirmar
+            recebimento</button>{% endif %}
+        {% if usuario.tipo == 'ADMIN' and doacao.status != 'CANCELADA' %}<button class="btn btn-outline" name="status"
+            value="CANCELADA">Cancelar doação</button>{% endif %}
+    </form>
+</section>
+{% endblock %}

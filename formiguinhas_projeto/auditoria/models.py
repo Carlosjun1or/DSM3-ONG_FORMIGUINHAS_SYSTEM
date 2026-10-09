@@ -10,6 +10,8 @@ class EventoAuditoria(models.Model):
         'RESIDUO': 'Resíduo coletado', 'DESTINACAO_RESIDUO': 'Destinação de resíduo',
         'COLETA_RESIDUO': 'Coleta de resíduos',
         'ITEM_COLETA_RESIDUO': 'Item de coleta de resíduos',
+        'DOADOR': 'Doador',
+        'DOACAO': 'Doação',
     }
     ACAO_CHOICES = [
         ('CRIACAO', 'Criação'), ('EDICAO', 'Edição'), ('MUDANCA_STATUS', 'Mudança de status'),

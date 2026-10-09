@@ -1,0 +1,10 @@
+{% extends 'sistema/template-sistema.html' %}
+
+{% block page_title %}{% if modo == 'edicao' %}Editar doador{% else %}Cadastrar doador{% endif %}{% endblock %}
+
+{% block conteudo %}
+<section class="page-section">
+    <div class="section-heading"><div><p class="eyebrow">Cadastro de doadores</p><h2>{% if modo == 'edicao' %}Editar doador{% else %}Novo doador{% endif %}</h2></div></div>
+    <form method="post" class="form-card">{% csrf_token %}{{ form.as_p }}<div class="button-group"><button class="btn btn-primary" type="submit">Salvar</button><a class="btn btn-outline" href="{% url 'doadores' %}">Cancelar</a></div></form>
+</section>
+{% endblock %}

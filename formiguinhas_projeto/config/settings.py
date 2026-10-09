@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'site_institucional',
     'auditoria',
     'comunicado',
+    'doacao',
 ]
 
 MIDDLEWARE = [

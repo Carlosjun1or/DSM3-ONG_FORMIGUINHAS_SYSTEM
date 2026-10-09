@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block titulo %}Formiguinhas | Sistema{% endblock %}</title>
-    <link rel="stylesheet" href="{% static 'css/style.css' %}?v=11">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}?v=12">
     {% block estilos %}{% endblock %}
 </head>
 <body class="system-page">
@@ -31,6 +31,9 @@
                 <a href="{% url 'equipes' %}" class="sidebar-link {% if '/equipe/' in request.path %}active{% endif %}">Controle de Equipes</a>
                 {% endif %}
                 <a href="{% url 'acoes' %}" class="sidebar-link {% if '/acao/' in request.path %}active{% endif %}">Controle de Ações</a>
+                {% if request.session.usuario_tipo == 'ADMIN' or request.session.usuario_tipo == 'COORDENADOR' %}
+                <a href="{% url 'doacoes' %}" class="sidebar-link {% if '/doacao/' in request.path %}active{% endif %}">Controle de Doações</a>
+                {% endif %}
                 {% if request.session.usuario_tipo == 'ADMIN' or request.session.usuario_tipo == 'COORDENADOR' %}
                 <a href="{% url 'residuos' %}" class="sidebar-link {% if request.path == '/residuo/' %}active{% endif %}">Controle de Resíduos</a>
                 {% endif %}
@@ -83,7 +86,7 @@
             {% block conteudo %}{% endblock %}
         </main>
     </div>
-    <script src="{% static 'js/masks.js' %}?v=11"></script>
+    <script src="{% static 'js/masks.js' %}?v=12"></script>
     {% block scripts %}{% endblock %}
 </body>
 </html>

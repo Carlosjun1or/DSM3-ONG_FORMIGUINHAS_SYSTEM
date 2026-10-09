@@ -1,0 +1,174 @@
+{% extends 'sistema/template-sistema.html' %}
+
+{% block page_title %}{% if modo == 'edicao' %}Editar doação{% else %}Nova doação{% endif %}{% endblock %}
+
+{% block conteudo %}
+<section class="page-section donation-page">
+    <div class="section-heading">
+        <div>
+            <p class="eyebrow">Registro administrativo</p>
+            <h2>{% if modo == 'edicao' %}Editar doação{% else %}Cadastrar doação{% endif %}</h2>
+            <p class="section-description">Preencha os dados. Os campos marcados com * são obrigatórios.</p>
+        </div>
+        <a class="btn btn-outline" href="{% if modo == 'edicao' %}{% url 'doacao_detalhe' doacao.id_doacao %}{% else %}{% url 'doacoes' %}{% endif %}">Cancelar</a>
+    </div>
+
+    {% if form.errors or financeira_form.errors or itens_formset.errors or itens_formset.non_form_errors or doador_inline_form.errors %}
+    <div class="form-error-summary" role="alert">
+        <strong>Não foi possível salvar a doação.</strong>
+        <span>Revise os campos destacados abaixo:</span>
+        {% if form.non_field_errors %}{{ form.non_field_errors }}{% endif %}
+        {% if financeira_form.non_field_errors %}{{ financeira_form.non_field_errors }}{% endif %}
+        {% if itens_formset.non_form_errors %}{{ itens_formset.non_form_errors }}{% endif %}
+        {% if doador_inline_form.non_field_errors %}{{ doador_inline_form.non_field_errors }}{% endif %}
+    </div>
+    {% endif %}
+
+    <form method="post" class="form-card donation-form" novalidate>
+        {% csrf_token %}
+        <div class="form-section">
+            <div class="form-section-heading"><span class="form-section-number">1</span><div><h3>Dados da doação</h3><p>Identifique o tipo, a situação e a destinação.</p></div></div>
+            {{ form.tipo.errors }}<label for="{{ form.tipo.id_for_label }}">Tipo de doação *</label>{{ form.tipo }}
+            {{ form.doador.errors }}<label for="{{ form.doador.id_for_label }}">Doador</label>{{ form.doador }}
+            <button type="button" class="btn btn-link" id="mostrar-novo-doador">+ Cadastrar novo doador nesta tela</button>
+            <div id="novo-doador-fields" class="inline-donor-card" hidden>
+                <div class="inline-donor-heading"><strong>Novo doador</strong><button type="button" class="btn btn-link" id="ocultar-novo-doador">Cancelar</button></div>
+                {% for hidden in doador_inline_form.hidden_fields %}{{ hidden }}{% endfor %}
+                {% for field in doador_inline_form.visible_fields %}
+                    <div class="form-field">{{ field.errors }}<label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}</div>
+                {% endfor %}
+                <p class="form-help">Esse doador será salvo junto com a doação, sem sair desta página.</p>
+            </div>
+            <div class="form-grid two-columns">
+                <div class="form-field">{{ form.anonima.errors }}<label class="checkbox-label">{{ form.anonima }} Doação anônima</label></div>
+                <div class="form-field">{{ form.data_recebimento.errors }}<label for="{{ form.data_recebimento.id_for_label }}">Data de recebimento *</label>{{ form.data_recebimento }}</div>
+                <div class="form-field">{{ form.status.errors }}<label for="{{ form.status.id_for_label }}">Situação *</label>{{ form.status }}</div>
+                <div class="form-field">{{ form.finalidade.errors }}<label for="{{ form.finalidade.id_for_label }}">Finalidade *</label>{{ form.finalidade }}</div>
+                <div class="form-field full-width">{{ form.descricao_finalidade.errors }}<label for="{{ form.descricao_finalidade.id_for_label }}">Descrição da finalidade específica</label>{{ form.descricao_finalidade }}</div>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <div class="form-section-heading"><span class="form-section-number">2</span><div><h3>Destinação</h3><p>Opcionalmente relacione a uma praia ou ação já cadastrada.</p></div></div>
+            <div class="form-grid two-columns">
+                <div class="form-field">{{ form.praia.errors }}<label for="{{ form.praia.id_for_label }}">Praia beneficiada</label>{{ form.praia }}</div>
+                <div class="form-field">{{ form.acao.errors }}<label for="{{ form.acao.id_for_label }}">Ação ou mutirão</label>{{ form.acao }}</div>
+            </div>
+        </div>
+
+        <div id="financeira-fields" class="form-section">
+            <div class="form-section-heading"><span class="form-section-number">3</span><div><h3>Dados financeiros</h3><p>Valores pendentes não entram na arrecadação confirmada.</p></div></div>
+            {% for field in financeira_form.visible_fields %}<div class="form-field">{{ field.errors }}<label for="{{ field.id_for_label }}">{{ field.label }} *</label>{{ field }}</div>{% endfor %}
+        </div>
+
+        <div id="material-fields" class="form-section">
+            <div class="form-section-heading"><span class="form-section-number">3</span><div><h3>Materiais recebidos</h3><p>Registre cada material separadamente para futura integração com o estoque.</p></div></div>
+            {{ itens_formset.management_form }}
+            <div id="materiais-list">
+                {% for item_form in itens_formset %}
+                <fieldset class="material-card">
+                    <legend>Material <span class="material-number">{{ forloop.counter }}</span></legend>
+                    {% for hidden in item_form.hidden_fields %}{{ hidden }}{% endfor %}
+                    {% for field in item_form.visible_fields %}{% if field.name == 'DELETE' %}{{ field.as_hidden }}{% endif %}{% endfor %}
+                    <div class="form-grid material-grid">
+                        {% for field in item_form.visible_fields %}{% if field.name != 'DELETE' %}<div class="form-field {% if field.name == 'observacoes' %}full-width{% endif %}">{{ field.errors }}<label for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %} *{% endif %}</label>{{ field }}</div>{% endif %}{% endfor %}
+                    </div>
+                    {% for field in itens_formset.empty_form.visible_fields %}{% if field.name == 'DELETE' %}{{ field.as_hidden }}{% endif %}{% endfor %}
+                    {% if not forloop.first %}<button type="button" class="btn btn-link remove-material">Remover material</button>{% endif %}
+                </fieldset>
+                {% endfor %}
+            </div>
+            <template id="material-empty-form">
+                <fieldset class="material-card">
+                    <legend>Material <span class="material-number"></span></legend>
+                    <div class="form-grid material-grid">
+                        {% for field in itens_formset.empty_form.visible_fields %}{% if field.name != 'DELETE' %}<div class="form-field {% if field.name == 'observacoes' %}full-width{% endif %}"><label for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %} *{% endif %}</label>{{ field }}</div>{% endif %}{% endfor %}
+                    </div>
+                    <button type="button" class="btn btn-link remove-material">Remover material</button>
+                </fieldset>
+            </template>
+            <button type="button" class="btn btn-secondary" id="add-material">+ Adicionar mais um material</button>
+        </div>
+
+        <div class="form-section">
+            <div class="form-section-heading"><span class="form-section-number">4</span><div><h3>Observações e comprovante</h3></div></div>
+            <div class="form-field">{{ form.observacoes.errors }}<label for="{{ form.observacoes.id_for_label }}">Observações</label>{{ form.observacoes }}</div>
+            <div class="form-field">{{ form.referencia_comprovante.errors }}<label for="{{ form.referencia_comprovante.id_for_label }}">Referência do comprovante</label>{{ form.referencia_comprovante }}</div>
+        </div>
+        <div class="form-actions"><button class="btn btn-primary" type="submit">Salvar doação</button><a class="btn btn-outline" href="{% if modo == 'edicao' %}{% url 'doacao_detalhe' doacao.id_doacao %}{% else %}{% url 'doacoes' %}{% endif %}">Cancelar</a></div>
+    </form>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    (function () {
+        var tipo = document.getElementById('id_tipo');
+        var financeira = document.getElementById('financeira-fields');
+        var material = document.getElementById('material-fields');
+        var anonima = document.getElementById('id_anonima');
+        var doador = document.getElementById('id_doador');
+        var novoDoador = document.getElementById('novo-doador-fields');
+        var mostrar = document.getElementById('mostrar-novo-doador');
+        var ocultar = document.getElementById('ocultar-novo-doador');
+        var totalForms = document.getElementById('id_itens-TOTAL_FORMS');
+        var lista = document.getElementById('materiais-list');
+        var modelo = document.getElementById('material-empty-form').innerHTML;
+
+        function atualizarTipo() {
+            var materialSelecionado = tipo.value === 'MATERIAL';
+            financeira.hidden = materialSelecionado;
+            material.hidden = !materialSelecionado;
+        }
+        function atualizarDoador() {
+            doador.disabled = anonima.checked;
+            if (anonima.checked) {
+                doador.value = '';
+                novoDoador.hidden = true;
+                mostrar.hidden = true;
+            } else {
+                mostrar.hidden = false;
+            }
+        }
+        function atualizarNumeracao() {
+            lista.querySelectorAll('.material-card').forEach(function (card, index) {
+                card.querySelector('.material-number').textContent = index + 1;
+            });
+        }
+        mostrar.addEventListener('click', function () {
+            novoDoador.hidden = false;
+            mostrar.hidden = true;
+            doador.value = '';
+        });
+        ocultar.addEventListener('click', function () {
+            novoDoador.hidden = true;
+            mostrar.hidden = false;
+            novoDoador.querySelectorAll('input').forEach(function (input) { input.value = ''; });
+        });
+        document.getElementById('add-material').addEventListener('click', function () {
+            var index = Number(totalForms.value);
+            lista.insertAdjacentHTML('beforeend', modelo.replace(/__prefix__/g, index));
+            totalForms.value = index + 1;
+            atualizarNumeracao();
+        });
+        lista.addEventListener('click', function (event) {
+            if (!event.target.classList.contains('remove-material')) return;
+            var card = event.target.closest('.material-card');
+            var deleteField = card.querySelector('input[name$="-DELETE"]');
+            if (deleteField) {
+                deleteField.value = 'on';
+                card.hidden = true;
+            } else {
+                card.remove();
+                totalForms.value = lista.querySelectorAll('.material-card').length;
+            }
+            atualizarNumeracao();
+        });
+        tipo.addEventListener('change', atualizarTipo);
+        anonima.addEventListener('change', atualizarDoador);
+        atualizarTipo();
+        atualizarDoador();
+        atualizarNumeracao();
+    }());
+</script>
+{% endblock %}

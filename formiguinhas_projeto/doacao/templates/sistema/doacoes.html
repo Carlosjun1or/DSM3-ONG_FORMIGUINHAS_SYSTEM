@@ -1,0 +1,62 @@
+{% extends 'sistema/template-sistema.html' %}
+
+{% block page_title %}Doações{% endblock %}
+
+{% block conteudo %}
+<section class="page-section donation-dashboard">
+    <div class="section-heading">
+        <div>
+            <p class="eyebrow">Controle financeiro e de materiais</p>
+            <h2>Doações recebidas</h2>
+        </div>
+        <div class="button-group">
+            <a class="btn btn-outline" href="{% url 'doadores' %}">Doadores</a>
+            <a class="btn btn-primary" href="{% url 'cadastro_doacao' %}">Nova doação</a>
+        </div>
+    </div>
+
+    <div class="stats-grid">
+        <article class="stat-card"><span>Arrecadação confirmada</span><strong>R$ {{ total_financeiro|floatformat:2 }}</strong></article>
+        <article class="stat-card"><span>Doações confirmadas</span><strong>{{ quantidade_doacoes }}</strong></article>
+        <article class="stat-card"><span>Aguardando confirmação</span><strong>{{ quantidade_pendentes }}</strong></article>
+        <article class="stat-card"><span>Materiais recebidos</span><strong>{{ quantidade_materiais|floatformat:2 }}</strong></article>
+    </div>
+
+    <form method="get" class="filter-grid donation-filters">
+        <div class="filter-field"><label for="filtro-inicio">Início</label><input id="filtro-inicio" class="data-doacao-input" type="text" name="inicio" value="{{ inicio|date:'d/m/Y' }}" placeholder="dd/mm/aaaa" inputmode="numeric" maxlength="10"></div>
+        <div class="filter-field"><label for="filtro-fim">Fim</label><input id="filtro-fim" class="data-doacao-input" type="text" name="fim" value="{{ fim|date:'d/m/Y' }}" placeholder="dd/mm/aaaa" inputmode="numeric" maxlength="10"></div>
+        <div class="filter-field"><label for="filtro-tipo">Tipo</label><select id="filtro-tipo" name="tipo"><option value="">Todos</option>{% for value,label in tipo_choices %}<option value="{{ value }}" {% if tipo_selecionado == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
+        <div class="filter-field"><label for="filtro-status">Situação</label><select id="filtro-status" name="status"><option value="">Todas</option>{% for value,label in status_choices %}<option value="{{ value }}" {% if status_selecionado == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
+        <div class="filter-field"><label for="filtro-finalidade">Finalidade</label><select id="filtro-finalidade" name="finalidade"><option value="">Todas</option>{% for value,label in finalidade_choices %}<option value="{{ value }}" {% if finalidade_selecionada == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
+        <button class="btn btn-primary filter-submit" type="submit">Filtrar</button>
+    </form>
+
+    <div class="table-wrapper donation-table-card">
+        <table>
+            <thead><tr><th>Recebimento</th><th>Tipo</th><th>Doador</th><th>Valor/itens</th><th>Situação</th><th>Auditoria</th><th></th></tr></thead>
+            <tbody>
+            {% for doacao in doacoes %}
+                <tr>
+                    <td>{{ doacao.data_recebimento|date:"d/m/Y" }}</td>
+                    <td>{{ doacao.get_tipo_display }}</td>
+                    <td>{% if doacao.anonima %}Anônima{% else %}{{ doacao.doador.nome }}{% endif %}</td>
+                    <td>{% if doacao.tipo == 'FINANCEIRA' %}R$ {{ doacao.financeira.valor|floatformat:2 }}{% else %}{{ doacao.itens_materiais.count }} item(ns){% endif %}</td>
+                    <td>{{ doacao.get_status_display }}</td>
+                    <td>
+                        <strong>Cadastrado por {{ doacao.registrado_por_nome }}</strong>
+                        <small>{{ doacao.dt_cadastro|date:"d/m/Y H:i" }}</small>
+                        {% if doacao.dt_ultima_edicao %}
+                            <small>Editado por {{ doacao.ultimo_editado_por_nome }}</small>
+                            <small>{{ doacao.dt_ultima_edicao|date:"d/m/Y H:i" }}</small>
+                        {% else %}
+                            <small>Sem edições</small>
+                        {% endif %}
+                    </td>
+                    <td><a class="btn btn-outline" href="{% url 'doacao_detalhe' doacao.id_doacao %}">Detalhes</a></td>
+                </tr>
+            {% empty %}<tr><td colspan="7">Nenhuma doação encontrada.</td></tr>{% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endblock %}

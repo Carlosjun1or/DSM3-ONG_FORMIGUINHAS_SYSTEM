@@ -1,0 +1,13 @@
+{% extends 'sistema/template-sistema.html' %}
+
+{% block page_title %}Doadores{% endblock %}
+
+{% block conteudo %}
+<section class="page-section donation-dashboard">
+    <div class="section-heading"><div><p class="eyebrow">Cadastro reutilizável</p><h2>Doadores</h2></div>{% if usuario.tipo == 'ADMIN' %}<a class="btn btn-primary" href="{% url 'cadastro_doador' %}">Novo doador</a>{% endif %}</div>
+    <form method="get" class="filter-grid donor-filters"><div class="filter-field"><label for="busca-doador">Buscar doador</label><input id="busca-doador" name="busca" value="{{ busca }}" placeholder="Nome, documento ou e-mail"></div><button class="btn btn-primary filter-submit" type="submit">Buscar</button></form>
+    <div class="table-wrapper donation-table-card"><table><thead><tr><th>Nome</th><th>Tipo</th><th>Contato</th><th>Situação</th><th>Auditoria</th><th>Ações</th></tr></thead><tbody>
+    {% for doador in doadores %}<tr><td><a class="table-link" href="{% url 'doador_detalhe' doador.id_doador %}"><strong>{{ doador.nome }}</strong></a></td><td>{{ doador.get_tipo_display }}</td><td>{{ doador.email|default:'-' }}</td><td>{% if doador.ativo %}Ativo{% else %}Inativo{% endif %}</td><td><strong>Cadastrado por {{ doador.cadastrado_por_nome }}</strong><small>{{ doador.dt_cadastro|date:"d/m/Y H:i" }}</small>{% if doador.dt_ultima_edicao %}<small>Editado por {{ doador.ultimo_editado_por_nome }}</small><small>{{ doador.dt_ultima_edicao|date:"d/m/Y H:i" }}</small>{% else %}<small>Sem edições</small>{% endif %}</td><td><a class="btn btn-outline" href="{% url 'doador_detalhe' doador.id_doador %}">Detalhes</a>{% if usuario.tipo == 'ADMIN' %}<a class="btn btn-outline" href="{% url 'editar_doador' doador.id_doador %}">Editar</a>{% endif %}</td></tr>{% empty %}<tr><td colspan="6">Nenhum doador encontrado.</td></tr>{% endfor %}
+    </tbody></table></div>
+</section>
+{% endblock %}

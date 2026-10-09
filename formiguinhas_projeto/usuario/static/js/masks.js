@@ -181,6 +181,57 @@ document.addEventListener('DOMContentLoaded', function () {
         aplicarMascaraHorario();
     });
 
+    document.querySelectorAll('.data-doacao-input').forEach(function (input) {
+        function aplicarMascaraData() {
+            var digits = input.value.replace(/\D/g, '').slice(0, 8);
+            input.value = digits
+                .replace(/^(\d{2})(\d)/, '$1/$2')
+                .replace(/^(\d{2}\/\d{2})(\d)/, '$1/$2');
+        }
+        if (/^\d{4}-\d{2}-\d{2}$/.test(input.value)) {
+            var partes = input.value.split('-');
+            input.value = partes[2] + '/' + partes[1] + '/' + partes[0];
+        }
+        input.addEventListener('input', aplicarMascaraData);
+        aplicarMascaraData();
+        if (input.form) input.form.addEventListener('submit', function () {
+            var partes = input.value.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+            if (partes) input.value = partes[3] + '-' + partes[2] + '-' + partes[1];
+        });
+    });
+
+    document.querySelectorAll('.documento-input').forEach(function (input) {
+        input.addEventListener('input', function () {
+            var digits = input.value.replace(/\D/g, '').slice(0, 14);
+            if (digits.length <= 11) {
+                input.value = digits
+                    .replace(/^(\d{3})(\d)/, '$1.$2')
+                    .replace(/^(\d{3}\.\d{3})(\d)/, '$1.$2')
+                    .replace(/^(\d{3}\.\d{3}\.\d{3})(\d)/, '$1-$2');
+            } else {
+                input.value = digits
+                    .replace(/^(\d{2})(\d)/, '$1.$2')
+                    .replace(/^(\d{2}\.\d{3})(\d)/, '$1.$2')
+                    .replace(/^(\d{2}\.\d{3}\.\d{3})(\d)/, '$1/$2')
+                    .replace(/^(\d{2}\.\d{3}\.\d{3}\/\d{4})(\d)/, '$1-$2');
+            }
+        });
+    });
+
+    document.querySelectorAll('.moeda-input').forEach(function (input) {
+        input.addEventListener('input', function () {
+            var digits = input.value.replace(/\D/g, '');
+            if (!digits) {
+                input.value = '';
+                return;
+            }
+            input.value = (Number(digits) / 100).toFixed(2).replace('.', ',');
+        });
+        if (input.form) input.form.addEventListener('submit', function () {
+            input.value = input.value.replace(/\./g, '').replace(',', '.');
+        });
+    });
+
     document.querySelectorAll('.data-hora-input').forEach(function (input) {
         function formatarDataHora(valor) {
             var digits = valor.replace(/\D/g, '').slice(0, 12);
