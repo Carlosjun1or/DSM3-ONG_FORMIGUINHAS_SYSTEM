@@ -234,6 +234,10 @@ def cadastro_doacao_view(request):
             )
             messages.success(request, 'Doação cadastrada com sucesso.')
             return redirect('doacao_detalhe', doacao_id=doacao.pk)
+        messages.error(
+            request,
+            'Não foi possível cadastrar a doação. Verifique os erros informados.',
+        )
     return render(request, 'sistema/cadastro-doacao.html', {
         'usuario': usuario,
         'form': form,
@@ -281,6 +285,10 @@ def editar_doacao_view(request, doacao_id):
             )
             messages.success(request, 'Doação atualizada com sucesso.')
             return redirect('doacao_detalhe', doacao_id=doacao.pk)
+        messages.error(
+            request,
+            'Não foi possível atualizar a doação. Verifique os erros informados.',
+        )
     return render(request, 'sistema/cadastro-doacao.html', {
         'usuario': usuario,
         'form': form,
@@ -417,6 +425,11 @@ def cadastro_doador_view(request):
         )
         messages.success(request, 'Doador cadastrado com sucesso.')
         return redirect('doadores')
+    if request.method == 'POST':
+        messages.error(
+            request,
+            'Não foi possível cadastrar o doador. Verifique os erros informados.',
+        )
     return render(request, 'sistema/cadastro-doador.html', {
         'usuario': usuario,
         'form': form,
@@ -450,6 +463,11 @@ def editar_doador_view(request, doador_id):
         )
         messages.success(request, 'Doador atualizado com sucesso.')
         return redirect('doadores')
+    if request.method == 'POST':
+        messages.error(
+            request,
+            'Não foi possível atualizar o doador. Verifique os erros informados.',
+        )
     return render(request, 'sistema/cadastro-doador.html', {
         'usuario': usuario,
         'form': form,

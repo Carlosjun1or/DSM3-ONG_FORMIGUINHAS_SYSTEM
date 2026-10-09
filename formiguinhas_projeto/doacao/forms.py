@@ -31,6 +31,14 @@ class DoadorForm(forms.ModelForm):
         self.fields['voluntario'].required = False
         self.fields['voluntario'].empty_label = 'Não vincular a voluntário'
 
+    def clean(self):
+        cleaned = super().clean()
+        if not cleaned.get('nome', '').strip():
+            self.add_error('nome', 'Informe o nome do doador.')
+        if not cleaned.get('email', '').strip() and not cleaned.get('telefone', '').strip():
+            self.add_error('email', 'Informe o e-mail ou o telefone do doador.')
+        return cleaned
+
 
 class DoadorInlineForm(forms.ModelForm):
     class Meta:
@@ -49,6 +57,14 @@ class DoadorInlineForm(forms.ModelForm):
                 'maxlength': '15',
             }),
         }
+
+    def clean(self):
+        cleaned = super().clean()
+        if not cleaned.get('nome', '').strip():
+            self.add_error('nome', 'Informe o nome do doador.')
+        if not cleaned.get('email', '').strip() and not cleaned.get('telefone', '').strip():
+            self.add_error('email', 'Informe o e-mail ou o telefone do doador.')
+        return cleaned
 
 
 class DoacaoForm(forms.ModelForm):
@@ -143,7 +159,7 @@ ItemDoacaoMaterialFormSet = inlineformset_factory(
     Doacao,
     ItemDoacaoMaterial,
     form=ItemDoacaoMaterialForm,
-    extra=1,
+    extra=0,
     can_delete=True,
     min_num=1,
     validate_min=True,

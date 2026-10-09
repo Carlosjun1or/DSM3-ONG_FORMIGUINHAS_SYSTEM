@@ -5,10 +5,14 @@
 {% block conteudo %}
 <section class="card">
     <div class="section-heading">
-        <div><p class="eyebrow">Doador #{{ doador.id_doador }}</p><h2>{{ doador.nome }}</h2></div>
+        <div>
+            <p class="eyebrow">Doador #{{ doador.id_doador }}</p>
+            <h2>{{ doador.nome }}</h2>
+        </div>
         <div class="button-group">
             <a class="btn btn-outline" href="{% url 'doadores' %}">Voltar</a>
-            {% if usuario.tipo == 'ADMIN' %}<a class="btn btn-primary" href="{% url 'editar_doador' doador.id_doador %}">Editar</a>{% endif %}
+            {% if usuario.tipo == 'ADMIN' %}<a class="btn btn-primary"
+                href="{% url 'editar_doador' doador.id_doador %}">Editar</a>{% endif %}
         </div>
     </div>
     <div class="detail-grid">
@@ -17,23 +21,72 @@
         <div><strong>E-mail</strong><span>{{ doador.email|default:'Não informado' }}</span></div>
         <div><strong>Telefone</strong><span>{{ doador.telefone|default:'Não informado' }}</span></div>
         <div><strong>Situação</strong><span>{% if doador.ativo %}Ativo{% else %}Inativo{% endif %}</span></div>
-        <div><strong>Voluntário vinculado</strong><span>{{ doador.voluntario.nome|default:'Não vinculado' }}</span></div>
-        <div><strong>Cadastrado por</strong><span>{{ doador.cadastrado_por_nome }}<br>{{ doador.dt_cadastro|date:"d/m/Y H:i" }}</span></div>
-        <div><strong>Última edição</strong><span>{% if doador.dt_ultima_edicao %}{{ doador.ultimo_editado_por_nome }}<br>{{ doador.dt_ultima_edicao|date:"d/m/Y H:i" }}{% else %}Sem edições{% endif %}</span></div>
+        <div><strong>Voluntário vinculado</strong><span>{{ doador.voluntario.nome|default:'Não vinculado' }}</span>
+        </div>
+        <div><strong>Cadastrado por</strong><span>{{ doador.cadastrado_por_nome }}<br>{{ doador.dt_cadastro|date:"d/m/YH:i" }}</span></div>
+        <div><strong>Última edição</strong><span>{% if doador.dt_ultima_edicao %}{{ doador.ultimo_editado_por_nome}}<br>{{ doador.dt_ultima_edicao|date:"d/m/Y H:i" }}{% else %}Sem edições{% endif %}</span></div>
     </div>
 </section>
 <section class="card volunteer-control">
-    <div class="section-heading"><div><h2>Doações deste doador</h2><p class="form-subtitle">Histórico de doações associadas ao cadastro.</p></div></div>
-    <div class="table-wrap"><table class="data-table"><thead><tr><th>Data</th><th>Tipo</th><th>Situação</th><th>Finalidade</th><th></th></tr></thead><tbody>
-    {% for doacao in doador.doacoes.all %}<tr><td>{{ doacao.data_recebimento|date:"d/m/Y" }}</td><td>{{ doacao.get_tipo_display }}</td><td>{{ doacao.get_status_display }}</td><td>{{ doacao.get_finalidade_display }}</td><td><a class="btn btn-outline btn-small" href="{% url 'doacao_detalhe' doacao.id_doacao %}">Detalhes</a></td></tr>{% empty %}<tr><td colspan="5">Nenhuma doação associada.</td></tr>{% endfor %}
-    </tbody></table></div>
+    <div class="section-heading">
+        <div>
+            <h2>Doações deste doador</h2>
+            <p class="form-subtitle">Histórico de doações associadas ao cadastro.</p>
+        </div>
+    </div>
+    <div class="table-wrap">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Data</th>
+                    <th>Tipo</th>
+                    <th>Situação</th>
+                    <th>Finalidade</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for doacao in doador.doacoes.all %}<tr>
+                    <td>{{ doacao.data_recebimento|date:"d/m/Y" }}</td>
+                    <td>{{ doacao.get_tipo_display }}</td>
+                    <td>{{ doacao.get_status_display }}</td>
+                    <td>{{ doacao.get_finalidade_display }}</td>
+                    <td><a class="btn btn-outline btn-small"
+                            href="{% url 'doacao_detalhe' doacao.id_doacao %}">Detalhes</a></td>
+                </tr>{% empty %}<tr>
+                    <td colspan="5">Nenhuma doação associada.</td>
+                </tr>{% endfor %}
+            </tbody>
+        </table>
+    </div>
 </section>
 <section class="card volunteer-control">
-        <div class="section-heading">
+    <div class="section-heading">
         <div>
             <h2>Auditoria do Doador</h2>
             <p class="form-subtitle">Cadastro e alterações feitas neste registro.</p>
         </div>
-        <a href="{% url 'auditorias' %}?entidade=DOADOR" class="btn btn-outline">Ver auditoria completa</a></div><div class="table-wrap"><table class="data-table"><thead><tr><th>Data</th><th>Ação</th><th>Resumo</th><th>Usuário</th></tr></thead><tbody>{% for auditoria in auditorias %}<tr><td>{{ auditoria.data_evento|date:'d/m/Y H:i' }}</td><td>{{ auditoria.get_acao_display }}</td><td>{{ auditoria.resumo }}</td><td>{{ auditoria.usuario_nome }}</td></tr>{% empty %}<tr><td colspan="4">Nenhum evento de auditoria registrado.</td></tr>{% endfor %}</tbody></table></div>
-    </section>
+        <a href="{% url 'auditorias' %}?entidade=DOADOR" class="btn btn-outline">Ver auditoria completa</a>
+    </div>
+    <div class="table-wrap">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Data</th>
+                    <th>Ação</th>
+                    <th>Resumo</th>
+                    <th>Usuário</th>
+                </tr>
+            </thead>
+            <tbody>{% for auditoria in auditorias %}<tr>
+                    <td>{{ auditoria.data_evento|date:'d/m/Y H:i' }}</td>
+                    <td>{{ auditoria.get_acao_display }}</td>
+                    <td>{{ auditoria.resumo }}</td>
+                    <td>{{ auditoria.usuario_nome }}</td>
+                </tr>{% empty %}<tr>
+                    <td colspan="4">Nenhum evento de auditoria registrado.</td>
+                </tr>{% endfor %}</tbody>
+        </table>
+    </div>
+</section>
 {% endblock %}

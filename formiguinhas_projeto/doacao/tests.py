@@ -7,7 +7,7 @@ from django.utils import timezone
 
 from usuario.models import Usuario, Voluntario
 
-from .forms import DoacaoForm
+from .forms import DoadorForm, DoacaoForm
 from .models import Doador, Doacao, DoacaoFinanceira, ItemDoacaoMaterial
 
 
@@ -237,3 +237,57 @@ class DoacaoTestCase(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Não foi possível salvar a doação.')
         self.assertContains(response, 'Informe o doador ou marque a doação como anônima.')
+
+    def test_doador_exige_nome_e_email_ou_telefone(self):
+        form = DoadorForm(data={
+            'tipo': Doador.PESSOA_FISICA,
+            'nome': '',
+            'documento': '',
+            'email': '',
+            'telefone': '',
+            'voluntario': '',
+            'ativo': 'on',
+        })
+        self.assertFalse(form.is_valid())
+        self.assertIn('nome', form.errors)
+        self.assertIn('email', form.errors)
+
+    def test_doador_nao_aceita_documento_ou_email_repetido(self):
+        self.doador.documento = '12345678901'
+        self.doador.email = 'doador@example.com'
+        self.doador.telefone = '11999999999'
+        self.doador.save()
+
+        for field, value in (
+            ('documento', '123.456.789-01'),
+            ('email', 'DOADOR@EXAMPLE.COM'),
+        ):
+            data = {
+                'tipo': Doador.PESSOA_FISICA,
+                'nome': 'Outro doador',
+                'documento': '',
+                'email': 'outro@example.com',
+                'telefone': '',
+                'voluntario': '',
+                'ativo': 'on',
+            }
+            data[field] = value
+            form = DoadorForm(data=data)
+            self.assertFalse(form.is_valid())
+            self.assertIn(field, form.errors)
+
+    def test_cadastro_doador_invalido_exibe_mensagem(self):
+        response = self.client.post(reverse('cadastro_doador'), {
+            'tipo': Doador.PESSOA_FISICA,
+            'nome': '',
+            'documento': '',
+            'email': '',
+            'telefone': '',
+            'voluntario': '',
+            'ativo': 'on',
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(
+            response,
+            'Não foi possível cadastrar o doador. Verifique os erros informados.',
+        )

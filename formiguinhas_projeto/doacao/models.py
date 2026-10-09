@@ -3,6 +3,7 @@ from decimal import Decimal
 from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
 from django.db import models
+from django.db.models import Q
 from django.utils import timezone
 
 
@@ -48,6 +49,45 @@ class Doador(models.Model):
     class Meta:
         db_table = 'doador'
         ordering = ('nome',)
+        constraints = [
+            models.UniqueConstraint(
+                fields=('documento',),
+                condition=~Q(documento=''),
+                name='doador_documento_unico_nao_vazio',
+            ),
+            models.UniqueConstraint(
+                fields=('email',),
+                condition=~Q(email=''),
+                name='doador_email_unico_nao_vazio',
+            ),
+        ]
+
+    def clean(self):
+        self.nome = self.nome.strip()
+        self.documento = ''.join(char for char in self.documento if char.isalnum())
+        self.email = self.email.strip().lower()
+        self.telefone = self.telefone.strip()
+        errors = {}
+        if not self.nome:
+            errors['nome'] = 'Informe o nome do doador.'
+        if not self.email and not self.telefone:
+            errors['email'] = 'Informe o e-mail ou o telefone do doador.'
+        if self.documento and Doador.objects.filter(
+            documento=self.documento,
+        ).exclude(pk=self.pk).exists():
+            errors['documento'] = 'Já existe um doador cadastrado com este documento.'
+        if self.email and Doador.objects.filter(
+            email=self.email,
+        ).exclude(pk=self.pk).exists():
+            errors['email'] = 'Já existe um doador cadastrado com este e-mail.'
+        if errors:
+            raise ValidationError(errors)
+
+    def save(self, *args, **kwargs):
+        self.documento = ''.join(char for char in (self.documento or '') if char.isalnum())
+        self.email = (self.email or '').strip().lower()
+        self.telefone = (self.telefone or '').strip()
+        return super().save(*args, **kwargs)
 
     def __str__(self):
         return self.nome

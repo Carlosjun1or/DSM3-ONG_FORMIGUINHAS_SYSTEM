@@ -73,8 +73,6 @@
                     <div class="form-grid material-grid">
                         {% for field in item_form.visible_fields %}{% if field.name != 'DELETE' %}<div class="form-field {% if field.name == 'observacoes' %}full-width{% endif %}">{{ field.errors }}<label for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %} *{% endif %}</label>{{ field }}</div>{% endif %}{% endfor %}
                     </div>
-                    {% for field in itens_formset.empty_form.visible_fields %}{% if field.name == 'DELETE' %}{{ field.as_hidden }}{% endif %}{% endfor %}
-                    {% if not forloop.first %}<button type="button" class="btn btn-link remove-material">Remover material</button>{% endif %}
                 </fieldset>
                 {% endfor %}
             </div>
