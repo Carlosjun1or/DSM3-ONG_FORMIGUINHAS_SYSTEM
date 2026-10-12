@@ -43,9 +43,18 @@ echo Atualizando banco de dados...
 "%CD%\venv\Scripts\python.exe" manage.py migrate
 if errorlevel 1 goto :erro
 
+set "PORT=8000"
+:procurar_porta
+netstat -ano | findstr /R /C:":%PORT% .*LISTENING" >nul
+if not errorlevel 1 (
+    echo A porta %PORT% ja esta em uso. Procurando outra porta...
+    set /a PORT+=1
+    goto :procurar_porta
+)
+
 echo Iniciando sistema...
-echo Acesse http://127.0.0.1:8000/
-"%CD%\venv\Scripts\python.exe" manage.py runserver
+echo Acesse http://127.0.0.1:%PORT%/
+"%CD%\venv\Scripts\python.exe" manage.py runserver 127.0.0.1:%PORT%
 if errorlevel 1 goto :erro
 
 endlocal
