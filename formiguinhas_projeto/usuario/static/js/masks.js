@@ -201,7 +201,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     document.querySelectorAll('.documento-input').forEach(function (input) {
-        input.addEventListener('input', function () {
+        function aplicarMascaraDocumento() {
             var digits = input.value.replace(/\D/g, '').slice(0, 14);
             if (digits.length <= 11) {
                 input.value = digits
@@ -215,7 +215,10 @@ document.addEventListener('DOMContentLoaded', function () {
                     .replace(/^(\d{2}\.\d{3}\.\d{3})(\d)/, '$1/$2')
                     .replace(/^(\d{2}\.\d{3}\.\d{3}\/\d{4})(\d)/, '$1-$2');
             }
-        });
+        }
+
+        input.addEventListener('input', aplicarMascaraDocumento);
+        aplicarMascaraDocumento();
     });
 
     document.querySelectorAll('.moeda-input').forEach(function (input) {
@@ -281,11 +284,28 @@ document.addEventListener('DOMContentLoaded', function () {
 
     document.querySelectorAll('.email-input').forEach(function (input) {
         input.addEventListener('input', function () {
-            input.value = input.value.replace(/\s/g, '').toLowerCase();
+            var inicio = input.selectionStart;
+            var antes = input.value;
+            var depois = antes.replace(/\s/g, '').toLowerCase();
+            if (antes === depois) return;
+
+            var removidosAntesDoCursor = antes
+                .slice(0, inicio)
+                .replace(/\s/g, '').length;
+            input.value = depois;
+            if (
+                input.type !== 'email'
+                && typeof input.setSelectionRange === 'function'
+            ) {
+                input.setSelectionRange(
+                    removidosAntesDoCursor,
+                    removidosAntesDoCursor,
+                );
+            }
         });
 
         input.addEventListener('blur', function () {
-            input.value = input.value.trim().toLowerCase();
+            input.value = input.value.replace(/\s/g, '').trim().toLowerCase();
         });
     });
 
@@ -295,6 +315,17 @@ document.addEventListener('DOMContentLoaded', function () {
             cell.textContent = digits.replace(/^(\d{2})(\d{5})(\d{4})$/, '($1) $2-$3');
         } else if (digits.length === 10) {
             cell.textContent = digits.replace(/^(\d{2})(\d{4})(\d{4})$/, '($1) $2-$3');
+        }
+    });
+
+    document.querySelectorAll('.document-cell').forEach(function (cell) {
+        var digits = cell.textContent.replace(/\D/g, '');
+        if (digits.length === 11) {
+            cell.textContent = digits
+                .replace(/^(\d{3})(\d{3})(\d{3})(\d{2})$/, '$1.$2.$3-$4');
+        } else if (digits.length === 14) {
+            cell.textContent = digits
+                .replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, '$1.$2.$3/$4-$5');
         }
     });
 

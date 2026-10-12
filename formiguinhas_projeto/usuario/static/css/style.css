@@ -381,7 +381,7 @@ main {
 
 .residue-metrics {
     grid-template-columns: repeat(4, minmax(140px, 1fr));
-    max-width: 920px;
+    max-width: none;
 }
 
 .residue-metrics .card {
@@ -1314,6 +1314,109 @@ details summary {
     color: #8b5b12;
 }
 
+.status-select.status-planejada {
+    background: #e4eef8;
+    border-color: #c4d9ea;
+    color: #245d8c;
+}
+
+.status-select.status-em_andamento {
+    background: #fff1d5;
+    border-color: #f1d89d;
+    color: #8b5b12;
+}
+
+.status-select.status-concluida {
+    background: #dff3e7;
+    border-color: #bfe5ce;
+    color: #176146;
+}
+
+.status-select.status-confirmada {
+    background: #dff3e7;
+    border-color: #bfe5ce;
+    color: #176146;
+}
+
+.status-select.status-pendente {
+    background: #fff3d5;
+    border-color: #f1d89d;
+    color: #8b6415;
+}
+
+.status-select.status-cancelada {
+    background: #fde3e3;
+    border-color: #efbcbc;
+    color: #a23737;
+}
+
+.status-select.status-rascunho {
+    background: #fff3d5;
+    border-color: #f1d89d;
+    color: #8b6415;
+}
+
+.status-select.status-publicado {
+    background: #dff3e7;
+    border-color: #bfe5ce;
+    color: #176146;
+}
+
+.status-select.status-arquivado {
+    background: #edf0f2;
+    border-color: #d5dce0;
+    color: #52616b;
+}
+
+.status-select.status-disponivel,
+.status-select.status-entregue {
+    background: #dff3e7;
+    border-color: #bfe5ce;
+    color: #176146;
+}
+
+.status-select.status-em_uso,
+.status-select.status-em_transito {
+    background: #e4eef8;
+    border-color: #c4d9ea;
+    color: #245d8c;
+}
+
+.status-select.status-cheia {
+    background: #fff1d5;
+    border-color: #f1d89d;
+    color: #8b5b12;
+}
+
+.status-select.status-retirada {
+    background: #edf0f2;
+    border-color: #d5dce0;
+    color: #52616b;
+}
+
+.status-select.status-danificada,
+.status-select.status-perdida {
+    background: #fde3e3;
+    border-color: #efbcbc;
+    color: #a23737;
+}
+
+.status-select:hover {
+    border-color: #a9c7b8;
+    box-shadow: 0 2px 6px rgba(18, 58, 45, 0.08);
+}
+
+.donation-status-control {
+    align-items: center;
+    gap: 10px;
+}
+
+.donation-status-control label {
+    color: #5b6f68;
+    font-size: 0.8rem;
+    font-weight: 700;
+}
+
 .type-select.type-admin {
     background: #e1f4e7;
     border-color: #bfe5ce;
@@ -1622,6 +1725,85 @@ details summary {
 
 .form-group[hidden] {
     display: none !important;
+}
+
+.volunteer-picker {
+    position: relative;
+}
+
+.donor-picker.is-disabled .form-control,
+.donor-picker .form-control:disabled {
+    border-color: #d7dfdb;
+    background: #e9eeeb;
+    color: #77847e;
+    cursor: not-allowed;
+    opacity: 0.8;
+}
+
+.donor-picker.is-disabled {
+    cursor: not-allowed;
+}
+
+.volunteer-picker-options {
+    position: absolute;
+    z-index: 20;
+    top: calc(100% + 4px);
+    right: 0;
+    left: 0;
+    display: none;
+    max-height: 230px;
+    overflow-y: auto;
+    padding: 5px;
+    border: 1px solid #cfe1d6;
+    border-radius: 10px;
+    background: #fff;
+    box-shadow: 0 10px 24px rgba(23, 61, 49, 0.14);
+}
+
+.volunteer-picker-options.is-open {
+    display: block;
+}
+
+.volunteer-picker-option {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 9px 10px;
+    border: 0;
+    border-radius: 7px;
+    background: transparent;
+    color: #173d31;
+    cursor: pointer;
+    font: inherit;
+    text-align: left;
+}
+
+.volunteer-picker-option[hidden],
+.volunteer-picker-empty[hidden] {
+    display: none;
+}
+
+.volunteer-picker-option:hover,
+.volunteer-picker-option:focus {
+    outline: none;
+    background: #edf7f0;
+}
+
+.volunteer-picker-option small {
+    overflow: hidden;
+    color: #6b7d76;
+    font-size: 0.78rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.volunteer-picker-empty {
+    display: block;
+    padding: 10px;
+    color: #6b7d76;
+    font-size: 0.82rem;
 }
 
 .form-group.full {
@@ -2170,17 +2352,50 @@ select.select-control:disabled {
     margin-top: 8px;
 }
 
+.required-indicator {
+    color: #a33f39;
+    font-weight: 800;
+}
+
 .donation-form {
-    max-width: 1040px;
+    width: min(100%, 1040px);
+    margin: 0 auto;
+    padding: 28px;
+}
+
+.donation-form [hidden] {
+    display: none !important;
+}
+
+.donation-form-heading {
+    align-items: flex-start;
+    max-width: none;
+    margin: 0 0 22px;
+}
+
+.donation-form-heading h2 {
+    font-size: 2rem;
+    margin-bottom: 8px;
+}
+
+.donation-form-heading .form-subtitle {
+    max-width: 680px;
+}
+
+.donation-page .form-error-summary {
+    width: min(100%, 1040px);
+    margin: 0 auto 18px;
 }
 
 .form-section {
-    padding: 24px 0;
-    border-bottom: 1px solid #dce8e2;
+    padding: 20px;
+    border: 1px solid #e1ebe4;
+    border-radius: 14px;
+    background: #f8fbf9;
 }
 
-.form-section:first-child {
-    padding-top: 0;
+.form-section + .form-section {
+    margin-top: 16px;
 }
 
 .form-section-heading {
@@ -2217,6 +2432,10 @@ select.select-control:disabled {
     grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
+.donation-primary-grid {
+    margin-bottom: 0;
+}
+
 .full-width {
     grid-column: 1 / -1;
 }
@@ -2246,6 +2465,11 @@ select.select-control:disabled {
     accent-color: #1b684d;
 }
 
+.donation-form .form-control::placeholder {
+    color: #879890;
+    opacity: 1;
+}
+
 .form-control {
     width: 100%;
 }
@@ -2254,6 +2478,48 @@ select.select-control:disabled {
     color: #6b7d76;
     font-size: 0.85rem;
     margin-top: 8px;
+}
+
+.inline-donor-card {
+    margin: 12px 0 18px;
+    padding: 18px;
+    border: 1px solid #cfe3d6;
+    border-radius: 14px;
+    background: #f4faf6;
+    box-shadow: inset 4px 0 0 #2d8a68;
+}
+
+.inline-donor-card[hidden] {
+    display: none;
+}
+
+.inline-donor-heading {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.inline-donor-heading strong {
+    display: block;
+    color: #174d3c;
+    font-size: 1rem;
+}
+
+.inline-donor-heading small {
+    display: block;
+    margin-top: 4px;
+    color: #6b7d76;
+    font-size: 0.8rem;
+}
+
+.inline-donor-grid {
+    gap: 14px;
+}
+
+.inline-donor-grid .form-field {
+    margin-bottom: 2px;
 }
 
 .form-error-summary {
@@ -2301,6 +2567,113 @@ select.select-control:disabled {
     margin-bottom: 8px;
 }
 
+.inline-donor-card {
+    margin-top: 14px;
+    padding: 20px;
+    border-color: #c9dfd1;
+    border-radius: 16px;
+    background: #f1f8f3;
+    box-shadow: inset 4px 0 0 #2d8a68;
+}
+
+.inline-donor-heading {
+    align-items: flex-start;
+    padding-bottom: 14px;
+    border-bottom: 1px solid #dce9e0;
+}
+
+.inline-donor-eyebrow {
+    display: block;
+    margin-bottom: 5px;
+    color: #39765b;
+    font-size: 0.7rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.inline-donor-heading strong {
+    font-size: 1.12rem;
+}
+
+.inline-donor-section {
+    padding: 16px;
+    border: 1px solid #e0ebe3;
+    border-radius: 12px;
+    background: #fff;
+}
+
+.inline-donor-section + .inline-donor-section {
+    margin-top: 14px;
+}
+
+.inline-donor-section-heading {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 16px;
+}
+
+.inline-donor-section-heading .form-section-number {
+    width: 26px;
+    height: 26px;
+    font-size: 0.85rem;
+}
+
+.inline-donor-section-heading h4 {
+    margin: 2px 0 4px;
+    color: #173d31;
+    font-size: 0.95rem;
+}
+
+.inline-donor-section-heading p {
+    color: #6b7d76;
+    font-size: 0.78rem;
+    line-height: 1.4;
+}
+
+.inline-donor-contact-note {
+    margin-top: 2px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    background: #f4f8f5;
+}
+
+.inline-volunteer-picker {
+    margin-bottom: 2px;
+}
+
+.inline-donor-card .form-control {
+    min-height: 42px;
+}
+
+.inline-donor-card .form-field label {
+    font-size: 0.84rem;
+}
+
+.inline-volunteer-picker .volunteer-picker-options {
+    max-height: 190px;
+}
+
+.relationship-picker .form-control {
+    min-height: 44px;
+}
+
+.relationship-picker .volunteer-picker-options {
+    max-height: 220px;
+}
+
+.relationship-picker-option[aria-selected="true"] {
+    background: #edf7f0;
+    color: #174d3c;
+    font-weight: 700;
+}
+
+.inline-donor-card .form-help {
+    font-size: 0.78rem;
+    line-height: 1.4;
+}
+
 .form-actions {
     display: flex;
     gap: 10px;
@@ -2340,6 +2713,39 @@ select.select-control:disabled {
     .form-actions {
         flex-direction: column;
     }
+
+    .donation-form {
+        padding: 20px 16px;
+    }
+
+    .donation-form-heading {
+        flex-direction: column;
+        gap: 14px;
+    }
+
+    .donation-form-heading h2 {
+        font-size: 1.6rem;
+    }
+
+    .form-section {
+        padding: 16px;
+    }
+
+    .inline-donor-heading {
+        align-items: flex-start;
+    }
+
+    .inline-donor-card {
+        padding: 15px;
+    }
+
+    .inline-donor-section {
+        padding: 13px;
+    }
+
+    .inline-donor-heading {
+        align-items: flex-start;
+    }
 }
 
 /* Donation module */
@@ -2372,6 +2778,18 @@ select.select-control:disabled {
     font-weight: 800;
     letter-spacing: 0.1em;
     text-transform: uppercase;
+}
+
+.donation-page-guidance {
+    max-width: 720px;
+    margin-top: 8px;
+    margin-bottom: 0;
+    line-height: 1.45;
+}
+
+.donation-table-card .table-secondary {
+    display: block;
+    margin-top: 4px;
 }
 
 .stats-grid {
@@ -2421,6 +2839,261 @@ select.select-control:disabled {
     grid-template-columns: minmax(220px, 1fr) auto;
 }
 
+.donor-clear-filter {
+    align-self: center;
+    white-space: nowrap;
+}
+
+.donor-records {
+    padding: 22px;
+}
+
+.donation-dashboard .donor-records > .section-heading {
+    padding: 0 0 16px;
+    margin-bottom: 18px;
+    border: 0;
+    border-bottom: 1px solid #e3ede7;
+    border-radius: 0;
+    background: none;
+    box-shadow: none;
+}
+
+.donor-records > .section-heading h2 {
+    font-size: 1.25rem;
+}
+
+.donor-search-form {
+    display: grid;
+    grid-template-columns: minmax(240px, 1fr) auto auto;
+    align-items: end;
+    gap: 12px;
+    margin-bottom: 18px;
+    padding: 14px;
+    border: 1px solid #e3ede7;
+    border-radius: 12px;
+    background: #f5f9f6;
+}
+
+.donor-search-form .form-group {
+    margin: 0;
+}
+
+.donor-search-form label {
+    display: block;
+    margin-bottom: 7px;
+    color: #38554a;
+    font-size: 0.78rem;
+    font-weight: 800;
+}
+
+.donor-search-form input {
+    width: 100%;
+    min-height: 44px;
+}
+
+.donor-records-table {
+    border: 1px solid #e3ede7;
+    border-radius: 12px;
+    background: #fff;
+}
+
+.donor-records-table .data-table {
+    min-width: 960px;
+}
+
+.donor-records-table .data-table th {
+    background: #f5f9f6;
+}
+
+.donor-records-table .data-table td:first-child,
+.donor-records-table .donor-contact-cell,
+.donor-records-table .audit-cell {
+    white-space: normal;
+}
+
+.donor-records-table .data-table td:first-child {
+    min-width: 180px;
+    max-width: 260px;
+}
+
+.donor-records-table .donor-contact-cell {
+    min-width: 170px;
+    overflow-wrap: anywhere;
+}
+
+.donor-contact-cell span,
+.donor-contact-cell small {
+    display: block;
+}
+
+.donor-contact-cell small {
+    margin-top: 4px;
+    color: #6b7d76;
+}
+
+.donor-records-table .audit-cell {
+    min-width: 190px;
+}
+
+.donor-record-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.donor-record-actions .btn {
+    white-space: nowrap;
+}
+
+.donor-detail-hero {
+    max-width: 1240px;
+    margin: 0 auto 24px;
+}
+
+.donor-profile-card {
+    padding: 26px;
+}
+
+.donor-profile-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 20px;
+    padding-bottom: 22px;
+    border-bottom: 1px solid #e4eee8;
+}
+
+.donor-profile-header h2 {
+    margin-bottom: 5px;
+}
+
+.donor-profile-header .form-subtitle {
+    margin: 0;
+}
+
+.donor-detail-status-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 0 4px;
+}
+
+.detail-status-label {
+    color: #5b6f68;
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.donor-detail-grid {
+    margin-top: 16px;
+}
+
+.donor-detail-grid > div {
+    min-height: 78px;
+}
+
+.donor-detail-grid span {
+    line-height: 1.4;
+}
+
+.donor-detail-grid span small {
+    display: block;
+    margin-top: 3px;
+    color: #6b7d76;
+    font-size: 0.76rem;
+    font-weight: 500;
+}
+
+.donor-form-heading {
+    max-width: 1040px;
+    margin: 0 auto 22px;
+}
+
+.donor-form-heading .form-subtitle {
+    max-width: 680px;
+    margin-bottom: 0;
+}
+
+.donor-form {
+    width: min(100%, 1040px);
+    margin: 0 auto;
+    padding: 24px;
+}
+
+.donor-form-section {
+    padding: 20px;
+    border: 1px solid #e1ebe4;
+    border-radius: 14px;
+    background: #f8fbf9;
+}
+
+.donor-form-section + .donor-form-section {
+    margin-top: 16px;
+}
+
+.donor-form-section-heading {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 18px;
+}
+
+.donor-form-section-heading h3 {
+    margin-bottom: 4px;
+    color: #173d31;
+    font-size: 1rem;
+}
+
+.donor-form-section-heading p {
+    color: #6b7d76;
+    font-size: 0.8rem;
+    line-height: 1.4;
+}
+
+.donor-form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 4px 18px;
+}
+
+.donor-form-grid .form-group {
+    margin-bottom: 14px;
+}
+
+.donor-active-field {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    grid-column: 1 / -1;
+    margin-top: 4px;
+    padding: 13px 14px;
+    border: 1px solid #cfe4d8;
+    border-radius: 10px;
+    background: #eef8f1;
+}
+
+.donor-active-field input {
+    width: 19px;
+    height: 19px;
+    flex: 0 0 19px;
+    margin-top: 2px;
+    accent-color: #1d785d;
+}
+
+.donor-active-field label {
+    display: block;
+    margin-bottom: 4px;
+    color: #184936;
+    font-weight: 800;
+}
+
+.donor-form-actions {
+    justify-content: flex-end;
+    margin-top: 20px;
+}
+
 .filter-field {
     min-width: 0;
 }
@@ -2434,7 +3107,7 @@ select.select-control:disabled {
 }
 
 .donation-dashboard input:not([type="checkbox"]),
-.donation-dashboard select {
+.donation-dashboard .donation-filters select {
     width: 100%;
     min-height: 44px;
     border: 1px solid #c8d9d0;
@@ -2448,7 +3121,7 @@ select.select-control:disabled {
     padding: 10px 12px;
 }
 
-.donation-dashboard select,
+.donation-dashboard .donation-filters select,
 .donation-form select {
     appearance: none;
     padding: 10px 38px 10px 12px;
@@ -2460,7 +3133,7 @@ select.select-control:disabled {
 }
 
 .donation-dashboard input:focus,
-.donation-dashboard select:focus,
+.donation-dashboard .donation-filters select:focus,
 .donation-form select:focus {
     border-color: #268060;
     box-shadow: 0 0 0 3px rgba(38, 128, 96, 0.14);
@@ -2526,6 +3199,85 @@ select.select-control:disabled {
     font-size: 0.8rem;
 }
 
+.donation-records {
+    padding: 22px;
+}
+
+.donation-dashboard .donation-records > .section-heading {
+    padding: 0 0 16px;
+    margin-bottom: 18px;
+    border: 0;
+    border-bottom: 1px solid #e3ede7;
+    border-radius: 0;
+    background: none;
+    box-shadow: none;
+}
+
+.donation-records > .section-heading h2 {
+    font-size: 1.25rem;
+}
+
+.donation-records .donation-filters {
+    grid-template-columns: repeat(5, minmax(120px, 1fr)) auto;
+    gap: 12px;
+    margin-bottom: 18px;
+    padding: 14px;
+    border-color: #e3ede7;
+    border-radius: 12px;
+    background: #f5f9f6;
+}
+
+.donation-records .filter-field label {
+    margin-bottom: 7px;
+    color: #38554a;
+    font-size: 0.78rem;
+    font-weight: 800;
+}
+
+.donation-records-table {
+    border: 1px solid #e3ede7;
+    border-radius: 12px;
+    background: #fff;
+}
+
+.donation-records-table .data-table {
+    min-width: 1080px;
+}
+
+.donation-records-table .data-table th {
+    background: #f5f9f6;
+}
+
+.donation-records-table .data-table td:nth-child(3),
+.donation-records-table .audit-cell {
+    white-space: normal;
+}
+
+.donation-records-table .data-table td:nth-child(3) {
+    min-width: 150px;
+    max-width: 220px;
+}
+
+.donation-records-table .audit-cell {
+    min-width: 220px;
+}
+
+.donation-records-table .donation-value {
+    white-space: nowrap;
+}
+
+.donation-records-table .status-select {
+    max-width: 140px;
+}
+
+.donation-records .table-empty {
+    padding: 40px 20px;
+}
+
+.donation-records .table-empty .form-subtitle {
+    margin-bottom: 16px;
+}
+
 .donation-summary {
     margin-bottom: 26px;
 }
@@ -2553,6 +3305,209 @@ select.select-control:disabled {
     color: #203c30;
     font-size: 1rem;
     font-weight: 700;
+}
+
+.donation-detail-hero,
+.donation-detail-content,
+.donation-status-card,
+.donation-audit {
+    max-width: 1240px;
+    margin: 0 auto 20px;
+}
+
+.donation-detail-hero {
+    padding: 26px;
+}
+
+.donation-detail-heading {
+    align-items: center;
+}
+
+.donation-detail-subtitle {
+    margin-top: 8px;
+    color: #60756c;
+}
+
+.donation-detail-actions {
+    flex-wrap: wrap;
+}
+
+.donation-detail-status-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: -4px 0 18px;
+}
+
+.donation-detail-hero .donation-summary {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+    margin: 0;
+}
+
+.donation-detail-hero .donation-summary > div {
+    min-height: 82px;
+    padding: 15px;
+}
+
+.donation-summary p small {
+    display: block;
+    margin-top: 5px;
+    color: #60756c;
+    font-size: 0.83rem;
+    font-weight: 500;
+    line-height: 1.4;
+}
+
+.donor-profile-summary p {
+    overflow-wrap: anywhere;
+}
+
+.donation-detail-content {
+    padding: 24px;
+}
+
+.donation-content-heading {
+    align-items: center;
+    margin-bottom: 18px;
+}
+
+.donation-content-heading h2,
+.donation-status-card h2 {
+    margin: 0 0 5px;
+    color: #173d31;
+    font-size: 1.2rem;
+}
+
+.donation-content-heading .form-subtitle,
+.donation-status-card .form-subtitle {
+    margin: 0;
+}
+
+.donation-financial-summary {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.donation-financial-summary > div,
+.donation-note {
+    padding: 16px;
+    border: 1px solid #e3ede7;
+    border-radius: 12px;
+    background: #f7faf8;
+}
+
+.donation-financial-summary span,
+.donation-note > span {
+    display: block;
+    margin-bottom: 7px;
+    color: #60756c;
+    font-size: 0.76rem;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+.donation-financial-summary strong {
+    color: #174d3c;
+    font-size: 1.2rem;
+}
+
+.donation-notes-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 12px;
+    margin-top: 18px;
+}
+
+.donation-note p {
+    color: #354c43;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+}
+
+.donation-status-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    padding: 18px 22px;
+}
+
+.donation-status-control {
+    margin: 0;
+}
+
+.donation-audit {
+    padding: 0;
+    overflow: hidden;
+}
+
+.donation-audit-summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    min-height: 76px;
+    padding: 16px 22px;
+    cursor: pointer;
+    list-style: none;
+}
+
+.donation-audit-summary::-webkit-details-marker {
+    display: none;
+}
+
+.donation-audit-summary::marker {
+    content: "";
+}
+
+.donation-audit-summary > span:first-child strong,
+.donation-audit-summary > span:first-child small {
+    display: block;
+}
+
+.donation-audit-summary strong {
+    color: #173d31;
+    font-size: 1rem;
+}
+
+.donation-audit-summary small {
+    margin-top: 4px;
+    color: #60756c;
+}
+
+.donation-audit-toggle {
+    flex: 0 0 auto;
+    color: #176146;
+    font-size: 0.85rem;
+    font-weight: 800;
+}
+
+.donation-audit-toggle::after {
+    display: inline-block;
+    margin-left: 8px;
+    content: "⌄";
+    transition: transform 0.2s ease;
+}
+
+.donation-audit[open] .donation-audit-toggle::after {
+    transform: rotate(180deg);
+}
+
+.donation-audit-summary:focus-visible {
+    outline: 3px solid #258060;
+    outline-offset: -3px;
+}
+
+.donation-audit-content {
+    padding: 0 22px 22px;
+    border-top: 1px solid #e7efe9;
+}
+
+.donation-audit-content .section-heading {
+    padding-top: 18px;
 }
 
 .status-badge {
@@ -2587,7 +3542,8 @@ select.select-control:disabled {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
-    .donation-filters {
+    .donation-filters,
+    .donation-records .donation-filters {
         grid-template-columns: repeat(3, minmax(0, 1fr));
     }
 }
@@ -2599,12 +3555,1412 @@ select.select-control:disabled {
         grid-template-columns: 1fr;
     }
 
+    .donation-records {
+        padding: 18px;
+    }
+
+    .donor-records {
+        padding: 18px;
+    }
+
+    .donor-search-form {
+        grid-template-columns: 1fr;
+    }
+
+    .donor-search-form .btn {
+        width: 100%;
+    }
+
+    .donor-record-actions {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
     .donation-dashboard .section-heading,
     .donation-detail .section-heading {
         padding: 18px;
     }
 
+    .donation-dashboard .donation-records > .section-heading {
+        padding: 0 0 14px;
+    }
+
+    .donation-dashboard .donor-records > .section-heading {
+        padding: 0 0 14px;
+    }
+
+    .donation-detail-hero,
+    .donation-detail-content {
+        padding: 18px;
+    }
+
+    .donation-detail-hero .donation-summary,
+    .donation-financial-summary {
+        grid-template-columns: 1fr;
+    }
+
+    .donation-detail-actions,
+    .donation-status-card {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .donation-status-control {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .donation-audit-summary {
+        align-items: flex-start;
+        flex-direction: column;
+        padding: 16px;
+    }
+
+    .donation-audit-content {
+        padding: 0 16px 16px;
+    }
+
     .filter-submit {
         width: 100%;
     }
+
+    .donor-form {
+        padding: 18px;
+    }
+
+    .donor-form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .donor-form-section {
+        padding: 16px;
+    }
+
+    .donor-form-actions {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .donor-form-actions .btn {
+        width: 100%;
+    }
 }
+
+.record-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-top: 16px;
+    padding: 12px 14px;
+    border: 1px solid #e3ede7;
+    border-radius: 12px;
+    background: #f7faf8;
+}
+
+.record-pagination-summary {
+    color: #40594e;
+    font-size: 0.86rem;
+    font-weight: 700;
+}
+
+.record-pagination-summary .muted {
+    font-weight: 500;
+}
+
+.record-pagination-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.record-pagination-actions .is-disabled {
+    opacity: 0.48;
+    cursor: not-allowed;
+}
+
+.record-pagination a:focus-visible {
+    outline: 3px solid #258060;
+    outline-offset: 2px;
+}
+
+.collection-detail-page {
+    max-width: 1240px;
+    margin: 0 auto;
+    padding-bottom: 8px;
+}
+
+.collection-detail-hero,
+.collection-detail-items {
+    margin-bottom: 20px;
+}
+
+.collection-detail-hero {
+    background:
+        radial-gradient(ellipse at top right, rgba(225, 242, 231, 0.6), transparent 48%),
+        #fff;
+}
+
+.collection-detail-hero .donation-detail-heading h2 {
+    margin: 0;
+    color: #173d31;
+    font-size: clamp(1.45rem, 2.5vw, 2rem);
+}
+
+.collection-detail-summary {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+    margin: 0;
+}
+
+.collection-detail-summary > div {
+    min-width: 0;
+    min-height: 82px;
+    padding: 15px;
+}
+
+.collection-detail-summary p {
+    margin: 0;
+    color: #203c30;
+    overflow-wrap: anywhere;
+}
+
+.collection-detail-note {
+    margin-top: 14px;
+    padding: 15px;
+    border: 1px solid #e3ede7;
+    border-radius: 12px;
+    background: #f7faf8;
+}
+
+.collection-detail-note > span {
+    display: block;
+    margin-bottom: 6px;
+    color: #60756c;
+    font-size: 0.76rem;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+.collection-detail-note p {
+    color: #354c43;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+}
+
+.collection-item-form {
+    margin-bottom: 20px;
+}
+
+.collection-detail-table {
+    min-width: 720px;
+}
+
+.collection-detail-table td {
+    vertical-align: top;
+    overflow-wrap: anywhere;
+}
+
+@media (max-width: 980px) {
+    .collection-detail-summary {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 700px) {
+    .record-pagination {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .record-pagination-actions .btn {
+        flex: 1;
+        text-align: center;
+    }
+
+    .collection-detail-summary {
+        grid-template-columns: 1fr;
+    }
+
+    .collection-detail-page .donation-detail-heading {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .collection-detail-page .donation-detail-actions {
+        align-items: stretch;
+    }
+}
+
+    .residue-records .section-heading {
+        align-items: center;
+        margin-bottom: 16px;
+    }
+
+    .residue-records .section-heading h2 {
+        margin-bottom: 5px;
+    }
+
+    .residue-filters {
+        grid-template-columns: minmax(240px, 1.5fr) repeat(2, minmax(180px, 1fr));
+        gap: 12px;
+        margin-bottom: 18px;
+    }
+
+    .residue-filters .form-group {
+        min-width: 0;
+    }
+
+    .residue-records-table {
+        border: 1px solid #e5eee8;
+        border-radius: 10px;
+    }
+
+    .residue-records-table .data-table {
+        min-width: 960px;
+        table-layout: fixed;
+    }
+
+    .residue-records-table .data-table th,
+    .residue-records-table .data-table td {
+        padding: 12px 10px;
+        white-space: normal;
+        vertical-align: top;
+        overflow-wrap: anywhere;
+    }
+
+    .residue-records-table .data-table th:nth-child(1) { width: 11%; }
+    .residue-records-table .data-table th:nth-child(2) { width: 10%; }
+    .residue-records-table .data-table th:nth-child(3) { width: 21%; }
+    .residue-records-table .data-table th:nth-child(4) { width: 23%; }
+    .residue-records-table .data-table th:nth-child(5) { width: 18%; }
+    .residue-records-table .data-table th:nth-child(6) { width: 17%; }
+
+    .residue-records-table .audit-cell {
+        min-width: 0;
+    }
+
+    @media (max-width: 600px) {
+        .residue-filters {
+            grid-template-columns: 1fr;
+        }
+
+        .residue-records .section-heading-actions {
+            justify-content: space-between;
+        }
+    }
+
+    .communication-center {
+        padding: 26px;
+    }
+
+    .communication-center-heading {
+        align-items: center;
+        margin-bottom: 20px;
+    }
+
+    .communication-center-heading h2 {
+        margin-bottom: 5px;
+    }
+
+    .communication-total {
+        display: inline-flex;
+        align-items: center;
+        min-height: 36px;
+        padding: 0 13px;
+        border-radius: 999px;
+        background: #eaf4ee;
+        color: #1d624d;
+        font-size: 0.82rem;
+        font-weight: 700;
+        white-space: nowrap;
+    }
+
+    .communication-filters {
+        display: grid;
+        grid-template-columns: minmax(240px, 1fr) minmax(180px, 260px) auto;
+        align-items: end;
+        gap: 14px;
+        margin-bottom: 24px;
+        padding: 16px;
+        border: 1px solid #e3ede7;
+        border-radius: 12px;
+        background: #f5f9f6;
+    }
+
+    .communication-filters .form-group {
+        min-width: 0;
+        margin-bottom: 0;
+    }
+
+    .communication-results-heading {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 12px;
+    }
+
+    .communication-results-heading h3 {
+        margin: 0;
+        color: #173d31;
+        font-size: 1rem;
+    }
+
+    .communication-results-heading > span {
+        color: #6b7d76;
+        font-size: 0.82rem;
+    }
+
+    .communication-list {
+        display: grid;
+        gap: 12px;
+    }
+
+    .communication-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 24px;
+        padding: 18px 20px;
+        border: 1px solid #e5eee8;
+        border-left: 4px solid #278264;
+        border-radius: 12px;
+        background: #fff;
+        transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+    }
+
+    .communication-item:hover {
+        border-color: #c7ded1;
+        box-shadow: 0 8px 20px rgba(26, 70, 53, 0.07);
+        transform: translateY(-1px);
+    }
+
+    .communication-item-content {
+        min-width: 0;
+    }
+
+    .communication-item-meta {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 8px;
+    }
+
+    .communication-type,
+    .communication-topic {
+        display: inline-flex;
+        align-items: center;
+        min-height: 24px;
+        padding: 3px 9px;
+        border-radius: 999px;
+        background: #eaf4ee;
+        color: #1d624d;
+        font-size: 0.72rem;
+        font-weight: 750;
+    }
+
+    .communication-type-noticia {
+        background: #edf1fb;
+        color: #415d9b;
+    }
+
+    .communication-topic {
+        background: #f3f5f3;
+        color: #5d7069;
+        font-weight: 600;
+    }
+
+    .communication-item-meta time {
+        margin-left: auto;
+        color: #6b7d76;
+        font-size: 0.78rem;
+    }
+
+    .communication-item h3 {
+        margin: 0 0 6px;
+        color: #173d31;
+        font-size: 1.08rem;
+        line-height: 1.35;
+    }
+
+    .communication-item h3 a {
+        color: inherit;
+        text-decoration: none;
+    }
+
+    .communication-item h3 a:hover {
+        color: #207b5f;
+    }
+
+    .communication-item p {
+        margin: 0 0 9px;
+        color: #5d7069;
+        font-size: 0.9rem;
+        line-height: 1.5;
+    }
+
+    .communication-audience {
+        color: #6b7d76;
+        font-size: 0.78rem;
+    }
+
+    .communication-read-link {
+        flex-shrink: 0;
+    }
+
+    .communication-empty .btn {
+        margin-top: 12px;
+    }
+
+    @media (max-width: 700px) {
+        .communication-center {
+            padding: 20px 16px;
+        }
+
+        .communication-filters {
+            grid-template-columns: 1fr;
+        }
+
+        .communication-filters .filter-actions {
+            align-items: center;
+        }
+
+        .communication-item {
+            align-items: stretch;
+            flex-direction: column;
+            gap: 14px;
+            padding: 16px;
+        }
+
+        .communication-item-meta time {
+            margin-left: 0;
+            width: 100%;
+        }
+
+        .communication-read-link {
+            align-self: flex-start;
+        }
+    }
+
+    .communication-total.has-unread {
+        background: #fff1e8;
+        color: #a44e1c;
+    }
+
+    .communication-filters {
+        grid-template-columns: minmax(220px, 1.5fr) minmax(150px, 0.8fr) minmax(170px, 0.9fr) auto;
+    }
+
+    .communication-item.is-unread {
+        border-left-color: #e29a36;
+        background: #fffdf8;
+    }
+
+    .communication-item.is-unread h3 {
+        font-weight: 800;
+    }
+
+    .communication-unread-label {
+        display: inline-flex;
+        vertical-align: middle;
+        margin-left: 7px;
+        padding: 3px 8px;
+        border-radius: 999px;
+        background: #fff1e8;
+        color: #a44e1c;
+        font-size: 0.67rem;
+        font-weight: 750;
+        letter-spacing: 0.02em;
+        text-transform: uppercase;
+    }
+
+    @media (max-width: 1000px) {
+        .communication-filters {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+
+    @media (max-width: 700px) {
+        .communication-filters {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .communication-detail {
+        display: grid;
+        gap: 18px;
+        width: min(100%, 1040px);
+        margin: 0 auto;
+    }
+
+    .communication-detail-hero,
+    .communication-detail-body,
+    .communication-detail-relations {
+        padding: 26px;
+    }
+
+    .communication-detail-hero {
+        border-top: 4px solid #278264;
+    }
+
+    .communication-back-link {
+        display: inline-flex;
+        margin-bottom: 20px;
+        font-weight: 700;
+        text-decoration: none;
+    }
+
+    .communication-detail-meta {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 12px;
+    }
+
+    .communication-read-label {
+        display: inline-flex;
+        align-items: center;
+        min-height: 24px;
+        padding: 3px 9px;
+        border-radius: 999px;
+        background: #edf5f0;
+        color: #547267;
+        font-size: 0.72rem;
+        font-weight: 700;
+    }
+
+    .communication-detail-hero h2 {
+        max-width: 820px;
+        margin: 0 0 14px;
+        color: #173d31;
+        font-size: clamp(1.55rem, 3vw, 2.15rem);
+        line-height: 1.2;
+        overflow-wrap: anywhere;
+    }
+
+    .communication-detail-info {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px 20px;
+        color: #60756c;
+        font-size: 0.84rem;
+    }
+
+    .communication-detail-summary {
+        margin: 20px 0 0;
+        padding: 14px 16px;
+        border-left: 3px solid #a9c7b8;
+        border-radius: 0 9px 9px 0;
+        background: #f5f9f6;
+        color: #36584b;
+        font-size: 1rem;
+        line-height: 1.6;
+    }
+
+    .communication-detail-body-heading {
+        margin-bottom: 18px;
+    }
+
+    .communication-detail-body-heading h3 {
+        margin: 0 0 6px;
+        color: #173d31;
+        font-size: 1.15rem;
+    }
+
+    .communication-detail-body-heading .form-subtitle {
+        margin: 0;
+    }
+
+    .communication-detail-content {
+        color: #33483f;
+        font-size: 1rem;
+        line-height: 1.8;
+        overflow-wrap: anywhere;
+    }
+
+    .communication-detail-content > :first-child {
+        margin-top: 0;
+    }
+
+    .communication-detail-content > :last-child {
+        margin-bottom: 0;
+    }
+
+    .communication-relation-list {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+        gap: 10px;
+    }
+
+    .communication-relation {
+        display: flex;
+        min-width: 0;
+        flex-direction: column;
+        gap: 5px;
+        padding: 14px;
+        border: 1px solid #e3ede7;
+        border-radius: 10px;
+        background: #f8faf8;
+        text-decoration: none;
+        transition: border-color 0.18s ease, background 0.18s ease;
+    }
+
+    .communication-relation:hover {
+        border-color: #a9c7b8;
+        background: #f1f8f4;
+    }
+
+    .communication-relation-kind {
+        color: #258060;
+        font-size: 0.68rem;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+    }
+
+    .communication-relation strong {
+        color: #173d31;
+        font-size: 0.92rem;
+        overflow-wrap: anywhere;
+    }
+
+    .communication-relation small {
+        color: #6b7d76;
+    }
+
+    .communication-detail-footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 0 4px;
+        color: #6b7d76;
+        font-size: 0.82rem;
+    }
+
+    @media (max-width: 700px) {
+        .communication-detail-hero,
+        .communication-detail-body,
+        .communication-detail-relations {
+            padding: 20px 16px;
+        }
+
+        .communication-detail-footer {
+            align-items: stretch;
+            flex-direction: column;
+        }
+
+        .communication-detail-footer .btn {
+            width: 100%;
+        }
+    }
+
+.communication-admin-metrics {
+    grid-template-columns: repeat(4, minmax(150px, 1fr));
+    max-width: 1160px;
+}
+
+.communication-admin-list,
+.communication-topic-list {
+    padding: 24px;
+}
+
+.communication-admin-list > .section-heading,
+.communication-topic-list > .section-heading {
+    align-items: center;
+    margin-bottom: 18px;
+}
+
+.communication-admin-list > .section-heading h2,
+.communication-topic-list > .section-heading h2 {
+    margin-bottom: 5px;
+}
+
+.communication-admin-filters {
+    grid-template-columns: minmax(240px, 1.5fr) minmax(160px, 0.8fr) minmax(160px, 0.8fr) auto;
+    margin-bottom: 14px;
+}
+
+.communication-admin-filters .form-group {
+    min-width: 0;
+}
+
+.communication-admin-table-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin: 0 2px 10px;
+    color: #173d31;
+    font-size: 0.86rem;
+}
+
+.communication-admin-table-heading strong {
+    color: #6b7d76;
+    font-size: 0.78rem;
+    font-weight: 600;
+}
+
+.communication-admin-table {
+    border: 1px solid #e5eee8;
+    border-radius: 10px;
+}
+
+.communication-admin-table .data-table {
+    min-width: 1050px;
+    table-layout: fixed;
+}
+
+.communication-admin-table .data-table th,
+.communication-admin-table .data-table td {
+    padding: 12px 10px;
+    vertical-align: middle;
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+
+.communication-admin-table .data-table th:nth-child(1) { width: 22%; }
+.communication-admin-table .data-table th:nth-child(2) { width: 12%; }
+.communication-admin-table .data-table th:nth-child(3) { width: 12%; }
+.communication-admin-table .data-table th:nth-child(4) { width: 14%; }
+.communication-admin-table .data-table th:nth-child(5) { width: 20%; }
+.communication-admin-table .data-table th:nth-child(6) { width: 20%; }
+
+.communication-admin-title {
+    min-width: 0;
+}
+
+.communication-admin-title .communication-type {
+    margin-bottom: 6px;
+}
+
+.communication-admin-title .table-link,
+.communication-admin-title .table-secondary {
+    display: block;
+}
+
+.communication-admin-title .communication-admin-summary {
+    display: -webkit-box;
+    margin-top: 5px;
+    overflow: hidden;
+    color: #71827b;
+    font-size: 0.76rem;
+    line-height: 1.4;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+}
+
+.communication-admin-table .audit-cell {
+    min-width: 0;
+}
+
+.communication-admin-actions {
+    white-space: nowrap;
+}
+
+.communication-admin-actions form {
+    display: inline;
+    margin: 0 0 0 6px;
+}
+
+.communication-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 1px solid #e8efeb;
+}
+
+.communication-pagination-summary {
+    color: #667a72;
+    font-size: 0.82rem;
+    font-weight: 650;
+}
+
+.communication-pagination-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.communication-topic-metrics {
+    grid-template-columns: repeat(3, minmax(160px, 240px));
+}
+
+.communication-topic-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 14px;
+}
+
+.communication-topic-card {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    padding: 18px;
+    border: 1px solid #e3ede7;
+    border-radius: 12px;
+    background: #fbfdfb;
+}
+
+.communication-topic-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.communication-topic-icon {
+    display: inline-grid;
+    width: 34px;
+    height: 34px;
+    place-items: center;
+    border-radius: 10px;
+    background: #eaf4ee;
+    color: #1d785d;
+    font-size: 1.1rem;
+    font-weight: 800;
+}
+
+.communication-topic-card h3 {
+    margin: 0 0 7px;
+    color: #173d31;
+    font-size: 1.05rem;
+    overflow-wrap: anywhere;
+}
+
+.communication-topic-card > p {
+    flex: 1;
+    margin: 0 0 16px;
+    color: #60756c;
+    font-size: 0.86rem;
+    line-height: 1.5;
+}
+
+.communication-topic-card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding-top: 12px;
+    border-top: 1px solid #e7efe9;
+}
+
+.communication-topic-card-footer > span,
+.communication-topic-form-count {
+    color: #60756c;
+    font-size: 0.78rem;
+}
+
+.communication-form-card,
+.communication-topic-form-card {
+    width: min(100%, 1080px);
+    margin: 0 auto;
+    padding: 26px;
+}
+
+.communication-form-heading,
+.communication-topic-form-heading {
+    align-items: center;
+    margin-bottom: 22px;
+}
+
+.communication-form-heading h2,
+.communication-topic-form-heading h2 {
+    margin-bottom: 5px;
+}
+
+.communication-form {
+    display: grid;
+    gap: 18px;
+}
+
+.communication-form-section {
+    padding: 20px;
+    border: 1px solid #e3ede7;
+    border-radius: 12px;
+    background: #fff;
+}
+
+.communication-form-section-heading {
+    display: flex;
+    align-items: flex-start;
+    gap: 11px;
+    margin-bottom: 18px;
+}
+
+.communication-step {
+    display: inline-grid;
+    width: 30px;
+    height: 30px;
+    flex: 0 0 30px;
+    place-items: center;
+    border-radius: 50%;
+    background: #eaf4ee;
+    color: #1d785d;
+    font-size: 0.83rem;
+    font-weight: 800;
+}
+
+.communication-form-section-heading h3 {
+    margin: 1px 0 4px;
+    color: #173d31;
+    font-size: 1rem;
+}
+
+.communication-form-section-heading p {
+    margin: 0;
+    color: #6b7d76;
+    font-size: 0.82rem;
+    line-height: 1.4;
+}
+
+.communication-primary-fields {
+    grid-template-columns: minmax(180px, 0.7fr) minmax(0, 1.7fr);
+}
+
+.communication-display-fields {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.communication-relations-fields {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 14px;
+}
+
+.communication-relations-fields .form-group {
+    min-width: 0;
+    margin: 0;
+    padding: 16px;
+    border: 1px solid #e3ede7;
+    border-radius: 11px;
+    background: #fbfdfb;
+}
+
+.communication-relations-fields .form-group > label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 0.96rem;
+}
+
+.communication-relations-fields .relationship-search {
+    margin-bottom: 9px;
+    background: #fff;
+}
+
+.communication-relations-fields .relationship-select {
+    width: 100%;
+    min-height: 220px;
+    padding: 8px 10px;
+    border-color: #cbdad1;
+    background: #fff;
+    font-size: 0.92rem;
+    line-height: 1.55;
+}
+
+.communication-relations-fields .relationship-select option {
+    min-height: 32px;
+    padding: 7px 10px;
+    color: #24483a;
+}
+
+.communication-relations-fields .relationship-select option:checked {
+    background: #dff2e6 linear-gradient(0deg, #dff2e6, #dff2e6);
+    color: #184936;
+    font-weight: 750;
+}
+
+.communication-relations-fields .relationship-selected {
+    padding: 12px 14px;
+    background: #f2f8f4;
+}
+
+.communication-relations-fields .relationship-selected-title {
+    font-size: 0.84rem;
+}
+
+.communication-relations-fields .relationship-chip {
+    min-height: 34px;
+    padding: 7px 10px;
+    font-size: 0.84rem;
+}
+
+.communication-relations-fields .form-help {
+    line-height: 1.5;
+}
+
+.communication-form .relationship-help {
+    margin-top: 16px;
+}
+
+.communication-related-waste {
+    margin-top: 12px;
+    padding: 12px 14px;
+    border: 1px solid #dcebe2;
+    border-radius: 9px;
+    background: #fff;
+}
+
+.communication-related-waste > strong {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 5px;
+}
+
+.communication-related-waste [data-waste-count] {
+    color: #258060;
+}
+
+.communication-related-waste p {
+    color: #667a72;
+    font-size: 0.82rem;
+}
+
+.communication-related-waste ul {
+    display: grid;
+    gap: 6px;
+    margin: 8px 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+.communication-related-waste li {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 4px 12px;
+    padding: 7px 9px;
+    border-radius: 7px;
+    background: #f2f8f4;
+    font-size: 0.8rem;
+}
+
+.communication-related-waste li span {
+    color: #667a72;
+}
+
+.communication-related-donations {
+    margin-top: 12px;
+    padding: 12px 14px;
+    border: 1px solid #dcebe2;
+    border-radius: 9px;
+    background: #fff;
+}
+
+.communication-related-donations > strong {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 5px;
+}
+
+.communication-related-donations [data-donation-count] {
+    color: #258060;
+}
+
+.communication-related-donations p {
+    color: #667a72;
+    font-size: 0.82rem;
+}
+
+.communication-related-donations ul {
+    display: grid;
+    gap: 6px;
+    margin: 8px 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+.communication-related-donations li {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 4px 12px;
+    padding: 7px 9px;
+    border-radius: 7px;
+    background: #f2f8f4;
+    font-size: 0.8rem;
+}
+
+.communication-related-donations li span {
+    color: #667a72;
+}
+
+.communication-related-residue {
+    padding-top: 4px;
+    border-top: 1px solid #e5eee8;
+    line-height: 1.45;
+}
+
+.communication-related-residue span {
+    display: block;
+    color: #258060;
+    font-size: 0.75rem;
+}
+
+.communication-form-actions {
+    padding-top: 2px;
+}
+
+.communication-topic-form {
+    display: grid;
+    gap: 18px;
+}
+
+.communication-topic-form .communication-form-section {
+    background: #fbfdfb;
+}
+
+.communication-topic-form .form-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+}
+
+.communication-topic-form textarea.form-control {
+    min-height: 130px;
+    resize: vertical;
+}
+
+.communication-topic-form-count {
+    display: inline-flex;
+    align-items: center;
+    min-height: 36px;
+    padding: 0 12px;
+    border-radius: 999px;
+    background: #f1f5f2;
+    white-space: nowrap;
+}
+
+@media (max-width: 1050px) {
+    .communication-admin-filters {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .communication-relations-fields {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 700px) {
+    .communication-admin-metrics {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .communication-admin-list,
+    .communication-topic-list,
+    .communication-form-card,
+    .communication-topic-form-card {
+        padding: 18px 16px;
+    }
+
+    .communication-admin-filters,
+    .communication-primary-fields,
+    .communication-display-fields,
+    .communication-relations-fields {
+        grid-template-columns: 1fr;
+    }
+
+    .communication-form-section {
+        padding: 16px;
+    }
+
+    .communication-admin-list > .section-heading,
+    .communication-topic-list > .section-heading,
+    .communication-form-heading,
+    .communication-topic-form-heading {
+        align-items: stretch;
+    }
+
+    .communication-admin-list .section-heading-actions,
+    .communication-topic-list .section-heading-actions {
+        justify-content: flex-start;
+    }
+
+    .communication-pagination {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .communication-pagination-actions .btn {
+        flex: 1;
+        text-align: center;
+    }
+}
+
+    .bag-detail-page,
+    .condominium-detail-page {
+        padding-bottom: 8px;
+    }
+
+    .bag-detail-hero,
+    .condominium-detail-hero {
+        background:
+            radial-gradient(ellipse at top right, rgba(225, 242, 231, 0.6), transparent 48%),
+            #fff;
+    }
+
+    .bag-detail-hero .donation-detail-heading h2,
+    .condominium-detail-hero .donation-detail-heading h2 {
+        margin: 0;
+        color: #173d31;
+        font-size: clamp(1.45rem, 2.5vw, 2rem);
+        overflow-wrap: anywhere;
+    }
+
+    .bag-detail-hero .eyebrow,
+    .condominium-detail-hero .eyebrow {
+        margin-bottom: 7px;
+        color: #56806c;
+        font-size: 0.72rem;
+        font-weight: 800;
+        letter-spacing: 0.09em;
+        text-transform: uppercase;
+    }
+
+    .bag-detail-hero .donation-detail-subtitle,
+    .condominium-detail-hero .donation-detail-subtitle {
+        max-width: 760px;
+        line-height: 1.55;
+        overflow-wrap: anywhere;
+    }
+
+    .detail-status-label {
+        color: #60756c;
+        font-size: 0.82rem;
+        font-weight: 700;
+    }
+
+    .condominium-status,
+    .condominium-location-tag {
+        display: inline-flex;
+        align-items: center;
+        padding: 6px 10px;
+        border-radius: 999px;
+        background: #e1f2e7;
+        color: #176247;
+        font-size: 0.78rem;
+        font-weight: 800;
+    }
+
+    .condominium-status-inativo,
+    .condominium-status-bloqueado {
+        background: #fbe3e3;
+        color: #a33c3c;
+    }
+
+    .condominium-location-tag {
+        background: #edf4f1;
+        color: #426356;
+    }
+
+    .bag-detail-hero .bag-summary,
+    .condominium-detail-hero .condominium-summary {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .bag-detail-hero .bag-summary > div,
+    .condominium-detail-hero .condominium-summary > div {
+        min-width: 0;
+    }
+
+    .bag-detail-hero .bag-summary p,
+    .condominium-summary p {
+        margin: 0;
+        overflow-wrap: anywhere;
+    }
+
+    .condominium-summary a {
+        color: #176146;
+        font-weight: 700;
+        overflow-wrap: anywhere;
+    }
+
+    .bag-occupancy-track {
+        height: 7px;
+        margin-top: 9px;
+        overflow: hidden;
+        border-radius: 999px;
+        background: #e6eee9;
+    }
+
+    .bag-occupancy-track > span {
+        display: block;
+        height: 100%;
+        min-width: 2px;
+        border-radius: inherit;
+        background: linear-gradient(90deg, #64a47c, #258060);
+    }
+
+    .bag-detail-section,
+    .condominium-detail-section {
+        margin-bottom: 16px;
+    }
+
+    .bag-detail-table,
+    .condominium-detail-table {
+        min-width: 760px;
+    }
+
+    .bag-detail-table td,
+    .condominium-detail-table td {
+        vertical-align: top;
+        overflow-wrap: anywhere;
+    }
+
+    .bag-collection-item {
+        display: inline-block;
+        margin: 0 5px 5px 0;
+        padding: 5px 8px;
+        border: 1px solid #e3ede7;
+        border-radius: 8px;
+        background: #f7faf8;
+        color: #34574a;
+        font-size: 0.82rem;
+    }
+
+    .bag-detail-table .btn-small,
+    .condominium-detail-table .btn-small {
+        white-space: nowrap;
+    }
+
+    .bag-detail-page .donation-audit,
+    .condominium-detail-page .donation-audit {
+        max-width: 1240px;
+    }
+
+    @media (max-width: 980px) {
+        .bag-detail-hero .bag-summary,
+        .condominium-detail-hero .condominium-summary {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+
+    @media (max-width: 620px) {
+        .bag-detail-hero .bag-summary,
+        .condominium-detail-hero .condominium-summary {
+            grid-template-columns: 1fr;
+        }
+
+        .bag-detail-page .donation-detail-status-row,
+        .condominium-detail-page .donation-detail-status-row {
+            align-items: flex-start;
+            flex-wrap: wrap;
+        }
+
+        .bag-detail-page .donation-content-heading,
+        .condominium-detail-page .donation-content-heading {
+            align-items: stretch;
+            flex-direction: column;
+        }
+
+        .bag-detail-page .donation-content-heading .btn,
+        .condominium-detail-page .donation-content-heading .btn {
+            width: 100%;
+        }
+    }

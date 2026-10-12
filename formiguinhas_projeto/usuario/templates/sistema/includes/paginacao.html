@@ -1,0 +1,22 @@
+{% if pagina.paginator.count %}
+<nav class="record-pagination" aria-label="Paginação de registros">
+    <span class="record-pagination-summary">
+        Exibindo {{ pagina.start_index }}–{{ pagina.end_index }} de {{ pagina.paginator.count }}
+        <span class="muted">· Até {{ pagina.paginator.per_page }} por página · Página {{ pagina.number }} de {{ pagina.paginator.num_pages }}</span>
+    </span>
+    {% if pagina.paginator.num_pages > 1 %}
+    <div class="record-pagination-actions">
+        {% if pagina.has_previous %}
+        <a class="btn btn-outline btn-small" href="?{% if filtros_query %}{{ filtros_query }}&amp;{% endif %}page={{ pagina.previous_page_number }}" rel="prev">Anterior</a>
+        {% else %}
+        <span class="btn btn-outline btn-small is-disabled" aria-disabled="true">Anterior</span>
+        {% endif %}
+        {% if pagina.has_next %}
+        <a class="btn btn-outline btn-small" href="?{% if filtros_query %}{{ filtros_query }}&amp;{% endif %}page={{ pagina.next_page_number }}" rel="next">Próxima</a>
+        {% else %}
+        <span class="btn btn-outline btn-small is-disabled" aria-disabled="true">Próxima</span>
+        {% endif %}
+    </div>
+    {% endif %}
+</nav>
+{% endif %}

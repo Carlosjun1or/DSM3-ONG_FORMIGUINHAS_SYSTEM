@@ -15,6 +15,7 @@ from .forms import (
     PerfilForm,
 )
 from .models import Usuario, Voluntario
+from .paginacao import paginar_queryset
 from auditoria.services import registrar_evento, snapshot
 
 
@@ -111,6 +112,8 @@ def voluntarios_view(request):
         voluntario_destacado = int(voluntario_id)
         voluntarios = voluntarios.filter(id_voluntario=voluntario_destacado)
 
+    pagina, filtros_query = paginar_queryset(request, voluntarios)
+    voluntarios = pagina.object_list
     frequencias = calcular_frequencias_voluntarios(
         voluntarios.values_list('id_voluntario', flat=True),
     )
@@ -129,6 +132,8 @@ def voluntarios_view(request):
     return render(request, 'sistema/voluntarios.html', {
         'usuario': usuario,
         'voluntarios': voluntarios,
+        'pagina': pagina,
+        'filtros_query': filtros_query,
         'busca': busca,
         'status_selecionado': status,
         'voluntario_destacado': voluntario_destacado,
@@ -325,6 +330,8 @@ def usuarios_view(request):
     if tipo in dict(Usuario.TIPO_CHOICES):
         usuarios = usuarios.filter(tipo=tipo)
 
+    pagina, filtros_query = paginar_queryset(request, usuarios)
+    usuarios = pagina.object_list
     for usuario_item in usuarios:
         praias = {}
         for membro in usuario_item.id_voluntario.equipes_coordenadas:
@@ -337,6 +344,8 @@ def usuarios_view(request):
     return render(request, 'sistema/usuarios.html', {
         'usuario': usuario,
         'usuarios': usuarios,
+        'pagina': pagina,
+        'filtros_query': filtros_query,
         'busca': busca,
         'tipo_selecionado': tipo,
         'tipo_choices': Usuario.TIPO_CHOICES,
