@@ -81,7 +81,7 @@ def residuos_view(request):
         'total_acoes_com_residuos': ResiduoColetado.objects.values('acao_id').distinct().count(),
         'coletas': ColetaResiduo.objects.select_related(
             'acao', 'acao__praia', 'bag', 'bag__condominio',
-        ).prefetch_related('itens__destinacoes'),
+        ).prefetch_related('itens__destinacoes').order_by('-data_coleta', '-id_coleta'),
         'total_coletas': ColetaResiduo.objects.count(),
     })
 
