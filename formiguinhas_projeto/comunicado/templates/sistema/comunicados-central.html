@@ -2,8 +2,90 @@
 {% block titulo %}Central de comunicados | Sistema{% endblock %}
 {% block page_title %}Central de comunicados{% endblock %}
 {% block conteudo %}
-<section class="card volunteer-control">
-    <div class="section-heading"><div><h2>Comunicados publicados</h2><p class="form-subtitle">Avisos e notícias vigentes para acompanhamento da equipe.</p></div></div>
-    {% if comunicados %}<div class="table-wrap"><table class="data-table"><thead><tr><th>Tipo</th><th>Título</th><th>Público</th><th>Publicado em</th><th>Ação</th></tr></thead><tbody>{% for comunicado in comunicados %}<tr><td><strong>{{ comunicado.get_tipo_display }}</strong></td><td><a class="table-link" href="{% url 'comunicado_interno_detalhe' comunicado.id_comunicado %}">{{ comunicado.titulo }}</a></td><td>{{ comunicado.get_publico_display }}</td><td>{{ comunicado.dt_publicacao|date:'d/m/Y H:i' }}</td><td class="table-actions"><a class="btn btn-outline btn-small" href="{% url 'comunicado_interno_detalhe' comunicado.id_comunicado %}">Ler</a></td></tr>{% endfor %}</tbody></table></div>{% else %}<div class="empty-state table-empty"><h3>Nenhum comunicado no momento</h3><p class="form-subtitle">Quando houver um comunicado vigente, ele aparecerá aqui.</p></div>{% endif %}
+<section class="card communication-center">
+    <div class="section-heading communication-center-heading">
+        <div>
+            <span class="section-kicker">Central de notificações</span>
+            <h2>Seus comunicados</h2>
+            <p class="form-subtitle">Acompanhe as novidades. Ao abrir um comunicado, ele será marcado como lido.</p>
+        </div>
+        <div class="section-heading-actions">
+            <span class="communication-total{% if total_nao_lidos %} has-unread{% endif %}">
+                {{ total_nao_lidos }} {% if total_nao_lidos == 1 %}não lido{% else %}não lidos{% endif %}
+            </span>
+            {% if request.session.usuario_tipo == 'ADMIN' %}
+            <a href="{% url 'comunicados_admin' %}" class="btn btn-outline">Gerenciar comunicados</a>
+            {% endif %}
+        </div>
+    </div>
+
+    <form method="get" class="communication-filters">
+        <div class="form-group">
+            <label for="id_busca">Buscar comunicado</label>
+            <input id="id_busca" class="form-control" type="search" name="busca" value="{{ busca }}" placeholder="Título, resumo, conteúdo ou tema">
+        </div>
+        <div class="form-group">
+            <label for="id_tipo">Tipo</label>
+            <select id="id_tipo" class="form-control" name="tipo">
+                <option value="">Todos os tipos</option>
+                {% for valor, rotulo in tipos %}
+                <option value="{{ valor }}" {% if filtro_tipo == valor %}selected{% endif %}>{{ rotulo }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="id_leitura">Leitura</label>
+            <select id="id_leitura" class="form-control" name="leitura">
+                <option value="">Todas</option>
+                <option value="nao_lidos" {% if filtro_leitura == 'nao_lidos' %}selected{% endif %}>Não lidas ({{ total_nao_lidos }})</option>
+                <option value="lidos" {% if filtro_leitura == 'lidos' %}selected{% endif %}>Lidas ({{ total_lidos }})</option>
+            </select>
+        </div>
+        <div class="filter-actions">
+            <button type="submit" class="btn btn-primary">Filtrar</button>
+            {% if busca or filtro_tipo or filtro_leitura %}<a href="{% url 'central_comunicados' %}" class="form-link">Limpar</a>{% endif %}
+        </div>
+    </form>
+
+    {% if comunicados %}
+    <div class="communication-results">
+        <div class="communication-results-heading">
+            <h3>{% if busca or filtro_tipo or filtro_leitura %}Resultados{% else %}Mais recentes{% endif %}</h3>
+            <span>{{ total_filtrados }} {% if total_filtrados == 1 %}item{% else %}itens{% endif %}</span>
+        </div>
+        <div class="communication-list">
+            {% for comunicado in comunicados %}
+            <article class="communication-item{% if not comunicado.foi_lido %} is-unread{% endif %}">
+                <div class="communication-item-content">
+                    <div class="communication-item-meta">
+                        <span class="communication-type communication-type-{{ comunicado.tipo|lower }}">{{ comunicado.get_tipo_display }}</span>
+                        {% if comunicado.tema %}<span class="communication-topic">{{ comunicado.tema.nome }}</span>{% endif %}
+                        <time datetime="{{ comunicado.dt_publicacao|date:'c' }}">{{ comunicado.dt_publicacao|date:'d/m/Y · H:i' }}</time>
+                    </div>
+                    <h3>
+                        <a href="{% url 'comunicado_interno_detalhe' comunicado.id_comunicado %}">{{ comunicado.titulo }}</a>
+                        {% if not comunicado.foi_lido %}<span class="communication-unread-label">Não lido</span>{% endif %}
+                    </h3>
+                    <p>{{ comunicado.resumo|default:comunicado.conteudo|striptags|truncatechars:180 }}</p>
+                    <span class="communication-audience">Público: {{ comunicado.get_publico_display }}</span>
+                </div>
+                <a href="{% url 'comunicado_interno_detalhe' comunicado.id_comunicado %}" class="btn btn-outline communication-read-link">Ler comunicado</a>
+            </article>
+            {% endfor %}
+        </div>
+        {% include 'sistema/includes/paginacao.html' %}
+    </div>
+    {% else %}
+    <div class="empty-state table-empty communication-empty">
+        {% if busca or filtro_tipo or filtro_leitura %}
+        <h3>Nenhum resultado encontrado</h3>
+        <p class="form-subtitle">{% if filtro_leitura == 'nao_lidos' %}Você já leu todos os comunicados vigentes.{% else %}Tente outros filtros para encontrar um comunicado.{% endif %}</p>
+        <a href="{% url 'central_comunicados' %}" class="btn btn-outline">Limpar filtros</a>
+        {% else %}
+        <h3>Nenhuma notificação no momento</h3>
+        <p class="form-subtitle">Quando houver um novo comunicado vigente, ele aparecerá aqui.</p>
+        {% endif %}
+    </div>
+    {% endif %}
 </section>
 {% endblock %}

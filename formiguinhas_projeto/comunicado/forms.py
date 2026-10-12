@@ -1,5 +1,6 @@
 from django import forms
 from acao.models import Acao
+from doacao.models import Doacao
 from equipe.models import Equipe
 from praia.models import Praia
 from .models import Comunicado, Tema
@@ -18,7 +19,12 @@ class ComunicadoForm(forms.ModelForm):
     )
     acoes = forms.ModelMultipleChoiceField(
         queryset=Acao.objects.none(), required=False, label='Ações relacionadas',
-        help_text='Opcional. A ação adiciona automaticamente sua praia e as equipes participantes.',
+        help_text='Opcional. A ação adiciona a praia, as equipes participantes e os resíduos já registrados nela.',
+        widget=forms.SelectMultiple(attrs={'class': 'form-control relationship-select', 'size': 6}),
+    )
+    doacoes = forms.ModelMultipleChoiceField(
+        queryset=Doacao.objects.none(), required=False, label='Doações relacionadas',
+        help_text='Opcional. Selecione doações para relacionar a este comunicado.',
         widget=forms.SelectMultiple(attrs={'class': 'form-control relationship-select', 'size': 6}),
     )
 
@@ -26,7 +32,7 @@ class ComunicadoForm(forms.ModelForm):
         model = Comunicado
         fields = ('tipo', 'titulo', 'resumo', 'conteudo', 'publico', 'tema',
                   'duracao_expiracao', 'unidade_duracao_expiracao',
-                  'praias', 'equipes', 'acoes')
+                  'praias', 'equipes', 'acoes', 'doacoes')
         widgets = {
             'tipo': forms.Select(attrs={'class': 'form-control'}),
             'titulo': forms.TextInput(attrs={
@@ -100,6 +106,9 @@ class ComunicadoForm(forms.ModelForm):
             status='ATIVA'
         ).order_by('nome')
         self.fields['acoes'].queryset = Acao.objects.select_related('praia').order_by('-data')
+        self.fields['doacoes'].queryset = Doacao.objects.select_related(
+            'doador',
+        ).order_by('-data_recebimento', '-id_doacao')
         self.fields['praias'].label_from_instance = lambda praia: f'{praia.nome} - {praia.cidade}'
         self.fields['equipes'].label_from_instance = lambda equipe: (
             f'{equipe.nome} - {equipe.praia.nome}' if equipe.praia else f'{equipe.nome} - sem praia'
@@ -107,10 +116,22 @@ class ComunicadoForm(forms.ModelForm):
         self.fields['acoes'].label_from_instance = lambda acao: (
             f'{acao.get_tipo_display()} - {acao.praia.nome} ({acao.data.strftime("%d/%m/%Y")})'
         )
+        self.fields['doacoes'].label_from_instance = self.rotulo_doacao
         if self.instance and self.instance.pk:
             self.initial['praias'] = self.instance.praias.values_list('praia_id', flat=True)
             self.initial['equipes'] = self.instance.equipes.values_list('equipe_id', flat=True)
             self.initial['acoes'] = self.instance.acoes.values_list('acao_id', flat=True)
+            self.initial['doacoes'] = self.instance.doacoes.values_list('doacao_id', flat=True)
+
+    @staticmethod
+    def rotulo_doacao(doacao):
+        doador = 'Anônima' if doacao.anonima else (
+            doacao.doador.nome if doacao.doador_id else 'Doador não informado'
+        )
+        return (
+            f'Doação #{doacao.id_doacao} - {doacao.data_recebimento:%d/%m/%Y} - '
+            f'{doacao.get_tipo_display()} - {doador}'
+        )
 
     def clean(self):
         data = super().clean()

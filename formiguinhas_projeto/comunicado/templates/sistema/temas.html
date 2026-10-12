@@ -2,8 +2,49 @@
 {% block titulo %}Temas de notícias | Sistema{% endblock %}
 {% block page_title %}Temas de notícias{% endblock %}
 {% block conteudo %}
-<section class="card volunteer-control">
-    <div class="section-heading"><div><h2>Temas cadastrados</h2><p class="form-subtitle">Organize as notícias por assuntos para facilitar a consulta.</p></div><div class="section-heading-actions"><a href="{% url 'comunicados_admin' %}" class="btn btn-outline">Voltar</a><a href="{% url 'tema_cadastrar' %}" class="btn btn-primary">Novo tema</a></div></div>
-    {% if temas %}<div class="table-wrap"><table class="data-table"><thead><tr><th>Nome</th><th>Descrição</th><th>Status</th><th>Ações</th></tr></thead><tbody>{% for tema in temas %}<tr><td><strong>{{ tema.nome }}</strong></td><td>{{ tema.descricao|default:'-'|truncatechars:100 }}</td><td><span class="current-status">{% if tema.ativo %}Ativo{% else %}Inativo{% endif %}</span></td><td class="table-actions"><a class="btn btn-outline btn-small" href="{% url 'tema_editar' tema.id %}">Editar</a></td></tr>{% endfor %}</tbody></table></div>{% else %}<div class="empty-state table-empty"><h3>Nenhum tema cadastrado</h3><p class="form-subtitle">Cadastre um tema para classificar suas notícias.</p></div>{% endif %}
+<section class="card-grid volunteer-metrics communication-topic-metrics" aria-label="Resumo dos temas">
+    <article class="card"><h3>Total de temas</h3><div class="metric">{{ total_temas }}</div></article>
+    <article class="card"><h3>Ativos</h3><div class="metric">{{ total_temas_ativos }}</div></article>
+    <article class="card"><h3>Inativos</h3><div class="metric">{{ total_temas_inativos }}</div></article>
+</section>
+
+<section class="card volunteer-control communication-topic-list">
+    <div class="section-heading">
+        <div>
+            <span class="section-kicker">Organização editorial</span>
+            <h2>Temas cadastrados</h2>
+            <p class="form-subtitle">Organize as notícias por assunto. Temas inativos não aparecem em novos cadastros.</p>
+        </div>
+        <div class="section-heading-actions">
+            <a href="{% url 'comunicados_admin' %}" class="btn btn-outline">Voltar aos comunicados</a>
+            <a href="{% url 'tema_cadastrar' %}" class="btn btn-primary">Novo tema</a>
+        </div>
+    </div>
+
+    {% if temas %}
+    <div class="communication-topic-grid">
+        {% for tema in temas %}
+        <article class="communication-topic-card">
+            <div class="communication-topic-card-header">
+                <span class="communication-topic-icon" aria-hidden="true">#</span>
+                <span class="current-status{% if not tema.ativo %} status-arquivado{% endif %}">{% if tema.ativo %}Ativo{% else %}Inativo{% endif %}</span>
+            </div>
+            <h3>{{ tema.nome }}</h3>
+            <p>{{ tema.descricao|default:'Sem descrição cadastrada.'|truncatechars:130 }}</p>
+            <div class="communication-topic-card-footer">
+                <span>{{ tema.total_noticias }} {% if tema.total_noticias == 1 %}notícia{% else %}notícias{% endif %}</span>
+                <a href="{% url 'tema_editar' tema.id %}" class="btn btn-outline btn-small">Editar tema</a>
+            </div>
+        </article>
+        {% endfor %}
+    </div>
+    {% include 'sistema/includes/paginacao.html' %}
+    {% else %}
+    <div class="empty-state table-empty">
+        <h3>Nenhum tema cadastrado</h3>
+        <p class="form-subtitle">Crie temas para classificar notícias e facilitar a consulta.</p>
+        <a href="{% url 'tema_cadastrar' %}" class="btn btn-primary">Criar primeiro tema</a>
+    </div>
+    {% endif %}
 </section>
 {% endblock %}

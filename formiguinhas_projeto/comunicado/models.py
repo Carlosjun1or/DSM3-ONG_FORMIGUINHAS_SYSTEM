@@ -131,6 +131,20 @@ class ComunicadoAcao(models.Model):
         constraints = [models.UniqueConstraint(fields=('comunicado', 'acao'), name='comunicado_acao_unico')]
 
 
+class ComunicadoDoacao(models.Model):
+    comunicado = models.ForeignKey(Comunicado, on_delete=models.CASCADE, related_name='doacoes')
+    doacao = models.ForeignKey('doacao.Doacao', on_delete=models.PROTECT, related_name='comunicados')
+
+    class Meta:
+        db_table = 'comunicado_doacao'
+        constraints = [
+            models.UniqueConstraint(
+                fields=('comunicado', 'doacao'),
+                name='comunicado_doacao_unico',
+            ),
+        ]
+
+
 class ComunicadoLeitura(models.Model):
     comunicado = models.ForeignKey(
         Comunicado,

@@ -4,44 +4,127 @@
 {% block page_title %}{% if comunicado %}Editar comunicado{% else %}Cadastro de comunicado{% endif %}{% endblock %}
 
 {% block conteudo %}
-<section class="card form-card">
-    <div class="section-heading"><div><h2>{% if comunicado %}Dados do comunicado{% else %}Novo comunicado{% endif %}</h2><p class="form-subtitle">Cadastre um aviso para a equipe ou uma notícia para o site institucional. A data de publicação será registrada automaticamente quando você publicar.</p></div><a href="{% url 'comunicados_admin' %}" class="btn btn-outline">Voltar</a></div>
-    <form method="post" novalidate>{% csrf_token %}
+<section class="card communication-form-card">
+    <div class="section-heading communication-form-heading">
+        <div>
+            <span class="section-kicker">{% if comunicado %}Atualização{% else %}Novo registro{% endif %}</span>
+            <h2>{% if comunicado %}Dados do comunicado{% else %}Criar comunicado{% endif %}</h2>
+            <p class="form-subtitle">Preencha a mensagem e defina onde ela será exibida. A publicação só acontece quando você acionar essa opção no controle.</p>
+        </div>
+        <a href="{% url 'comunicados_admin' %}" class="btn btn-outline">Voltar aos comunicados</a>
+    </div>
+
+    <form method="post" novalidate class="communication-form">
+        {% csrf_token %}
         {% if form.non_field_errors %}<div class="error-box">{{ form.non_field_errors|join:', ' }}</div>{% endif %}
-        <div class="form-grid">
-            {% for field in form %}
-            <div class="form-group {% if field.name == 'conteudo' or field.name == 'resumo' or field.name == 'praias' or field.name == 'equipes' or field.name == 'acoes' %}form-group-full{% endif %}" data-field="{{ field.name }}">
-                {{ field.label_tag }}
-                {% if field.name == 'praias' or field.name == 'equipes' or field.name == 'acoes' %}
-                <input type="search" class="form-control relationship-search" data-target="{{ field.id_for_label }}" placeholder="Pesquisar {{ field.label|lower }}" aria-label="Pesquisar {{ field.label|lower }}">
-                {% endif %}
-                {{ field }}
-                {% if field.name == 'unidade_duracao_expiracao' %}
-                <div class="expiration-preview" aria-live="polite">
-                    <div><strong>Publicação prevista:</strong> <span data-publication-now></span></div>
-                    <div><strong>Expiração prevista:</strong> <span data-expiration-preview>Sem expiração definida.</span></div>
-                    <small>O prazo começa a contar no momento em que o comunicado for publicado.</small>
-                </div>
-                {% endif %}
-                {% if field.name == 'praias' or field.name == 'equipes' or field.name == 'acoes' %}
-                <div class="relationship-selected" data-selected-for="{{ field.id_for_label }}" aria-live="polite">
-                    <span class="relationship-selected-title">Selecionados: <strong data-selected-count>0</strong></span>
-                    <div class="relationship-chips" data-selected-chips></div>
-                    <small class="form-help" data-selected-empty>Nenhum item selecionado.</small>
-                </div>
-                {% endif %}
-                {% if field.help_text %}<small class="form-help">{{ field.help_text }}</small>{% endif %}
-                {% for error in field.errors %}<small class="field-error">{{ error }}</small>{% endfor %}
+
+        <section class="communication-form-section">
+            <div class="communication-form-section-heading">
+                <span class="communication-step">1</span>
+                <div><h3>Mensagem</h3><p>Escolha o tipo e escreva um título fácil de identificar.</p></div>
             </div>
-            {% endfor %}
+            <div class="form-grid communication-primary-fields">
+                <div class="form-group" data-field="tipo">
+                    {{ form.tipo.label_tag }}{{ form.tipo }}
+                    {% if form.tipo.help_text %}<small class="form-help">{{ form.tipo.help_text }}</small>{% endif %}
+                    {% for error in form.tipo.errors %}<small class="field-error">{{ error }}</small>{% endfor %}
+                </div>
+                <div class="form-group" data-field="titulo">
+                    {{ form.titulo.label_tag }}{{ form.titulo }}
+                    {% if form.titulo.help_text %}<small class="form-help">{{ form.titulo.help_text }}</small>{% endif %}
+                    {% for error in form.titulo.errors %}<small class="field-error">{{ error }}</small>{% endfor %}
+                </div>
+                <div class="form-group form-group-full" data-field="resumo">
+                    {{ form.resumo.label_tag }}{{ form.resumo }}
+                    {% if form.resumo.help_text %}<small class="form-help">{{ form.resumo.help_text }}</small>{% endif %}
+                    {% for error in form.resumo.errors %}<small class="field-error">{{ error }}</small>{% endfor %}
+                </div>
+                <div class="form-group form-group-full" data-field="conteudo">
+                    {{ form.conteudo.label_tag }}{{ form.conteudo }}
+                    {% if form.conteudo.help_text %}<small class="form-help">{{ form.conteudo.help_text }}</small>{% endif %}
+                    {% for error in form.conteudo.errors %}<small class="field-error">{{ error }}</small>{% endfor %}
+                </div>
+            </div>
+        </section>
+
+        <section class="communication-form-section">
+            <div class="communication-form-section-heading">
+                <span class="communication-step">2</span>
+                <div><h3>Exibição e validade</h3><p>Defina quem recebe o aviso ou o tema e a validade da notícia.</p></div>
+            </div>
+            <div class="form-grid communication-display-fields">
+                <div class="form-group" data-field="publico">
+                    {{ form.publico.label_tag }}{{ form.publico }}
+                    {% if form.publico.help_text %}<small class="form-help">{{ form.publico.help_text }}</small>{% endif %}
+                    {% for error in form.publico.errors %}<small class="field-error">{{ error }}</small>{% endfor %}
+                </div>
+                <div class="form-group" data-field="tema">
+                    {{ form.tema.label_tag }}{{ form.tema }}
+                    {% if form.tema.help_text %}<small class="form-help">{{ form.tema.help_text }}</small>{% endif %}
+                    {% for error in form.tema.errors %}<small class="field-error">{{ error }}</small>{% endfor %}
+                </div>
+                <div class="form-group" data-field="duracao_expiracao">
+                    {{ form.duracao_expiracao.label_tag }}{{ form.duracao_expiracao }}
+                    {% if form.duracao_expiracao.help_text %}<small class="form-help">{{ form.duracao_expiracao.help_text }}</small>{% endif %}
+                    {% for error in form.duracao_expiracao.errors %}<small class="field-error">{{ error }}</small>{% endfor %}
+                </div>
+                <div class="form-group" data-field="unidade_duracao_expiracao">
+                    {{ form.unidade_duracao_expiracao.label_tag }}{{ form.unidade_duracao_expiracao }}
+                    <div class="expiration-preview" aria-live="polite">
+                        <div><strong>Publicação prevista:</strong> <span data-publication-now></span></div>
+                        <div><strong>Expiração prevista:</strong> <span data-expiration-preview>Sem expiração definida.</span></div>
+                        <small>O prazo começa a contar no momento em que o comunicado for publicado.</small>
+                    </div>
+                    {% for error in form.unidade_duracao_expiracao.errors %}<small class="field-error">{{ error }}</small>{% endfor %}
+                </div>
+            </div>
+        </section>
+
+        <section class="communication-form-section">
+            <div class="communication-form-section-heading">
+                <span class="communication-step">3</span>
+                <div><h3>Relacionamentos</h3><p>Opcionalmente, associe o comunicado a praias, equipes, ações, resíduos e doações.</p></div>
+            </div>
+            <div class="form-grid communication-relations-fields">
+                {% for field in form %}
+                {% if field.name == 'praias' or field.name == 'equipes' or field.name == 'acoes' or field.name == 'doacoes' %}
+                <div class="form-group" data-field="{{ field.name }}">
+                    {{ field.label_tag }}
+                    <input type="search" class="form-control relationship-search" data-target="{{ field.id_for_label }}" placeholder="Pesquisar {{ field.label|lower }}" aria-label="Pesquisar {{ field.label|lower }}">
+                    {{ field }}
+                    <div class="relationship-selected" data-selected-for="{{ field.id_for_label }}" aria-live="polite">
+                        <span class="relationship-selected-title">Selecionados: <strong data-selected-count>0</strong></span>
+                        <div class="relationship-chips" data-selected-chips></div>
+                        <small class="form-help" data-selected-empty>Nenhum item selecionado.</small>
+                    </div>
+                    {% if field.help_text %}<small class="form-help">{{ field.help_text }}</small>{% endif %}
+                    {% for error in field.errors %}<small class="field-error">{{ error }}</small>{% endfor %}
+                </div>
+                {% endif %}
+                {% endfor %}
+            </div>
+            <div class="relationship-help" data-field="relationship-help">
+                <strong>Vínculos automáticos</strong>
+                <p>Ao selecionar uma equipe, a praia vinculada será incluída. Ao selecionar uma ação, serão incluídas a praia, as equipes participantes e os resíduos já registrados nela.</p>
+                <div class="communication-related-waste" aria-live="polite">
+                    <strong>Resíduos das ações selecionadas <span data-waste-count>0</span></strong>
+                    <p data-waste-empty>Selecione uma ação para relacionar e visualizar os resíduos registrados nela.</p>
+                    <ul data-waste-items></ul>
+                </div>
+                <div class="communication-related-donations" aria-live="polite">
+                    <strong>Doações relacionadas <span data-donation-count>0</span></strong>
+                    <p data-donation-empty>Selecione doações para visualizar seus dados neste comunicado.</p>
+                    <ul data-donation-items></ul>
+                </div>
+                <small class="relationship-warning" data-relacionamento-aviso hidden></small>
+                <small class="field-error" data-relacionamento-erro hidden>Não foi possível atualizar os relacionamentos automaticamente. Você ainda pode selecionar as opções manualmente.</small>
+            </div>
+        </section>
+
+        <div class="form-actions communication-form-actions">
+            <button type="submit" class="btn btn-primary">{% if comunicado %}Salvar alterações{% else %}Salvar como rascunho{% endif %}</button>
+            <a href="{% url 'comunicados_admin' %}" class="btn btn-outline">Cancelar</a>
         </div>
-        <div class="relationship-help" data-field="relationship-help">
-            <strong>Relacionamentos automáticos</strong>
-            <p>Clique uma vez para selecionar e clique novamente para remover. Você pode escolher nenhuma, uma ou várias opções. Ao escolher uma equipe, sua praia será adicionada. Ao escolher uma ação, a praia e as equipes participantes serão adicionadas automaticamente. Você ainda pode ajustar as seleções.</p>
-            <small class="relationship-warning" data-relacionamento-aviso hidden></small>
-            <small class="field-error" data-relacionamento-erro hidden>Não foi possível atualizar os relacionamentos automaticamente. Você ainda pode selecionar as opções manualmente.</small>
-        </div>
-        <div class="form-actions"><button type="submit" class="btn btn-primary">Salvar comunicado</button><a href="{% url 'comunicados_admin' %}" class="btn btn-outline">Cancelar</a></div>
     </form>
 </section>
 {% endblock %}
@@ -51,6 +134,7 @@ const publico = document.getElementById('id_publico');
 const praias = document.getElementById('id_praias');
 const equipes = document.getElementById('id_equipes');
 const acoes = document.getElementById('id_acoes');
+const doacoes = document.getElementById('id_doacoes');
 const relacionamentosUrl = '{% url "comunicado_relacionamentos" %}';
 let relacionamentosController = null;
 let relacionamentosVersao = 0;
@@ -58,6 +142,43 @@ let praiasObrigatoriasPorAcao = new Set();
 let equipesObrigatoriasPorAcao = new Set();
 let praiasObrigatoriasPorEquipe = new Set();
 let avisoRelacionamento = null;
+const residuosRelacionados = document.querySelector('[data-waste-items]');
+const residuosVazios = document.querySelector('[data-waste-empty]');
+const quantidadeResiduos = document.querySelector('[data-waste-count]');
+const doacoesRelacionadas = document.querySelector('[data-donation-items]');
+const doacoesVazias = document.querySelector('[data-donation-empty]');
+const quantidadeDoacoes = document.querySelector('[data-donation-count]');
+function atualizarResiduosRelacionados(residuos) {
+    if (!residuosRelacionados) return;
+    residuosRelacionados.replaceChildren();
+    quantidadeResiduos.textContent = String(residuos.length);
+    residuosVazios.hidden = residuos.length > 0;
+    residuos.forEach((residuo) => {
+        const item = document.createElement('li');
+        const titulo = document.createElement('strong');
+        titulo.textContent = residuo.tipo + (residuo.categoria ? ' · ' + residuo.categoria : '');
+        const detalhes = document.createElement('span');
+        detalhes.textContent = residuo.acao
+            + (residuo.quantidade ? ' · ' + residuo.quantidade + ' ' + residuo.unidade : '');
+        item.append(titulo, detalhes);
+        residuosRelacionados.appendChild(item);
+    });
+}
+function atualizarDoacoesRelacionadas(lista) {
+    if (!doacoesRelacionadas) return;
+    doacoesRelacionadas.replaceChildren();
+    quantidadeDoacoes.textContent = String(lista.length);
+    doacoesVazias.hidden = lista.length > 0;
+    lista.forEach((doacao) => {
+        const item = document.createElement('li');
+        const titulo = document.createElement('strong');
+        titulo.textContent = 'Doação #' + doacao.id + ' · ' + doacao.tipo + ' · ' + doacao.data;
+        const detalhes = document.createElement('span');
+        detalhes.textContent = 'Doador: ' + doacao.doador;
+        item.append(titulo, detalhes);
+        doacoesRelacionadas.appendChild(item);
+    });
+}
 function adicionarOpcoes(select, ids) {
     if (!select) return;
     ids.forEach((id) => {
@@ -97,7 +218,9 @@ function atualizarResumo(select) {
         chip.addEventListener('click', () => {
             option.selected = false;
             atualizarResumo(select);
-            if (select === equipes || select === acoes) atualizarRelacionamentos();
+            if (select === equipes || select === acoes || select === doacoes) {
+                atualizarRelacionamentos();
+            }
         });
         chips.appendChild(chip);
     });
@@ -166,7 +289,7 @@ function configurarSelecaoPorClique(select) {
     });
 }
 function atualizarRelacionamentos() {
-    if (!equipes || !acoes) return;
+    if (!equipes || !acoes || !doacoes) return;
     const versaoAtual = ++relacionamentosVersao;
     if (relacionamentosController) relacionamentosController.abort();
     const params = new URLSearchParams();
@@ -175,8 +298,10 @@ function atualizarRelacionamentos() {
         .sort();
     const equipesSelecionadas = valoresSelecionados(equipes);
     const acoesSelecionadas = valoresSelecionados(acoes);
+    const doacoesSelecionadas = valoresSelecionados(doacoes);
     equipesSelecionadas.forEach((valor) => params.append('equipe', valor));
     acoesSelecionadas.forEach((valor) => params.append('acao', valor));
+    doacoesSelecionadas.forEach((valor) => params.append('doacao', valor));
     const aviso = document.querySelector('[data-relacionamento-erro]');
     if (aviso) aviso.hidden = true;
     relacionamentosController = new AbortController();
@@ -195,6 +320,7 @@ function atualizarRelacionamentos() {
             if (
                 !equipesSelecionadas.every((valor) => equipesAtuais.has(valor))
                 || !acoesSelecionadas.every((valor) => acoesAtuais.has(valor))
+                || !doacoesSelecionadas.every((valor) => valoresSelecionados(doacoes).includes(valor))
             ) return;
             praiasObrigatoriasPorAcao = new Set((dados.acao_praia_ids || []).map(Number));
             equipesObrigatoriasPorAcao = new Set((dados.acao_equipe_ids || []).map(Number));
@@ -204,6 +330,8 @@ function atualizarRelacionamentos() {
             atualizarResumo(praias);
             atualizarResumo(equipes);
             atualizarResumo(acoes);
+            atualizarResiduosRelacionados(dados.residuos || []);
+            atualizarDoacoesRelacionadas(dados.doacoes || []);
         })
         .catch((erro) => {
             if (erro.name === 'AbortError' || versaoAtual !== relacionamentosVersao) return;
@@ -225,7 +353,7 @@ function atualizarCampos() {
         tema.disabled = !noticia;
         if (!noticia) tema.value = '';
     }
-    ['praias', 'equipes', 'acoes'].forEach((nome) => {
+    ['praias', 'equipes', 'acoes', 'doacoes'].forEach((nome) => {
         const campo = document.querySelector('[data-field="' + nome + '"]');
         const elemento = document.getElementById('id_' + nome);
         if (campo) campo.hidden = false;
@@ -236,6 +364,8 @@ function atualizarCampos() {
     atualizarResumo(praias);
     atualizarResumo(equipes);
     atualizarResumo(acoes);
+    atualizarResumo(doacoes);
+    atualizarRelacionamentos();
 }
 tipo && tipo.addEventListener('change', () => {
     atualizarCampos();
@@ -250,13 +380,19 @@ acoes && acoes.addEventListener('change', () => {
     atualizarResumo(acoes);
     atualizarRelacionamentos();
 });
+doacoes && doacoes.addEventListener('change', () => {
+    atualizarResumo(doacoes);
+    atualizarRelacionamentos();
+});
 configurarSelecaoPorClique(praias);
 configurarSelecaoPorClique(equipes);
 configurarSelecaoPorClique(acoes);
+configurarSelecaoPorClique(doacoes);
 atualizarCampos();
 atualizarResumo(praias);
 atualizarResumo(equipes);
 atualizarResumo(acoes);
+atualizarResumo(doacoes);
 
 const duracao = document.getElementById('id_duracao_expiracao');
 const unidadeDuracao = document.getElementById('id_unidade_duracao_expiracao');

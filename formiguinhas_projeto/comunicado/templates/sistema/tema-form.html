@@ -2,45 +2,61 @@
 {% block titulo %}{% if tema %}Editar tema{% else %}Cadastro de tema{% endif %} | Sistema{% endblock %}
 {% block page_title %}{% if tema %}Editar tema{% else %}Cadastro de tema{% endif %}{% endblock %}
 {% block conteudo %}
-<section class="card form-card">
-    <div class="section-heading">
+<section class="card form-card communication-topic-form-card">
+    <div class="section-heading communication-topic-form-heading">
         <div>
-            <h2>{% if tema %}Editar tema{% else %}Novo tema{% endif %}</h2>
-            <p class="form-subtitle">Use um nome claro para ajudar a encontrar e organizar as notícias.</p>
+            <span class="section-kicker">Organização editorial</span>
+            <h2>{% if tema %}Editar tema{% else %}Criar tema{% endif %}</h2>
+            <p class="form-subtitle">Use um nome claro para classificar as notícias e ajudar a equipe a encontrá-las.</p>
         </div>
-        <a href="{% url 'temas_comunicados' %}" class="btn btn-outline">Voltar</a>
+        <div class="section-heading-actions">
+            {% if tema %}<span class="communication-topic-form-count">{{ tema.noticias.count }} notícia{{ tema.noticias.count|pluralize }}</span>{% endif %}
+            <a href="{% url 'temas_comunicados' %}" class="btn btn-outline">Voltar aos temas</a>
+        </div>
     </div>
-    <form method="post" novalidate>
+    <form method="post" novalidate class="communication-topic-form">
         {% csrf_token %}
         {% if form.non_field_errors %}<div class="error-box">{{ form.non_field_errors|join:', ' }}</div>{% endif %}
-        <div class="form-grid">
-            <div class="form-group form-group-full">
+        <section class="communication-form-section">
+            <div class="communication-form-section-heading">
+                <span class="communication-step">1</span>
+                <div><h3>Identificação do tema</h3><p>O nome aparece na classificação e nos filtros das notícias.</p></div>
+            </div>
+            <div class="form-grid">
+                <div class="form-group form-group-full">
                 {{ form.nome.label_tag }}
                 {{ form.nome }}
-                <small class="form-help">O nome é obrigatório e não pode ser repetido.</small>
+                <small class="form-help">Obrigatório. Escolha um nome curto e único, como “Educação ambiental”.</small>
                 {% for error in form.nome.errors %}<small class="field-error">{{ error }}</small>{% endfor %}
-            </div>
-            <div class="form-group form-group-full">
+                </div>
+                <div class="form-group form-group-full">
                 {{ form.descricao.label_tag }}
                 {{ form.descricao }}
-                <small class="form-help">A descrição ajuda outros administradores a escolherem o tema correto.</small>
+                <small class="form-help">Opcional. Explique quando este tema deve ser usado.</small>
                 {% for error in form.descricao.errors %}<small class="field-error">{{ error }}</small>{% endfor %}
+                </div>
+            </div>
+        </section>
+        <section class="communication-form-section communication-topic-status-section">
+            <div class="communication-form-section-heading">
+                <span class="communication-step">2</span>
+                <div><h3>Disponibilidade</h3><p>Temas inativos deixam de aparecer em novos cadastros.</p></div>
             </div>
             <div class="form-group form-group-full">
                 <div class="topic-status-control">
                     {{ form.ativo }}
                     <label for="{{ form.ativo.id_for_label }}">
-                        <strong>Disponibilizar para novas notícias</strong>
+                        <strong>Manter tema ativo</strong>
                     </label>
                 </div>
                 <small class="form-help topic-status-help">
-                    {% if tema %}Desmarque para inativar este tema. Notícias existentes continuam usando-o.{% else %}Temas novos ficam ativos por padrão.{% endif %}
+                    {% if tema %}Ao inativar, notícias existentes continuam com este tema, mas ele não poderá ser escolhido em novas notícias.{% else %}Novos temas ficam ativos por padrão.{% endif %}
                 </small>
                 {% for error in form.ativo.errors %}<small class="field-error">{{ error }}</small>{% endfor %}
             </div>
-        </div>
-        <div class="form-actions">
-            <button type="submit" class="btn btn-primary">Salvar tema</button>
+        </section>
+        <div class="form-actions communication-form-actions">
+            <button type="submit" class="btn btn-primary">{% if tema %}Salvar alterações{% else %}Criar tema{% endif %}</button>
             <a href="{% url 'temas_comunicados' %}" class="btn btn-outline">Cancelar</a>
         </div>
     </form>
