@@ -66,7 +66,22 @@
                         <small class="table-secondary">{{ bag.condominio.cidade }}/{{ bag.condominio.estado }}</small>
                     </td>
                     <td>{% if bag.condominio.praia %}{{ bag.condominio.praia.nome }}{% else %}<span class="muted">Não vinculada</span>{% endif %}</td>
-                    <td><span class="bag-status bag-status-{{ bag.status|lower }}">{{ bag.get_status_display }}</span></td>
+                    <td>
+                        {% if usuario.tipo == 'ADMIN' %}
+                        <form method="post" action="{% url 'atualizar_status_bag' bag.id_bag %}" class="inline-status-form">
+                            {% csrf_token %}
+                            <input type="hidden" name="busca" value="{{ busca }}">
+                            <input type="hidden" name="filtro_status" value="{{ status_selecionado }}">
+                            <select name="status" class="status-select bag-status-select status-{{ bag.status|lower }}" aria-label="Status da bag {{ bag.codigo }}" onchange="this.form.submit()">
+                                {% for valor, rotulo in status_choices %}
+                                <option value="{{ valor }}" {% if bag.status == valor %}selected{% endif %}>{{ rotulo }}</option>
+                                {% endfor %}
+                            </select>
+                        </form>
+                        {% else %}
+                        <span class="bag-status bag-status-{{ bag.status|lower }}">{{ bag.get_status_display }}</span>
+                        {% endif %}
+                    </td>
                     <td><strong>{{ bag.percentual_ocupacao }}%</strong></td>
                     <td>{{ bag.peso_atual_kg|floatformat:2 }} kg</td>
                     <td>
@@ -88,6 +103,7 @@
             </tbody>
         </table>
     </div>
+    {% include 'sistema/includes/paginacao.html' %}
     {% else %}
         <div class="empty-state table-empty"><h3>Nenhuma bag encontrada</h3><p class="form-subtitle">Ajuste os filtros ou cadastre uma nova bag.</p></div>
     {% endif %}

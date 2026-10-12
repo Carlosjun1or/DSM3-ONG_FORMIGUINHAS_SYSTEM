@@ -13,5 +13,10 @@ urlpatterns = [
     path('bags/cadastrar/', views.cadastrar_bag_view, name='cadastrar_bag'),
     path('bags/<int:bag_id>/', views.detalhe_bag_view, name='detalhe_bag'),
     path('bags/<int:bag_id>/editar/', views.editar_bag_view, name='editar_bag'),
+    path(
+        'bags/<int:bag_id>/status/',
+        views.atualizar_status_bag_view,
+        name='atualizar_status_bag',
+    ),
     path('bags/<int:bag_id>/movimentar/', views.cadastrar_movimentacao_view, name='cadastrar_movimentacao_bag'),
 ]

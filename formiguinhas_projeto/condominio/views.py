@@ -1,9 +1,13 @@
+from urllib.parse import urlencode
+
 from django.contrib import messages
-from django.db import models
+from django.db import models, transaction
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.utils import timezone
 
 from usuario.models import Usuario
+from usuario.paginacao import paginar_queryset
 
 from .forms import BagForm, CondominioForm, MovimentacaoBagForm
 from auditoria.models import EventoAuditoria
@@ -53,9 +57,12 @@ def condominios_view(request):
     if status in dict(Condominio.STATUS_CHOICES):
         condominios = condominios.filter(status=status)
 
+    pagina, filtros_query = paginar_queryset(request, condominios)
     return render(request, 'sistema/condominios.html', {
         'usuario': usuario,
-        'condominios': condominios,
+        'condominios': pagina.object_list,
+        'pagina': pagina,
+        'filtros_query': filtros_query,
         'busca': busca,
         'status_selecionado': status,
         'status_choices': Condominio.STATUS_CHOICES,
@@ -86,9 +93,12 @@ def bags_view(request):
     if status in dict(Bag.STATUS_CHOICES):
         bags = bags.filter(status=status)
 
+    pagina, filtros_query = paginar_queryset(request, bags)
     return render(request, 'sistema/bags.html', {
         'usuario': usuario,
-        'bags': bags,
+        'bags': pagina.object_list,
+        'pagina': pagina,
+        'filtros_query': filtros_query,
         'busca': busca,
         'status_selecionado': status,
         'status_choices': Bag.STATUS_CHOICES,
@@ -178,7 +188,10 @@ def detalhe_condominio_view(request, condominio_id):
         'bags': bags,
         'movimentacoes': MovimentacaoBag.objects.filter(
             bag__condominio=condominio,
-        ).select_related('bag').order_by('-data_movimentacao')[:20],
+        ).select_related('bag', 'registrado_por').order_by(
+            '-data_movimentacao',
+            '-id_movimentacao',
+        )[:20],
         'auditorias': EventoAuditoria.objects.filter(
             entidade='CONDOMINIO',
             id_registro=condominio.id_condominio,
@@ -245,23 +258,89 @@ def editar_bag_view(request, bag_id):
     })
 
 
+@transaction.atomic
+def atualizar_status_bag_view(request, bag_id):
+    usuario = exigir_admin(request)
+    if usuario is None:
+        return redirect('login')
+    if usuario is False:
+        return redirect('bags')
+    bag = get_object_or_404(Bag, id_bag=bag_id)
+
+    filtros = {}
+    if request.POST.get('busca'):
+        filtros['busca'] = request.POST['busca']
+    if request.POST.get('filtro_status'):
+        filtros['status'] = request.POST['filtro_status']
+    destino = 'bags'
+    if request.method != 'POST':
+        return redirect(destino)
+
+    novo_status = request.POST.get('status', '')
+    if novo_status not in dict(Bag.STATUS_CHOICES):
+        messages.error(request, 'Selecione um status válido para a bag.')
+    elif novo_status != bag.status:
+        status_anterior = bag.get_status_display()
+        valores_anteriores = snapshot(bag)
+        movimentacao = MovimentacaoBag.objects.create(
+            bag=bag,
+            tipo='OUTRO',
+            status_anterior=bag.status,
+            status_novo=novo_status,
+            data_movimentacao=timezone.now(),
+            observacao='Status alterado diretamente pelo controle de bags.',
+            registrado_por=usuario,
+            registrado_por_nome=usuario.id_voluntario.nome,
+        )
+        registrar_auditoria(
+            entidade='MOVIMENTACAO',
+            instancia=movimentacao,
+            acao='MOVIMENTACAO',
+            usuario=usuario,
+            resumo=(
+                f'Status da bag "{bag.codigo}" alterado de {status_anterior} '
+                f'para {dict(Bag.STATUS_CHOICES)[novo_status]}.'
+            ),
+        )
+        bag.status = novo_status
+        bag.ultimo_editado_por = usuario
+        bag.ultimo_editado_por_nome = usuario.id_voluntario.nome
+        bag.dt_ultima_edicao = timezone.now()
+        bag.save(update_fields=[
+            'status', 'ultimo_editado_por', 'ultimo_editado_por_nome',
+            'dt_ultima_edicao',
+        ])
+        registrar_auditoria(
+            entidade='BAG',
+            instancia=bag,
+            acao='MUDANCA_STATUS',
+            usuario=usuario,
+            resumo=f'Status da bag "{bag.codigo}" alterado.',
+            valores_anteriores=valores_anteriores,
+            valores_novos=snapshot(bag),
+        )
+        messages.success(request, 'Status da bag atualizado com movimentação registrada.')
+    return redirect(f'{reverse("bags")}?{urlencode(filtros)}' if filtros else destino)
+
+
 def detalhe_bag_view(request, bag_id):
     usuario = usuario_logado(request)
     if not usuario:
         return redirect('login')
     bag = get_object_or_404(Bag.objects.select_related('condominio', 'condominio__praia'), id_bag=bag_id)
     from residuo.models import ColetaResiduo
+    movimentacoes = bag.movimentacoes.select_related('registrado_por').all()
     return render(request, 'sistema/detalhe-bag.html', {
         'usuario': usuario,
         'bag': bag,
-        'movimentacoes': bag.movimentacoes.select_related('registrado_por').all(),
+        'movimentacoes': movimentacoes,
         'auditorias': EventoAuditoria.objects.filter(
-            entidade__in=('BAG', 'MOVIMENTACAO'),
-            id_registro__in=(
-                [bag.id_bag]
-                + list(bag.movimentacoes.values_list('id_movimentacao', flat=True))
+            models.Q(entidade='BAG', id_registro=bag.id_bag)
+            | models.Q(
+                entidade='MOVIMENTACAO',
+                id_registro__in=movimentacoes.values('id_movimentacao'),
             ),
-        ).select_related('usuario')[:50],
+        ).select_related('usuario').order_by('-data_evento', '-id')[:50],
         'coletas_residuos': ColetaResiduo.objects.filter(
             bag=bag,
         ).prefetch_related('itens').order_by('-data_coleta'),

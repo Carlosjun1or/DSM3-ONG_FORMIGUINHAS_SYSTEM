@@ -147,6 +147,16 @@ class ControleCondominioPermissoesTests(TestCase):
             MovimentacaoBag.objects.filter(bag=nova_bag).count(),
             1,
         )
+        detalhe_condominio = self.client.get(
+            reverse('detalhe_condominio', args=[novo_condominio.id_condominio]),
+        )
+        detalhe_bag = self.client.get(
+            reverse('detalhe_bag', args=[nova_bag.id_bag]),
+        )
+        self.assertContains(detalhe_condominio, 'Movimentar')
+        self.assertContains(detalhe_condominio, 'Ver auditoria completa')
+        self.assertContains(detalhe_bag, 'Editar bag')
+        self.assertContains(detalhe_bag, 'Registrar coleta')
 
     def test_coordenador_consegue_visualizar_dados(self):
         self.autenticar(self.coordenador)
@@ -164,6 +174,113 @@ class ControleCondominioPermissoesTests(TestCase):
         self.assertEqual(detalhe_bag.status_code, 200)
         self.assertContains(listagem, 'Condomínio Simulado')
         self.assertContains(detalhe_bag, 'BAG-TESTE-001')
+        self.assertContains(detalhe_condominio, 'Bags cadastradas')
+        self.assertContains(detalhe_condominio, 'Movimentações recentes')
+        self.assertContains(detalhe_bag, 'Coletas de resíduos')
+        self.assertContains(detalhe_bag, 'Histórico de movimentações')
+        self.assertContains(detalhe_bag, 'Auditoria da bag')
+        self.assertNotContains(
+            detalhe_bag,
+            reverse('editar_bag', args=[self.bag.id_bag]),
+        )
+        self.assertNotContains(
+            detalhe_condominio,
+            reverse('editar_condominio', args=[self.condominio.id_condominio]),
+        )
+
+    def test_admin_altera_status_direto_na_lista_com_movimentacao_e_auditoria(self):
+        self.autenticar(self.admin)
+
+        response = self.client.post(
+            reverse('atualizar_status_bag', args=[self.bag.id_bag]),
+            {
+                'status': 'CHEIA',
+                'busca': 'BAG-TESTE',
+                'filtro_status': 'EM_USO',
+            },
+        )
+
+        self.assertRedirects(
+            response,
+            reverse('bags') + '?busca=BAG-TESTE&status=EM_USO',
+        )
+        self.bag.refresh_from_db()
+        self.assertEqual(self.bag.status, 'CHEIA')
+        movimentacao = MovimentacaoBag.objects.get(bag=self.bag)
+        self.assertEqual(movimentacao.tipo, 'OUTRO')
+        self.assertEqual(movimentacao.status_anterior, 'EM_USO')
+        self.assertEqual(movimentacao.status_novo, 'CHEIA')
+        self.assertIn('diretamente pelo controle', movimentacao.observacao)
+        self.assertTrue(EventoAuditoria.objects.filter(
+            entidade='MOVIMENTACAO',
+            id_registro=movimentacao.id_movimentacao,
+            usuario=self.admin,
+        ).exists())
+        self.assertTrue(EventoAuditoria.objects.filter(
+            entidade='BAG',
+            id_registro=self.bag.id_bag,
+            acao='MUDANCA_STATUS',
+            usuario=self.admin,
+        ).exists())
+
+    def test_status_invalido_nao_altera_bag_nem_cria_movimentacao(self):
+        self.autenticar(self.admin)
+
+        response = self.client.post(
+            reverse('atualizar_status_bag', args=[self.bag.id_bag]),
+            {'status': 'INVALIDO'},
+        )
+
+        self.assertRedirects(response, reverse('bags'))
+        self.bag.refresh_from_db()
+        self.assertEqual(self.bag.status, 'EM_USO')
+        self.assertFalse(MovimentacaoBag.objects.filter(bag=self.bag).exists())
+        self.assertTrue(response.wsgi_request._messages)
+
+    def test_coordenador_nao_altera_status_da_bag_pela_lista(self):
+        self.autenticar(self.coordenador)
+
+        response = self.client.post(
+            reverse('atualizar_status_bag', args=[self.bag.id_bag]),
+            {'status': 'CHEIA'},
+        )
+
+        self.assertRedirects(response, reverse('bags'))
+        self.bag.refresh_from_db()
+        self.assertEqual(self.bag.status, 'EM_USO')
+        self.assertFalse(MovimentacaoBag.objects.filter(bag=self.bag).exists())
+
+    def test_lista_exibe_seletor_de_status_somente_para_admin(self):
+        self.autenticar(self.admin)
+        resposta_admin = self.client.get(reverse('bags'))
+        self.assertContains(resposta_admin, 'name="status"')
+        self.assertContains(resposta_admin, 'Status da bag BAG-TESTE-001')
+
+        self.autenticar(self.coordenador)
+        resposta_coordenador = self.client.get(reverse('bags'))
+        self.assertNotContains(resposta_coordenador, 'bag-status-select')
+        self.assertContains(resposta_coordenador, 'Em uso')
+
+    def test_controle_de_bags_pagina_resultados_e_preserva_filtro(self):
+        for indice in range(2, 23):
+            Bag.objects.create(
+                codigo=f'BAG-TESTE-{indice:03d}',
+                condominio=self.condominio,
+                status='EM_USO',
+            )
+        self.autenticar(self.coordenador)
+
+        response = self.client.get(
+            reverse('bags'),
+            {'status': 'EM_USO', 'page': '2'},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['pagina'].number, 2)
+        self.assertEqual(response.context['pagina'].paginator.count, 22)
+        self.assertEqual(response.context['filtros_query'], 'status=EM_USO')
+        self.assertContains(response, 'BAG-TESTE-021')
+        self.assertNotContains(response, 'BAG-TESTE-020')
 
     def test_usuario_consegue_consultar_tela_geral_de_auditoria(self):
         self.autenticar(self.admin)
