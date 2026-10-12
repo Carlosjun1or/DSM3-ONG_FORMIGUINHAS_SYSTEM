@@ -9,6 +9,7 @@ from urllib.parse import urlencode
 from urllib.request import Request, urlopen
 
 from usuario.models import Usuario
+from usuario.paginacao import paginar_queryset
 
 from .forms import PraiaForm
 from .models import Praia
@@ -109,9 +110,12 @@ def praias_view(request):
         cidade_limpa = cidade_cadastrada.strip()
         cidades_unicas.setdefault(cidade_limpa.casefold(), cidade_limpa)
 
+    pagina, filtros_query = paginar_queryset(request, praias)
     return render(request, 'sistema/praias.html', {
         'usuario': usuario,
-        'praias': praias,
+        'praias': pagina.object_list,
+        'pagina': pagina,
+        'filtros_query': filtros_query,
         'busca': busca,
         'status_selecionado': status,
         'cidade_selecionada': cidade,

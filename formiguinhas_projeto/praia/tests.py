@@ -88,7 +88,7 @@ class PraiaViewsTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
-            list(response.context['praias'].values_list('nome', flat=True)),
+            [praia.nome for praia in response.context['praias']],
             ['Praia Central', 'Praia do Gonzaga'],
         )
         self.assertEqual(response.context['cidades'], ['Praia Grande', 'Santos'])
