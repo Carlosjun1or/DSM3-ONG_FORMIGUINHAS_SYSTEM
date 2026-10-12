@@ -79,6 +79,7 @@
                     <td>{{ praia.latitude }}, {{ praia.longitude }}</td>
                     <td>{{ praia.descricao|default:'-'|truncatechars:80 }}</td>
                     <td>
+                        {% if usuario.tipo == 'ADMIN' %}
                         <form method="post" action="{% url 'atualizar_status_praia' praia.id_praia %}" class="inline-status-form">
                             {% csrf_token %}
                             <select name="praia_ativa" class="status-select {% if praia.praia_ativa == 'ATIVA' %}status-ativo{% else %}status-inativo{% endif %}" aria-label="Status da praia {{ praia.nome }}" onchange="this.form.submit()">
@@ -87,6 +88,9 @@
                                 {% endfor %}
                             </select>
                         </form>
+                        {% else %}
+                        <span class="status-select {% if praia.praia_ativa == 'ATIVA' %}status-ativo{% else %}status-inativo{% endif %}">{{ praia.get_praia_ativa_display }}</span>
+                        {% endif %}
                     </td>
                     <td class="audit-cell">
                         <strong>{% if praia.cadastrado_por_nome %}Cadastrado por {{ praia.cadastrado_por_nome }}{% elif praia.cadastrado_por %}Cadastrado por {{ praia.cadastrado_por.id_voluntario.nome }}{% else %}Cadastro anterior{% endif %}</strong>

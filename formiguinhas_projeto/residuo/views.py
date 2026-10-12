@@ -6,7 +6,7 @@ from django.utils import timezone
 
 from acao.models import Acao
 from auditoria.services import registrar_evento, snapshot
-from usuario.views import get_session_usuario
+from usuario.views import get_session_usuario, render_acesso_bloqueado
 from usuario.paginacao import paginar_queryset
 
 from .forms import (
@@ -98,7 +98,7 @@ def registrar_coleta_bag_view(request, bag_id):
         return redirect('login')
     if usuario is False:
         messages.error(request, 'Somente administradores podem registrar coletas.')
-        return redirect('detalhe_bag', bag_id=bag_id)
+        return render_acesso_bloqueado(request)
 
     from condominio.models import Bag
     bag = get_object_or_404(Bag, id_bag=bag_id)
@@ -156,7 +156,7 @@ def adicionar_item_coleta_view(request, coleta_id):
         return redirect('login')
     if usuario is False:
         messages.error(request, 'Somente administradores podem adicionar itens.')
-        return redirect('detalhe_coleta_residuo', coleta_id=coleta_id)
+        return render_acesso_bloqueado(request)
     coleta = get_object_or_404(ColetaResiduo, id_coleta=coleta_id)
     if request.method == 'POST':
         form = ItemColetaResiduoForm(request.POST)
@@ -182,7 +182,7 @@ def registrar_residuo_view(request, acao_id):
         return redirect('login')
     if usuario is False:
         messages.error(request, 'Somente administradores podem registrar resíduos.')
-        return redirect('acao_detalhe', acao_id=acao_id)
+        return render_acesso_bloqueado(request)
 
     acao = get_object_or_404(Acao, id_acao=acao_id)
     if request.method == 'POST':
@@ -241,7 +241,7 @@ def registrar_destinacao_view(request, acao_id, residuo_id):
         return redirect('login')
     if usuario is False:
         messages.error(request, 'Somente administradores podem registrar destinações.')
-        return redirect('acao_detalhe', acao_id=acao_id)
+        return render_acesso_bloqueado(request)
 
     residuo = get_object_or_404(
         ResiduoColetado,

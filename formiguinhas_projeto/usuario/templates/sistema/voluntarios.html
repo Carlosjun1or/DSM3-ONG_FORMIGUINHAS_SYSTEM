@@ -72,14 +72,18 @@
                     <td class="phone-cell">{{ voluntario.telefone }}</td>
                     <td>{{ voluntario.email }}</td>
                     <td>
+                        {% if usuario.tipo != 'ADMIN' %}
+                        <span class="status-select status-{{ voluntario.status|lower }}">{{ voluntario.get_status_display }}</span>
+                        {% else %}
                         <form method="post" action="{% url 'atualizar_status_voluntario' voluntario.id_voluntario %}" class="inline-status-form">
                             {% csrf_token %}
                             <select name="status" class="status-select status-{{ voluntario.status|lower }}" aria-label="Status de {{ voluntario.nome }}" onchange="this.form.submit()">
                                 {% for valor, rotulo in status_choices %}
-                                    <option value="{{ valor }}" {% if voluntario.status == valor %}selected{% endif %} {% if voluntario.usuario and voluntario.usuario.tipo == 'ADMIN' and valor != 'ATIVO' %}disabled{% endif %} {% if usuario.tipo != 'ADMIN' and voluntario.usuario and voluntario.usuario.tipo == 'COORDENADOR' and valor != voluntario.status %}disabled{% endif %}>{{ rotulo }}</option>
+                                    <option value="{{ valor }}" {% if voluntario.status == valor %}selected{% endif %} {% if voluntario.usuario and voluntario.usuario.tipo == 'ADMIN' and valor != 'ATIVO' %}disabled{% endif %}>{{ rotulo }}</option>
                                 {% endfor %}
                             </select>
                         </form>
+                        {% endif %}
                     </td>
                     <td>
                         <strong>{{ voluntario.frequencia_nivel }}</strong>

@@ -9,6 +9,7 @@ from urllib.parse import urlencode
 from urllib.request import Request, urlopen
 
 from usuario.models import Usuario
+from usuario.views import render_acesso_bloqueado
 from usuario.paginacao import paginar_queryset
 
 from .forms import PraiaForm
@@ -132,7 +133,7 @@ def cadastrar_praia_view(request):
     if not usuario:
         return redirect('login')
     if usuario.tipo != 'ADMIN':
-        return redirect('praias')
+        return render_acesso_bloqueado(request)
 
     if request.method == 'POST':
         form = PraiaForm(request.POST)
@@ -183,7 +184,7 @@ def editar_praia_view(request, praia_id):
     if not usuario:
         return redirect('login')
     if usuario.tipo != 'ADMIN':
-        return redirect('praias')
+        return render_acesso_bloqueado(request)
 
     praia = get_object_or_404(Praia, id_praia=praia_id)
     valores_anteriores = snapshot(praia)
@@ -216,7 +217,7 @@ def atualizar_status_praia_view(request, praia_id):
     if not usuario:
         return redirect('login')
     if usuario.tipo != 'ADMIN':
-        return redirect('praias')
+        return render_acesso_bloqueado(request)
 
     if request.method == 'POST':
         praia = get_object_or_404(Praia, id_praia=praia_id)
@@ -241,7 +242,7 @@ def excluir_praia_view(request, praia_id):
     if not usuario:
         return redirect('login')
     if usuario.tipo != 'ADMIN':
-        return redirect('praias')
+        return render_acesso_bloqueado(request)
 
     if request.method == 'POST':
         praia = get_object_or_404(Praia, id_praia=praia_id)

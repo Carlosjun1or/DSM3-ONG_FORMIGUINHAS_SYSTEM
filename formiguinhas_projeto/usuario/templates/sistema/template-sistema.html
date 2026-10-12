@@ -38,9 +38,11 @@
                 {% if request.session.usuario_tipo == 'ADMIN' or request.session.usuario_tipo == 'COORDENADOR' %}
                 <a href="{% url 'residuos' %}" class="sidebar-link {% if request.path == '/residuo/' %}active{% endif %}">Controle de Resíduos</a>
                 {% endif %}
+                {% if request.session.usuario_tipo == 'ADMIN' %}
                 <a href="{% url 'condominios' %}" class="sidebar-link {% if '/condominio/' in request.path %}active{% endif %}">Controle de Condomínios</a>
                 <a href="{% url 'bags' %}" class="sidebar-link {% if request.path == '/condominio/bags/' %}active{% endif %}">Controle de Bags</a>
                 <a href="{% url 'auditoria_global' %}" class="sidebar-link {% if '/auditoria/' in request.path or '/condominio/auditoria/' in request.path %}active{% endif %}">Auditoria global</a>
+                {% endif %}
                 {% if request.session.usuario_tipo == 'ADMIN' or request.session.usuario_tipo == 'COORDENADOR' %}
                 <a href="{% url 'central_comunicados' %}" class="sidebar-link {% if '/comunicado/central/' in request.path %}active{% endif %}">Central de comunicados</a>
                 {% endif %}

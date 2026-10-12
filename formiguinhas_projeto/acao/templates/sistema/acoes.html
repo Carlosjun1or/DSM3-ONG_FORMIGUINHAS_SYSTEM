@@ -110,7 +110,7 @@
                             </select>
                         </form>
                         {% else %}
-                        <span class="status-badge status-{{ acao.status|lower }}">{{ acao.get_status_display }}</span>
+                        <span class="status-select status-{{ acao.status|lower }}">{{ acao.get_status_display }}</span>
                         {% endif %}
                     </td>
                     <td>{{ acao.participantes.count }}</td>

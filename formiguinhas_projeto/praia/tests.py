@@ -120,7 +120,7 @@ class PraiaViewsTests(TestCase):
             'descricao': 'Área de atuação.',
         })
 
-        self.assertRedirects(response, reverse('praias'))
+        self.assertEqual(response.status_code, 302)
         praia = Praia.objects.get(nome='Praia Central')
         self.assertEqual(praia.cadastrado_por, self.usuario)
         self.assertEqual(praia.cadastrado_por_nome, self.usuario.id_voluntario.nome)
@@ -193,7 +193,7 @@ class PraiaViewsTests(TestCase):
             },
         )
 
-        self.assertRedirects(response, reverse('praias'))
+        self.assertEqual(response.status_code, 302)
         self.assertEqual(Praia.objects.count(), 1)
         praia.refresh_from_db()
         self.assertEqual(praia.nome, 'Praia Atualizada')
@@ -219,7 +219,7 @@ class PraiaViewsTests(TestCase):
 
         response = self.client.get(reverse('cadastrar_praia'))
 
-        self.assertRedirects(response, reverse('praias'))
+        self.assertEqual(response.status_code, 403)
         self.assertFalse(Praia.objects.filter(nome='Praia do Coordenador').exists())
 
     def test_coordenador_nao_pode_editar_ou_excluir_praia(self):
@@ -249,17 +249,17 @@ class PraiaViewsTests(TestCase):
         session.save()
 
         response = self.client.get(reverse('editar_praia', args=[praia.id_praia]))
-        self.assertRedirects(response, reverse('praias'))
+        self.assertEqual(response.status_code, 403)
 
         response = self.client.post(reverse('excluir_praia', args=[praia.id_praia]))
-        self.assertRedirects(response, reverse('praias'))
+        self.assertEqual(response.status_code, 403)
         self.assertTrue(Praia.objects.filter(pk=praia.pk).exists())
 
         response = self.client.post(
             reverse('atualizar_status_praia', args=[praia.id_praia]),
             {'praia_ativa': 'INATIVA'}
         )
-        self.assertRedirects(response, reverse('praias'))
+        self.assertEqual(response.status_code, 403)
         praia.refresh_from_db()
         self.assertEqual(praia.praia_ativa, 'ATIVA')
 

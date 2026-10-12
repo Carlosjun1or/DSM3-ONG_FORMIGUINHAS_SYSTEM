@@ -5,7 +5,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 
 from praia.models import Praia
-from usuario.views import get_session_usuario
+from usuario.views import get_session_usuario, render_acesso_bloqueado
 from usuario.paginacao import paginar_queryset
 
 from .forms import (
@@ -106,7 +106,7 @@ def cadastro_acao_view(request):
     if not usuario:
         return redirect('login')
     if usuario.tipo != 'ADMIN':
-        return redirect('acoes')
+        return render_acesso_bloqueado(request)
 
     if request.method == 'POST':
         form = AcaoForm(request.POST)
@@ -140,7 +140,7 @@ def editar_acao_view(request, acao_id):
     if not usuario:
         return redirect('login')
     if usuario.tipo != 'ADMIN':
-        return redirect('acao_detalhe', acao_id=acao_id)
+        return render_acesso_bloqueado(request)
 
     acao = get_object_or_404(Acao, id_acao=acao_id)
     valores_anteriores = snapshot(acao)
@@ -257,7 +257,7 @@ def adicionar_participante_view(request, acao_id):
     if not usuario:
         return redirect('login')
     if usuario.tipo != 'ADMIN':
-        return redirect('acao_detalhe', acao_id=acao_id)
+        return render_acesso_bloqueado(request)
 
     acao = get_object_or_404(Acao, id_acao=acao_id)
     if request.method == 'POST':
@@ -275,7 +275,7 @@ def adicionar_responsavel_view(request, acao_id):
     if not usuario:
         return redirect('login')
     if usuario.tipo != 'ADMIN':
-        return redirect('acao_detalhe', acao_id=acao_id)
+        return render_acesso_bloqueado(request)
 
     acao = get_object_or_404(Acao, id_acao=acao_id)
     if request.method == 'POST':
@@ -292,7 +292,7 @@ def adicionar_imagens_acao_view(request, acao_id):
     if not usuario:
         return redirect('login')
     if usuario.tipo != 'ADMIN':
-        return redirect('acao_detalhe', acao_id=acao_id)
+        return render_acesso_bloqueado(request)
 
     acao = get_object_or_404(Acao, id_acao=acao_id)
     if request.method == 'POST':
@@ -316,7 +316,7 @@ def excluir_imagem_acao_view(request, acao_id, imagem_id):
     if not usuario:
         return redirect('login')
     if usuario.tipo != 'ADMIN':
-        return redirect('acao_detalhe', acao_id=acao_id)
+        return render_acesso_bloqueado(request)
 
     imagem = get_object_or_404(
         AcaoImagem,
@@ -335,7 +335,7 @@ def atualizar_status_acao_view(request, acao_id):
     if not usuario:
         return redirect('login')
     if usuario.tipo != 'ADMIN':
-        return redirect('acoes')
+        return render_acesso_bloqueado(request)
 
     acao = get_object_or_404(Acao, id_acao=acao_id)
     if request.method == 'POST':
@@ -367,7 +367,7 @@ def confirmar_participacao_view(request, acao_id, participante_id):
     if not usuario:
         return redirect('login')
     if usuario.tipo != 'ADMIN':
-        return redirect('acao_detalhe', acao_id=acao_id)
+        return render_acesso_bloqueado(request)
 
     participante = get_object_or_404(
         AcaoParticipante,
@@ -394,7 +394,7 @@ def registrar_comparecimento_view(request, acao_id, participante_id):
     if not usuario:
         return redirect('login')
     if usuario.tipo != 'ADMIN':
-        return redirect('acao_detalhe', acao_id=acao_id)
+        return render_acesso_bloqueado(request)
 
     participante = get_object_or_404(
         AcaoParticipante,
@@ -423,7 +423,7 @@ def restaurar_participante_view(request, acao_id, historico_id):
     if not usuario:
         return redirect('login')
     if usuario.tipo != 'ADMIN':
-        return redirect('acao_detalhe', acao_id=acao_id)
+        return render_acesso_bloqueado(request)
 
     historico = get_object_or_404(
         AcaoParticipanteHistorico,
@@ -484,7 +484,7 @@ def excluir_acao_view(request, acao_id):
     if not usuario:
         return redirect('login')
     if usuario.tipo != 'ADMIN':
-        return redirect('acoes')
+        return render_acesso_bloqueado(request)
 
     acao = get_object_or_404(Acao, id_acao=acao_id)
     if request.method == 'POST':

@@ -13,7 +13,7 @@
             <p>{{ acao.descricao|default:'Esta ação ainda não possui uma descrição detalhada.' }}</p>
         </div>
         <div class="team-hero-side">
-            <span class="team-status team-status-{{ acao.status|lower }}">{{ acao.get_status_display }}</span>
+            <span class="status-select status-{{ acao.status|lower }}">{{ acao.get_status_display }}</span>
             <small>{{ participantes|length }} participante{{ participantes|length|pluralize }}</small>
         </div>
     </div>
@@ -453,7 +453,7 @@
                             </select>
                         </form>
                         {% else %}
-                        {{ participante.get_status_display }}
+                        <span class="status-select status-{{ participante.status|lower }}">{{ participante.get_status_display }}</span>
                         {% endif %}
                     </td>
                     <td>

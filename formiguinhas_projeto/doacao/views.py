@@ -12,7 +12,7 @@ from django.utils.dateparse import parse_date
 from auditoria.services import registrar_evento, snapshot
 
 from auditoria.models import EventoAuditoria
-from usuario.views import get_session_usuario
+from usuario.views import get_session_usuario, render_acesso_bloqueado
 from usuario.paginacao import paginar_queryset
 
 from .forms import (
@@ -30,7 +30,7 @@ def _usuario_com_acesso(request):
     if not usuario:
         return None
     if usuario.tipo != 'ADMIN':
-        return None
+        return False
     return usuario
 
 
@@ -68,8 +68,10 @@ def _parse_data_br(valor):
 
 def doacoes_view(request):
     usuario = _usuario_com_acesso(request)
-    if not usuario:
+    if usuario is None:
         return redirect('login')
+    if usuario is False:
+        return render_acesso_bloqueado(request)
 
     inicio, fim = _periodo(request)
     tipo = request.GET.get('tipo', '').strip()
@@ -210,8 +212,10 @@ def _salvar_doador_inline(request, usuario, inline_form, doacao_form):
 @transaction.atomic
 def cadastro_doacao_view(request):
     usuario = _usuario_com_acesso(request)
-    if not usuario:
+    if usuario is None:
         return redirect('login')
+    if usuario is False:
+        return render_acesso_bloqueado(request)
     form, financeira_form, itens_formset, doador_inline_form = _formulario_doacao(request)
     if request.method == 'POST':
         if _validar_doacao_forms(
@@ -256,8 +260,10 @@ def cadastro_doacao_view(request):
 @transaction.atomic
 def editar_doacao_view(request, doacao_id):
     usuario = _usuario_com_acesso(request)
-    if not usuario:
+    if usuario is None:
         return redirect('login')
+    if usuario is False:
+        return render_acesso_bloqueado(request)
     doacao = get_object_or_404(Doacao, pk=doacao_id)
     valores_anteriores = snapshot(doacao)
     form, financeira_form, itens_formset, doador_inline_form = _formulario_doacao(request, doacao)
@@ -308,8 +314,10 @@ def editar_doacao_view(request, doacao_id):
 
 def doacao_detalhe_view(request, doacao_id):
     usuario = _usuario_com_acesso(request)
-    if not usuario:
+    if usuario is None:
         return redirect('login')
+    if usuario is False:
+        return render_acesso_bloqueado(request)
 
     doacao = get_object_or_404(
         Doacao.objects.select_related(
@@ -339,8 +347,10 @@ def doacao_detalhe_view(request, doacao_id):
 @transaction.atomic
 def atualizar_status_doacao_view(request, doacao_id):
     usuario = _usuario_com_acesso(request)
-    if not usuario:
+    if usuario is None:
         return redirect('login')
+    if usuario is False:
+        return render_acesso_bloqueado(request)
     doacao = get_object_or_404(Doacao, pk=doacao_id)
     retornar_aos_detalhes = request.POST.get('retorno') == 'detalhe'
     destino = 'doacao_detalhe' if retornar_aos_detalhes else 'doacoes'
@@ -371,8 +381,10 @@ def atualizar_status_doacao_view(request, doacao_id):
 
 def doadores_view(request):
     usuario = _usuario_com_acesso(request)
-    if not usuario:
+    if usuario is None:
         return redirect('login')
+    if usuario is False:
+        return render_acesso_bloqueado(request)
     busca = request.GET.get('busca', '').strip()
     doadores = Doador.objects.select_related('voluntario').all()
     if busca:
@@ -394,8 +406,10 @@ def doadores_view(request):
 
 def doador_detalhe_view(request, doador_id):
     usuario = _usuario_com_acesso(request)
-    if not usuario:
+    if usuario is None:
         return redirect('login')
+    if usuario is False:
+        return render_acesso_bloqueado(request)
     doador = get_object_or_404(
         Doador.objects.select_related(
             'voluntario',
@@ -418,8 +432,10 @@ def doador_detalhe_view(request, doador_id):
 @transaction.atomic
 def atualizar_status_doador_view(request, doador_id):
     usuario = _usuario_com_acesso(request)
-    if not usuario:
+    if usuario is None:
         return redirect('login')
+    if usuario is False:
+        return render_acesso_bloqueado(request)
     if usuario.tipo != 'ADMIN':
         messages.error(request, 'Somente administradores podem alterar a situação de doadores.')
         return redirect('doadores')
@@ -455,8 +471,10 @@ def atualizar_status_doador_view(request, doador_id):
 
 def cadastro_doador_view(request):
     usuario = _usuario_com_acesso(request)
-    if not usuario:
+    if usuario is None:
         return redirect('login')
+    if usuario is False:
+        return render_acesso_bloqueado(request)
     if usuario.tipo != 'ADMIN':
         messages.error(request, 'Somente administradores podem gerenciar doadores.')
         return redirect('doacoes')
@@ -489,8 +507,10 @@ def cadastro_doador_view(request):
 
 def editar_doador_view(request, doador_id):
     usuario = _usuario_com_acesso(request)
-    if not usuario:
+    if usuario is None:
         return redirect('login')
+    if usuario is False:
+        return render_acesso_bloqueado(request)
     if usuario.tipo != 'ADMIN':
         messages.error(request, 'Somente administradores podem gerenciar doadores.')
         return redirect('doacoes')

@@ -19,7 +19,7 @@
                     {{ field }}
                     {% if field.name == 'dt_nascimento' %}<small class="field-hint">O responsável deve ter 18 anos ou mais.</small>{% endif %}
                     {% if field.name == 'email' and email_bloqueado %}<small class="field-hint">Coordenadores não podem alterar o e-mail de quem possui usuário.</small>{% endif %}
-                    {% if field.name == 'status' and status_bloqueado %}<small class="field-hint">Somente um administrador pode alterar o status deste coordenador.</small>{% endif %}
+                    {% if field.name == 'status' and status_bloqueado %}<small class="field-hint">Somente um administrador pode alterar o status de um voluntário.</small>{% endif %}
                     {% if field.errors %}<small class="error-msg">{{ field.errors|join:', ' }}</small>{% endif %}
                 </div>
                 {% endfor %}

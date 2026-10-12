@@ -1,0 +1,12 @@
+{% extends 'sistema/template-sistema.html' %}
+
+{% block titulo %}Acesso bloqueado | Sistema{% endblock %}
+{% block page_title %}Acesso bloqueado{% endblock %}
+
+{% block conteudo %}
+<section class="card empty-state">
+    <h2>Você não tem permissão para acessar esta tela</h2>
+    <p class="form-subtitle">Seu tipo de usuário não possui permissão para acessar este recurso.</p>
+    <a href="{% url 'home' %}" class="btn btn-primary">Voltar para a Home</a>
+</section>
+{% endblock %}

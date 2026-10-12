@@ -4,7 +4,7 @@ from django.db.models.deletion import ProtectedError
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 
-from usuario.views import get_session_usuario
+from usuario.views import get_session_usuario, render_acesso_bloqueado
 from usuario.paginacao import paginar_queryset
 
 from .forms import EquipeForm, EquipeMembroForm
@@ -110,7 +110,7 @@ def cadastro_equipe_view(request):
     if not usuario:
         return redirect('login')
     if usuario.tipo != 'ADMIN':
-        return redirect('equipes')
+        return render_acesso_bloqueado(request)
 
     if request.method == 'POST':
         form = EquipeForm(request.POST)
@@ -136,7 +136,7 @@ def editar_equipe_view(request, equipe_id):
     if not usuario:
         return redirect('login')
     if usuario.tipo != 'ADMIN':
-        return redirect('equipes')
+        return render_acesso_bloqueado(request)
 
     equipe = get_object_or_404(
         Equipe.objects.select_related('praia'),
@@ -254,7 +254,7 @@ def atualizar_funcao_membro_view(request, equipe_id, membro_id):
     if not usuario:
         return redirect('login')
     if usuario.tipo != 'ADMIN':
-        return redirect('equipe_detalhe', equipe_id=equipe_id)
+        return render_acesso_bloqueado(request)
 
     equipe = get_object_or_404(Equipe, id_equipe=equipe_id)
     membro = get_object_or_404(
@@ -324,7 +324,7 @@ def excluir_historico_membro_view(request, equipe_id, membro_id):
     if not usuario:
         return redirect('login')
     if usuario.tipo != 'ADMIN':
-        return redirect('equipe_detalhe', equipe_id=equipe_id)
+        return render_acesso_bloqueado(request)
 
     equipe = get_object_or_404(Equipe, id_equipe=equipe_id)
     membro = get_object_or_404(
@@ -350,7 +350,7 @@ def atualizar_status_equipe_view(request, equipe_id):
     if not usuario:
         return redirect('login')
     if usuario.tipo != 'ADMIN':
-        return redirect('equipes')
+        return render_acesso_bloqueado(request)
 
     equipe = get_object_or_404(Equipe, id_equipe=equipe_id)
     if request.method == 'POST':
@@ -373,7 +373,7 @@ def excluir_equipe_view(request, equipe_id):
     if not usuario:
         return redirect('login')
     if usuario.tipo != 'ADMIN':
-        return redirect('equipes')
+        return render_acesso_bloqueado(request)
 
     equipe = get_object_or_404(Equipe, id_equipe=equipe_id)
     if request.method == 'POST':

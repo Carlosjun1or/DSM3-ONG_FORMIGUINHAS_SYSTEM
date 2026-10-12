@@ -98,7 +98,7 @@
                             </select>
                         </form>
                         {% else %}
-                            {{ equipe.get_status_display }}
+                            <span class="status-select status-{{ equipe.status|lower }}">{{ equipe.get_status_display }}</span>
                         {% endif %}
                     </td>
                     <td class="audit-cell">

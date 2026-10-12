@@ -7,6 +7,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from usuario.models import Usuario
+from usuario.views import render_acesso_bloqueado
 from usuario.paginacao import paginar_queryset
 
 from .forms import BagForm, CondominioForm, MovimentacaoBagForm
@@ -45,9 +46,11 @@ def exigir_admin(request):
 
 
 def condominios_view(request):
-    usuario = usuario_logado(request)
-    if not usuario:
+    usuario = exigir_admin(request)
+    if usuario is None:
         return redirect('login')
+    if usuario is False:
+        return render_acesso_bloqueado(request)
 
     busca = request.GET.get('busca', '').strip()
     status = request.GET.get('status', '').strip()
@@ -73,9 +76,11 @@ def condominios_view(request):
 
 
 def bags_view(request):
-    usuario = usuario_logado(request)
-    if not usuario:
+    usuario = exigir_admin(request)
+    if usuario is None:
         return redirect('login')
+    if usuario is False:
+        return render_acesso_bloqueado(request)
 
     busca = request.GET.get('busca', '').strip()
     status = request.GET.get('status', '').strip()
@@ -110,6 +115,11 @@ def bags_view(request):
 
 def auditorias_view(request):
     """Compatibilidade com o endereço antigo; a tela agora é global."""
+    usuario = exigir_admin(request)
+    if usuario is None:
+        return redirect('login')
+    if usuario is False:
+        return render_acesso_bloqueado(request)
     from auditoria.views import global_auditoria
     return global_auditoria(request)
 
@@ -119,7 +129,7 @@ def cadastrar_condominio_view(request):
     if usuario is None:
         return redirect('login')
     if usuario is False:
-        return redirect('condominios')
+        return render_acesso_bloqueado(request)
 
     form = CondominioForm(request.POST or None)
     if request.method == 'POST' and form.is_valid():
@@ -144,7 +154,7 @@ def editar_condominio_view(request, condominio_id):
     if usuario is None:
         return redirect('login')
     if usuario is False:
-        return redirect('condominios')
+        return render_acesso_bloqueado(request)
 
     condominio = get_object_or_404(Condominio, id_condominio=condominio_id)
     valores_anteriores = snapshot(condominio)
@@ -174,9 +184,11 @@ def editar_condominio_view(request, condominio_id):
 
 
 def detalhe_condominio_view(request, condominio_id):
-    usuario = usuario_logado(request)
-    if not usuario:
+    usuario = exigir_admin(request)
+    if usuario is None:
         return redirect('login')
+    if usuario is False:
+        return render_acesso_bloqueado(request)
     condominio = get_object_or_404(
         Condominio.objects.select_related('praia'),
         id_condominio=condominio_id,
@@ -204,7 +216,7 @@ def cadastrar_bag_view(request):
     if usuario is None:
         return redirect('login')
     if usuario is False:
-        return redirect('condominios')
+        return render_acesso_bloqueado(request)
 
     form = BagForm(request.POST or None)
     if request.method == 'POST' and form.is_valid():
@@ -229,7 +241,7 @@ def editar_bag_view(request, bag_id):
     if usuario is None:
         return redirect('login')
     if usuario is False:
-        return redirect('detalhe_bag', bag_id=bag_id)
+        return render_acesso_bloqueado(request)
 
     bag = get_object_or_404(Bag, id_bag=bag_id)
     valores_anteriores = snapshot(bag)
@@ -264,7 +276,7 @@ def atualizar_status_bag_view(request, bag_id):
     if usuario is None:
         return redirect('login')
     if usuario is False:
-        return redirect('bags')
+        return render_acesso_bloqueado(request)
     bag = get_object_or_404(Bag, id_bag=bag_id)
 
     filtros = {}
@@ -324,9 +336,11 @@ def atualizar_status_bag_view(request, bag_id):
 
 
 def detalhe_bag_view(request, bag_id):
-    usuario = usuario_logado(request)
-    if not usuario:
+    usuario = exigir_admin(request)
+    if usuario is None:
         return redirect('login')
+    if usuario is False:
+        return render_acesso_bloqueado(request)
     bag = get_object_or_404(Bag.objects.select_related('condominio', 'condominio__praia'), id_bag=bag_id)
     from residuo.models import ColetaResiduo
     movimentacoes = bag.movimentacoes.select_related('registrado_por').all()
@@ -352,7 +366,7 @@ def cadastrar_movimentacao_view(request, bag_id):
     if usuario is None:
         return redirect('login')
     if usuario is False:
-        return redirect('detalhe_bag', bag_id=bag_id)
+        return render_acesso_bloqueado(request)
 
     bag = get_object_or_404(Bag, id_bag=bag_id)
     form = MovimentacaoBagForm(request.POST or None, bag=bag)

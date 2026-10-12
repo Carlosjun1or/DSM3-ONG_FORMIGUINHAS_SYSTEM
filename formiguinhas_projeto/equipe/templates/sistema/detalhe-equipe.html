@@ -17,7 +17,7 @@
             <p>{{ equipe.descricao|default:'Esta equipe ainda não possui uma descrição.' }}</p>
         </div>
         <div class="team-hero-side">
-            <span class="team-status team-status-{{ equipe.status|lower }}">{{ equipe.get_status_display }}</span>
+            <span class="status-select status-{{ equipe.status|lower }}">{{ equipe.get_status_display }}</span>
             <small>{{ membros|length }} membro{{ membros|length|pluralize }} ativo{{ membros|length|pluralize }}</small>
         </div>
     </div>

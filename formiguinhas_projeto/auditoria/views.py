@@ -3,6 +3,7 @@ from django.shortcuts import redirect, render
 from django.utils.dateparse import parse_date
 from usuario.paginacao import paginar_queryset
 from usuario.models import Usuario
+from usuario.views import render_acesso_bloqueado
 from .models import EventoAuditoria
 
 
@@ -14,6 +15,8 @@ def global_auditoria(request):
     if not usuario:
         request.session.flush()
         return redirect('login')
+    if usuario.tipo != 'ADMIN':
+        return render_acesso_bloqueado(request)
     eventos = EventoAuditoria.objects.select_related('usuario')
     entidade = request.GET.get('entidade', '').strip()
     acao = request.GET.get('acao', '').strip()

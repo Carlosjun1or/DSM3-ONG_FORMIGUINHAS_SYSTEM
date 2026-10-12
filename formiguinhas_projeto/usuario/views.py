@@ -33,6 +33,14 @@ def get_session_usuario(request):
         return None
 
 
+def render_acesso_bloqueado(request):
+    return render(
+        request,
+        'sistema/acesso-bloqueado.html',
+        status=403,
+    )
+
+
 def coordenador_nao_pode_alterar_email(usuario_logado, voluntario, email_novo):
     return (
         usuario_logado.tipo == 'COORDENADOR'
@@ -42,17 +50,20 @@ def coordenador_nao_pode_alterar_email(usuario_logado, voluntario, email_novo):
     )
 
 
+def coordenador_nao_pode_alterar_status(usuario_logado, voluntario, status_novo):
+    return (
+        usuario_logado.tipo == 'COORDENADOR'
+        and status_novo != voluntario.status
+    )
+
+
 def aplicar_restricoes_edicao(form, usuario_logado, voluntario):
     email_bloqueado = (
         usuario_logado.tipo == 'COORDENADOR'
         and Usuario.objects.filter(id_voluntario=voluntario).exists()
         and voluntario.id_voluntario != usuario_logado.id_voluntario_id
     )
-    status_bloqueado = (
-        usuario_logado.tipo != 'ADMIN'
-        and hasattr(voluntario, 'usuario')
-        and voluntario.usuario.tipo == 'COORDENADOR'
-    )
+    status_bloqueado = usuario_logado.tipo != 'ADMIN'
 
     if email_bloqueado:
         form.fields['email'].disabled = True
@@ -173,16 +184,15 @@ def editar_voluntario_view(request, voluntario_id):
                 'Coordenadores não podem alterar o e-mail de um voluntário com usuário cadastrado.'
             )
         if formulario_valido:
-            status_proibido = (
-                usuario.tipo != 'ADMIN'
-                and hasattr(voluntario, 'usuario')
-                and voluntario.usuario.tipo == 'COORDENADOR'
-                and form.cleaned_data['status'] != voluntario.status
+            status_proibido = coordenador_nao_pode_alterar_status(
+                usuario,
+                voluntario,
+                form.cleaned_data['status'],
             )
             if status_proibido:
                 form.add_error(
                     'status',
-                    'Somente um administrador pode alterar o status de um coordenador.'
+                    'Somente um administrador pode alterar o status de um voluntário.'
                 )
             if not email_proibido and not status_proibido:
                 voluntario = form.save(commit=False)
@@ -227,11 +237,10 @@ def atualizar_status_voluntario_view(request, voluntario_id):
 
         status = request.POST.get('status')
         status_validos = dict(Voluntario.STATUS_CHOICES)
-        status_proibido_para_coordenador = (
-            usuario.tipo != 'ADMIN'
-            and hasattr(voluntario, 'usuario')
-            and voluntario.usuario.tipo == 'COORDENADOR'
-            and status != voluntario.status
+        status_proibido_para_coordenador = coordenador_nao_pode_alterar_status(
+            usuario,
+            voluntario,
+            status,
         )
         status_proibido_para_admin = (
             hasattr(voluntario, 'usuario')
@@ -300,7 +309,7 @@ def usuarios_view(request):
         return redirect('login')
 
     if usuario.tipo != 'ADMIN':
-        return redirect('home')
+        return render_acesso_bloqueado(request)
 
     busca = request.GET.get('busca', '').strip()
     tipo = request.GET.get('tipo', '').strip()
@@ -358,7 +367,7 @@ def atualizar_tipo_usuario_view(request, usuario_id):
     if not usuario_logado:
         return redirect('login')
     if usuario_logado.tipo != 'ADMIN':
-        return redirect('home')
+        return render_acesso_bloqueado(request)
 
     if request.method == 'POST' and usuario_id != usuario_logado.id_usuario:
         novo_tipo = request.POST.get('tipo')
@@ -386,7 +395,7 @@ def editar_usuario_view(request, usuario_id):
     if not usuario_logado:
         return redirect('login')
     if usuario_logado.tipo != 'ADMIN':
-        return redirect('home')
+        return render_acesso_bloqueado(request)
 
     try:
         usuario_editado = Usuario.objects.select_related('id_voluntario').get(
@@ -458,7 +467,7 @@ def excluir_usuario_view(request, usuario_id):
     if not usuario_logado:
         return redirect('login')
     if usuario_logado.tipo != 'ADMIN':
-        return redirect('home')
+        return render_acesso_bloqueado(request)
 
     if request.method == 'POST' and usuario_id != usuario_logado.id_usuario:
         usuario_excluido = Usuario.objects.filter(id_usuario=usuario_id).first()
@@ -533,7 +542,7 @@ def cadastro_usuario_view(request):
     if not usuario_logado:
         return redirect('login')
     if usuario_logado.tipo != 'ADMIN':
-        return redirect('home')
+        return render_acesso_bloqueado(request)
 
     if request.method == 'POST':
         form = UsuarioForm(request.POST)
@@ -560,7 +569,7 @@ def cadastro_view(request):
     if not usuario_logado:
         return redirect('login')
     if usuario_logado.tipo != 'ADMIN':
-        return redirect('home')
+        return render_acesso_bloqueado(request)
 
     if request.method == 'POST':
         form = CadastroForm(request.POST)

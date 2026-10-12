@@ -158,9 +158,10 @@ class ControleCondominioPermissoesTests(TestCase):
         self.assertContains(detalhe_bag, 'Editar bag')
         self.assertContains(detalhe_bag, 'Registrar coleta')
 
-    def test_coordenador_consegue_visualizar_dados(self):
+    def test_coordenador_nao_visualiza_controles_restritos(self):
         self.autenticar(self.coordenador)
 
+        home = self.client.get(reverse('home'))
         listagem = self.client.get(reverse('condominios'))
         detalhe_condominio = self.client.get(
             reverse('detalhe_condominio', args=[self.condominio.id_condominio]),
@@ -169,24 +170,15 @@ class ControleCondominioPermissoesTests(TestCase):
             reverse('detalhe_bag', args=[self.bag.id_bag]),
         )
 
-        self.assertEqual(listagem.status_code, 200)
-        self.assertEqual(detalhe_condominio.status_code, 200)
-        self.assertEqual(detalhe_bag.status_code, 200)
-        self.assertContains(listagem, 'Condomínio Simulado')
-        self.assertContains(detalhe_bag, 'BAG-TESTE-001')
-        self.assertContains(detalhe_condominio, 'Bags cadastradas')
-        self.assertContains(detalhe_condominio, 'Movimentações recentes')
-        self.assertContains(detalhe_bag, 'Coletas de resíduos')
-        self.assertContains(detalhe_bag, 'Histórico de movimentações')
-        self.assertContains(detalhe_bag, 'Auditoria da bag')
-        self.assertNotContains(
-            detalhe_bag,
-            reverse('editar_bag', args=[self.bag.id_bag]),
-        )
-        self.assertNotContains(
-            detalhe_condominio,
-            reverse('editar_condominio', args=[self.condominio.id_condominio]),
-        )
+        self.assertNotContains(home, 'Controle de Condomínios')
+        self.assertNotContains(home, 'Controle de Bags')
+        self.assertNotContains(home, 'Auditoria global')
+        for resposta in (listagem, detalhe_condominio, detalhe_bag):
+            self.assertEqual(resposta.status_code, 403)
+            self.assertIn(
+                'Você não tem permissão para acessar esta tela'.encode(),
+                resposta.content,
+            )
 
     def test_admin_altera_status_direto_na_lista_com_movimentacao_e_auditoria(self):
         self.autenticar(self.admin)
@@ -245,7 +237,7 @@ class ControleCondominioPermissoesTests(TestCase):
             {'status': 'CHEIA'},
         )
 
-        self.assertRedirects(response, reverse('bags'))
+        self.assertEqual(response.status_code, 403)
         self.bag.refresh_from_db()
         self.assertEqual(self.bag.status, 'EM_USO')
         self.assertFalse(MovimentacaoBag.objects.filter(bag=self.bag).exists())
@@ -258,8 +250,7 @@ class ControleCondominioPermissoesTests(TestCase):
 
         self.autenticar(self.coordenador)
         resposta_coordenador = self.client.get(reverse('bags'))
-        self.assertNotContains(resposta_coordenador, 'bag-status-select')
-        self.assertContains(resposta_coordenador, 'Em uso')
+        self.assertEqual(resposta_coordenador.status_code, 403)
 
     def test_controle_de_bags_pagina_resultados_e_preserva_filtro(self):
         for indice in range(2, 23):
@@ -268,7 +259,7 @@ class ControleCondominioPermissoesTests(TestCase):
                 condominio=self.condominio,
                 status='EM_USO',
             )
-        self.autenticar(self.coordenador)
+        self.autenticar(self.admin)
 
         response = self.client.get(
             reverse('bags'),
@@ -289,6 +280,16 @@ class ControleCondominioPermissoesTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'sistema/auditorias.html')
+
+    def test_coordenador_nao_visualiza_auditoria_global_nas_rotas(self):
+        self.autenticar(self.coordenador)
+
+        auditoria_global = self.client.get(reverse('auditoria_global'))
+        auditoria_legada = self.client.get(reverse('auditorias'))
+
+        for resposta in (auditoria_global, auditoria_legada):
+            self.assertEqual(resposta.status_code, 403)
+            self.assertIn(b'Acesso bloqueado', resposta.content)
 
     def test_coordenador_nao_consegue_alterar_nenhum_fluxo(self):
         self.autenticar(self.coordenador)
@@ -322,13 +323,13 @@ class ControleCondominioPermissoesTests(TestCase):
             },
         )
 
-        self.assertRedirects(cadastro_condominio, reverse('condominios'))
-        self.assertRedirects(edicao_condominio, reverse('condominios'))
-        self.assertRedirects(cadastro_bag, reverse('condominios'))
-        self.assertRedirects(
+        for resposta in (
+            cadastro_condominio,
+            edicao_condominio,
+            cadastro_bag,
             movimentacao,
-            reverse('detalhe_bag', args=[self.bag.id_bag]),
-        )
+        ):
+            self.assertEqual(resposta.status_code, 403)
         self.assertFalse(
             Condominio.objects.filter(nome='Tentativa do Coordenador').exists(),
         )

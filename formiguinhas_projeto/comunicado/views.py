@@ -16,7 +16,7 @@ from doacao.models import Doacao
 from equipe.models import Equipe
 from residuo.models import ResiduoColetado
 from usuario.paginacao import paginar_queryset
-from usuario.views import get_session_usuario
+from usuario.views import get_session_usuario, render_acesso_bloqueado
 from .forms import ComunicadoForm, TemaForm
 from .models import (
     Comunicado,
@@ -35,11 +35,7 @@ def _admin(request):
     if not usuario:
         return None, redirect('login')
     if usuario.tipo != 'ADMIN':
-        return usuario, render(
-            request,
-            'sistema/comunicado-acesso-negado.html',
-            status=403,
-        )
+        return usuario, render_acesso_bloqueado(request)
     return usuario, None
 
 

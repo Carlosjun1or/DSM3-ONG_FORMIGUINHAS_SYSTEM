@@ -239,7 +239,7 @@ class DoacaoTestCase(TestCase):
             reverse('atualizar_status_doacao', args=[doacao.pk]),
             {'status': Doacao.CANCELADA},
         )
-        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.status_code, 403)
         doacao.refresh_from_db()
         self.assertEqual(doacao.status, Doacao.PENDENTE)
 
