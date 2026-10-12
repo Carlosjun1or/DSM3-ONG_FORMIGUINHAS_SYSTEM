@@ -13,6 +13,7 @@ from auditoria.services import registrar_evento, snapshot
 
 from auditoria.models import EventoAuditoria
 from usuario.views import get_session_usuario
+from usuario.paginacao import paginar_queryset
 
 from .forms import (
     DoadorForm,
@@ -28,7 +29,7 @@ def _usuario_com_acesso(request):
     usuario = get_session_usuario(request)
     if not usuario:
         return None
-    if usuario.tipo not in ('ADMIN', 'COORDENADOR'):
+    if usuario.tipo != 'ADMIN':
         return None
     return usuario
 
@@ -115,9 +116,13 @@ def doacoes_view(request):
         ),
     )['total']
 
+    doacoes = doacoes.order_by('-data_recebimento', '-id_doacao')
+    pagina, filtros_query = paginar_queryset(request, doacoes)
     return render(request, 'sistema/doacoes.html', {
         'usuario': usuario,
-        'doacoes': doacoes,
+        'doacoes': pagina.object_list,
+        'pagina': pagina,
+        'filtros_query': filtros_query,
         'inicio': request.GET.get('inicio', ''),
         'fim': request.GET.get('fim', ''),
         'tipo_selecionado': tipo,
@@ -154,7 +159,7 @@ def _formulario_doacao(request, doacao=None):
 
 
 def _novo_doador_informado(request):
-    campos = ('tipo', 'nome', 'documento', 'email', 'telefone')
+    campos = ('tipo', 'nome', 'documento', 'email', 'telefone', 'voluntario')
     return any(request.POST.get(f'novo_doador-{campo}', '').strip() for campo in campos)
 
 
@@ -325,6 +330,7 @@ def doacao_detalhe_view(request, doacao_id):
     return render(request, 'sistema/detalhe-doacao.html', {
         'usuario': usuario,
         'doacao': doacao,
+        'status_choices': Doacao.STATUS_CHOICES,
         'auditorias': auditorias,
     })
 
@@ -336,13 +342,15 @@ def atualizar_status_doacao_view(request, doacao_id):
     if not usuario:
         return redirect('login')
     doacao = get_object_or_404(Doacao, pk=doacao_id)
+    retornar_aos_detalhes = request.POST.get('retorno') == 'detalhe'
+    destino = 'doacao_detalhe' if retornar_aos_detalhes else 'doacoes'
     novo_status = request.POST.get('status', '')
     if request.method != 'POST' or novo_status not in dict(Doacao.STATUS_CHOICES):
         messages.error(request, 'Situação de doação inválida.')
-        return redirect('doacao_detalhe', doacao_id=doacao.pk)
+        return redirect(destino, **({'doacao_id': doacao.pk} if retornar_aos_detalhes else {}))
     if novo_status == Doacao.CANCELADA and usuario.tipo != 'ADMIN':
         messages.error(request, 'Somente administradores podem cancelar doações.')
-        return redirect('doacao_detalhe', doacao_id=doacao.pk)
+        return redirect(destino, **({'doacao_id': doacao.pk} if retornar_aos_detalhes else {}))
     status_anterior = doacao.get_status_display()
     doacao.status = novo_status
     _preencher_auditoria(doacao, usuario)
@@ -358,7 +366,7 @@ def atualizar_status_doacao_view(request, doacao_id):
         resumo=f'Doação #{doacao.pk}: {status_anterior} para {doacao.get_status_display()}.',
     )
     messages.success(request, 'Situação da doação atualizada.')
-    return redirect('doacao_detalhe', doacao_id=doacao.pk)
+    return redirect(destino, **({'doacao_id': doacao.pk} if retornar_aos_detalhes else {}))
 
 
 def doadores_view(request):
@@ -373,9 +381,13 @@ def doadores_view(request):
             | Q(documento__icontains=busca)
             | Q(email__icontains=busca)
         )
+    doadores = doadores.order_by('-dt_cadastro', '-id_doador')
+    pagina, filtros_query = paginar_queryset(request, doadores)
     return render(request, 'sistema/doadores.html', {
         'usuario': usuario,
-        'doadores': doadores,
+        'doadores': pagina.object_list,
+        'pagina': pagina,
+        'filtros_query': filtros_query,
         'busca': busca,
     })
 
@@ -401,6 +413,44 @@ def doador_detalhe_view(request, doador_id):
         'doador': doador,
         'auditorias': auditorias,
     })
+
+
+@transaction.atomic
+def atualizar_status_doador_view(request, doador_id):
+    usuario = _usuario_com_acesso(request)
+    if not usuario:
+        return redirect('login')
+    if usuario.tipo != 'ADMIN':
+        messages.error(request, 'Somente administradores podem alterar a situação de doadores.')
+        return redirect('doadores')
+
+    doador = get_object_or_404(Doador, pk=doador_id)
+    retornar_aos_detalhes = request.POST.get('retorno') == 'detalhe'
+    destino = 'doador_detalhe' if retornar_aos_detalhes else 'doadores'
+    novo_status = request.POST.get('status', '')
+    if request.method != 'POST' or novo_status not in ('ATIVO', 'INATIVO'):
+        messages.error(request, 'Situação de doador inválida.')
+        return redirect(destino, **({'doador_id': doador.pk} if retornar_aos_detalhes else {}))
+
+    ativo_anterior = doador.ativo
+    doador.ativo = novo_status == 'ATIVO'
+    doador.ultimo_editado_por = usuario
+    doador.ultimo_editado_por_nome = usuario.id_voluntario.nome
+    doador.dt_ultima_edicao = timezone.now()
+    doador.save(update_fields=[
+        'ativo', 'ultimo_editado_por', 'ultimo_editado_por_nome', 'dt_ultima_edicao',
+    ])
+    registrar_evento(
+        entidade='DOADOR',
+        instancia=doador,
+        acao='MUDANCA_STATUS',
+        usuario=usuario,
+        resumo=f'Doador #{doador.pk}: '
+        f'{"Ativo" if ativo_anterior else "Inativo"} para '
+        f'{"Ativo" if doador.ativo else "Inativo"}.',
+    )
+    messages.success(request, 'Situação do doador atualizada.')
+    return redirect(destino, **({'doador_id': doador.pk} if retornar_aos_detalhes else {}))
 
 
 def cadastro_doador_view(request):

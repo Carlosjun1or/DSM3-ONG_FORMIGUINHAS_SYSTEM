@@ -3,8 +3,157 @@
 {% block page_title %}{% if modo == 'edicao' %}Editar doador{% else %}Cadastrar doador{% endif %}{% endblock %}
 
 {% block conteudo %}
-<section class="page-section">
-    <div class="section-heading"><div><p class="eyebrow">Cadastro de doadores</p><h2>{% if modo == 'edicao' %}Editar doador{% else %}Novo doador{% endif %}</h2></div></div>
-    <form method="post" class="form-card">{% csrf_token %}{{ form.as_p }}<div class="button-group"><button class="btn btn-primary" type="submit">Salvar</button><a class="btn btn-outline" href="{% url 'doadores' %}">Cancelar</a></div></form>
+<section class="form-shell donor-form-shell">
+    <div class="form-card donor-form">
+        <div class="section-heading donor-form-heading">
+            <div>
+                <p class="eyebrow">Cadastro de doadores</p>
+                <h2>{% if modo == 'edicao' %}Editar doador{% else %}Novo doador{% endif %}</h2>
+                <p class="form-subtitle">Preencha os dados para identificar o doador e facilitar a consulta de suas doações.</p>
+            </div>
+            <a class="btn btn-outline" href="{% url 'doadores' %}">Voltar</a>
+        </div>
+        <form method="post" novalidate>{% csrf_token %}
+        {% if form.non_field_errors %}<div class="error-box">{{ form.non_field_errors }}</div>{% endif %}
+        <section class="donor-form-section">
+            <div class="donor-form-section-heading"><span class="form-section-number">1</span><div><h3>Identificação</h3><p>Informe quem está realizando ou mantendo o cadastro.</p></div></div>
+            <div class="donor-form-grid">
+                {% for field in form %}
+                {% if field.name in 'tipo nome documento voluntario' %}
+                <div class="form-group">
+                    {% if field.name == 'voluntario' %}
+                    {{ field.label_tag }}
+                    <div class="volunteer-picker" id="volunteer-picker">
+                    <input id="busca-voluntario-doador" type="search" class="form-control" placeholder="Buscar por nome ou e-mail" autocomplete="off" aria-controls="voluntarios-doador-list" aria-expanded="false" aria-describedby="ajuda-voluntario-doador">
+                    <div id="voluntarios-doador-list" class="volunteer-picker-options" role="listbox">
+                        <button type="button" class="volunteer-picker-option" data-id="" data-display="Não vincular a voluntário" role="option">Não vincular a voluntário</button>
+                        {% for voluntario in field.field.queryset %}
+                        <button type="button" class="volunteer-picker-option" data-id="{{ voluntario.pk }}" data-nome="{{ voluntario.nome|lower }}" data-email="{{ voluntario.email|lower }}" data-display="{{ voluntario.nome }} - {{ voluntario.email }}" data-voluntario-email="{{ voluntario.email }}" data-voluntario-telefone="{{ voluntario.telefone }}" role="option"><span>{{ voluntario.nome }}</span><small>{{ voluntario.email }}</small></button>
+                        {% endfor %}
+                        <span class="volunteer-picker-empty" hidden>Nenhum voluntário encontrado.</span>
+                    </div>
+                    </div>
+                    <div hidden>{{ field }}</div>
+                    <small id="ajuda-voluntario-doador" class="field-hint">Opcional. Clique no campo para ver os voluntários ou busque por nome e e-mail.</small>
+                    {% else %}
+                    {{ field }}
+                    {% if field.help_text %}<small class="field-hint">{{ field.help_text }}</small>{% endif %}
+                    {% endif %}
+                    {% for error in field.errors %}<small class="error-msg">{{ error }}</small>{% endfor %}
+                </div>
+                {% endif %}
+                {% endfor %}
+            </div>
+        </section>
+        <section class="donor-form-section">
+            <div class="donor-form-section-heading"><span class="form-section-number">2</span><div><h3>Contato e situação</h3><p>Cadastre pelo menos um canal de contato e defina se o doador pode ser usado em novas doações.</p></div></div>
+            <div class="donor-form-grid">
+                {% for field in form %}
+                {% if field.name in 'email telefone' %}
+                <div class="form-group">
+                    {{ field.label_tag }}{{ field }}
+                    {% if field.help_text %}<small class="field-hint">{{ field.help_text }}</small>{% endif %}
+                    {% for error in field.errors %}<small class="error-msg">{{ error }}</small>{% endfor %}
+                </div>
+                {% endif %}
+                {% endfor %}
+                <div class="donor-active-field">{{ form.ativo }}<div><label for="{{ form.ativo.id_for_label }}">Doador ativo</label><small class="field-hint">Doador inativo continua no histórico, mas não aparece para novas doações.</small></div></div>
+            </div>
+        </section>
+        <div class="form-actions donor-form-actions"><button class="btn btn-primary" type="submit">Salvar doador</button><a class="btn btn-outline" href="{% url 'doadores' %}">Cancelar</a></div>
+        </form>
+    </div>
 </section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    (function () {
+        const busca = document.getElementById('busca-voluntario-doador');
+        const select = document.getElementById('id_voluntario');
+        const email = document.getElementById('id_email');
+        const telefone = document.getElementById('id_telefone');
+        const lista = document.getElementById('voluntarios-doador-list');
+        const picker = document.getElementById('volunteer-picker');
+
+        if (!busca || !select || !email || !telefone || !lista || !picker) return;
+
+        const opcoes = Array.from(lista.querySelectorAll('.volunteer-picker-option'));
+
+        function filtrarOpcoes() {
+            const texto = busca.value.trim().toLowerCase();
+            let visiveis = 0;
+            opcoes.forEach(function (opcao) {
+                const corresponde = !texto
+                    || (opcao.dataset.nome && opcao.dataset.nome.includes(texto))
+                    || (opcao.dataset.email && opcao.dataset.email.includes(texto))
+                    || opcao.textContent.toLowerCase().includes(texto);
+                opcao.hidden = !corresponde;
+                if (corresponde) visiveis += 1;
+            });
+            lista.querySelector('.volunteer-picker-empty').hidden = visiveis > 0;
+            lista.classList.add('is-open');
+            busca.setAttribute('aria-expanded', 'true');
+        }
+
+        function selecionarVoluntario(opcao) {
+            select.value = opcao.dataset.id || '';
+            busca.value = opcao.dataset.display || 'Não vincular a voluntário';
+            if (opcao.dataset.id) {
+                email.value = opcao.dataset.voluntarioEmail || '';
+                telefone.value = opcao.dataset.voluntarioTelefone || '';
+            } else {
+                email.value = '';
+                telefone.value = '';
+            }
+            lista.classList.remove('is-open');
+            busca.setAttribute('aria-expanded', 'false');
+        }
+
+        const voluntarioSelecionado = select.value;
+        const opcaoInicial = opcoes.find(function (item) {
+            return item.dataset.id === voluntarioSelecionado;
+        });
+        if (opcaoInicial) {
+            busca.value = opcaoInicial.dataset.display;
+            email.value = opcaoInicial.dataset.voluntarioEmail || email.value;
+            telefone.value = opcaoInicial.dataset.voluntarioTelefone || telefone.value;
+        } else if (!select.value) {
+            busca.value = 'Não vincular a voluntário';
+        }
+
+        busca.addEventListener('focus', function () {
+            if (!select.value && busca.value === 'Não vincular a voluntário') {
+                busca.value = '';
+            }
+            filtrarOpcoes();
+        });
+        busca.addEventListener('input', filtrarOpcoes);
+        opcoes.forEach(function (opcao) {
+            opcao.addEventListener('click', function () {
+                selecionarVoluntario(opcao);
+            });
+        });
+        busca.addEventListener('keydown', function (event) {
+            if (event.key === 'Enter') {
+                const primeiraOpcao = opcoes.find(function (opcao) {
+                    return !opcao.hidden;
+                });
+                if (primeiraOpcao) {
+                    event.preventDefault();
+                    selecionarVoluntario(primeiraOpcao);
+                }
+            }
+        });
+        document.addEventListener('click', function (event) {
+            if (!picker.contains(event.target)) {
+                lista.classList.remove('is-open');
+                busca.setAttribute('aria-expanded', 'false');
+                if (!select.value && !busca.value.trim()) {
+                    busca.value = 'Não vincular a voluntário';
+                }
+            }
+        });
+    }());
+</script>
 {% endblock %}

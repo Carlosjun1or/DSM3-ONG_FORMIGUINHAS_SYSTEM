@@ -8,6 +8,7 @@
         <div>
             <p class="eyebrow">Controle financeiro e de materiais</p>
             <h2>Doações recebidas</h2>
+            <p class="form-subtitle donation-page-guidance">Acompanhe valores, materiais e situação das doações recebidas.</p>
         </div>
         <div class="button-group">
             <a class="btn btn-outline" href="{% url 'doadores' %}">Doadores</a>
@@ -22,41 +23,69 @@
         <article class="stat-card"><span>Materiais recebidos</span><strong>{{ quantidade_materiais|floatformat:2 }}</strong></article>
     </div>
 
-    <form method="get" class="filter-grid donation-filters">
-        <div class="filter-field"><label for="filtro-inicio">Início</label><input id="filtro-inicio" class="data-doacao-input" type="text" name="inicio" value="{{ inicio|date:'d/m/Y' }}" placeholder="dd/mm/aaaa" inputmode="numeric" maxlength="10"></div>
-        <div class="filter-field"><label for="filtro-fim">Fim</label><input id="filtro-fim" class="data-doacao-input" type="text" name="fim" value="{{ fim|date:'d/m/Y' }}" placeholder="dd/mm/aaaa" inputmode="numeric" maxlength="10"></div>
-        <div class="filter-field"><label for="filtro-tipo">Tipo</label><select id="filtro-tipo" name="tipo"><option value="">Todos</option>{% for value,label in tipo_choices %}<option value="{{ value }}" {% if tipo_selecionado == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
-        <div class="filter-field"><label for="filtro-status">Situação</label><select id="filtro-status" name="status"><option value="">Todas</option>{% for value,label in status_choices %}<option value="{{ value }}" {% if status_selecionado == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
-        <div class="filter-field"><label for="filtro-finalidade">Finalidade</label><select id="filtro-finalidade" name="finalidade"><option value="">Todas</option>{% for value,label in finalidade_choices %}<option value="{{ value }}" {% if finalidade_selecionada == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
-        <button class="btn btn-primary filter-submit" type="submit">Filtrar</button>
-    </form>
+    <section class="card volunteer-control donation-records">
+        <div class="section-heading">
+            <div>
+                <h2>Doações cadastradas</h2>
+                <p class="form-subtitle">Filtre e consulte os registros. Abra uma doação para ver todos os detalhes.</p>
+            </div>
+        </div>
 
-    <div class="table-wrapper donation-table-card">
-        <table>
-            <thead><tr><th>Recebimento</th><th>Tipo</th><th>Doador</th><th>Valor/itens</th><th>Situação</th><th>Auditoria</th><th></th></tr></thead>
-            <tbody>
-            {% for doacao in doacoes %}
-                <tr>
-                    <td>{{ doacao.data_recebimento|date:"d/m/Y" }}</td>
-                    <td>{{ doacao.get_tipo_display }}</td>
-                    <td>{% if doacao.anonima %}Anônima{% else %}{{ doacao.doador.nome }}{% endif %}</td>
-                    <td>{% if doacao.tipo == 'FINANCEIRA' %}R$ {{ doacao.financeira.valor|floatformat:2 }}{% else %}{{ doacao.itens_materiais.count }} item(ns){% endif %}</td>
-                    <td>{{ doacao.get_status_display }}</td>
-                    <td>
-                        <strong>Cadastrado por {{ doacao.registrado_por_nome }}</strong>
-                        <small>{{ doacao.dt_cadastro|date:"d/m/Y H:i" }}</small>
-                        {% if doacao.dt_ultima_edicao %}
-                            <small>Editado por {{ doacao.ultimo_editado_por_nome }}</small>
-                            <small>{{ doacao.dt_ultima_edicao|date:"d/m/Y H:i" }}</small>
-                        {% else %}
-                            <small>Sem edições</small>
-                        {% endif %}
-                    </td>
-                    <td><a class="btn btn-outline" href="{% url 'doacao_detalhe' doacao.id_doacao %}">Detalhes</a></td>
-                </tr>
-            {% empty %}<tr><td colspan="7">Nenhuma doação encontrada.</td></tr>{% endfor %}
-            </tbody>
-        </table>
-    </div>
+        <form method="get" class="filter-grid donation-filters">
+            <div class="filter-field"><label for="filtro-inicio">Data inicial</label><input id="filtro-inicio" class="data-doacao-input" type="text" name="inicio" value="{{ inicio|date:'d/m/Y' }}" placeholder="dd/mm/aaaa" inputmode="numeric" maxlength="10"></div>
+            <div class="filter-field"><label for="filtro-fim">Data final</label><input id="filtro-fim" class="data-doacao-input" type="text" name="fim" value="{{ fim|date:'d/m/Y' }}" placeholder="dd/mm/aaaa" inputmode="numeric" maxlength="10"></div>
+            <div class="filter-field"><label for="filtro-tipo">Tipo</label><select id="filtro-tipo" name="tipo"><option value="">Todos</option>{% for value,label in tipo_choices %}<option value="{{ value }}" {% if tipo_selecionado == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
+            <div class="filter-field"><label for="filtro-status">Situação</label><select id="filtro-status" name="status"><option value="">Todas</option>{% for value,label in status_choices %}<option value="{{ value }}" {% if status_selecionado == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
+            <div class="filter-field"><label for="filtro-finalidade">Finalidade</label><select id="filtro-finalidade" name="finalidade"><option value="">Todas</option>{% for value,label in finalidade_choices %}<option value="{{ value }}" {% if finalidade_selecionada == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
+            <button class="btn btn-primary filter-submit" type="submit">Filtrar</button>
+        </form>
+
+        {% if doacoes %}
+        <div class="table-wrap donation-records-table">
+            <table class="data-table">
+                <thead><tr><th>Recebimento</th><th>Tipo</th><th>Doador</th><th>Valor / itens</th><th>Situação</th><th>Auditoria</th><th>Ações</th></tr></thead>
+                <tbody>
+                {% for doacao in doacoes %}
+                    <tr>
+                        <td><strong>{{ doacao.data_recebimento|date:"d/m/Y" }}</strong></td>
+                        <td><a class="table-link" href="{% url 'doacao_detalhe' doacao.id_doacao %}"><strong>{{ doacao.get_tipo_display }}</strong></a></td>
+                        <td>{% if doacao.anonima %}<span class="muted">Anônima</span>{% elif doacao.doador %}<a class="table-link" href="{% url 'doador_detalhe' doacao.doador.id_doador %}"><strong>{{ doacao.doador.nome }}</strong></a>{% else %}<span class="muted">Não informado</span>{% endif %}</td>
+                        <td class="donation-value">{% if doacao.tipo == 'FINANCEIRA' %}<strong>R$ {{ doacao.financeira.valor|floatformat:2 }}</strong>{% else %}<a class="table-link" href="{% url 'doacao_detalhe' doacao.id_doacao %}">{{ doacao.itens_materiais.count }} item(ns)</a>{% endif %}</td>
+                        <td>
+                            <form method="post" action="{% url 'atualizar_status_doacao' doacao.id_doacao %}" class="inline-status-form">
+                                {% csrf_token %}
+                                <select name="status" class="status-select status-{{ doacao.status|lower }}" aria-label="Situação da doação {{ doacao.id_doacao }}" onchange="this.form.submit()">
+                                    {% for valor, rotulo in status_choices %}
+                                        {% if valor != 'CANCELADA' or usuario.tipo == 'ADMIN' or doacao.status == 'CANCELADA' %}
+                                        <option value="{{ valor }}" {% if doacao.status == valor %}selected{% endif %}>{{ rotulo }}</option>
+                                        {% endif %}
+                                    {% endfor %}
+                                </select>
+                            </form>
+                        </td>
+                        <td class="audit-cell">
+                            <strong>Cadastrado por {{ doacao.registrado_por_nome }}</strong>
+                            <small>{{ doacao.dt_cadastro|date:"d/m/Y H:i" }}</small>
+                            {% if doacao.dt_ultima_edicao %}
+                                <small>Editado por {{ doacao.ultimo_editado_por_nome }} · {{ doacao.dt_ultima_edicao|date:"d/m/Y H:i" }}</small>
+                            {% else %}
+                                <small>Sem edições</small>
+                            {% endif %}
+                        </td>
+                        <td><a class="btn btn-outline btn-small" href="{% url 'doacao_detalhe' doacao.id_doacao %}">Detalhes</a></td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% include 'sistema/includes/paginacao.html' %}
+        {% else %}
+        <div class="empty-state table-empty">
+            <h3>Nenhuma doação encontrada</h3>
+            <p class="form-subtitle">Ajuste os filtros ou cadastre uma nova doação.</p>
+            <a class="btn btn-primary" href="{% url 'cadastro_doacao' %}">Nova doação</a>
+        </div>
+        {% endif %}
+    </section>
 </section>
 {% endblock %}

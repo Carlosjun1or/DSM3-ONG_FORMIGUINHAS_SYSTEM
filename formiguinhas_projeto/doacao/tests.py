@@ -5,9 +5,11 @@ from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 
+from acao.models import Acao
+from praia.models import Praia
 from usuario.models import Usuario, Voluntario
 
-from .forms import DoadorForm, DoacaoForm
+from .forms import DoadorForm, DoadorInlineForm, DoacaoForm
 from .models import Doador, Doacao, DoacaoFinanceira, ItemDoacaoMaterial
 
 
@@ -102,6 +104,57 @@ class DoacaoTestCase(TestCase):
         self.assertContains(response, '10.00')
         self.assertNotContains(response, '100.00')
 
+    def test_menu_lateral_marca_apenas_controle_de_doadores(self):
+        resposta_doadores = self.client.get(reverse('doadores'))
+        self.assertContains(
+            resposta_doadores,
+            '<a href="/doacao/doadores/" class="sidebar-link active">Controle de Doadores</a>',
+            html=True,
+        )
+        self.assertContains(
+            resposta_doadores,
+            '<a href="/doacao/" class="sidebar-link ">Controle de Doações</a>',
+            html=True,
+        )
+
+        resposta_doacoes = self.client.get(reverse('doacoes'))
+        self.assertContains(
+            resposta_doacoes,
+            '<a href="/doacao/" class="sidebar-link active">Controle de Doações</a>',
+            html=True,
+        )
+        self.assertContains(
+            resposta_doacoes,
+            '<a href="/doacao/doadores/" class="sidebar-link ">Controle de Doadores</a>',
+            html=True,
+        )
+
+    def test_controle_de_doacoes_pagina_e_preserva_filtros(self):
+        for indice in range(21):
+            Doacao.objects.create(
+                tipo=Doacao.MATERIAL,
+                doador=self.doador,
+                data_recebimento=timezone.localdate(),
+                status=Doacao.PENDENTE,
+                registrado_por=self.usuario,
+                registrado_por_nome='Administrador',
+                registrado_por_tipo='ADMIN',
+            )
+
+        response = self.client.get(
+            reverse('doacoes'),
+            {'tipo': Doacao.MATERIAL, 'status': Doacao.PENDENTE, 'page': '2'},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['pagina'].number, 2)
+        self.assertEqual(response.context['pagina'].paginator.count, 21)
+        self.assertEqual(
+            response.context['filtros_query'],
+            'tipo=MATERIAL&status=PENDENTE',
+        )
+        self.assertContains(response, 'tipo=MATERIAL&amp;status=PENDENTE&amp;page=1')
+
     def test_data_futura_e_rejeitada(self):
         form = DoacaoForm(data={
             'tipo': Doacao.MATERIAL,
@@ -190,6 +243,78 @@ class DoacaoTestCase(TestCase):
         doacao.refresh_from_db()
         self.assertEqual(doacao.status, Doacao.PENDENTE)
 
+    def test_alterar_status_na_tela_de_detalhes_permanece_nela(self):
+        doacao = Doacao.objects.create(
+            tipo=Doacao.FINANCEIRA,
+            doador=self.doador,
+            data_recebimento=timezone.localdate(),
+            status=Doacao.PENDENTE,
+            registrado_por=self.usuario,
+            registrado_por_nome='Administrador',
+            registrado_por_tipo='ADMIN',
+        )
+
+        response = self.client.post(
+            reverse('atualizar_status_doacao', args=[doacao.pk]),
+            {'status': Doacao.CONFIRMADA, 'retorno': 'detalhe'},
+        )
+
+        self.assertRedirects(
+            response,
+            reverse('doacao_detalhe', args=[doacao.pk]),
+        )
+        doacao.refresh_from_db()
+        self.assertEqual(doacao.status, Doacao.CONFIRMADA)
+
+    def test_detalhes_da_doacao_linkam_para_praia_e_acao_vinculadas(self):
+        praia = Praia.objects.create(
+            nome='Praia Teste',
+            cidade='Santos',
+            latitude='-23.9600',
+            longitude='-46.3300',
+        )
+        acao = Acao.objects.create(
+            tipo=Acao.TIPO_MUTIRAO,
+            data=timezone.localdate(),
+            local='Orla',
+            praia=praia,
+        )
+        doacao = Doacao.objects.create(
+            tipo=Doacao.MATERIAL,
+            doador=self.doador,
+            data_recebimento=timezone.localdate(),
+            status=Doacao.PENDENTE,
+            praia=praia,
+            acao=acao,
+            registrado_por=self.usuario,
+            registrado_por_nome='Administrador',
+            registrado_por_tipo='ADMIN',
+        )
+
+        response = self.client.get(reverse('doacao_detalhe', args=[doacao.pk]))
+
+        self.assertContains(
+            response,
+            f'href="{reverse("praias")}?praia={praia.pk}#praia-{praia.pk}"',
+        )
+        self.assertContains(
+            response,
+            f'href="{reverse("acao_detalhe", args=[acao.pk])}"',
+        )
+
+    def test_alterar_status_na_tela_de_doador_permanece_nela(self):
+        response = self.client.post(
+            reverse('atualizar_status_doador', args=[self.doador.pk]),
+            {'status': 'INATIVO', 'retorno': 'detalhe'},
+        )
+
+        self.assertRedirects(
+            response,
+            reverse('doador_detalhe', args=[self.doador.pk]),
+        )
+        self.doador.refresh_from_db()
+        self.assertFalse(self.doador.ativo)
+
     def test_cadastro_cria_doador_na_mesma_tela(self):
         response = self.client.post(reverse('cadastro_doacao'), {
             'tipo': Doacao.FINANCEIRA,
@@ -218,6 +343,50 @@ class DoacaoTestCase(TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertTrue(Doador.objects.filter(nome='Empresa Demonstrativa').exists())
         self.assertEqual(Doacao.objects.get().doador.nome, 'Empresa Demonstrativa')
+
+    def test_cadastro_inline_vincula_voluntario_ao_novo_doador(self):
+        voluntario = Voluntario.objects.create(
+            nome='Voluntário doador',
+            dt_nascimento='1992-02-02',
+            endereco='Rua C',
+            telefone='13988887777',
+            email='voluntario.doador@example.com',
+        )
+        response = self.client.post(reverse('cadastro_doacao'), {
+            'tipo': Doacao.FINANCEIRA,
+            'doador': '',
+            'anonima': '',
+            'data_recebimento': timezone.localdate().isoformat(),
+            'status': Doacao.CONFIRMADA,
+            'finalidade': Doacao.FINALIDADE_GERAL,
+            'descricao_finalidade': '',
+            'praia': '',
+            'acao': '',
+            'observacoes': '',
+            'referencia_comprovante': '',
+            'novo_doador-tipo': Doador.PESSOA_FISICA,
+            'novo_doador-nome': 'Doador voluntário',
+            'novo_doador-documento': '',
+            'novo_doador-email': 'VOLUNTARIO.DOADOR@EXAMPLE.COM',
+            'novo_doador-telefone': '13988887777',
+            'novo_doador-voluntario': voluntario.pk,
+            'financeira-valor': '50.00',
+            'financeira-forma_recebimento': DoacaoFinanceira.PIX,
+            'itens-TOTAL_FORMS': '1',
+            'itens-INITIAL_FORMS': '0',
+            'itens-MIN_NUM_FORMS': '1',
+            'itens-MAX_NUM_FORMS': '1000',
+        })
+
+        self.assertEqual(response.status_code, 302)
+        doador = Doador.objects.get(voluntario=voluntario)
+        self.assertEqual(doador.email, 'voluntario.doador@example.com')
+        self.assertEqual(doador.telefone, '13988887777')
+        self.assertEqual(Doacao.objects.get().doador, doador)
+        self.assertNotIn(
+            voluntario,
+            DoadorInlineForm().fields['voluntario'].queryset,
+        )
 
     def test_formulario_invalido_exibe_erros_ao_usuario(self):
         response = self.client.post(reverse('cadastro_doacao'), {

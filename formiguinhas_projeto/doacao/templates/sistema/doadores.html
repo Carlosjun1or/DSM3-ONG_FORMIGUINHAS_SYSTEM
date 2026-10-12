@@ -3,11 +3,102 @@
 {% block page_title %}Doadores{% endblock %}
 
 {% block conteudo %}
-<section class="page-section donation-dashboard">
-    <div class="section-heading"><div><p class="eyebrow">Cadastro reutilizável</p><h2>Doadores</h2></div>{% if usuario.tipo == 'ADMIN' %}<a class="btn btn-primary" href="{% url 'cadastro_doador' %}">Novo doador</a>{% endif %}</div>
-    <form method="get" class="filter-grid donor-filters"><div class="filter-field"><label for="busca-doador">Buscar doador</label><input id="busca-doador" name="busca" value="{{ busca }}" placeholder="Nome, documento ou e-mail"></div><button class="btn btn-primary filter-submit" type="submit">Buscar</button></form>
-    <div class="table-wrapper donation-table-card"><table><thead><tr><th>Nome</th><th>Tipo</th><th>Contato</th><th>Situação</th><th>Auditoria</th><th>Ações</th></tr></thead><tbody>
-    {% for doador in doadores %}<tr><td><a class="table-link" href="{% url 'doador_detalhe' doador.id_doador %}"><strong>{{ doador.nome }}</strong></a></td><td>{{ doador.get_tipo_display }}</td><td>{{ doador.email|default:'-' }}</td><td>{% if doador.ativo %}Ativo{% else %}Inativo{% endif %}</td><td><strong>Cadastrado por {{ doador.cadastrado_por_nome }}</strong><small>{{ doador.dt_cadastro|date:"d/m/Y H:i" }}</small>{% if doador.dt_ultima_edicao %}<small>Editado por {{ doador.ultimo_editado_por_nome }}</small><small>{{ doador.dt_ultima_edicao|date:"d/m/Y H:i" }}</small>{% else %}<small>Sem edições</small>{% endif %}</td><td><a class="btn btn-outline" href="{% url 'doador_detalhe' doador.id_doador %}">Detalhes</a>{% if usuario.tipo == 'ADMIN' %}<a class="btn btn-outline" href="{% url 'editar_doador' doador.id_doador %}">Editar</a>{% endif %}</td></tr>{% empty %}<tr><td colspan="6">Nenhum doador encontrado.</td></tr>{% endfor %}
-    </tbody></table></div>
+<section class="page-section donation-dashboard donor-dashboard">
+    <div class="section-heading">
+        <div>
+            <p class="eyebrow">Cadastro reutilizável</p>
+            <h2>Doadores</h2>
+            <p class="form-subtitle donation-page-guidance">Consulte os cadastros e pesquise por nome, documento ou e-mail. Doadores inativos continuam no histórico, mas não podem ser vinculados a novas doações.</p>
+        </div>
+        {% if usuario.tipo == 'ADMIN' %}
+        <a class="btn btn-primary" href="{% url 'cadastro_doador' %}">Novo doador</a>
+        {% endif %}
+    </div>
+
+    <section class="card volunteer-control donor-records">
+        <div class="section-heading">
+            <div>
+                <h2>Doadores cadastrados</h2>
+                <p class="form-subtitle">Gerencie a situação e consulte os dados de contato.</p>
+            </div>
+        </div>
+
+        <form method="get" class="donor-search-form">
+            <div class="form-group">
+                <label for="busca-doador">Buscar doador</label>
+                <input id="busca-doador" name="busca" value="{{ busca }}" class="form-control" type="search" placeholder="Nome, CPF/CNPJ ou e-mail">
+            </div>
+            <button class="btn btn-primary" type="submit">Buscar</button>
+            {% if busca %}<a class="form-link donor-clear-filter" href="{% url 'doadores' %}">Limpar busca</a>{% endif %}
+        </form>
+
+        {% if doadores %}
+        <div class="table-wrap donor-records-table">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Doador</th>
+                        <th>Tipo</th>
+                        <th>Contato</th>
+                        <th>Situação</th>
+                        <th>Auditoria</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for doador in doadores %}
+                    <tr>
+                        <td>
+                            <a class="table-link" href="{% url 'doador_detalhe' doador.id_doador %}"><strong>{{ doador.nome }}</strong></a>
+                            {% if doador.documento %}<small class="table-secondary">{{ doador.documento }}</small>{% endif %}
+                        </td>
+                        <td>{{ doador.get_tipo_display }}</td>
+                        <td class="donor-contact-cell">
+                            {% if doador.email %}<span>{{ doador.email }}</span>{% endif %}
+                            {% if doador.telefone %}<small>{{ doador.telefone }}</small>{% endif %}
+                            {% if not doador.email and not doador.telefone %}<span class="muted">Não informado</span>{% endif %}
+                        </td>
+                        <td>
+                            {% if usuario.tipo == 'ADMIN' %}
+                            <form method="post" action="{% url 'atualizar_status_doador' doador.id_doador %}" class="inline-status-form">
+                                {% csrf_token %}
+                                <select name="status" class="status-select {% if doador.ativo %}status-ativo{% else %}status-inativo{% endif %}" aria-label="Situação do doador {{ doador.nome }}" onchange="this.form.submit()">
+                                    <option value="ATIVO" {% if doador.ativo %}selected{% endif %}>Ativo</option>
+                                    <option value="INATIVO" {% if not doador.ativo %}selected{% endif %}>Inativo</option>
+                                </select>
+                            </form>
+                            {% else %}
+                            <span class="status-badge {% if doador.ativo %}status-ativo{% else %}status-inativo{% endif %}">{% if doador.ativo %}Ativo{% else %}Inativo{% endif %}</span>
+                            {% endif %}
+                        </td>
+                        <td class="audit-cell">
+                            <strong>Cadastrado por {{ doador.cadastrado_por_nome|default:'Sistema' }}</strong>
+                            <small>{{ doador.dt_cadastro|date:"d/m/Y H:i" }}</small>
+                            {% if doador.dt_ultima_edicao %}
+                            <small>Editado por {{ doador.ultimo_editado_por_nome|default:'Usuário do sistema' }} · {{ doador.dt_ultima_edicao|date:"d/m/Y H:i" }}</small>
+                            {% else %}
+                            <small>Sem edições</small>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="donor-record-actions">
+                                <a class="btn btn-outline btn-small" href="{% url 'doador_detalhe' doador.id_doador %}">Detalhes</a>
+                                {% if usuario.tipo == 'ADMIN' %}<a class="btn btn-outline btn-small" href="{% url 'editar_doador' doador.id_doador %}">Editar</a>{% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% include 'sistema/includes/paginacao.html' %}
+        {% else %}
+        <div class="empty-state table-empty">
+            <h3>{% if busca %}Nenhum doador encontrado{% else %}Nenhum doador cadastrado{% endif %}</h3>
+            <p class="form-subtitle">{% if busca %}Tente outro nome, documento ou e-mail.{% else %}Cadastre um doador para associá-lo às doações.{% endif %}</p>
+            {% if not busca and usuario.tipo == 'ADMIN' %}<a class="btn btn-primary" href="{% url 'cadastro_doador' %}">Novo doador</a>{% endif %}
+        </div>
+        {% endif %}
+    </section>
 </section>
 {% endblock %}

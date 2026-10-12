@@ -3,16 +3,7 @@
 {% block page_title %}{% if modo == 'edicao' %}Editar doação{% else %}Nova doação{% endif %}{% endblock %}
 
 {% block conteudo %}
-<section class="page-section donation-page">
-    <div class="section-heading">
-        <div>
-            <p class="eyebrow">Registro administrativo</p>
-            <h2>{% if modo == 'edicao' %}Editar doação{% else %}Cadastrar doação{% endif %}</h2>
-            <p class="section-description">Preencha os dados. Os campos marcados com * são obrigatórios.</p>
-        </div>
-        <a class="btn btn-outline" href="{% if modo == 'edicao' %}{% url 'doacao_detalhe' doacao.id_doacao %}{% else %}{% url 'doacoes' %}{% endif %}">Cancelar</a>
-    </div>
-
+<section class="page-section donation-page donation-form-shell">
     {% if form.errors or financeira_form.errors or itens_formset.errors or itens_formset.non_form_errors or doador_inline_form.errors %}
     <div class="form-error-summary" role="alert">
         <strong>Não foi possível salvar a doação.</strong>
@@ -26,39 +17,152 @@
 
     <form method="post" class="form-card donation-form" novalidate>
         {% csrf_token %}
+        <div class="section-heading donor-form-heading donation-form-heading">
+            <div>
+                <p class="eyebrow">Cadastro de doações</p>
+                <h2>{% if modo == 'edicao' %}Editar doação{% else %}Cadastrar doação{% endif %}</h2>
+                <p class="form-subtitle">Preencha os dados por etapas. Os campos com <span class="required-indicator">*</span> são obrigatórios.</p>
+            </div>
+            <a class="btn btn-outline" href="{% if modo == 'edicao' %}{% url 'doacao_detalhe' doacao.id_doacao %}{% else %}{% url 'doacoes' %}{% endif %}">Cancelar</a>
+        </div>
         <div class="form-section">
             <div class="form-section-heading"><span class="form-section-number">1</span><div><h3>Dados da doação</h3><p>Identifique o tipo, a situação e a destinação.</p></div></div>
-            {{ form.tipo.errors }}<label for="{{ form.tipo.id_for_label }}">Tipo de doação *</label>{{ form.tipo }}
-            {{ form.doador.errors }}<label for="{{ form.doador.id_for_label }}">Doador</label>{{ form.doador }}
-            <button type="button" class="btn btn-link" id="mostrar-novo-doador">+ Cadastrar novo doador nesta tela</button>
-            <div id="novo-doador-fields" class="inline-donor-card" hidden>
-                <div class="inline-donor-heading"><strong>Novo doador</strong><button type="button" class="btn btn-link" id="ocultar-novo-doador">Cancelar</button></div>
+            <div class="form-grid two-columns donation-primary-grid">
+                <div class="form-field">{{ form.tipo.errors }}<label for="{{ form.tipo.id_for_label }}">{{ form.tipo.label }}{% if form.tipo.field.required %} <span class="required-indicator">*</span>{% endif %}</label>{{ form.tipo }}{% if form.tipo.help_text %}<small class="form-help">{{ form.tipo.help_text }}</small>{% endif %}</div>
+                <div class="form-field">
+                    {{ form.doador.errors }}
+                    <label for="busca-doador-relacionado">{{ form.doador.label }}{% if form.doador.field.required %} <span class="required-indicator">*</span>{% endif %}</label>
+                    <div class="volunteer-picker donor-picker" id="donor-picker">
+                        <input id="busca-doador-relacionado" type="search" class="form-control" placeholder="Buscar doador por nome ou e-mail" autocomplete="off" role="combobox" aria-autocomplete="list" aria-controls="doadores-relacionados-list" aria-expanded="false" aria-describedby="ajuda-doador-relacionado">
+                        <div id="doadores-relacionados-list" class="volunteer-picker-options" role="listbox">
+                            {% for doador in form.doador.field.queryset %}
+                            <button type="button" class="volunteer-picker-option donor-picker-option" data-id="{{ doador.pk }}" data-nome="{{ doador.nome|lower }}" data-email="{{ doador.email|lower }}" data-display="{{ doador.nome }}{% if doador.email %} - {{ doador.email }}{% endif %}" role="option" aria-selected="false">
+                                <span>{{ doador.nome }}</span>
+                                <small>{% if doador.email %}{{ doador.email }}{% else %}E-mail não informado{% endif %}</small>
+                            </button>
+                            {% endfor %}
+                            <span class="volunteer-picker-empty" hidden>Nenhum doador encontrado. Você pode cadastrá-lo nesta tela.</span>
+                        </div>
+                    </div>
+                    <div hidden>{{ form.doador }}</div>
+                    <small id="ajuda-doador-relacionado" class="form-help" aria-live="polite">
+                        <span id="ajuda-doador-ativo">{% if form.doador.help_text %}{{ form.doador.help_text }}{% endif %}</span>
+                        <span id="ajuda-doador-anonimo" hidden>Doação anônima selecionada. A busca e o cadastro de doador estão bloqueados.</span>
+                    </small>
+                </div>
+            </div>
+            <button type="button" class="btn btn-link" id="mostrar-novo-doador" aria-controls="novo-doador-fields" aria-expanded="{% if doador_inline_form.errors %}true{% else %}false{% endif %}" {% if doador_inline_form.errors %}hidden{% endif %}>+ Cadastrar novo doador nesta tela</button>
+            <div id="novo-doador-fields" class="inline-donor-card" {% if not doador_inline_form.errors %}hidden{% endif %}>
+                <div class="inline-donor-heading">
+                    <div><span class="inline-donor-eyebrow">Cadastro rápido</span><strong>Novo doador</strong><small>Preencha os dados do cadastro de doador sem sair desta tela. Ele será vinculado à doação ao salvar.</small></div>
+                    <button type="button" class="btn btn-link" id="ocultar-novo-doador">Cancelar</button>
+                </div>
                 {% for hidden in doador_inline_form.hidden_fields %}{{ hidden }}{% endfor %}
-                {% for field in doador_inline_form.visible_fields %}
-                    <div class="form-field">{{ field.errors }}<label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}</div>
-                {% endfor %}
-                <p class="form-help">Esse doador será salvo junto com a doação, sem sair desta página.</p>
+                <section class="inline-donor-section">
+                    <div class="inline-donor-section-heading"><span class="form-section-number">1</span><div><h4>Identificação</h4><p>Informe os dados de identificação do doador.</p></div></div>
+                    <div class="form-grid two-columns inline-donor-grid">
+                    {% for field in doador_inline_form.visible_fields %}
+                        {% if field.name == 'tipo' or field.name == 'nome' or field.name == 'documento' %}
+                        <div class="form-field">{{ field.errors }}<label for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %} <span class="required-indicator">*</span>{% endif %}</label>{{ field }}{% if field.help_text %}<small class="form-help">{{ field.help_text }}</small>{% endif %}</div>
+                        {% endif %}
+                    {% endfor %}
+                    </div>
+                </section>
+                <section class="inline-donor-section">
+                    <div class="inline-donor-section-heading"><span class="form-section-number">2</span><div><h4>Contato e voluntário relacionado</h4><p>Busque um voluntário para preencher e-mail e telefone; você ainda pode editar esses dados.</p></div></div>
+                    <div class="form-grid two-columns inline-donor-grid">
+                        <div class="form-field full-width">
+                            {{ doador_inline_form.voluntario.errors }}
+                            <label for="inline-busca-voluntario-doador">{{ doador_inline_form.voluntario.label }}</label>
+                            <div class="volunteer-picker inline-volunteer-picker" id="inline-volunteer-picker">
+                                <input id="inline-busca-voluntario-doador" type="search" class="form-control" placeholder="Buscar voluntário por nome ou e-mail" autocomplete="off" role="combobox" aria-autocomplete="list" aria-controls="inline-voluntarios-doador-list" aria-expanded="false" aria-describedby="inline-ajuda-voluntario-doador">
+                                <div id="inline-voluntarios-doador-list" class="volunteer-picker-options" role="listbox">
+                                    <button type="button" class="volunteer-picker-option inline-volunteer-option" data-id="" data-display="Não vincular a voluntário" role="option" aria-selected="false">Não vincular a voluntário</button>
+                                    {% for voluntario in doador_inline_form.voluntario.field.queryset %}
+                                    <button type="button" class="volunteer-picker-option inline-volunteer-option" data-id="{{ voluntario.pk }}" data-nome="{{ voluntario.nome|lower }}" data-email="{{ voluntario.email|lower }}" data-display="{% if voluntario.email %}{{ voluntario.nome }} - {{ voluntario.email }}{% else %}{{ voluntario.nome }}{% endif %}" data-voluntario-email="{{ voluntario.email }}" data-voluntario-telefone="{{ voluntario.telefone }}" role="option" aria-selected="false">
+                                        <span>{{ voluntario.nome }}</span>
+                                        <small>{% if voluntario.email %}{{ voluntario.email }}{% else %}E-mail não informado{% endif %}{% if voluntario.telefone %} · {{ voluntario.telefone }}{% endif %}</small>
+                                    </button>
+                                    {% endfor %}
+                                    <span class="volunteer-picker-empty" hidden>Nenhum voluntário disponível encontrado.</span>
+                                </div>
+                            </div>
+                            <div hidden>{{ doador_inline_form.voluntario }}</div>
+                            <small id="inline-ajuda-voluntario-doador" class="form-help">{% if doador_inline_form.voluntario.help_text %}{{ doador_inline_form.voluntario.help_text }}{% endif %}</small>
+                        </div>
+                        {% for field in doador_inline_form.visible_fields %}
+                            {% if field.name == 'email' or field.name == 'telefone' %}
+                            <div class="form-field">{{ field.errors }}<label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{% if field.help_text %}<small class="form-help">{{ field.help_text }}</small>{% endif %}</div>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                    <p class="form-help inline-donor-contact-note">Informe pelo menos um contato. Os dados preenchidos pelo voluntário permanecem editáveis.</p>
+                </section>
             </div>
             <div class="form-grid two-columns">
-                <div class="form-field">{{ form.anonima.errors }}<label class="checkbox-label">{{ form.anonima }} Doação anônima</label></div>
-                <div class="form-field">{{ form.data_recebimento.errors }}<label for="{{ form.data_recebimento.id_for_label }}">Data de recebimento *</label>{{ form.data_recebimento }}</div>
-                <div class="form-field">{{ form.status.errors }}<label for="{{ form.status.id_for_label }}">Situação *</label>{{ form.status }}</div>
-                <div class="form-field">{{ form.finalidade.errors }}<label for="{{ form.finalidade.id_for_label }}">Finalidade *</label>{{ form.finalidade }}</div>
-                <div class="form-field full-width">{{ form.descricao_finalidade.errors }}<label for="{{ form.descricao_finalidade.id_for_label }}">Descrição da finalidade específica</label>{{ form.descricao_finalidade }}</div>
+                <div class="form-field checkbox-field">{{ form.anonima.errors }}<label class="checkbox-label">{{ form.anonima }} {{ form.anonima.label }}</label>{% if form.anonima.help_text %}<small class="form-help">{{ form.anonima.help_text }}</small>{% endif %}</div>
+                <div class="form-field">{{ form.data_recebimento.errors }}<label for="{{ form.data_recebimento.id_for_label }}">{{ form.data_recebimento.label }}{% if form.data_recebimento.field.required %} <span class="required-indicator">*</span>{% endif %}</label>{{ form.data_recebimento }}{% if form.data_recebimento.help_text %}<small class="form-help">{{ form.data_recebimento.help_text }}</small>{% endif %}</div>
+                <div class="form-field">{{ form.status.errors }}<label for="{{ form.status.id_for_label }}">{{ form.status.label }}{% if form.status.field.required %} <span class="required-indicator">*</span>{% endif %}</label>{{ form.status }}{% if form.status.help_text %}<small class="form-help">{{ form.status.help_text }}</small>{% endif %}</div>
+                <div class="form-field">{{ form.finalidade.errors }}<label for="{{ form.finalidade.id_for_label }}">{{ form.finalidade.label }}{% if form.finalidade.field.required %} <span class="required-indicator">*</span>{% endif %}</label>{{ form.finalidade }}{% if form.finalidade.help_text %}<small class="form-help">{{ form.finalidade.help_text }}</small>{% endif %}</div>
+                <div class="form-field full-width">{{ form.descricao_finalidade.errors }}<label for="{{ form.descricao_finalidade.id_for_label }}">{{ form.descricao_finalidade.label }} <span class="required-indicator" id="descricao-finalidade-required" hidden>*</span></label>{{ form.descricao_finalidade }}{% if form.descricao_finalidade.help_text %}<small class="form-help">{{ form.descricao_finalidade.help_text }}</small>{% endif %}</div>
             </div>
         </div>
 
         <div class="form-section">
             <div class="form-section-heading"><span class="form-section-number">2</span><div><h3>Destinação</h3><p>Opcionalmente relacione a uma praia ou ação já cadastrada.</p></div></div>
             <div class="form-grid two-columns">
-                <div class="form-field">{{ form.praia.errors }}<label for="{{ form.praia.id_for_label }}">Praia beneficiada</label>{{ form.praia }}</div>
-                <div class="form-field">{{ form.acao.errors }}<label for="{{ form.acao.id_for_label }}">Ação ou mutirão</label>{{ form.acao }}</div>
+                <div class="form-field relationship-field">
+                    {{ form.praia.errors }}
+                    <label for="busca-praia-beneficiada">{{ form.praia.label }}{% if form.praia.field.required %} <span class="required-indicator">*</span>{% endif %}</label>
+                    <div class="volunteer-picker relationship-picker" id="praia-picker">
+                        <input id="busca-praia-beneficiada" type="search" class="form-control" placeholder="Buscar praia por nome ou cidade" autocomplete="off" role="combobox" aria-autocomplete="list" aria-controls="praias-beneficiadas-list" aria-expanded="false" aria-describedby="ajuda-praia-beneficiada">
+                        <div id="praias-beneficiadas-list" class="volunteer-picker-options" role="listbox">
+                            <button type="button" class="volunteer-picker-option relationship-picker-option" data-id="" data-search="" data-display="Sem praia específica" role="option" aria-selected="false">
+                                <span>Sem praia específica</span>
+                                <small>Limpar seleção</small>
+                            </button>
+                            {% for praia in form.praia.field.queryset %}
+                            <button type="button" class="volunteer-picker-option relationship-picker-option" data-id="{{ praia.pk }}" data-search="{{ praia.nome|lower }} {{ praia.cidade|lower }}" data-display="{{ praia.nome }} - {{ praia.cidade }}" role="option" aria-selected="false">
+                                <span>{{ praia.nome }}</span>
+                                <small>{{ praia.cidade }}</small>
+                            </button>
+                            {% endfor %}
+                            <span class="volunteer-picker-empty" hidden>Nenhuma praia encontrada.</span>
+                        </div>
+                    </div>
+                    <div hidden>{{ form.praia }}</div>
+                    {% if form.praia.help_text %}<small id="ajuda-praia-beneficiada" class="form-help">{{ form.praia.help_text }}</small>{% endif %}
+                </div>
+                <div class="form-field relationship-field">
+                    {{ form.acao.errors }}
+                    <label for="busca-acao-relacionada">{{ form.acao.label }}{% if form.acao.field.required %} <span class="required-indicator">*</span>{% endif %}</label>
+                    <div class="volunteer-picker relationship-picker" id="acao-picker">
+                        <input id="busca-acao-relacionada" type="search" class="form-control" placeholder="Buscar ação por tipo, praia ou data" autocomplete="off" role="combobox" aria-autocomplete="list" aria-controls="acoes-relacionadas-list" aria-expanded="false" aria-describedby="ajuda-acao-relacionada">
+                        <div id="acoes-relacionadas-list" class="volunteer-picker-options" role="listbox">
+                            <button type="button" class="volunteer-picker-option relationship-picker-option" data-id="" data-search="" data-display="Sem ação específica" role="option" aria-selected="false">
+                                <span>Sem ação específica</span>
+                                <small>Limpar seleção</small>
+                            </button>
+                            {% for acao in form.acao.field.queryset %}
+                            <button type="button" class="volunteer-picker-option relationship-picker-option" data-id="{{ acao.pk }}" data-praia-id="{{ acao.praia_id }}" data-search="{{ acao.get_tipo_display|lower }} {{ acao.praia.nome|lower }} {{ acao.data|date:'d/m/Y' }} {{ acao.local|lower }}" data-display="{{ acao.get_tipo_display }} - {{ acao.praia.nome }} - {{ acao.data|date:'d/m/Y' }}" role="option" aria-selected="false">
+                                <span>{{ acao.get_tipo_display }} · {{ acao.praia.nome }}</span>
+                                <small>{{ acao.data|date:'d/m/Y' }}{% if acao.local %} · {{ acao.local }}{% endif %}</small>
+                            </button>
+                            {% endfor %}
+                            <span class="volunteer-picker-empty" hidden>Nenhuma ação ou mutirão encontrado.</span>
+                        </div>
+                    </div>
+                    <div hidden>{{ form.acao }}</div>
+                    {% if form.acao.help_text %}<small id="ajuda-acao-relacionada" class="form-help">{{ form.acao.help_text }}</small>{% endif %}
+                </div>
             </div>
         </div>
 
         <div id="financeira-fields" class="form-section">
             <div class="form-section-heading"><span class="form-section-number">3</span><div><h3>Dados financeiros</h3><p>Valores pendentes não entram na arrecadação confirmada.</p></div></div>
-            {% for field in financeira_form.visible_fields %}<div class="form-field">{{ field.errors }}<label for="{{ field.id_for_label }}">{{ field.label }} *</label>{{ field }}</div>{% endfor %}
+            <div class="form-grid two-columns">
+            {% for field in financeira_form.visible_fields %}<div class="form-field">{{ field.errors }}<label for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %} <span class="required-indicator">*</span>{% endif %}</label>{{ field }}{% if field.help_text %}<small class="form-help">{{ field.help_text }}</small>{% endif %}</div>{% endfor %}
+            </div>
         </div>
 
         <div id="material-fields" class="form-section">
@@ -71,7 +175,7 @@
                     {% for hidden in item_form.hidden_fields %}{{ hidden }}{% endfor %}
                     {% for field in item_form.visible_fields %}{% if field.name == 'DELETE' %}{{ field.as_hidden }}{% endif %}{% endfor %}
                     <div class="form-grid material-grid">
-                        {% for field in item_form.visible_fields %}{% if field.name != 'DELETE' %}<div class="form-field {% if field.name == 'observacoes' %}full-width{% endif %}">{{ field.errors }}<label for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %} *{% endif %}</label>{{ field }}</div>{% endif %}{% endfor %}
+                        {% for field in item_form.visible_fields %}{% if field.name != 'DELETE' %}<div class="form-field {% if field.name == 'observacoes' %}full-width{% endif %}">{{ field.errors }}<label for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %} <span class="required-indicator">*</span>{% endif %}</label>{{ field }}{% if field.help_text %}<small class="form-help">{{ field.help_text }}</small>{% endif %}</div>{% endif %}{% endfor %}
                     </div>
                 </fieldset>
                 {% endfor %}
@@ -80,7 +184,7 @@
                 <fieldset class="material-card">
                     <legend>Material <span class="material-number"></span></legend>
                     <div class="form-grid material-grid">
-                        {% for field in itens_formset.empty_form.visible_fields %}{% if field.name != 'DELETE' %}<div class="form-field {% if field.name == 'observacoes' %}full-width{% endif %}"><label for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %} *{% endif %}</label>{{ field }}</div>{% endif %}{% endfor %}
+                        {% for field in itens_formset.empty_form.visible_fields %}{% if field.name != 'DELETE' %}<div class="form-field {% if field.name == 'observacoes' %}full-width{% endif %}"><label for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %} <span class="required-indicator">*</span>{% endif %}</label>{{ field }}{% if field.help_text %}<small class="form-help">{{ field.help_text }}</small>{% endif %}</div>{% endif %}{% endfor %}
                     </div>
                     <button type="button" class="btn btn-link remove-material">Remover material</button>
                 </fieldset>
@@ -90,8 +194,8 @@
 
         <div class="form-section">
             <div class="form-section-heading"><span class="form-section-number">4</span><div><h3>Observações e comprovante</h3></div></div>
-            <div class="form-field">{{ form.observacoes.errors }}<label for="{{ form.observacoes.id_for_label }}">Observações</label>{{ form.observacoes }}</div>
-            <div class="form-field">{{ form.referencia_comprovante.errors }}<label for="{{ form.referencia_comprovante.id_for_label }}">Referência do comprovante</label>{{ form.referencia_comprovante }}</div>
+            <div class="form-field">{{ form.observacoes.errors }}<label for="{{ form.observacoes.id_for_label }}">{{ form.observacoes.label }}{% if form.observacoes.field.required %} <span class="required-indicator">*</span>{% endif %}</label>{{ form.observacoes }}{% if form.observacoes.help_text %}<small class="form-help">{{ form.observacoes.help_text }}</small>{% endif %}</div>
+            <div class="form-field">{{ form.referencia_comprovante.errors }}<label for="{{ form.referencia_comprovante.id_for_label }}">{{ form.referencia_comprovante.label }}{% if form.referencia_comprovante.field.required %} <span class="required-indicator">*</span>{% endif %}</label>{{ form.referencia_comprovante }}{% if form.referencia_comprovante.help_text %}<small class="form-help">{{ form.referencia_comprovante.help_text }}</small>{% endif %}</div>
         </div>
         <div class="form-actions"><button class="btn btn-primary" type="submit">Salvar doação</button><a class="btn btn-outline" href="{% if modo == 'edicao' %}{% url 'doacao_detalhe' doacao.id_doacao %}{% else %}{% url 'doacoes' %}{% endif %}">Cancelar</a></div>
     </form>
@@ -106,12 +210,278 @@
         var material = document.getElementById('material-fields');
         var anonima = document.getElementById('id_anonima');
         var doador = document.getElementById('id_doador');
+        var buscaDoador = document.getElementById('busca-doador-relacionado');
+        var ajudaDoadorAnonimo = document.getElementById('ajuda-doador-anonimo');
+        var ajudaDoadorAtivo = document.getElementById('ajuda-doador-ativo');
+        var listaDoadores = document.getElementById('doadores-relacionados-list');
+        var donorPicker = document.getElementById('donor-picker');
+        var praiaSelect = document.getElementById('id_praia');
+        var buscaPraia = document.getElementById('busca-praia-beneficiada');
+        var praiaPicker = document.getElementById('praia-picker');
+        var listaPraias = document.getElementById('praias-beneficiadas-list');
+        var acaoSelect = document.getElementById('id_acao');
+        var buscaAcao = document.getElementById('busca-acao-relacionada');
+        var acaoPicker = document.getElementById('acao-picker');
+        var listaAcoes = document.getElementById('acoes-relacionadas-list');
+        var finalidade = document.getElementById('id_finalidade');
+        var descricaoFinalidade = document.getElementById('id_descricao_finalidade');
+        var marcadorDescricaoFinalidade = document.getElementById('descricao-finalidade-required');
         var novoDoador = document.getElementById('novo-doador-fields');
         var mostrar = document.getElementById('mostrar-novo-doador');
         var ocultar = document.getElementById('ocultar-novo-doador');
+        var voluntarioInline = document.getElementById('id_novo_doador-voluntario');
+        var buscaVoluntarioInline = document.getElementById('inline-busca-voluntario-doador');
+        var listaVoluntariosInline = document.getElementById('inline-voluntarios-doador-list');
+        var seletorVoluntarioInline = document.getElementById('inline-volunteer-picker');
+        var emailInline = document.getElementById('id_novo_doador-email');
+        var telefoneInline = document.getElementById('id_novo_doador-telefone');
+        var doadorAnterior = '';
+        var ignorarProximoFocoDoador = false;
+        var ignorarProximoFocoVoluntarioInline = false;
         var totalForms = document.getElementById('id_itens-TOTAL_FORMS');
         var lista = document.getElementById('materiais-list');
         var modelo = document.getElementById('material-empty-form').innerHTML;
+        var opcoesDoador = Array.from(listaDoadores.querySelectorAll('.donor-picker-option'));
+        var opcoesVoluntarioInline = Array.from(
+            listaVoluntariosInline.querySelectorAll('.inline-volunteer-option')
+        );
+
+        function atualizarVoluntarioInlineSelecionado() {
+            opcoesVoluntarioInline.forEach(function (opcao) {
+                opcao.setAttribute(
+                    'aria-selected',
+                    opcao.dataset.id === voluntarioInline.value ? 'true' : 'false'
+                );
+            });
+        }
+        function sincronizarBuscaVoluntarioInline() {
+            var selecionado = opcoesVoluntarioInline.find(function (opcao) {
+                return opcao.dataset.id === voluntarioInline.value;
+            });
+            buscaVoluntarioInline.value = selecionado
+                ? selecionado.dataset.display
+                : 'Não vincular a voluntário';
+            atualizarVoluntarioInlineSelecionado();
+        }
+        function fecharListaVoluntariosInline(restaurarSelecao) {
+            listaVoluntariosInline.classList.remove('is-open');
+            buscaVoluntarioInline.setAttribute('aria-expanded', 'false');
+            if (restaurarSelecao) sincronizarBuscaVoluntarioInline();
+        }
+        function filtrarVoluntariosInline() {
+            var termo = buscaVoluntarioInline.value.trim().toLowerCase();
+            var visiveis = 0;
+            opcoesVoluntarioInline.forEach(function (opcao) {
+                var corresponde = !termo
+                    || (opcao.dataset.nome && opcao.dataset.nome.includes(termo))
+                    || (opcao.dataset.email && opcao.dataset.email.includes(termo));
+                opcao.hidden = !corresponde;
+                if (corresponde) visiveis += 1;
+            });
+            listaVoluntariosInline.querySelector('.volunteer-picker-empty').hidden = visiveis > 0;
+            listaVoluntariosInline.classList.add('is-open');
+            buscaVoluntarioInline.setAttribute('aria-expanded', 'true');
+        }
+        function preencherContatoVoluntarioInline(opcao) {
+            emailInline.value = opcao.dataset.voluntarioEmail || '';
+            telefoneInline.value = opcao.dataset.voluntarioTelefone || '';
+            emailInline.dispatchEvent(new Event('input', { bubbles: true }));
+            telefoneInline.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+        function selecionarVoluntarioInline(opcao) {
+            voluntarioInline.value = opcao.dataset.id || '';
+            buscaVoluntarioInline.value = opcao.dataset.display || 'Não vincular a voluntário';
+            if (opcao.dataset.id) {
+                preencherContatoVoluntarioInline(opcao);
+            } else {
+                emailInline.value = '';
+                telefoneInline.value = '';
+            }
+            atualizarVoluntarioInlineSelecionado();
+            fecharListaVoluntariosInline(false);
+        }
+
+        function atualizarOpcaoSelecionada() {
+            opcoesDoador.forEach(function (opcao) {
+                opcao.setAttribute('aria-selected', opcao.dataset.id === doador.value ? 'true' : 'false');
+            });
+        }
+        function sincronizarBuscaDoador() {
+            var selecionado = opcoesDoador.find(function (opcao) {
+                return opcao.dataset.id === doador.value;
+            });
+            buscaDoador.value = selecionado ? selecionado.dataset.display : '';
+            atualizarOpcaoSelecionada();
+        }
+        function fecharListaDoadores(restaurarSelecao) {
+            listaDoadores.classList.remove('is-open');
+            buscaDoador.setAttribute('aria-expanded', 'false');
+            if (restaurarSelecao && doador.value) sincronizarBuscaDoador();
+        }
+        function filtrarDoadores() {
+            var termo = buscaDoador.value.trim().toLowerCase();
+            var visiveis = 0;
+            opcoesDoador.forEach(function (opcao) {
+                var corresponde = !termo
+                    || opcao.dataset.nome.includes(termo)
+                    || opcao.dataset.email.includes(termo);
+                opcao.hidden = !corresponde;
+                if (corresponde) visiveis += 1;
+            });
+            listaDoadores.querySelector('.volunteer-picker-empty').hidden = visiveis > 0;
+            listaDoadores.classList.add('is-open');
+            buscaDoador.setAttribute('aria-expanded', 'true');
+        }
+        function selecionarDoador(opcao) {
+            doador.value = opcao.dataset.id;
+            buscaDoador.value = opcao.dataset.display;
+            atualizarOpcaoSelecionada();
+            fecharListaDoadores(false);
+        }
+
+        function prepararBuscaRelacionamento(
+            busca,
+            select,
+            listaOpcoes,
+            seletor,
+            aoSelecionar,
+            correspondeOpcao,
+            aoLimpar
+        ) {
+            var opcoes = Array.from(listaOpcoes.querySelectorAll('.relationship-picker-option'));
+            var ignorarProximoFoco = false;
+            var usuarioDigitouBusca = false;
+            var termoBusca = '';
+
+            function atualizarSelecionada() {
+                opcoes.forEach(function (opcao) {
+                    opcao.setAttribute(
+                        'aria-selected',
+                        opcao.dataset.id === select.value ? 'true' : 'false'
+                    );
+                });
+            }
+            function sincronizarBusca() {
+                var selecionada = opcoes.find(function (opcao) {
+                    return opcao.dataset.id === select.value;
+                });
+                busca.value = selecionada ? selecionada.dataset.display : '';
+                usuarioDigitouBusca = false;
+                termoBusca = '';
+                atualizarSelecionada();
+            }
+            function fecharLista(restaurarSelecao) {
+                listaOpcoes.classList.remove('is-open');
+                busca.setAttribute('aria-expanded', 'false');
+                if (restaurarSelecao) sincronizarBusca();
+            }
+            function atualizarOpcoes() {
+                var visiveis = 0;
+                opcoes.forEach(function (opcao) {
+                    var corresponde = (!correspondeOpcao || correspondeOpcao(opcao))
+                        && (!termoBusca || opcao.dataset.search.includes(termoBusca));
+                    opcao.hidden = !corresponde;
+                    if (corresponde) visiveis += 1;
+                });
+                listaOpcoes.querySelector('.volunteer-picker-empty').hidden = visiveis > 0;
+            }
+            function filtrarOpcoes() {
+                atualizarOpcoes();
+                listaOpcoes.classList.add('is-open');
+                busca.setAttribute('aria-expanded', 'true');
+            }
+            function selecionar(opcao) {
+                select.value = opcao.dataset.id;
+                busca.value = opcao.dataset.display;
+                usuarioDigitouBusca = false;
+                termoBusca = '';
+                atualizarSelecionada();
+                fecharLista(false);
+                if (aoSelecionar) aoSelecionar(opcao);
+            }
+
+            busca.addEventListener('focus', function () {
+                if (ignorarProximoFoco) {
+                    ignorarProximoFoco = false;
+                    return;
+                }
+                if (busca.value && (select.value || !usuarioDigitouBusca)) {
+                    busca.value = '';
+                    usuarioDigitouBusca = false;
+                    termoBusca = '';
+                }
+                filtrarOpcoes();
+            });
+            busca.addEventListener('input', function () {
+                var tinhaSelecao = Boolean(select.value);
+                select.value = '';
+                usuarioDigitouBusca = true;
+                termoBusca = busca.value.trim().toLowerCase();
+                atualizarSelecionada();
+                if (tinhaSelecao && aoLimpar) aoLimpar();
+                filtrarOpcoes();
+            });
+            busca.addEventListener('keydown', function (event) {
+                if (event.key === 'Enter') {
+                    var primeiraOpcao = opcoes.find(function (opcao) {
+                        return !opcao.hidden;
+                    });
+                    if (primeiraOpcao) {
+                        event.preventDefault();
+                        selecionar(primeiraOpcao);
+                    }
+                } else if (event.key === 'Escape') {
+                    fecharLista(true);
+                } else if (event.key === 'ArrowDown') {
+                    var primeiraOpcaoVisivel = opcoes.find(function (opcao) {
+                        return !opcao.hidden;
+                    });
+                    if (primeiraOpcaoVisivel) {
+                        event.preventDefault();
+                        primeiraOpcaoVisivel.focus();
+                    }
+                }
+            });
+            opcoes.forEach(function (opcao) {
+                opcao.addEventListener('mousedown', function (event) {
+                    event.preventDefault();
+                });
+                opcao.addEventListener('click', function () {
+                    var focoDeTeclado = document.activeElement === opcao;
+                    selecionar(opcao);
+                    if (focoDeTeclado) {
+                        ignorarProximoFoco = true;
+                        busca.focus();
+                    }
+                });
+            });
+            seletor.addEventListener('focusout', function (event) {
+                if (!seletor.contains(event.relatedTarget)) fecharLista(true);
+            });
+            document.addEventListener('click', function (event) {
+                if (!seletor.contains(event.target)) fecharLista(true);
+            });
+            if (aoSelecionar && select.value) {
+                var opcaoInicial = opcoes.find(function (opcao) {
+                    return opcao.dataset.id === select.value;
+                });
+                if (opcaoInicial) aoSelecionar(opcaoInicial);
+            }
+            sincronizarBusca();
+            atualizarOpcoes();
+            return {
+                atualizarOpcoes: atualizarOpcoes,
+                limparSelecao: function () {
+                    select.value = '';
+                    busca.value = '';
+                    usuarioDigitouBusca = false;
+                    termoBusca = '';
+                    atualizarSelecionada();
+                    atualizarOpcoes();
+                },
+                selecionar: selecionar
+            };
+        }
 
         function atualizarTipo() {
             var materialSelecionado = tipo.value === 'MATERIAL';
@@ -120,28 +490,221 @@
         }
         function atualizarDoador() {
             doador.disabled = anonima.checked;
+            buscaDoador.disabled = anonima.checked;
+            novoDoador.querySelectorAll('input, select, textarea').forEach(function (campo) {
+                campo.disabled = anonima.checked;
+            });
+            donorPicker.classList.toggle('is-disabled', anonima.checked);
+            seletorVoluntarioInline.classList.toggle('is-disabled', anonima.checked);
+            buscaDoador.setAttribute('aria-disabled', anonima.checked ? 'true' : 'false');
+            buscaVoluntarioInline.setAttribute('aria-disabled', anonima.checked ? 'true' : 'false');
+            ajudaDoadorAnonimo.hidden = !anonima.checked;
+            ajudaDoadorAtivo.hidden = anonima.checked;
             if (anonima.checked) {
                 doador.value = '';
+                buscaDoador.value = '';
+                fecharListaDoadores(false);
+                fecharListaVoluntariosInline(false);
+                atualizarOpcaoSelecionada();
                 novoDoador.hidden = true;
                 mostrar.hidden = true;
             } else {
-                mostrar.hidden = false;
+                sincronizarBuscaDoador();
+                mostrar.hidden = !novoDoador.hidden;
             }
+        }
+        function atualizarDescricaoFinalidade() {
+            var especifica = finalidade.value === 'ESPECIFICA';
+            marcadorDescricaoFinalidade.hidden = !especifica;
+            descricaoFinalidade.setAttribute('aria-required', especifica ? 'true' : 'false');
         }
         function atualizarNumeracao() {
             lista.querySelectorAll('.material-card').forEach(function (card, index) {
                 card.querySelector('.material-number').textContent = index + 1;
             });
         }
+        var acaoPickerControle;
+        var praiaPickerControle = prepararBuscaRelacionamento(
+            buscaPraia,
+            praiaSelect,
+            listaPraias,
+            praiaPicker,
+            function (praia) {
+                if (!acaoPickerControle) return;
+                var acaoSelecionada = Array.from(
+                    listaAcoes.querySelectorAll('.relationship-picker-option')
+                ).find(function (opcao) {
+                    return opcao.dataset.id && opcao.dataset.id === acaoSelect.value;
+                });
+                if (
+                    acaoSelecionada
+                    && acaoSelecionada.dataset.praiaId !== praia.dataset.id
+                ) {
+                    acaoPickerControle.limparSelecao();
+                }
+                acaoPickerControle.atualizarOpcoes();
+            },
+            null,
+            function () {
+                if (!acaoPickerControle) return;
+                acaoPickerControle.limparSelecao();
+                acaoPickerControle.atualizarOpcoes();
+            }
+        );
+        acaoPickerControle = prepararBuscaRelacionamento(
+            buscaAcao,
+            acaoSelect,
+            listaAcoes,
+            acaoPicker,
+            function (acao) {
+                if (!acao.dataset.praiaId) return;
+                var praia = Array.from(
+                    listaPraias.querySelectorAll('.relationship-picker-option')
+                ).find(function (opcao) {
+                    return opcao.dataset.id === acao.dataset.praiaId;
+                });
+                if (!praia) return;
+                praiaPickerControle.selecionar(praia);
+            },
+            function (opcao) {
+                return !opcao.dataset.id
+                    || !praiaSelect.value
+                    || opcao.dataset.praiaId === praiaSelect.value;
+            }
+        );
+        buscaVoluntarioInline.addEventListener('focus', function () {
+            if (ignorarProximoFocoVoluntarioInline) {
+                ignorarProximoFocoVoluntarioInline = false;
+                return;
+            }
+            if (
+                !voluntarioInline.value
+                && buscaVoluntarioInline.value === 'Não vincular a voluntário'
+            ) {
+                buscaVoluntarioInline.value = '';
+            }
+            filtrarVoluntariosInline();
+        });
+        buscaVoluntarioInline.addEventListener('input', filtrarVoluntariosInline);
+        buscaVoluntarioInline.addEventListener('keydown', function (event) {
+            if (event.key === 'Enter') {
+                var primeiraOpcao = opcoesVoluntarioInline.find(function (opcao) {
+                    return !opcao.hidden;
+                });
+                if (primeiraOpcao) {
+                    event.preventDefault();
+                    selecionarVoluntarioInline(primeiraOpcao);
+                }
+            } else if (event.key === 'Escape') {
+                fecharListaVoluntariosInline(true);
+            } else if (event.key === 'ArrowDown') {
+                var primeiraOpcaoVisivel = opcoesVoluntarioInline.find(function (opcao) {
+                    return !opcao.hidden;
+                });
+                if (primeiraOpcaoVisivel) {
+                    event.preventDefault();
+                    primeiraOpcaoVisivel.focus();
+                }
+            }
+        });
+        opcoesVoluntarioInline.forEach(function (opcao) {
+            opcao.addEventListener('mousedown', function (event) {
+                event.preventDefault();
+            });
+            opcao.addEventListener('click', function () {
+                var focoDeTeclado = document.activeElement === opcao;
+                selecionarVoluntarioInline(opcao);
+                if (focoDeTeclado) {
+                    ignorarProximoFocoVoluntarioInline = true;
+                    buscaVoluntarioInline.focus();
+                }
+            });
+        });
+        seletorVoluntarioInline.addEventListener('focusout', function (event) {
+            if (!seletorVoluntarioInline.contains(event.relatedTarget)) {
+                fecharListaVoluntariosInline(true);
+            }
+        });
+        document.addEventListener('click', function (event) {
+            if (!seletorVoluntarioInline.contains(event.target)) {
+                fecharListaVoluntariosInline(true);
+            }
+        });
+        sincronizarBuscaVoluntarioInline();
+        buscaDoador.addEventListener('focus', function () {
+            if (ignorarProximoFocoDoador) {
+                ignorarProximoFocoDoador = false;
+                return;
+            }
+            if (doador.value && buscaDoador.value) buscaDoador.value = '';
+            filtrarDoadores();
+        });
+        buscaDoador.addEventListener('input', function () {
+            doador.value = '';
+            atualizarOpcaoSelecionada();
+            filtrarDoadores();
+        });
+        buscaDoador.addEventListener('keydown', function (event) {
+            if (event.key === 'Enter') {
+                var primeiraOpcao = opcoesDoador.find(function (opcao) {
+                    return !opcao.hidden;
+                });
+                if (primeiraOpcao) {
+                    event.preventDefault();
+                    selecionarDoador(primeiraOpcao);
+                }
+            } else if (event.key === 'Escape') {
+                fecharListaDoadores(true);
+            } else if (event.key === 'ArrowDown') {
+                var primeiraVisivel = opcoesDoador.find(function (opcao) {
+                    return !opcao.hidden;
+                });
+                if (primeiraVisivel) {
+                    event.preventDefault();
+                    primeiraVisivel.focus();
+                }
+            }
+        });
+        opcoesDoador.forEach(function (opcao) {
+            opcao.addEventListener('mousedown', function (event) {
+                event.preventDefault();
+            });
+            opcao.addEventListener('click', function () {
+                var focoDeTeclado = document.activeElement === opcao;
+                selecionarDoador(opcao);
+                if (focoDeTeclado) {
+                    ignorarProximoFocoDoador = true;
+                    buscaDoador.focus();
+                }
+            });
+        });
+        donorPicker.addEventListener('focusout', function (event) {
+            if (!donorPicker.contains(event.relatedTarget)) fecharListaDoadores(true);
+        });
+        document.addEventListener('click', function (event) {
+            if (!donorPicker.contains(event.target)) fecharListaDoadores(true);
+        });
+        sincronizarBuscaDoador();
         mostrar.addEventListener('click', function () {
+            doadorAnterior = doador.value;
             novoDoador.hidden = false;
             mostrar.hidden = true;
+            mostrar.setAttribute('aria-expanded', 'true');
             doador.value = '';
+            buscaDoador.value = '';
+            fecharListaDoadores(false);
+            atualizarOpcaoSelecionada();
         });
         ocultar.addEventListener('click', function () {
             novoDoador.hidden = true;
             mostrar.hidden = false;
-            novoDoador.querySelectorAll('input').forEach(function (input) { input.value = ''; });
+            mostrar.setAttribute('aria-expanded', 'false');
+            novoDoador.querySelectorAll('input:not([type="hidden"]), select, textarea').forEach(function (campo) {
+                campo.value = '';
+            });
+            sincronizarBuscaVoluntarioInline();
+            doador.value = doadorAnterior;
+            sincronizarBuscaDoador();
         });
         document.getElementById('add-material').addEventListener('click', function () {
             var index = Number(totalForms.value);
@@ -164,9 +727,14 @@
         });
         tipo.addEventListener('change', atualizarTipo);
         anonima.addEventListener('change', atualizarDoador);
+        finalidade.addEventListener('change', atualizarDescricaoFinalidade);
         atualizarTipo();
         atualizarDoador();
+        atualizarDescricaoFinalidade();
         atualizarNumeracao();
+        if (!novoDoador.hidden) {
+            mostrar.hidden = true;
+        }
     }());
 </script>
 {% endblock %}
