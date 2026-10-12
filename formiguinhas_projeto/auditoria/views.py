@@ -1,6 +1,7 @@
 from datetime import datetime, time
 from django.shortcuts import redirect, render
 from django.utils.dateparse import parse_date
+from usuario.paginacao import paginar_queryset
 from usuario.models import Usuario
 from .models import EventoAuditoria
 
@@ -28,9 +29,12 @@ def global_auditoria(request):
         eventos = eventos.filter(data_evento__gte=datetime.combine(inicio, time.min))
     if fim:
         eventos = eventos.filter(data_evento__lte=datetime.combine(fim, time.max))
+    eventos = eventos.order_by('-data_evento', '-id')
+    pagina, filtros_query = paginar_queryset(request, eventos, por_pagina=20)
     entidades = EventoAuditoria.objects.values_list('entidade', flat=True).distinct().order_by('entidade')
     return render(request, 'sistema/auditorias.html', {
-        'usuario': usuario, 'auditorias': eventos[:300],
+        'usuario': usuario, 'auditorias': pagina.object_list,
+        'pagina': pagina, 'filtros_query': filtros_query,
         'entidades': entidades, 'entidade_selecionada': entidade,
         'acao_selecionada': acao, 'usuario_selecionado': usuario_filtro,
         'inicio': request.GET.get('inicio', ''), 'fim': request.GET.get('fim', ''),
