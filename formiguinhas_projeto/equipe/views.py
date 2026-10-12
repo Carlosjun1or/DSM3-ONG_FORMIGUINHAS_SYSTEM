@@ -5,6 +5,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 
 from usuario.views import get_session_usuario
+from usuario.paginacao import paginar_queryset
 
 from .forms import EquipeForm, EquipeMembroForm
 from .models import Equipe, EquipeMembro
@@ -86,10 +87,13 @@ def equipes_view(request):
         )
     equipes = equipes.distinct()
 
+    pagina, filtros_query = paginar_queryset(request, equipes)
     base_queryset = equipe_queryset_para_usuario(usuario)
     return render(request, 'sistema/equipes.html', {
         'usuario': usuario,
-        'equipes': equipes,
+        'equipes': pagina.object_list,
+        'pagina': pagina,
+        'filtros_query': filtros_query,
         'busca': busca,
         'status_selecionado': status,
         'status_choices': Equipe.STATUS_CHOICES,
