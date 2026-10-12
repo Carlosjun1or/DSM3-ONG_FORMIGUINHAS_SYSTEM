@@ -96,10 +96,23 @@
                             <strong>{{ acao.get_tipo_display }}</strong>
                         </a>
                     </td>
-                    <td>{{ acao.praia.nome }}</td>
+                    <td><a class="table-link" href="{% url 'praias' %}?praia={{ acao.praia.id_praia }}#praia-{{ acao.praia.id_praia }}"><strong>{{ acao.praia.nome }}</strong></a></td>
                     <td>{{ acao.data|date:'d/m/Y' }}{% if acao.horario %}<br><small>{{ acao.horario|time:'H:i' }}</small>{% endif %}</td>
                     <td>{{ acao.local|default:'-' }}</td>
-                    <td><span class="status-pill">{{ acao.get_status_display }}</span></td>
+                    <td>
+                        {% if usuario.tipo == 'ADMIN' %}
+                        <form method="post" action="{% url 'atualizar_status_acao' acao.id_acao %}" class="inline-status-form">
+                            {% csrf_token %}
+                            <select name="status" class="status-select status-{{ acao.status|lower }}" aria-label="Status da ação {{ acao.id_acao }}" onchange="this.form.submit()">
+                                {% for valor, rotulo in status_choices %}
+                                    <option value="{{ valor }}" {% if acao.status == valor %}selected{% endif %}>{{ rotulo }}</option>
+                                {% endfor %}
+                            </select>
+                        </form>
+                        {% else %}
+                        <span class="status-badge status-{{ acao.status|lower }}">{{ acao.get_status_display }}</span>
+                        {% endif %}
+                    </td>
                     <td>{{ acao.participantes.count }}</td>
                     <td class="audit-cell">
                         <strong>{% if acao.cadastrado_por_nome %}Cadastrado por {{ acao.cadastrado_por_nome }}{% elif acao.cadastrado_por %}Cadastrado por {{ acao.cadastrado_por.id_voluntario.nome }}{% else %}Cadastro anterior{% endif %}</strong>
@@ -121,6 +134,7 @@
             </tbody>
         </table>
     </div>
+    {% include 'sistema/includes/paginacao.html' %}
     {% else %}
     <div class="empty-state table-empty">
         <h3>Nenhuma ação cadastrada</h3>

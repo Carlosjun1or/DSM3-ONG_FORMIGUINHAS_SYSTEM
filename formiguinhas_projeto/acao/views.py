@@ -6,6 +6,7 @@ from django.utils import timezone
 
 from praia.models import Praia
 from usuario.views import get_session_usuario
+from usuario.paginacao import paginar_queryset
 
 from .forms import (
     AcaoForm,
@@ -78,10 +79,14 @@ def acoes_view(request):
             participantes__voluntario=usuario.id_voluntario,
         ).distinct()
 
+    acoes = acoes.order_by('-data', '-id_acao')
+    pagina, filtros_query = paginar_queryset(request, acoes)
     base_acoes = Acao.objects.all()
     return render(request, 'sistema/acoes.html', {
         'usuario': usuario,
-        'acoes': acoes.order_by('-data'),
+        'acoes': pagina.object_list,
+        'pagina': pagina,
+        'filtros_query': filtros_query,
         'busca': busca,
         'tipo_selecionado': tipo,
         'status_selecionado': status,
@@ -330,12 +335,13 @@ def atualizar_status_acao_view(request, acao_id):
     if not usuario:
         return redirect('login')
     if usuario.tipo != 'ADMIN':
-        return redirect('acao_detalhe', acao_id=acao_id)
+        return redirect('acoes')
 
     acao = get_object_or_404(Acao, id_acao=acao_id)
     if request.method == 'POST':
         novo_status = request.POST.get('status')
         if novo_status in dict(Acao.STATUS_CHOICES):
+            status_anterior = acao.get_status_display()
             acao.status = novo_status
             preencher_auditoria(acao, usuario)
             acao.save(update_fields=[
@@ -345,7 +351,15 @@ def atualizar_status_acao_view(request, acao_id):
                 'ultimo_editado_por_tipo',
                 'dt_ultima_edicao',
             ])
-    return redirect('acao_detalhe', acao_id=acao.id_acao)
+            messages.success(
+                request,
+                f'Status da ação atualizado de {status_anterior} para {acao.get_status_display()}.',
+            )
+        else:
+            messages.error(request, 'Status de ação inválido.')
+    else:
+        messages.error(request, 'Atualização de status inválida.')
+    return redirect('acoes')
 
 
 def confirmar_participacao_view(request, acao_id, participante_id):
