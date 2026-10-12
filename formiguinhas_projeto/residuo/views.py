@@ -7,6 +7,7 @@ from django.utils import timezone
 from acao.models import Acao
 from auditoria.services import registrar_evento, snapshot
 from usuario.views import get_session_usuario
+from usuario.paginacao import paginar_queryset
 
 from .forms import (
     ColetaResiduoForm,
@@ -64,9 +65,13 @@ def residuos_view(request):
     if acao_id.isdigit():
         residuos = residuos.filter(acao_id=acao_id)
 
+    residuos = residuos.order_by('-id_residuo')
+    pagina, filtros_query = paginar_queryset(request, residuos)
     return render(request, 'sistema/residuos.html', {
         'usuario': usuario,
-        'residuos': residuos,
+        'residuos': pagina.object_list,
+        'pagina': pagina,
+        'filtros_query': filtros_query,
         'acoes': Acao.objects.order_by('-data', '-id_acao'),
         'busca': busca,
         'tipo_selecionado': tipo,
@@ -130,7 +135,12 @@ def detalhe_coleta_residuo_view(request, coleta_id):
     if not usuario:
         return redirect('login')
     coleta = get_object_or_404(
-        ColetaResiduo.objects.select_related('acao', 'bag', 'bag__condominio')
+        ColetaResiduo.objects.select_related(
+            'acao',
+            'acao__praia',
+            'bag',
+            'bag__condominio',
+        )
         .prefetch_related('itens__destinacoes'),
         id_coleta=coleta_id,
     )

@@ -4,7 +4,7 @@
 {% block page_title %}Controle de Resíduos{% endblock %}
 
 {% block conteudo %}
-<section class="card-grid volunteer-metrics residue-metrics">
+<section class="card-grid volunteer-metrics residue-metrics" aria-label="Resumo dos resíduos">
     <article class="card"><h3>Registros coletados</h3><div class="metric">{{ total_residuos }}</div></article>
     <article class="card"><h3>Destinações registradas</h3><div class="metric">{{ total_destinacoes }}</div></article>
     <article class="card"><h3>Ações com resíduos</h3><div class="metric">{{ total_acoes_com_residuos }}</div></article>
@@ -24,16 +24,19 @@
     <p class="table-scroll-hint">Deslize dentro da lista para consultar outras coletas.</p>
 </section>
 
-<section class="card volunteer-control">
+<section class="card volunteer-control residue-records">
     <div class="section-heading">
         <div>
             <h2>Todos os resíduos registrados</h2>
-            <p class="form-subtitle">Consulte coleta, classificação, destinação, ação vinculada e responsáveis em uma única tela.</p>
+            <p class="form-subtitle">Consulte coleta, classificação, destinação, ação vinculada e responsáveis.</p>
         </div>
-        <a href="{% url 'acoes' %}" class="btn btn-outline">Ver ações</a>
+        <div class="section-heading-actions">
+            <span class="section-count">{{ residuos|length }}</span>
+            <a href="{% url 'acoes' %}" class="btn btn-outline">Ver ações</a>
+        </div>
     </div>
 
-    <form method="get" class="volunteer-filters">
+    <form method="get" class="volunteer-filters residue-filters">
         <div class="form-group">
             <label for="id_busca">Buscar</label>
             <input id="id_busca" name="busca" type="search" value="{{ busca }}" class="form-control" placeholder="Tipo, categoria, ação ou responsável">
@@ -73,7 +76,7 @@
     </form>
 
     {% if residuos %}
-    <div class="table-wrap">
+    <div class="table-wrap residue-records-table">
         <table class="data-table">
             <thead>
                 <tr>
@@ -115,6 +118,7 @@
             </tbody>
         </table>
     </div>
+    {% include 'sistema/includes/paginacao.html' %}
     {% else %}
     <div class="empty-state table-empty"><h3>Nenhum resíduo encontrado</h3><p class="form-subtitle">Cadastre resíduos no detalhe de uma ação ou ajuste os filtros.</p></div>
     {% endif %}
