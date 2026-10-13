@@ -1,0 +1,12 @@
+{% extends 'sistema/template-sistema.html' %}
+
+{% block titulo %}Logout | Sistema{% endblock %}
+{% block page_title %}Logout{% endblock %}
+
+{% block conteudo %}
+<section class="empty-state">
+    <h2>Você saiu do sistema</h2>
+    <p class="form-subtitle">Sua sessão foi encerrada com sucesso.</p>
+    <a href="{% url 'login' %}" class="btn btn-primary">Fazer login novamente</a>
+</section>
+{% endblock %}

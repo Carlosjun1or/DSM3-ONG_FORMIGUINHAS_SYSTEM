@@ -1,0 +1,75 @@
+{% extends 'sistema/template-sistema.html' %}
+{% load static %}
+
+{% block titulo %}Doações | Sistema{% endblock %}
+{% block page_title %}Doações de materiais{% endblock %}
+{% block estilos %}<link rel="stylesheet" href="{% static 'estoque/estoque.css' %}">
+<script src="{% static 'estoque/estoque.js' %}" defer></script>{% endblock %}
+
+{% block conteudo %}
+<section class="card-grid volunteer-metrics">
+    <article class="card">
+        <h3>Doações registradas</h3>
+        <div class="metric">{{ total_doacoes }}</div>
+    </article>
+    <article class="card">
+        <h3>Itens doados</h3>
+        <div class="metric">{{ total_itens_doados }}</div>
+    </article>
+</section>
+
+<section class="card volunteer-control">
+    <div class="section-heading">
+        <div>
+            <h2>Doações recebidas</h2>
+            <p class="form-subtitle">Cada doação registrada gera automaticamente a entrada correspondente no estoque.</p>
+        </div>
+        <div class="table-actions">
+            <a href="{% url 'materiais' %}" class="btn btn-outline">Voltar ao estoque</a>
+            <a href="{% url 'cadastrar_doacao_estoque' %}" class="btn btn-primary">Registrar doação</a>
+        </div>
+    </div>
+
+    <form method="get" class="volunteer-filters">
+        <div class="form-group">
+            <label for="id_busca">Buscar</label>
+            <input id="id_busca" name="busca" type="search" value="{{ busca }}" class="form-control" placeholder="Doador ou material" autocomplete="off">
+        </div>
+        <div class="filter-actions">
+            <button type="submit" class="btn btn-primary">Filtrar</button>
+            {% if busca %}<a href="{% url 'doacoes_estoque' %}" class="form-link">Limpar</a>{% endif %}
+        </div>
+    </form>
+
+    {% if page_obj %}
+    <div class="table-wrap">
+        <table class="data-table">
+            <thead>
+                <tr><th>Data</th><th>Doador</th><th>Material</th><th>Quantidade</th><th>Registrado por</th></tr>
+            </thead>
+            <tbody>
+                {% for d in page_obj %}
+                <tr>
+                    <td>{{ d.dt_cadastro|date:'d/m/Y H:i' }}</td>
+                    <td>{{ d.doador }}</td>
+                    <td>{{ d.material.nome }}</td>
+                    <td>{{ d.quantidade }} {{ d.material.get_unidade_display }}</td>
+                    <td>{{ d.registrado_por_nome|default:'-' }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div class="estoque-paginacao">
+        {% if page_obj.has_previous %}<a class="form-link" href="?{% if querystring %}{{ querystring }}&amp;{% endif %}page={{ page_obj.previous_page_number }}">&laquo; Anterior</a>{% endif %}
+        <span>Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span>
+        {% if page_obj.has_next %}<a class="form-link" href="?{% if querystring %}{{ querystring }}&amp;{% endif %}page={{ page_obj.next_page_number }}">Próxima &raquo;</a>{% endif %}
+    </div>
+    {% else %}
+    <div class="empty-state table-empty">
+        <h3>Nenhuma doação encontrada</h3>
+        <p class="form-subtitle">Registre a primeira doação para lançar a entrada no estoque.</p>
+    </div>
+    {% endif %}
+</section>
+{% endblock %}
