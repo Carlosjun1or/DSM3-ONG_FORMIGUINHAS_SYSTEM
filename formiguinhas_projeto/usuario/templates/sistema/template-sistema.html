@@ -34,6 +34,7 @@
                 {% if request.session.usuario_tipo == 'ADMIN' %}
                 <a href="{% url 'doacoes' %}" class="sidebar-link {% if '/doacao/' in request.path and '/doacao/doadores/' not in request.path %}active{% endif %}">Controle de Doações</a>
                 <a href="{% url 'doadores' %}" class="sidebar-link {% if '/doacao/doadores/' in request.path %}active{% endif %}">Controle de Doadores</a>
+                <a href="{% url 'materiais' %}" class="sidebar-link {% if '/estoque/' in request.path %}active{% endif %}">Controle de Estoque</a>
                 {% endif %}
                 {% if request.session.usuario_tipo == 'ADMIN' or request.session.usuario_tipo == 'COORDENADOR' %}
                 <a href="{% url 'residuos' %}" class="sidebar-link {% if request.path == '/residuo/' %}active{% endif %}">Controle de Resíduos</a>
@@ -82,7 +83,7 @@
             {% endif %}
             {% if messages %}
                 {% for message in messages %}
-                    <div class="alert-box">{{ message }}</div>
+                    <div class="alert-box{% if message.tags %} alert-{{ message.tags }}{% endif %}" role="status" data-toast>{{ message }}</div>
                 {% endfor %}
             {% endif %}
 

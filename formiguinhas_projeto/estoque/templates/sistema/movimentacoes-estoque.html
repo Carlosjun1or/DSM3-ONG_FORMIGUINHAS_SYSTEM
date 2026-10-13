@@ -1,0 +1,98 @@
+{% extends 'sistema/template-sistema.html' %}
+{% load static %}
+
+{% block titulo %}Histórico de Estoque | Sistema{% endblock %}
+{% block page_title %}Histórico de movimentações de estoque{% endblock %}
+{% block estilos %}<link rel="stylesheet" href="{% static 'estoque/estoque.css' %}">
+<script src="{% static 'estoque/estoque.js' %}" defer></script>{% endblock %}
+
+{% block conteudo %}
+<section class="card volunteer-control">
+    <div class="section-heading">
+        <div>
+            <h2>Movimentações</h2>
+            <p class="form-subtitle">Use os filtros para refinar a busca. O histórico não pode ser editado nem excluído.</p>
+        </div>
+        <div class="table-actions">
+            <a data-live="exportar" href="{% url 'exportar_movimentacoes_estoque' %}{% if querystring %}?{{ querystring }}{% endif %}" class="btn btn-outline">Exportar CSV</a>
+            <a href="{% url 'cadastrar_movimentacao_estoque' %}" class="btn btn-primary">Registrar movimentação</a>
+        </div>
+    </div>
+
+    <form method="get" class="volunteer-filters" data-filtro-vivo>
+        <div class="form-group">
+            <label for="f-busca">Material</label>
+            <input id="f-busca" name="busca" type="search" value="{{ filtros.busca }}" class="form-control" placeholder="Nome ou código" autocomplete="off">
+        </div>
+        <div class="form-group">
+            <label for="f-tipo">Tipo</label>
+            <select id="f-tipo" name="tipo" class="form-control">
+                <option value="">Todos</option>
+                {% for valor, rotulo in tipo_choices %}<option value="{{ valor }}" {% if filtros.tipo == valor %}selected{% endif %}>{{ rotulo }}</option>{% endfor %}
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="f-origem">Origem</label>
+            <select id="f-origem" name="origem" class="form-control">
+                <option value="">Todas</option>
+                {% for valor, rotulo in origem_choices %}<option value="{{ valor }}" {% if filtros.origem == valor %}selected{% endif %}>{{ rotulo }}</option>{% endfor %}
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="f-inicio">Data início</label>
+            <input id="f-inicio" name="data_inicio" type="date" value="{{ filtros.data_inicio }}" class="form-control">
+        </div>
+        <div class="form-group">
+            <label for="f-fim">Data fim</label>
+            <input id="f-fim" name="data_fim" type="date" value="{{ filtros.data_fim }}" class="form-control">
+        </div>
+        <div class="filter-actions" data-live="acoes">
+            <button type="submit" class="btn btn-primary">Filtrar</button>
+            {% if querystring %}<a href="{% url 'movimentacoes_estoque' %}" class="form-link">Limpar</a>{% endif %}
+        </div>
+    </form>
+
+    <div data-live="resultado">
+    {% if page_obj %}
+    <div class="table-wrap">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Data/hora</th>
+                    <th>Tipo</th>
+                    <th>Material</th>
+                    <th>Quantidade</th>
+                    <th>Responsável</th>
+                    <th>Justificativa</th>
+                    <th>Origem</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for mov in page_obj %}
+                <tr>
+                    <td>{{ mov.dt_cadastro|date:'d/m/Y H:i' }}</td>
+                    <td><span class="status-badge {% if mov.tipo == 'ENTRADA' %}status-ativo{% else %}status-pausado{% endif %}">{{ mov.get_tipo_display }}</span></td>
+                    <td>{{ mov.material.nome }}</td>
+                    <td>{{ mov.quantidade }} {{ mov.material.get_unidade_display }}</td>
+                    <td>{{ mov.registrado_por_nome|default:'-' }}</td>
+                    <td>{{ mov.justificativa|default:'-'|truncatechars:80 }}</td>
+                    <td>{{ mov.origem_detalhada }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div class="estoque-paginacao">
+        {% if page_obj.has_previous %}<a class="form-link" href="?{% if querystring %}{{ querystring }}&amp;{% endif %}page={{ page_obj.previous_page_number }}">&laquo; Anterior</a>{% endif %}
+        <span>Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span>
+        {% if page_obj.has_next %}<a class="form-link" href="?{% if querystring %}{{ querystring }}&amp;{% endif %}page={{ page_obj.next_page_number }}">Próxima &raquo;</a>{% endif %}
+    </div>
+    {% else %}
+    <div class="empty-state table-empty">
+        <h3>Nenhuma movimentação encontrada</h3>
+        <p class="form-subtitle">Ajuste os filtros ou registre uma movimentação.</p>
+    </div>
+    {% endif %}
+    </div>
+</section>
+{% endblock %}
