@@ -87,7 +87,7 @@ class Command(BaseCommand):
             )
 
         material, criada = Doacao.objects.get_or_create(
-            observacoes='DADO DEMONSTRATIVO - materiais reservados para futura integração com estoque.',
+            observacoes='DADO DEMONSTRATIVO - materiais pendentes de confirmação e entrada no estoque.',
             defaults={
                 'tipo': Doacao.MATERIAL,
                 'doador': doador_pj,

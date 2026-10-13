@@ -2,6 +2,7 @@ from urllib.parse import urlencode
 
 from django.contrib import messages
 from django.db import models, transaction
+from django.db.models import Avg
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
@@ -70,8 +71,13 @@ def condominios_view(request):
         'status_selecionado': status,
         'status_choices': Condominio.STATUS_CHOICES,
         'total_condominios': Condominio.objects.count(),
+        'condominios_ativos': Condominio.objects.filter(status='ATIVO').count(),
+        'condominios_em_avaliacao': Condominio.objects.filter(
+            confiabilidade='EM_AVALIACAO'
+        ).count(),
         'total_bags': Bag.objects.count(),
         'bags_cheias': Bag.objects.filter(status='CHEIA').count(),
+        'bags_disponiveis': Bag.objects.filter(status='DISPONIVEL').count(),
     })
 
 
@@ -110,6 +116,9 @@ def bags_view(request):
         'total_bags': Bag.objects.count(),
         'bags_cheias': Bag.objects.filter(status='CHEIA').count(),
         'bags_em_uso': Bag.objects.filter(status='EM_USO').count(),
+        'bags_disponiveis': Bag.objects.filter(status='DISPONIVEL').count(),
+        'bags_danificadas': Bag.objects.filter(status='DANIFICADA').count(),
+        'ocupacao_media': Bag.objects.aggregate(media=Avg('percentual_ocupacao'))['media'] or 0,
     })
 
 

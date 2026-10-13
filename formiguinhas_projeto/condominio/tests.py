@@ -180,6 +180,29 @@ class ControleCondominioPermissoesTests(TestCase):
                 resposta.content,
             )
 
+    def test_menu_lateral_destaca_bags_sem_destacar_condominios(self):
+        self.autenticar(self.admin)
+
+        for url in (
+            reverse('bags'),
+            reverse('cadastrar_bag'),
+            reverse('detalhe_bag', args=[self.bag.id_bag]),
+            reverse('editar_bag', args=[self.bag.id_bag]),
+            reverse('cadastrar_movimentacao_bag', args=[self.bag.id_bag]),
+        ):
+            resposta = self.client.get(url)
+            self.assertEqual(resposta.status_code, 200)
+            self.assertContains(
+                resposta,
+                '<a href="/condominio/bags/" class="sidebar-link active">Controle de Bags</a>',
+                html=True,
+            )
+            self.assertContains(
+                resposta,
+                '<a href="/condominio/" class="sidebar-link ">Controle de Condomínios</a>',
+                html=True,
+            )
+
     def test_admin_altera_status_direto_na_lista_com_movimentacao_e_auditoria(self):
         self.autenticar(self.admin)
 

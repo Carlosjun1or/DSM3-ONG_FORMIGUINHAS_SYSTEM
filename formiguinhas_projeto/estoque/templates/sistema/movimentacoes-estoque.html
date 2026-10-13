@@ -3,23 +3,43 @@
 
 {% block titulo %}Histórico de Estoque | Sistema{% endblock %}
 {% block page_title %}Histórico de movimentações de estoque{% endblock %}
-{% block estilos %}<link rel="stylesheet" href="{% static 'estoque/estoque.css' %}">
+{% block estilos %}<link rel="stylesheet" href="{% static 'estoque/estoque.css' %}?v=2">
 <script src="{% static 'estoque/estoque.js' %}" defer></script>{% endblock %}
 
 {% block conteudo %}
-<section class="card volunteer-control">
+<section class="card-grid volunteer-metrics estoque-metricas estoque-metricas-movimentacoes" data-live="metricas" aria-label="Resumo das movimentações">
+    <article class="card estoque-metrica-card">
+        <span class="section-kicker">Histórico</span>
+        <h3>Movimentações encontradas</h3>
+        <div class="metric">{{ total_movimentacoes }}</div>
+    </article>
+    <article class="card estoque-metrica-card">
+        <span class="section-kicker">Entradas</span>
+        <h3>Entradas registradas</h3>
+        <div class="metric">{{ total_entradas }}</div>
+    </article>
+    <article class="card estoque-metrica-card">
+        <span class="section-kicker">Saídas</span>
+        <h3>Saídas registradas</h3>
+        <div class="metric">{{ total_saidas }}</div>
+    </article>
+</section>
+
+<section class="card volunteer-control estoque-painel estoque-lista">
     <div class="section-heading">
         <div>
+            <span class="section-kicker">Rastreabilidade</span>
             <h2>Movimentações</h2>
             <p class="form-subtitle">Use os filtros para refinar a busca. O histórico não pode ser editado nem excluído.</p>
         </div>
-        <div class="table-actions">
-            <a data-live="exportar" href="{% url 'exportar_movimentacoes_estoque' %}{% if querystring %}?{{ querystring }}{% endif %}" class="btn btn-outline">Exportar CSV</a>
+        <div class="estoque-acoes" data-live="exportar">
+            <a href="{% url 'materiais' %}" class="btn btn-outline">Ver materiais</a>
+            <a href="{% url 'exportar_movimentacoes_estoque' %}{% if querystring %}?{{ querystring }}{% endif %}" class="btn btn-outline">Exportar CSV</a>
             <a href="{% url 'cadastrar_movimentacao_estoque' %}" class="btn btn-primary">Registrar movimentação</a>
         </div>
     </div>
 
-    <form method="get" class="volunteer-filters" data-filtro-vivo>
+    <form method="get" class="volunteer-filters estoque-filtros movimentacoes-filtros" data-filtro-vivo aria-label="Filtrar movimentações">
         <div class="form-group">
             <label for="f-busca">Material</label>
             <input id="f-busca" name="busca" type="search" value="{{ filtros.busca }}" class="form-control" placeholder="Nome ou código" autocomplete="off">
@@ -48,45 +68,56 @@
         </div>
         <div class="filter-actions" data-live="acoes">
             <button type="submit" class="btn btn-primary">Filtrar</button>
-            {% if querystring %}<a href="{% url 'movimentacoes_estoque' %}" class="form-link">Limpar</a>{% endif %}
+            <a href="{% url 'movimentacoes_estoque' %}" class="form-link">Limpar filtros</a>
         </div>
     </form>
 
     <div data-live="resultado">
     {% if page_obj %}
-    <div class="table-wrap">
+    <p class="estoque-dica-tabela">Em telas menores, deslize a tabela horizontalmente para consultar os detalhes.</p>
+    <div class="table-wrap estoque-tabela estoque-tabela-movimentacoes">
         <table class="data-table">
             <thead>
                 <tr>
                     <th>Data/hora</th>
-                    <th>Tipo</th>
+                    <th>Movimento</th>
                     <th>Material</th>
                     <th>Quantidade</th>
                     <th>Responsável</th>
-                    <th>Justificativa</th>
-                    <th>Origem</th>
+                    <th>Detalhes</th>
                 </tr>
             </thead>
             <tbody>
                 {% for mov in page_obj %}
                 <tr>
-                    <td>{{ mov.dt_cadastro|date:'d/m/Y H:i' }}</td>
-                    <td><span class="status-badge {% if mov.tipo == 'ENTRADA' %}status-ativo{% else %}status-pausado{% endif %}">{{ mov.get_tipo_display }}</span></td>
-                    <td>{{ mov.material.nome }}</td>
-                    <td>{{ mov.quantidade }} {{ mov.material.get_unidade_display }}</td>
+                    <td>
+                        <strong>{{ mov.dt_cadastro|date:'d/m/Y H:i' }}</strong>
+                        <small class="table-secondary">Registro #{{ mov.id_movimentacao }}</small>
+                    </td>
+                    <td><span class="status-badge {% if mov.tipo == 'ENTRADA' %}status-ativo{% else %}status-pausado{% endif %}">{{ mov.get_tipo_display }}</span><small class="table-secondary">{{ mov.origem_detalhada }}</small></td>
+                    <td>
+                        <a class="table-link" href="{% url 'materiais' %}?busca={{ mov.material.codigo|urlencode }}" title="Abrir {{ mov.material.nome }}"><strong>{{ mov.material.nome }}</strong></a>
+                        <small class="table-secondary">Código {{ mov.material.codigo }} · <a class="table-link" href="{% url 'materiais' %}?busca={{ mov.material.codigo|urlencode }}">ver material</a></small>
+                    </td>
+                    <td><strong>{% if mov.tipo == 'ENTRADA' %}+{% else %}−{% endif %}{{ mov.quantidade }}</strong><small class="table-secondary">{{ mov.material.get_unidade_display }}</small></td>
                     <td>{{ mov.registrado_por_nome|default:'-' }}</td>
-                    <td>{{ mov.justificativa|default:'-'|truncatechars:80 }}</td>
-                    <td>{{ mov.origem_detalhada }}</td>
+                    <td class="movimentacao-detalhes">
+                        {% if mov.doacao %}
+                            <a class="table-link" href="{% url 'doacao_detalhe' mov.doacao.id_doacao %}">Doação #{{ mov.doacao.id_doacao }}</a>
+                            {% if mov.doacao.doador %}<small class="table-secondary">{{ mov.doacao.doador.nome }}</small>{% endif %}
+                            {% if mov.item_doacao %}<small class="table-secondary">Item: {{ mov.item_doacao.nome }}</small>{% endif %}
+                        {% elif mov.justificativa %}
+                            {{ mov.justificativa|truncatechars:100 }}
+                        {% else %}
+                            <span class="muted">Sem observações adicionais</span>
+                        {% endif %}
+                    </td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
-    <div class="estoque-paginacao">
-        {% if page_obj.has_previous %}<a class="form-link" href="?{% if querystring %}{{ querystring }}&amp;{% endif %}page={{ page_obj.previous_page_number }}">&laquo; Anterior</a>{% endif %}
-        <span>Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span>
-        {% if page_obj.has_next %}<a class="form-link" href="?{% if querystring %}{{ querystring }}&amp;{% endif %}page={{ page_obj.next_page_number }}">Próxima &raquo;</a>{% endif %}
-    </div>
+    {% include 'sistema/includes/paginacao.html' %}
     {% else %}
     <div class="empty-state table-empty">
         <h3>Nenhuma movimentação encontrada</h3>

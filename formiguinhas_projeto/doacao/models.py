@@ -33,6 +33,8 @@ class Doador(models.Model):
     cadastrado_por = models.ForeignKey(
         'usuario.Usuario',
         on_delete=models.PROTECT,
+        null=True,
+        blank=True,
         related_name='doadores_cadastrados',
     )
     cadastrado_por_nome = models.CharField(max_length=150)
@@ -153,7 +155,9 @@ class Doacao(models.Model):
     registrado_por = models.ForeignKey(
         'usuario.Usuario',
         on_delete=models.PROTECT,
-        related_name='doacoes_registradas',
+        null=True,
+        blank=True,
+        related_name='doacoes_registradas_doacao_app',
     )
     registrado_por_nome = models.CharField(max_length=150)
     registrado_por_tipo = models.CharField(max_length=20)
@@ -233,11 +237,13 @@ class ItemDoacaoMaterial(models.Model):
     CONDICAO_BOM = 'BOM'
     CONDICAO_USADO = 'USADO'
     CONDICAO_DANIFICADO = 'DANIFICADO'
+    CONDICAO_NAO_INFORMADA = 'NAO_INFORMADA'
     CONDICAO_CHOICES = [
         (CONDICAO_NOVO, 'Novo'),
         (CONDICAO_BOM, 'Bom estado'),
         (CONDICAO_USADO, 'Usado'),
         (CONDICAO_DANIFICADO, 'Danificado'),
+        (CONDICAO_NAO_INFORMADA, 'Não informada'),
     ]
 
     id_item = models.AutoField(primary_key=True)
@@ -245,6 +251,13 @@ class ItemDoacaoMaterial(models.Model):
         Doacao,
         on_delete=models.CASCADE,
         related_name='itens_materiais',
+    )
+    material = models.ForeignKey(
+        'estoque.Material',
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name='itens_doacao',
     )
     nome = models.CharField(max_length=150)
     categoria = models.CharField(max_length=100)
@@ -254,7 +267,7 @@ class ItemDoacaoMaterial(models.Model):
         validators=[MinValueValidator(Decimal('0.01'))],
     )
     unidade = models.CharField(max_length=30)
-    condicao = models.CharField(max_length=12, choices=CONDICAO_CHOICES)
+    condicao = models.CharField(max_length=13, choices=CONDICAO_CHOICES)
     observacoes = models.TextField(blank=True, default='')
 
     class Meta:

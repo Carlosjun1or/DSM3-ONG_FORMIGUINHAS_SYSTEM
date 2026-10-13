@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Doacao, Material, MovimentacaoEstoque
+from .models import Material, MovimentacaoEstoque
 
 
 @admin.register(Material)
@@ -21,12 +21,6 @@ class SomenteLeituraAdmin(admin.ModelAdmin):
 
     def has_delete_permission(self, request, obj=None):
         return False
-
-
-@admin.register(Doacao)
-class DoacaoAdmin(SomenteLeituraAdmin):
-    list_display = ('doador', 'material', 'quantidade', 'registrado_por_nome', 'dt_cadastro')
-    search_fields = ('doador', 'material__nome')
 
 
 @admin.register(MovimentacaoEstoque)

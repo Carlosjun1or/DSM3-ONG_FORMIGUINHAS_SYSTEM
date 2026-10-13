@@ -1,9 +1,10 @@
 from django import forms
 from django.db.models import Q
-from django.forms import inlineformset_factory
+from django.forms import BaseInlineFormSet, inlineformset_factory
 from django.utils import timezone
 
 from acao.models import Acao
+from estoque.models import Material
 from praia.models import Praia
 
 from .models import Doador, Doacao, DoacaoFinanceira, ItemDoacaoMaterial
@@ -302,21 +303,22 @@ class DoacaoFinanceiraForm(forms.ModelForm):
 class ItemDoacaoMaterialForm(forms.ModelForm):
     class Meta:
         model = ItemDoacaoMaterial
-        fields = ['nome', 'categoria', 'quantidade', 'unidade', 'condicao', 'observacoes']
+        fields = ['material', 'nome', 'categoria', 'quantidade', 'condicao', 'observacoes']
         labels = {
+            'material': 'Material do estoque',
             'nome': 'Nome do material',
             'categoria': 'Categoria',
             'quantidade': 'Quantidade',
-            'unidade': 'Unidade de medida',
             'condicao': 'Condição',
             'observacoes': 'Observações do material',
         }
         help_texts = {
-            'quantidade': 'Use um valor maior que zero.',
-            'unidade': 'Ex.: unidade, kg, litro ou pacote.',
+            'material': 'Selecione o material correspondente para integrar a entrada ao estoque.',
+            'quantidade': 'Use um valor maior que zero. Para confirmar a doação, informe uma quantidade inteira.',
             'observacoes': 'Opcional. Registre detalhes sobre o material recebido.',
         }
         widgets = {
+            'material': forms.Select(attrs={'class': 'form-control'}),
             'nome': forms.TextInput(attrs={
                 'class': 'form-control',
                 'placeholder': 'Ex.: saco de lixo reforçado',
@@ -331,10 +333,6 @@ class ItemDoacaoMaterialForm(forms.ModelForm):
                 'min': '0.01',
                 'placeholder': 'Ex.: 10',
             }),
-            'unidade': forms.TextInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'Ex.: unidade, kg, litro',
-            }),
             'condicao': forms.Select(attrs={'class': 'form-control'}),
             'observacoes': forms.Textarea(attrs={
                 'class': 'form-control',
@@ -343,18 +341,86 @@ class ItemDoacaoMaterialForm(forms.ModelForm):
             }),
         }
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, estoque_bloqueado=False, **kwargs):
         super().__init__(*args, **kwargs)
+        self.fields['material'].queryset = Material.objects.order_by('nome')
+        self.fields['material'].empty_label = 'Selecione o material do estoque'
+        self.fields['material'].required = False
+        if estoque_bloqueado:
+            for field in self.fields.values():
+                field.disabled = True
         self.fields['condicao'].choices = [
             ('', 'Selecione a condição'),
             *ItemDoacaoMaterial.CONDICAO_CHOICES,
         ]
+
+    def save(self, commit=True):
+        if self.cleaned_data.get('material'):
+            self.instance.unidade = self.cleaned_data['material'].get_unidade_display()
+        return super().save(commit=commit)
+
+
+class ItemDoacaoMaterialFormSetBase(forms.BaseInlineFormSet):
+    def __init__(self, *args, **kwargs):
+        instance = kwargs.get('instance')
+        self.estoque_bloqueado = bool(
+            instance
+            and instance.pk
+            and instance.status == Doacao.CONFIRMADA
+            and instance.movimentacoes_estoque.exists()
+        )
+        kwargs.setdefault('form_kwargs', {})['estoque_bloqueado'] = self.estoque_bloqueado
+        super().__init__(*args, **kwargs)
+
+    def clean(self):
+        super().clean()
+        if self.instance.status != Doacao.CONFIRMADA:
+            return
+
+        for form in self.forms:
+            if not hasattr(form, 'cleaned_data'):
+                continue
+            if (
+                self.instance.pk
+                and self.instance.status == Doacao.CONFIRMADA
+                and self.estoque_bloqueado
+                and form.cleaned_data.get('DELETE')
+            ):
+                form.add_error(None, 'Itens de uma doação já lançada no estoque não podem ser removidos.')
+                continue
+            if form.cleaned_data.get('DELETE'):
+                continue
+            if not form.cleaned_data:
+                continue
+            if (
+                self.instance.pk
+                and self.instance.status == Doacao.CONFIRMADA
+                and self.estoque_bloqueado
+                and not form.has_changed()
+            ):
+                continue
+            material = form.cleaned_data.get('material')
+            quantidade = form.cleaned_data.get('quantidade')
+            condicao = form.cleaned_data.get('condicao')
+            if not material:
+                form.add_error('material', 'Selecione o material do estoque antes de confirmar.')
+            if quantidade is not None and quantidade != quantidade.to_integral_value():
+                form.add_error(
+                    'quantidade',
+                    'A quantidade precisa ser inteira para movimentar o estoque.',
+                )
+            if condicao == ItemDoacaoMaterial.CONDICAO_DANIFICADO:
+                form.add_error(
+                    'condicao',
+                    'Materiais danificados não podem ser adicionados ao estoque.',
+                )
 
 
 ItemDoacaoMaterialFormSet = inlineformset_factory(
     Doacao,
     ItemDoacaoMaterial,
     form=ItemDoacaoMaterialForm,
+    formset=ItemDoacaoMaterialFormSetBase,
     extra=0,
     can_delete=True,
     min_num=1,

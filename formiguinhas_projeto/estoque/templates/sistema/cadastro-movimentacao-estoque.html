@@ -3,35 +3,53 @@
 
 {% block titulo %}Registrar movimentação | Sistema{% endblock %}
 {% block page_title %}Registrar movimentação de estoque{% endblock %}
-{% block estilos %}<link rel="stylesheet" href="{% static 'estoque/estoque.css' %}">
+{% block estilos %}<link rel="stylesheet" href="{% static 'estoque/estoque.css' %}?v=2">
 <script src="{% static 'estoque/estoque.js' %}" defer></script>{% endblock %}
 
 {% block conteudo %}
-<section class="form-card">
+<section class="form-card estoque-form-card estoque-form-movimentacao">
     <div class="section-heading">
         <div>
+            <span class="form-kicker">Controle de estoque</span>
             <h2>Entrada ou saída de material</h2>
-            <p class="form-subtitle">Registre uma entrada (compra ou ajuste) ou uma saída. Doações são lançadas em <a class="form-link" href="{% url 'cadastrar_doacao_estoque' %}">Registrar doação</a>.</p>
+            <p class="form-subtitle">Cada registro atualiza o saldo e fica disponível no histórico de movimentações.</p>
         </div>
-        <a href="{% url 'materiais' %}" class="btn btn-outline">Voltar</a>
+        <div class="estoque-acoes">
+            <a href="{% url 'movimentacoes_estoque' %}" class="btn btn-outline">Ver histórico</a>
+            <a href="{% url 'materiais' %}" class="btn btn-outline">Voltar ao estoque</a>
+        </div>
+    </div>
+
+    <div class="estoque-nota-form">
+        As doações de materiais devem ser confirmadas no <a class="table-link" href="{% url 'doacoes' %}">controle de doações</a>. A confirmação cria automaticamente uma entrada vinculada à doação.
     </div>
 
     <form method="post" class="system-form" novalidate>{% csrf_token %}
-        {% if form.errors %}<div class="error-box" role="alert">Não foi possível salvar. Preencha ou corrija os campos destacados em vermelho.</div>{% endif %}
+        {% if form.errors %}<div class="error-box" role="alert" tabindex="-1" data-form-error>Não foi possível salvar. Preencha ou corrija os campos destacados em vermelho.</div>{% endif %}
         {% for error in form.non_field_errors %}<div class="error-box">{{ error }}</div>{% endfor %}
         <h3 class="form-section-title">Dados da movimentação</h3>
         <div class="form-grid">
-            {% include 'sistema/_campo-estoque.html' with field=form.material %}
+            <div class="form-group material-picker{% if form.material.errors %} campo-invalido{% endif %}">
+                <label for="material-search">{{ form.material.label }}</label>
+                <div class="material-combobox" data-material-combobox>
+                    <input id="material-search" type="search" class="form-control" placeholder="Digite o nome ou código do material" autocomplete="off" autofocus role="combobox" aria-autocomplete="list" aria-controls="material-options" aria-expanded="false">
+                    <div id="material-options" class="material-options" role="listbox" hidden></div>
+                    <div class="material-select-real">{{ form.material }}</div>
+                </div>
+                <small class="form-help">Digite para pesquisar e selecione um material da lista.</small>
+                {% for error in form.material.errors %}<small class="field-error">{{ error }}</small>{% endfor %}
+            </div>
             {% include 'sistema/_campo-estoque.html' with field=form.tipo %}
             {% include 'sistema/_campo-estoque.html' with field=form.quantidade %}
             <div id="origem-field">
-                {% include 'sistema/_campo-estoque.html' with field=form.origem ajuda='Obrigatória nas entradas.' %}
+                {% include 'sistema/_campo-estoque.html' with field=form.origem %}
             </div>
-            {% include 'sistema/_campo-estoque.html' with field=form.justificativa full=True ajuda='Obrigatória nas saídas (destino ou motivo).' %}
+            {% include 'sistema/_campo-estoque.html' with field=form.justificativa full=True %}
         </div>
+        <p id="movimentacao-orientacao" class="estoque-nota-form" role="status" aria-live="polite"></p>
         <div class="form-actions">
             <button type="submit" class="btn btn-primary">Salvar movimentação</button>
-            <a href="{% url 'materiais' %}" class="btn btn-outline">Cancelar</a>
+            <a href="{% url 'movimentacoes_estoque' %}" class="btn btn-outline">Cancelar</a>
         </div>
     </form>
 </section>
@@ -40,10 +58,114 @@
     (function () {
         var tipo = document.getElementById('id_tipo');
         var origem = document.getElementById('origem-field');
-        function alternar() { origem.style.display = tipo.value === 'SAIDA' ? 'none' : 'block'; }
+        var orientacao = document.getElementById('movimentacao-orientacao');
+        var buscaMaterial = document.getElementById('material-search');
+        var material = document.getElementById('id_material');
+        var opcoesMaterial = document.getElementById('material-options');
+        var comboboxMaterial = document.querySelector('[data-material-combobox]');
+        function alternar() {
+            var ehSaida = tipo.value === 'SAIDA';
+            origem.style.display = ehSaida ? 'none' : 'block';
+            orientacao.textContent = ehSaida
+                ? 'Saída: informe a quantidade a retirar e descreva o destino ou motivo. O sistema impede saídas acima do saldo.'
+                : 'Entrada: informe a quantidade recebida e selecione a origem. Doações devem ser confirmadas no controle de doações.';
+        }
+        var primeiroCampoInvalido = document.querySelector('.campo-invalido input, .campo-invalido select, .campo-invalido textarea');
+        var erro = document.querySelector('[data-form-error]');
+        if (primeiroCampoInvalido) {
+            primeiroCampoInvalido.focus();
+        } else if (erro) {
+            erro.focus();
+        }
         if (tipo && origem) {
             tipo.addEventListener('change', alternar);
             alternar();
+        }
+        if (buscaMaterial && material && opcoesMaterial && comboboxMaterial) {
+            var opcoes = Array.prototype.filter.call(material.options, function (opcao) {
+                return opcao.value;
+            });
+            var indiceAtivo = -1;
+
+            function selecionar(opcao) {
+                material.value = opcao.value;
+                buscaMaterial.value = opcao.textContent;
+                fecharOpcoes();
+                material.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+
+            function fecharOpcoes() {
+                opcoesMaterial.hidden = true;
+                buscaMaterial.setAttribute('aria-expanded', 'false');
+                indiceAtivo = -1;
+            }
+
+            function renderizarOpcoes() {
+                var termo = buscaMaterial.value.trim().toLowerCase();
+                var encontradas = opcoes.filter(function (opcao) {
+                    return opcao.textContent.toLowerCase().indexOf(termo) !== -1;
+                });
+                opcoesMaterial.innerHTML = '';
+                encontradas.forEach(function (opcao, indice) {
+                    var item = document.createElement('button');
+                    item.type = 'button';
+                    item.className = 'material-option';
+                    item.setAttribute('role', 'option');
+                    item.setAttribute('data-value', opcao.value);
+                    item.textContent = opcao.textContent;
+                    item.addEventListener('mousedown', function (evento) {
+                        evento.preventDefault();
+                        selecionar(opcao);
+                    });
+                    if (indice === indiceAtivo) {
+                        item.classList.add('is-active');
+                    }
+                    opcoesMaterial.appendChild(item);
+                });
+                if (!encontradas.length) {
+                    var vazio = document.createElement('div');
+                    vazio.className = 'material-options-empty';
+                    vazio.textContent = 'Nenhum material encontrado.';
+                    opcoesMaterial.appendChild(vazio);
+                }
+                opcoesMaterial.hidden = false;
+                buscaMaterial.setAttribute('aria-expanded', 'true');
+                return encontradas;
+            }
+
+            buscaMaterial.value = material.value
+                ? material.options[material.selectedIndex].textContent
+                : '';
+            buscaMaterial.addEventListener('focus', renderizarOpcoes);
+            buscaMaterial.addEventListener('input', function () {
+                indiceAtivo = -1;
+                renderizarOpcoes();
+            });
+            buscaMaterial.addEventListener('keydown', function (evento) {
+                var itens = opcoesMaterial.querySelectorAll('.material-option');
+                if (evento.key === 'ArrowDown' || evento.key === 'ArrowUp') {
+                    evento.preventDefault();
+                    if (!itens.length) return;
+                    indiceAtivo = evento.key === 'ArrowDown'
+                        ? (indiceAtivo + 1) % itens.length
+                        : (indiceAtivo - 1 + itens.length) % itens.length;
+                    Array.prototype.forEach.call(itens, function (item, indice) {
+                        item.classList.toggle('is-active', indice === indiceAtivo);
+                    });
+                } else if (evento.key === 'Enter' && indiceAtivo >= 0 && itens[indiceAtivo]) {
+                    evento.preventDefault();
+                    selecionar(opcoes.find(function (opcao) {
+                        return opcao.value === itens[indiceAtivo].getAttribute('data-value');
+                    }));
+                } else if (evento.key === 'Escape') {
+                    fecharOpcoes();
+                }
+            });
+            document.addEventListener('click', function (evento) {
+                if (!comboboxMaterial.contains(evento.target)) {
+                    fecharOpcoes();
+                }
+            });
         }
     })();
 </script>

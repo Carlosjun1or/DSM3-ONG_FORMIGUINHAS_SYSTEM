@@ -1,4 +1,340 @@
 /* Complementos do módulo de estoque; o restante vem de css/style.css. */
+.card-grid.volunteer-metrics.estoque-metricas {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    margin-bottom: 24px;
+}
+
+.estoque-metrica-card {
+    min-width: 0;
+}
+
+.estoque-metrica-card .form-help {
+    display: block;
+    margin-top: 8px;
+    line-height: 1.5;
+}
+
+.estoque-painel {
+    padding: 24px;
+}
+
+.estoque-lista {
+    overflow: hidden;
+}
+
+.estoque-painel > .section-heading {
+    align-items: center;
+}
+
+.estoque-acoes {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.volunteer-filters.estoque-filtros {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    align-items: end;
+    gap: 14px;
+}
+
+.estoque-filtros .form-group:first-child {
+    grid-column: span 2;
+}
+
+.estoque-filtros .filter-actions {
+    grid-column: 1 / -1;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+}
+
+.volunteer-filters.estoque-filtros.movimentacoes-filtros {
+    grid-template-columns: minmax(220px, 1.5fr) repeat(4, minmax(130px, 1fr));
+}
+
+.movimentacoes-filtros .filter-actions {
+    grid-column: 1 / -1;
+    justify-content: flex-end;
+}
+
+.estoque-tabela {
+    border: 1px solid #e7efe9;
+    border-radius: 12px;
+}
+
+.estoque-tabela .data-table th,
+.estoque-tabela .data-table td {
+    vertical-align: middle;
+}
+
+.estoque-tabela .data-table {
+    min-width: 1120px;
+}
+
+.estoque-tabela .data-table td {
+    white-space: normal;
+}
+
+.estoque-tabela-movimentacoes .data-table {
+    min-width: 960px;
+}
+
+.estoque-tabela-movimentacoes .data-table th:first-child,
+.estoque-tabela-movimentacoes .data-table td:first-child {
+    min-width: 145px;
+}
+
+.estoque-tabela-movimentacoes .data-table th:nth-child(6),
+.estoque-tabela-movimentacoes .data-table td:nth-child(6) {
+    min-width: 210px;
+}
+
+.movimentacao-detalhes {
+    line-height: 1.45;
+}
+
+.movimentacao-detalhes .table-secondary {
+    display: block;
+}
+
+.estoque-detalhe-vinculo {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+    margin-top: 8px;
+}
+
+.estoque-detalhe-vinculo .status-badge {
+    white-space: nowrap;
+}
+
+.estoque-relatorio-metricas {
+    margin-top: 24px;
+}
+
+.estoque-tabela-relatorio .data-table {
+    min-width: 0;
+}
+
+.estoque-form-card {
+    width: min(100%, 900px);
+}
+
+.estoque-form-movimentacao {
+    width: min(100%, 820px);
+}
+
+.material-picker {
+    grid-column: 1 / -1;
+}
+
+.material-combobox {
+    position: relative;
+}
+
+.material-select-real {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+}
+
+.material-options {
+    position: absolute;
+    z-index: 10;
+    top: calc(100% + 4px);
+    right: 0;
+    left: 0;
+    max-height: 240px;
+    overflow-y: auto;
+    padding: 6px;
+    border: 1px solid #cfe0d5;
+    border-radius: 10px;
+    background: #fff;
+    box-shadow: 0 8px 24px rgba(23, 61, 49, 0.14);
+}
+
+.material-option {
+    display: block;
+    width: 100%;
+    padding: 10px 12px;
+    border: 0;
+    border-radius: 7px;
+    background: transparent;
+    color: #173d31;
+    cursor: pointer;
+    font: inherit;
+    text-align: left;
+}
+
+.material-option:hover,
+.material-option.is-active {
+    background: #edf7f0;
+}
+
+.material-options-empty {
+    padding: 10px 12px;
+    color: #71827b;
+    font-size: 0.9rem;
+}
+
+.material-duplicado-aviso {
+    display: block;
+}
+
+.campo-duplicado {
+    border-color: #b42318;
+    box-shadow: 0 0 0 3px rgba(180, 35, 24, 0.1);
+}
+
+.form-actions button:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.estoque-form-card > .section-heading {
+    align-items: center;
+    padding-bottom: 18px;
+    border-bottom: 1px solid #edf1ee;
+}
+
+.estoque-form-card .system-form {
+    margin-top: 22px;
+}
+
+.estoque-form-card .form-section-title {
+    padding-bottom: 8px;
+    border-bottom: 1px solid #edf1ee;
+}
+
+.estoque-nota-form {
+    margin: 18px 0;
+    padding: 14px 16px;
+    border: 1px solid #cfe4d8;
+    border-radius: 12px;
+    background: #f3f8f4;
+    color: #435a50;
+    font-size: 0.9rem;
+    line-height: 1.55;
+}
+
+.estoque-detalhe-resumo {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+    margin: 20px 0;
+}
+
+.estoque-detalhe-resumo > div {
+    display: grid;
+    gap: 6px;
+    padding: 14px 16px;
+    border: 1px solid #e3ede7;
+    border-radius: 12px;
+    background: #f7faf8;
+}
+
+.estoque-detalhe-resumo span {
+    color: #6b7d76;
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.estoque-detalhe-resumo strong {
+    color: #173d31;
+    font-size: 1.05rem;
+}
+
+.estoque-dica-tabela {
+    display: none;
+    margin: 0 0 8px;
+    color: #71827b;
+    font-size: 0.8rem;
+}
+
+.estoque-tabela .estoque-auditoria {
+    min-width: 230px;
+    white-space: normal;
+    line-height: 1.5;
+}
+
+.estoque-tabela .estoque-auditoria strong,
+.estoque-tabela .estoque-auditoria small {
+    display: block;
+}
+
+.estoque-tabela .estoque-auditoria small {
+    margin-top: 4px;
+    color: #71827b;
+}
+
+.estoque-tabela td.table-actions {
+    white-space: nowrap;
+}
+
+@media (max-width: 1000px) {
+    .volunteer-filters.estoque-filtros {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .volunteer-filters.estoque-filtros.movimentacoes-filtros {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 700px) {
+    .card-grid.volunteer-metrics.estoque-metricas {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .volunteer-filters.estoque-filtros {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .volunteer-filters.estoque-filtros.movimentacoes-filtros {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .estoque-dica-tabela {
+        display: block;
+    }
+}
+
+@media (max-width: 480px) {
+    .card-grid.volunteer-metrics.estoque-metricas,
+    .volunteer-filters.estoque-filtros,
+    .volunteer-filters.estoque-filtros.movimentacoes-filtros {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .estoque-filtros .form-group:first-child,
+    .estoque-filtros .filter-actions {
+        grid-column: auto;
+    }
+
+    .estoque-painel {
+        padding: 18px 14px;
+    }
+
+    .estoque-acoes {
+        justify-content: flex-start;
+    }
+
+    .estoque-detalhe-resumo {
+        grid-template-columns: 1fr;
+    }
+
+    .estoque-form-card {
+        padding: 22px 18px;
+    }
+}
+
 .field-error {
     display: block;
     color: #b42318;

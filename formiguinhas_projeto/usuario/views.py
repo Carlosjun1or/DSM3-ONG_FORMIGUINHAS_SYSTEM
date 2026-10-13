@@ -478,8 +478,9 @@ def excluir_usuario_view(request, usuario_id):
 
 
 def login_view(request):
-    if get_session_usuario(request):
-        return redirect('home')
+    usuario_logado = get_session_usuario(request)
+    if usuario_logado:
+        return redirect('materiais' if usuario_logado.tipo == 'COORDENADOR' else 'home')
 
     form = LoginForm()
     cadastro_form = CadastroForm()
@@ -507,7 +508,7 @@ def login_view(request):
                 request.session['usuario_tipo'] = usuario.tipo
                 usuario.data_ultimo_acesso = timezone.now()
                 usuario.save()
-                return redirect('home')
+                return redirect('materiais' if usuario.tipo == 'COORDENADOR' else 'home')
 
     return render(request, 'sistema/login.html', {'form': form, 'cadastro_form': cadastro_form})
 

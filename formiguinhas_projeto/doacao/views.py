@@ -2,6 +2,7 @@ from decimal import Decimal
 from datetime import datetime
 
 from django.contrib import messages
+from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.db.models import Q, Sum, Value, DecimalField
 from django.db.models.functions import Coalesce
@@ -12,6 +13,7 @@ from django.utils.dateparse import parse_date
 from auditoria.services import registrar_evento, snapshot
 
 from auditoria.models import EventoAuditoria
+from estoque.services import registrar_entradas_doacao
 from usuario.views import get_session_usuario, render_acesso_bloqueado
 from usuario.paginacao import paginar_queryset
 
@@ -142,6 +144,10 @@ def doacoes_view(request):
 
 def _formulario_doacao(request, doacao=None):
     form = DoacaoForm(request.POST or None, instance=doacao)
+    estoque_bloqueado = bool(doacao and doacao.movimentacoes_estoque.exists())
+    if estoque_bloqueado:
+        form.fields['tipo'].disabled = True
+        form.fields['status'].disabled = True
     financeira = getattr(doacao, 'financeira', None) if doacao else None
     financeira_form = DoacaoFinanceiraForm(
         request.POST or None,
@@ -171,6 +177,8 @@ def _validar_doacao_forms(form, financeira_form, itens_formset, doador_inline_fo
     financeira_valida = (
         tipo != Doacao.FINANCEIRA or financeira_form.is_valid()
     )
+    if principal_valida and tipo == Doacao.MATERIAL:
+        itens_formset.instance.status = form.cleaned_data['status']
     itens_validos = tipo != Doacao.MATERIAL or itens_formset.is_valid()
     inline_informado = _novo_doador_informado(request)
     inline_valido = not inline_informado or doador_inline_form.is_valid()
@@ -234,6 +242,8 @@ def cadastro_doacao_view(request):
             else:
                 itens_formset.instance = doacao
                 itens_formset.save()
+                if doacao.status == Doacao.CONFIRMADA:
+                    registrar_entradas_doacao(doacao, usuario)
             registrar_evento(
                 entidade='DOACAO',
                 instancia=doacao,
@@ -286,6 +296,11 @@ def editar_doacao_view(request, doacao_id):
                 DoacaoFinanceira.objects.filter(doacao=doacao).delete()
                 itens_formset.instance = doacao
                 itens_formset.save()
+                if (
+                    doacao.status == Doacao.CONFIRMADA
+                    and not doacao.movimentacoes_estoque.exists()
+                ):
+                    registrar_entradas_doacao(doacao, usuario)
             registrar_evento(
                 entidade='DOACAO',
                 instancia=doacao,
@@ -308,6 +323,7 @@ def editar_doacao_view(request, doacao_id):
         'doador_inline_form': doador_inline_form,
         'doacao': doacao,
         'modo': 'edicao',
+        'estoque_bloqueado': bool(doacao.movimentacoes_estoque.exists()),
     })
 
 
@@ -326,9 +342,17 @@ def doacao_detalhe_view(request, doacao_id):
             'acao',
             'registrado_por__id_voluntario',
             'ultimo_editado_por__id_voluntario',
-        ).prefetch_related('itens_materiais'),
+        ).prefetch_related(
+            'itens_materiais__material',
+            'itens_materiais__movimentacao_estoque',
+        ),
         pk=doacao_id,
     )
+    estoque_movimentacoes = doacao.movimentacoes_estoque.select_related(
+        'material',
+        'item_doacao',
+    )
+    tem_movimentacoes_estoque = estoque_movimentacoes.exists()
 
     auditorias = EventoAuditoria.objects.filter(
         entidade='DOACAO',
@@ -338,8 +362,12 @@ def doacao_detalhe_view(request, doacao_id):
     return render(request, 'sistema/detalhe-doacao.html', {
         'usuario': usuario,
         'doacao': doacao,
-        'status_choices': Doacao.STATUS_CHOICES,
+        'status_choices': [
+            choice for choice in Doacao.STATUS_CHOICES
+            if not tem_movimentacoes_estoque or choice[0] == doacao.status
+        ],
         'auditorias': auditorias,
+        'tem_movimentacoes_estoque': tem_movimentacoes_estoque,
     })
 
 
@@ -361,20 +389,37 @@ def atualizar_status_doacao_view(request, doacao_id):
     if novo_status == Doacao.CANCELADA and usuario.tipo != 'ADMIN':
         messages.error(request, 'Somente administradores podem cancelar doações.')
         return redirect(destino, **({'doacao_id': doacao.pk} if retornar_aos_detalhes else {}))
+    if novo_status != Doacao.CONFIRMADA and doacao.movimentacoes_estoque.exists():
+        messages.error(
+            request,
+            'Não é possível retirar a confirmação: a doação já gerou movimentações no estoque.',
+        )
+        return redirect(destino, **({'doacao_id': doacao.pk} if retornar_aos_detalhes else {}))
     status_anterior = doacao.get_status_display()
-    doacao.status = novo_status
-    _preencher_auditoria(doacao, usuario)
-    doacao.save(update_fields=[
-        'status', 'ultimo_editado_por', 'ultimo_editado_por_nome',
-        'ultimo_editado_por_tipo', 'dt_ultima_edicao',
-    ])
-    registrar_evento(
-        entidade='DOACAO',
-        instancia=doacao,
-        acao='MUDANCA_STATUS',
-        usuario=usuario,
-        resumo=f'Doação #{doacao.pk}: {status_anterior} para {doacao.get_status_display()}.',
-    )
+    try:
+        with transaction.atomic():
+            doacao.status = novo_status
+            _preencher_auditoria(doacao, usuario)
+            doacao.save(update_fields=[
+                'status', 'ultimo_editado_por', 'ultimo_editado_por_nome',
+                'ultimo_editado_por_tipo', 'dt_ultima_edicao',
+            ])
+            if (
+                novo_status == Doacao.CONFIRMADA
+                and doacao.tipo == Doacao.MATERIAL
+                and not doacao.movimentacoes_estoque.exists()
+            ):
+                registrar_entradas_doacao(doacao, usuario)
+            registrar_evento(
+                entidade='DOACAO',
+                instancia=doacao,
+                acao='MUDANCA_STATUS',
+                usuario=usuario,
+                resumo=f'Doação #{doacao.pk}: {status_anterior} para {doacao.get_status_display()}.',
+            )
+    except ValidationError as erro:
+        messages.error(request, 'Não foi possível confirmar a doação: ' + ' '.join(erro.messages))
+        return redirect(destino, **({'doacao_id': doacao.pk} if retornar_aos_detalhes else {}))
     messages.success(request, 'Situação da doação atualizada.')
     return redirect(destino, **({'doacao_id': doacao.pk} if retornar_aos_detalhes else {}))
 

@@ -1,0 +1,153 @@
+.condominio-metricas {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.condominio-metricas .card {
+    min-width: 0;
+}
+
+.condominio-metricas .metric-caption {
+    display: block;
+    margin-top: 4px;
+    color: #71827b;
+    font-size: .82rem;
+}
+
+.condominio-filtros {
+    align-items: end;
+}
+
+.condominio-filtros .form-group:first-child {
+    min-width: 240px;
+    flex: 1.5;
+}
+
+.condominio-tabela .data-table,
+.bags-tabela .data-table {
+    min-width: 1000px;
+}
+
+.condominio-identificacao,
+.bag-identificacao {
+    display: grid;
+    gap: 4px;
+}
+
+.condominio-identificacao strong,
+.bag-identificacao strong {
+    color: #173d31;
+}
+
+.condominio-identificacao small,
+.bag-identificacao small {
+    color: #71827b;
+}
+
+.condominio-bags {
+    display: grid;
+    gap: 6px;
+    min-width: 125px;
+}
+
+.condominio-bags .bag-summary {
+    margin: 0;
+}
+
+.situacao-badge,
+.bag-status {
+    display: inline-flex;
+    align-items: center;
+    width: fit-content;
+    padding: 5px 9px;
+    border-radius: 999px;
+    font-size: .78rem;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.situacao-ativo,
+.bag-status-disponivel,
+.bag-status-entregue {
+    background: #e6f5eb;
+    color: #17643d;
+}
+
+.situacao-inativo,
+.bag-status-retirada,
+.bag-status-perdida {
+    background: #f1f3f2;
+    color: #5d6c66;
+}
+
+.situacao-bloqueado,
+.bag-status-danificada {
+    background: #fde9e7;
+    color: #a6382e;
+}
+
+.bag-status-cheia {
+    background: #fff1d6;
+    color: #8a5a00;
+}
+
+.bag-status-em_uso,
+.bag-status-em_transito {
+    background: #e6f0fb;
+    color: #245b91;
+}
+
+.ocupacao-celula {
+    min-width: 125px;
+}
+
+.ocupacao-celula strong {
+    display: block;
+    margin-bottom: 6px;
+}
+
+.ocupacao-barra {
+    height: 7px;
+    overflow: hidden;
+    border-radius: 99px;
+    background: #e7eee9;
+}
+
+.ocupacao-barra span {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: #2f8f61;
+}
+
+.ocupacao-barra.alta span {
+    background: #d38a1d;
+}
+
+.ocupacao-barra.cheia span {
+    background: #b74438;
+}
+
+.condominio-acoes,
+.bag-acoes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    white-space: nowrap;
+}
+
+.condominio-vazio,
+.bags-vazio {
+    padding: 36px 20px;
+}
+
+@media (max-width: 700px) {
+    .condominio-metricas {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 480px) {
+    .condominio-metricas {
+        grid-template-columns: 1fr;
+    }
+}

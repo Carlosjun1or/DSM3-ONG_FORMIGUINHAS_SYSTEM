@@ -59,7 +59,7 @@
                 <small class="communication-related-residue">
                     Resíduo: {{ residuo.get_tipo_display|default:'Sem tipo' }}
                     {% if residuo.get_categoria_display %} · {{ residuo.get_categoria_display }}{% endif %}
-                    {% if residuo.quantidade %} · {{ residuo.quantidade }} {{ residuo.get_unidade_display }}{% endif %}
+                    {% if residuo.quantidade %} · {{ residuo.quantidade|floatformat:"2u" }} {{ residuo.get_unidade_display }}{% endif %}
                     <span>Registrado nesta ação</span>
                 </small>
                 {% endfor %}
@@ -72,7 +72,7 @@
                 <strong>Doação #{{ item.doacao.id_doacao }} · {{ item.doacao.get_tipo_display }}</strong>
                 <small>{{ item.doacao.data_recebimento|date:'d/m/Y' }} · {{ item.doacao.get_status_display }}</small>
                 {% if item.doacao.tipo == 'FINANCEIRA' and item.doacao.financeira %}
-                <small>R$ {{ item.doacao.financeira.valor|floatformat:2 }}</small>
+                <small>R$ {{ item.doacao.financeira.valor|floatformat:"2u" }}</small>
                 {% else %}
                     {% for material in item.doacao.itens_materiais.all %}
                     <small>{{ material.nome }} · {{ material.quantidade }} {{ material.unidade }}</small>

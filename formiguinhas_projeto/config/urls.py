@@ -18,7 +18,6 @@ from django.contrib import admin
 from django.conf import settings
 from django.conf.urls.static import static
 from django.urls import include, path
-from django.views.generic import RedirectView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -31,9 +30,8 @@ urlpatterns = [
     path('auditoria/', include('auditoria.urls')),
     path('comunicado/', include('comunicado.urls')),
     path('doacao/', include('doacao.urls')),
-    path('', include('site_institucional.urls')),
     path('estoque/', include('estoque.urls')),
-    path('', RedirectView.as_view(pattern_name='materiais', permanent=False)),
+    path('', include('site_institucional.urls')),
 ]
 
 if settings.DEBUG:
