@@ -1,0 +1,24 @@
+CONTROLE DE LOGINS PARA TESTE
+=============================
+
+Use este arquivo somente localmente.
+Nao compartilhe nem envie ao repositorio com senhas reais.
+Os usuarios abaixo sao criados automaticamente pelas migrations
+usuario.0003 e usuario.0004.
+
+1. Usuario
+Nome: carlos
+E-mail: carlos@gmail.com
+Tipo: ADMIN
+Senha: carlos
+
+2. Usuario
+Nome: Coordenador
+E-mail: coordenador@gmail.com
+Tipo: COORDENADOR
+Senha: coordenador
+
+Observacoes:
+- O e-mail e usado para entrar no sistema.
+- COORDENADOR consulta saldo e relatorio. Cadastro, edicao, movimentacoes,
+  doacoes e historico sao restritos ao tipo ADMIN.

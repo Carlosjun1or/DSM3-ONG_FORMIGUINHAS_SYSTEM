@@ -1,0 +1,100 @@
+/* Complementos do módulo de estoque; o restante vem de css/style.css. */
+.field-error {
+    display: block;
+    color: #b42318;
+    font-size: 0.8rem;
+    margin-top: 6px;
+}
+
+.estoque-baixo td:first-child {
+    box-shadow: inset 3px 0 0 #a6382e;
+}
+
+.estoque-donativo td:first-child {
+    box-shadow: inset 3px 0 0 #1d7048;
+}
+
+.estoque-resumo {
+    margin: 0 0 16px;
+    color: #555;
+}
+
+.estoque-paginacao {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    margin-top: 18px;
+}
+
+/* Filtros em tempo real */
+.filtro-carregando {
+    opacity: 0.75;
+    transition: opacity 0.15s;
+}
+
+/* Aviso de sucesso em destaque */
+.alert-box.toast-estoque {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1000;
+    max-width: 360px;
+    margin: 0;
+    padding-left: 44px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+    cursor: pointer;
+    animation: toast-entrada 0.25s ease-out;
+    transition: opacity 0.3s, transform 0.3s;
+}
+
+.alert-box.toast-estoque::before {
+    content: '\2713';
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: #1d7048;
+    color: #fff;
+    font-size: 0.8rem;
+    line-height: 22px;
+    text-align: center;
+}
+
+.alert-box.toast-estoque.alert-error {
+    background: #fdecea;
+    color: #b42318;
+    border-color: #f5c2bd;
+}
+
+.alert-box.toast-estoque.alert-error::before {
+    content: '!';
+    background: #b42318;
+}
+
+.alert-box.toast-estoque.toast-saindo {
+    opacity: 0;
+    transform: translateX(20px);
+}
+
+@keyframes toast-entrada {
+    from { opacity: 0; transform: translateX(20px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+/* Campos inválidos em vermelho */
+.campo-invalido label {
+    color: #b42318;
+}
+
+.campo-invalido .form-control {
+    border-color: #b42318;
+    background: #fff8f7;
+}
+
+.campo-invalido .form-control:focus {
+    outline-color: #b42318;
+}

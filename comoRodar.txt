@@ -1,0 +1,29 @@
+# Opcao mais simples (Windows):
+# Na pasta raiz do projeto, execute o arquivo
+iniciar.bat
+# Ele cria o ambiente virtual, instala as dependencias,
+# executa as migrations e inicia o servidor automaticamente.
+# Depois acesse: http://127.0.0.1:8000/
+
+# ----------------------------------------
+
+# Opcao manual pelo terminal:
+cd formiguinhas_projeto
+
+# 1. Cria o ambiente virtual dentro da pasta do projeto.
+python -m venv venv
+
+# 2. Ativa o ambiente virtual.
+venv\Scripts\activate
+
+# 3. Instala o Django, listado no requirements.txt.
+pip install -r requirements.txt
+
+# 4. Cria o banco e as tabelas (as migrations tambem criam os usuarios de teste: ver logins_teste.txt).
+python manage.py migrate
+
+# 5. Inicia o servidor do projeto.
+python manage.py runserver
+
+# 6. (Opcional) Roda os testes automatizados do estoque.
+python manage.py test

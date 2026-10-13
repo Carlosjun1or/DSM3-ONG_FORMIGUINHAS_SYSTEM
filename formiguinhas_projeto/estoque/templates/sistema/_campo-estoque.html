@@ -1,0 +1,6 @@
+<div class="form-group{% if full %} form-group-full{% endif %}{% if field.errors %} campo-invalido{% endif %}">
+    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+    {{ field }}
+    {% if ajuda %}<small class="form-help">{{ ajuda }}</small>{% endif %}
+    {% for error in field.errors %}<small class="field-error">{{ error }}</small>{% endfor %}
+</div>
