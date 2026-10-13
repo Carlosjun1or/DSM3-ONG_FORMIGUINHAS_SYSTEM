@@ -3,27 +3,37 @@
 
 {% block titulo %}Relatório de Estoque | Sistema{% endblock %}
 {% block page_title %}Relatório de estoque{% endblock %}
-{% block estilos %}<link rel="stylesheet" href="{% static 'estoque/estoque.css' %}">
+{% block estilos %}<link rel="stylesheet" href="{% static 'estoque/estoque.css' %}?v=2">
 <script src="{% static 'estoque/estoque.js' %}" defer></script>{% endblock %}
 
 {% block conteudo %}
-<section class="card volunteer-control">
+<section class="card volunteer-control estoque-painel estoque-relatorio">
     <div class="section-heading">
         <div>
+            <span class="section-kicker">Visão geral</span>
             <h2>Resumo por origem</h2>
             <p class="form-subtitle">Quantidade de materiais e saldo total, separados entre donativos e comprados.</p>
         </div>
-        <a href="{% url 'materiais' %}" class="btn btn-outline">Voltar ao estoque</a>
+        <div class="estoque-acoes">
+            <a href="{% url 'movimentacoes_estoque' %}" class="btn btn-outline">Histórico</a>
+            <a href="{% url 'materiais' %}" class="btn btn-outline">Voltar ao estoque</a>
+        </div>
     </div>
 
-    <div class="table-wrap">
+    <section class="card-grid volunteer-metrics estoque-metricas estoque-relatorio-metricas" aria-label="Indicadores do estoque">
+        <article class="card estoque-metrica-card"><span class="section-kicker">Donativos</span><h3>Materiais cadastrados</h3><div class="metric">{{ total_donativos }}</div><small class="form-help">Saldo: {{ quantidade_donativos }}</small></article>
+        <article class="card estoque-metrica-card"><span class="section-kicker">Compras</span><h3>Materiais cadastrados</h3><div class="metric">{{ total_comprados }}</div><small class="form-help">Saldo: {{ quantidade_comprados }}</small></article>
+        <article class="card estoque-metrica-card"><span class="section-kicker">Inventário</span><h3>Total de materiais</h3><div class="metric">{{ total_materiais }}</div><small class="form-help">Saldo total: {{ quantidade_total }}</small></article>
+    </section>
+
+    <div class="table-wrap estoque-tabela estoque-tabela-relatorio">
         <table class="data-table">
             <thead>
                 <tr><th>Origem</th><th>Total de materiais</th><th>Quantidade total (saldo)</th></tr>
             </thead>
             <tbody>
-                <tr><td>Donativos</td><td>{{ total_donativos }}</td><td>{{ quantidade_donativos }}</td></tr>
-                <tr><td>Comprados</td><td>{{ total_comprados }}</td><td>{{ quantidade_comprados }}</td></tr>
+                <tr><td><strong>Donativos</strong></td><td>{{ total_donativos }}</td><td>{{ quantidade_donativos }}</td></tr>
+                <tr><td><strong>Comprados</strong></td><td>{{ total_comprados }}</td><td>{{ quantidade_comprados }}</td></tr>
                 <tr>
                     <td><strong>Total geral</strong></td>
                     <td><strong>{{ total_materiais }}</strong></td>

@@ -2,7 +2,6 @@ import csv
 
 from django.contrib import messages
 from django.core.exceptions import ValidationError
-from django.core.paginator import Paginator
 from django.db.models import Count, F, Q, Sum
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -10,11 +9,13 @@ from django.utils import timezone
 from django.utils.dateparse import parse_date
 
 from auditoria.services import registrar_evento, snapshot
+from doacao.models import Doacao
 from usuario.models import Usuario
+from usuario.paginacao import paginar_queryset
 
-from .forms import DoacaoForm, MaterialForm, MovimentacaoEstoqueForm
-from .models import Doacao, Material, MovimentacaoEstoque
-from .services import registrar_doacao, registrar_movimentacao
+from .forms import MaterialForm, MovimentacaoEstoqueForm
+from .models import Material, MovimentacaoEstoque
+from .services import registrar_movimentacao
 
 MSG_ADMIN = 'Permissão insuficiente: esta funcionalidade é restrita a administradores.'
 MSG_HISTORICO = 'Acesso negado: a consulta ao histórico é restrita a administradores.'
@@ -56,13 +57,6 @@ def _periodo(request):
     return inicio, fim
 
 
-def _paginar(request, queryset, por_pagina=10):
-    parametros = request.GET.copy()
-    parametros.pop('page', None)
-    pagina = Paginator(queryset, por_pagina).get_page(request.GET.get('page'))
-    return pagina, parametros.urlencode()
-
-
 def materiais_view(request):
     usuario, resposta = autenticar(request)
     if resposta:
@@ -87,12 +81,24 @@ def materiais_view(request):
         materiais = materiais.filter(donativo=False)
 
     doado = Doacao.objects.filter(
-        dt_cadastro__date__gte=inicio, dt_cadastro__date__lte=fim
-    ).aggregate(total=Sum('quantidade'), registros=Count('id_doacao'))
+        tipo=Doacao.MATERIAL,
+        status=Doacao.CONFIRMADA,
+        data_recebimento__range=(inicio, fim),
+    ).aggregate(
+        total=Sum('itens_materiais__quantidade'),
+        registros=Count('pk', distinct=True),
+    )
+    resumo = materiais.aggregate(
+        total_materiais=Count('id_material'),
+        total_baixo_estoque=Count('id_material', filter=_estoque_baixo()),
+    )
 
+    pagina, filtros_query = paginar_queryset(request, materiais)
     return render(request, 'sistema/materiais.html', {
         'usuario': usuario,
-        'materiais': materiais,
+        'materiais': pagina.object_list,
+        'pagina': pagina,
+        'filtros_query': filtros_query,
         'busca': busca,
         'categoria_selecionada': categoria,
         'situacao_selecionada': situacao,
@@ -104,13 +110,20 @@ def materiais_view(request):
         'data_fim': fim.isoformat(),
         'doado_total': doado['total'] or 0,
         'doado_registros': doado['registros'],
-        'total_materiais': Material.objects.count(),
-        'total_baixo_estoque': Material.objects.com_saldo().filter(_estoque_baixo()).count(),
+        'total_materiais': resumo['total_materiais'] or 0,
+        'total_baixo_estoque': resumo['total_baixo_estoque'] or 0,
     })
 
 
 def _categorias():
     return Material.objects.order_by('categoria').values_list('categoria', flat=True).distinct()
+
+
+def _nomes_materiais_existentes(material=None):
+    materiais = Material.objects.only('id_material', 'nome')
+    if material:
+        materiais = materiais.exclude(pk=material.pk)
+    return list(materiais.values('id_material', 'nome'))
 
 
 def cadastrar_material_view(request):
@@ -140,6 +153,7 @@ def cadastrar_material_view(request):
         'usuario': usuario,
         'form': form,
         'categorias': _categorias(),
+        'materiais_existentes': _nomes_materiais_existentes(),
         'modo_edicao': False,
     })
 
@@ -176,6 +190,7 @@ def editar_material_view(request, material_id):
         'form': form,
         'material': material,
         'categorias': _categorias(),
+        'materiais_existentes': _nomes_materiais_existentes(material),
         'modo_edicao': True,
     })
 
@@ -209,7 +224,7 @@ def cadastrar_movimentacao_estoque_view(request):
 
 def _filtrar_movimentacoes(request):
     movimentacoes = MovimentacaoEstoque.objects.select_related(
-        'material', 'doacao'
+        'material', 'doacao', 'doacao__doador'
     ).order_by('-dt_cadastro', '-id_movimentacao')
     busca = request.GET.get('busca', '').strip()
     tipo = request.GET.get('tipo', '').strip()
@@ -245,12 +260,21 @@ def movimentacoes_estoque_view(request):
         return resposta
 
     movimentacoes, filtros = _filtrar_movimentacoes(request)
-    page_obj, querystring = _paginar(request, movimentacoes)
+    pagina, filtros_query = paginar_queryset(request, movimentacoes)
+    totais_movimentacoes = movimentacoes.aggregate(
+        entradas=Count('id_movimentacao', filter=Q(tipo='ENTRADA')),
+        saidas=Count('id_movimentacao', filter=Q(tipo='SAIDA')),
+    )
     return render(request, 'sistema/movimentacoes-estoque.html', {
         'usuario': usuario,
-        'page_obj': page_obj,
+        'pagina': pagina,
+        'page_obj': pagina,
+        'querystring': filtros_query,
+        'filtros_query': filtros_query,
+        'total_movimentacoes': pagina.paginator.count,
+        'total_entradas': totais_movimentacoes['entradas'] or 0,
+        'total_saidas': totais_movimentacoes['saidas'] or 0,
         'filtros': filtros,
-        'querystring': querystring,
         'tipo_choices': MovimentacaoEstoque.TIPO_CHOICES,
         'origem_choices': MovimentacaoEstoque.ORIGEM_CHOICES,
     })
@@ -291,52 +315,6 @@ def exportar_movimentacoes_estoque_view(request):
             _csv_seguro(mov.origem_detalhada),
         ])
     return resposta
-
-
-def doacoes_estoque_view(request):
-    usuario, resposta = autenticar(
-        request, True, 'Permissão insuficiente: apenas administradores podem ver as doações.'
-    )
-    if resposta:
-        return resposta
-
-    busca = request.GET.get('busca', '').strip()
-    doacoes = Doacao.objects.select_related('material')
-    if busca:
-        doacoes = doacoes.filter(
-            Q(doador__icontains=busca) | Q(material__nome__icontains=busca)
-        )
-    page_obj, querystring = _paginar(request, doacoes)
-    return render(request, 'sistema/doacoes-estoque.html', {
-        'usuario': usuario,
-        'page_obj': page_obj,
-        'busca': busca,
-        'querystring': querystring,
-        'total_doacoes': Doacao.objects.count(),
-        'total_itens_doados': Doacao.objects.aggregate(total=Sum('quantidade'))['total'] or 0,
-    })
-
-
-def cadastrar_doacao_estoque_view(request):
-    usuario, resposta = autenticar(
-        request, True, 'Permissão insuficiente: apenas administradores podem registrar doações.'
-    )
-    if resposta:
-        return resposta
-
-    if request.method == 'POST':
-        form = DoacaoForm(request.POST)
-        if form.is_valid():
-            registrar_doacao(form.save(commit=False), usuario)
-            messages.success(request, 'Doação registrada e entrada lançada no estoque.')
-            return redirect('doacoes_estoque')
-    else:
-        form = DoacaoForm()
-
-    return render(request, 'sistema/cadastro-doacao-estoque.html', {
-        'usuario': usuario,
-        'form': form,
-    })
 
 
 def relatorio_estoque_view(request):

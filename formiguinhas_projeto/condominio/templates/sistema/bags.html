@@ -1,11 +1,13 @@
 {% extends 'sistema/template-sistema.html' %}
+{% load static %}
 {% block titulo %}Controle de Bags | Sistema{% endblock %}
 {% block page_title %}Controle de Bags{% endblock %}
+{% block estilos %}<link rel="stylesheet" href="{% static 'condominio/condominio.css' %}?v=1">{% endblock %}
 {% block conteudo %}
-<section class="card-grid volunteer-metrics">
-    <article class="card"><h3>Total de bags</h3><div class="metric">{{ total_bags }}</div></article>
-    <article class="card"><h3>Bags cheias</h3><div class="metric">{{ bags_cheias }}</div></article>
-    <article class="card"><h3>Bags em uso</h3><div class="metric">{{ bags_em_uso }}</div></article>
+<section class="card-grid volunteer-metrics condominio-metricas" aria-label="Resumo das bags">
+    <article class="card"><h3>Total de bags</h3><div class="metric">{{ total_bags }}</div><small class="metric-caption">{{ bags_disponiveis }} disponíveis</small></article>
+    <article class="card"><h3>Bags cheias</h3><div class="metric">{{ bags_cheias }}</div><small class="metric-caption">aguardando retirada</small></article>
+    <article class="card"><h3>Ocupação média</h3><div class="metric">{{ ocupacao_media|floatformat:0 }}%</div><small class="metric-caption">{{ bags_em_uso }} em uso · {{ bags_danificadas }} danificadas</small></article>
 </section>
 
 <section class="card volunteer-control">
@@ -20,7 +22,7 @@
         </div>
     </div>
 
-    <form method="get" class="volunteer-filters">
+    <form method="get" class="volunteer-filters condominio-filtros">
         <div class="form-group">
             <label for="id_busca">Buscar</label>
             <input id="id_busca" name="busca" type="search" value="{{ busca }}" class="form-control" placeholder="Código da bag ou condomínio">
@@ -33,13 +35,13 @@
             </select>
         </div>
         <div class="filter-actions">
-            <button type="submit" class="btn btn-primary">Filtrar</button>
-            {% if busca or status_selecionado %}<a href="{% url 'bags' %}" class="form-link">Limpar</a>{% endif %}
+            <button type="submit" class="btn btn-primary">Aplicar filtros</button>
+            {% if busca or status_selecionado %}<a href="{% url 'bags' %}" class="form-link">Limpar filtros</a>{% endif %}
         </div>
     </form>
 
     {% if bags %}
-    <div class="table-wrap">
+    <div class="table-wrap bags-tabela">
         <table class="data-table bags-table">
             <thead>
                 <tr>
@@ -58,8 +60,7 @@
             {% for bag in bags %}
                 <tr>
                     <td>
-                        <a class="table-link" href="{% url 'detalhe_bag' bag.id_bag %}"><strong>{{ bag.codigo }}</strong></a>
-                        <small class="table-secondary">Bag grande</small>
+                        <div class="bag-identificacao"><a class="table-link" href="{% url 'detalhe_bag' bag.id_bag %}"><strong>{{ bag.codigo }}</strong></a><small>Bag grande</small></div>
                     </td>
                     <td>
                         <a class="table-link" href="{% url 'detalhe_condominio' bag.condominio.id_condominio %}">{{ bag.condominio.nome }}</a>
@@ -82,7 +83,7 @@
                         <span class="bag-status bag-status-{{ bag.status|lower }}">{{ bag.get_status_display }}</span>
                         {% endif %}
                     </td>
-                    <td><strong>{{ bag.percentual_ocupacao }}%</strong></td>
+                    <td class="ocupacao-celula"><strong>{{ bag.percentual_ocupacao }}%</strong><div class="ocupacao-barra {% if bag.percentual_ocupacao >= 100 %}cheia{% elif bag.percentual_ocupacao >= 80 %}alta{% endif %}" role="progressbar" aria-valuenow="{{ bag.percentual_ocupacao }}" aria-valuemin="0" aria-valuemax="100" aria-label="Ocupação da bag {{ bag.codigo }}"><span style="width: {{ bag.percentual_ocupacao }}%"></span></div></td>
                     <td>{{ bag.peso_atual_kg|floatformat:2 }} kg</td>
                     <td>
                         {% with ultima=bag.movimentacoes.all|first %}
@@ -105,7 +106,7 @@
     </div>
     {% include 'sistema/includes/paginacao.html' %}
     {% else %}
-        <div class="empty-state table-empty"><h3>Nenhuma bag encontrada</h3><p class="form-subtitle">Ajuste os filtros ou cadastre uma nova bag.</p></div>
+        <div class="empty-state table-empty bags-vazio"><h3>Nenhuma bag encontrada</h3><p class="form-subtitle">Ajuste os filtros ou cadastre uma nova bag.</p>{% if usuario.tipo == 'ADMIN' %}<a href="{% url 'cadastrar_bag' %}" class="btn btn-primary">Cadastrar bag</a>{% endif %}</div>
     {% endif %}
 </section>
 {% endblock %}

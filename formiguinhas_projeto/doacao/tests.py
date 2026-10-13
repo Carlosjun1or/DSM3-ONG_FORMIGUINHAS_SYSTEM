@@ -6,6 +6,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from acao.models import Acao
+from estoque.models import Material, MovimentacaoEstoque
 from praia.models import Praia
 from usuario.models import Usuario, Voluntario
 
@@ -172,6 +173,18 @@ class DoacaoTestCase(TestCase):
         self.assertIn('data_recebimento', form.errors)
 
     def test_cadastro_material_aceita_varios_itens(self):
+        luvas = Material.objects.create(
+            nome='Luvas',
+            codigo='LUVAS',
+            categoria='Proteção',
+            unidade='UNIDADE',
+        )
+        sacos = Material.objects.create(
+            nome='Sacos de lixo',
+            codigo='SACOS',
+            categoria='Limpeza',
+            unidade='PACOTE',
+        )
         response = self.client.post(reverse('cadastro_doacao'), {
             'tipo': Doacao.MATERIAL,
             'doador': self.doador.pk,
@@ -190,12 +203,14 @@ class DoacaoTestCase(TestCase):
             'itens-INITIAL_FORMS': '0',
             'itens-MIN_NUM_FORMS': '1',
             'itens-MAX_NUM_FORMS': '1000',
+            'itens-0-material': str(luvas.pk),
             'itens-0-nome': 'Luvas',
             'itens-0-categoria': 'Proteção',
             'itens-0-quantidade': '20',
             'itens-0-unidade': 'unidades',
             'itens-0-condicao': 'NOVO',
             'itens-0-observacoes': '',
+            'itens-1-material': str(sacos.pk),
             'itens-1-nome': 'Sacos de lixo',
             'itens-1-categoria': 'Limpeza',
             'itens-1-quantidade': '5',
@@ -205,6 +220,172 @@ class DoacaoTestCase(TestCase):
         })
         self.assertEqual(response.status_code, 302)
         self.assertEqual(ItemDoacaoMaterial.objects.count(), 2)
+        movimentacoes = MovimentacaoEstoque.objects.order_by('material__nome')
+        self.assertEqual(movimentacoes.count(), 2)
+        self.assertEqual([mov.material_id for mov in movimentacoes], [luvas.pk, sacos.pk])
+        self.assertTrue(all(mov.origem == 'DOACAO' for mov in movimentacoes))
+        self.assertEqual(luvas.calcular_saldo(), 20)
+        self.assertEqual(sacos.calcular_saldo(), 5)
+
+    def test_confirmar_doacao_material_cria_movimentacao_uma_unica_vez(self):
+        material = Material.objects.create(
+            nome='Cestas',
+            codigo='CESTAS',
+            categoria='Alimentos',
+            unidade='UNIDADE',
+        )
+        doacao = Doacao.objects.create(
+            tipo=Doacao.MATERIAL,
+            doador=self.doador,
+            data_recebimento=timezone.localdate(),
+            status=Doacao.PENDENTE,
+            registrado_por=self.usuario,
+            registrado_por_nome='Administrador',
+            registrado_por_tipo='ADMIN',
+        )
+        item = ItemDoacaoMaterial.objects.create(
+            doacao=doacao,
+            material=material,
+            nome='Cestas',
+            categoria='Alimentos',
+            quantidade=8,
+            unidade='unidades',
+            condicao=ItemDoacaoMaterial.CONDICAO_NOVO,
+        )
+
+        for _ in range(2):
+            response = self.client.post(
+                reverse('atualizar_status_doacao', args=[doacao.pk]),
+                {'status': Doacao.CONFIRMADA},
+            )
+            self.assertEqual(response.status_code, 302)
+
+        self.assertEqual(MovimentacaoEstoque.objects.filter(doacao=doacao).count(), 1)
+        movimentacao = MovimentacaoEstoque.objects.get(doacao=doacao)
+        self.assertEqual(movimentacao.item_doacao, item)
+        self.assertEqual(material.calcular_saldo(), 8)
+        self.assertContains(
+            self.client.get(reverse('doacao_detalhe', args=[doacao.pk])),
+            'Entrada aplicada',
+        )
+        self.assertContains(
+            self.client.get(reverse('movimentacoes_estoque')),
+            reverse('doacao_detalhe', args=[doacao.pk]),
+        )
+
+    def test_confirmacao_sem_correspondencia_no_estoque_e_bloqueada(self):
+        doacao = Doacao.objects.create(
+            tipo=Doacao.MATERIAL,
+            doador=self.doador,
+            data_recebimento=timezone.localdate(),
+            status=Doacao.PENDENTE,
+            registrado_por=self.usuario,
+            registrado_por_nome='Administrador',
+            registrado_por_tipo='ADMIN',
+        )
+        ItemDoacaoMaterial.objects.create(
+            doacao=doacao,
+            nome='Item sem vínculo',
+            categoria='Geral',
+            quantidade=2,
+            unidade='unidades',
+            condicao=ItemDoacaoMaterial.CONDICAO_NOVO,
+        )
+
+        response = self.client.post(
+            reverse('atualizar_status_doacao', args=[doacao.pk]),
+            {'status': Doacao.CONFIRMADA},
+            follow=True,
+        )
+
+        doacao.refresh_from_db()
+        self.assertEqual(doacao.status, Doacao.PENDENTE)
+        self.assertEqual(MovimentacaoEstoque.objects.count(), 0)
+        self.assertContains(response, 'Selecione o material do estoque')
+
+    def test_quantidade_fracionada_ou_material_danificado_nao_entra_no_estoque(self):
+        material = Material.objects.create(
+            nome='Ração',
+            codigo='RACAO',
+            categoria='Alimentos',
+            unidade='KG',
+        )
+        for indice, quantidade, condicao in [
+            (1, '2.5', ItemDoacaoMaterial.CONDICAO_NOVO),
+            (2, '3', ItemDoacaoMaterial.CONDICAO_DANIFICADO),
+        ]:
+            doacao = Doacao.objects.create(
+                tipo=Doacao.MATERIAL,
+                doador=self.doador,
+                data_recebimento=timezone.localdate(),
+                status=Doacao.PENDENTE,
+                registrado_por=self.usuario,
+                registrado_por_nome='Administrador',
+                registrado_por_tipo='ADMIN',
+            )
+            ItemDoacaoMaterial.objects.create(
+                doacao=doacao,
+                material=material,
+                nome=f'Ração {indice}',
+                categoria='Alimentos',
+                quantidade=quantidade,
+                unidade='kg',
+                condicao=condicao,
+            )
+
+            response = self.client.post(
+                reverse('atualizar_status_doacao', args=[doacao.pk]),
+                {'status': Doacao.CONFIRMADA},
+                follow=True,
+            )
+
+            doacao.refresh_from_db()
+            self.assertEqual(doacao.status, Doacao.PENDENTE)
+            self.assertContains(response, 'Não foi possível confirmar a doação')
+
+        self.assertEqual(MovimentacaoEstoque.objects.count(), 0)
+        self.assertEqual(material.calcular_saldo(), 0)
+
+    def test_nao_permite_cancelar_doacao_que_ja_movimentou_estoque(self):
+        material = Material.objects.create(
+            nome='Cobertores',
+            codigo='COBERT',
+            categoria='Geral',
+            unidade='UNIDADE',
+        )
+        doacao = Doacao.objects.create(
+            tipo=Doacao.MATERIAL,
+            doador=self.doador,
+            data_recebimento=timezone.localdate(),
+            status=Doacao.CONFIRMADA,
+            registrado_por=self.usuario,
+            registrado_por_nome='Administrador',
+            registrado_por_tipo='ADMIN',
+        )
+        item = ItemDoacaoMaterial.objects.create(
+            doacao=doacao,
+            material=material,
+            nome='Cobertores',
+            categoria='Geral',
+            quantidade=3,
+            unidade='unidades',
+            condicao=ItemDoacaoMaterial.CONDICAO_NOVO,
+        )
+        self.client.post(
+            reverse('atualizar_status_doacao', args=[doacao.pk]),
+            {'status': Doacao.CONFIRMADA},
+        )
+
+        response = self.client.post(
+            reverse('atualizar_status_doacao', args=[doacao.pk]),
+            {'status': Doacao.CANCELADA},
+            follow=True,
+        )
+
+        doacao.refresh_from_db()
+        self.assertEqual(doacao.status, Doacao.CONFIRMADA)
+        self.assertEqual(MovimentacaoEstoque.objects.filter(item_doacao=item).count(), 1)
+        self.assertContains(response, 'Não é possível retirar a confirmação')
 
     def test_coordenador_nao_pode_cancelar_doacao(self):
         voluntario = Voluntario.objects.create(

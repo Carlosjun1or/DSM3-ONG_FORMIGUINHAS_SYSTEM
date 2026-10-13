@@ -3,14 +3,16 @@ import io
 from datetime import date
 
 from django.core.exceptions import ValidationError
+from django.core.management import call_command
 from django.test import TestCase
 from django.urls import reverse
 
 from auditoria.models import EventoAuditoria
+from doacao.models import Doador, Doacao, ItemDoacaoMaterial
 from usuario.models import Usuario, Voluntario
 
-from .forms import MaterialForm
-from .models import Doacao, Material, MovimentacaoEstoque
+from .forms import MaterialForm, MovimentacaoEstoqueForm
+from .models import Material, MovimentacaoEstoque
 
 
 def criar_usuario(nome, email, tipo):
@@ -53,11 +55,73 @@ class EstoqueTestCase(TestCase):
         sessao.save()
 
 
+class SimularEstoqueCommandTests(TestCase):
+    def setUp(self):
+        criar_usuario('Administrador', 'admin-simulacao@teste.org', 'ADMIN')
+
+    def test_cria_dados_integrados_e_pode_ser_executado_mais_de_uma_vez(self):
+        call_command('simular_estoque', stdout=io.StringIO())
+        call_command('simular_estoque', stdout=io.StringIO())
+
+        self.assertEqual(Material.objects.count(), 4)
+        self.assertEqual(MovimentacaoEstoque.objects.count(), 5)
+        self.assertEqual(
+            Doacao.objects.filter(observacoes__startswith='DADO DEMONSTRATIVO - estoque').count(),
+            1,
+        )
+        doacao = Doacao.objects.get(observacoes__startswith='DADO DEMONSTRATIVO - estoque')
+        movimentacao = MovimentacaoEstoque.objects.get(doacao=doacao)
+        self.assertEqual(movimentacao.item_doacao.material, movimentacao.material)
+        self.assertEqual(movimentacao.quantidade, 6)
+        self.assertEqual(
+            Material.objects.get(codigo='DEMO-EPI-001').calcular_saldo(),
+            32,
+        )
+
+
+class FormulariosEstoqueTests(TestCase):
+    def test_formulario_material_tem_placeholders_e_orientacoes(self):
+        form = MaterialForm()
+
+        self.assertEqual(form.fields['nome'].widget.attrs['placeholder'], 'Ex.: Luvas de proteção tamanho M')
+        self.assertEqual(form.fields['codigo'].widget.attrs['placeholder'], 'Ex.: MAT-0001')
+        self.assertEqual(form.fields['quantidade_inicial'].widget.attrs['placeholder'], 'Ex.: 20')
+        self.assertEqual(form.fields['estoque_minimo'].widget.attrs['placeholder'], 'Ex.: 5')
+        self.assertIn('opcional', form.fields['descricao'].widget.attrs['placeholder'])
+
+    def test_formulario_movimentacao_orienta_os_campos(self):
+        form = MovimentacaoEstoqueForm()
+
+        self.assertEqual(form.fields['quantidade'].widget.attrs['placeholder'], 'Ex.: 10')
+        self.assertIn('mutirão', form.fields['justificativa'].widget.attrs['placeholder'])
+        self.assertIn('Obrigatória para entradas', form.fields['origem'].help_text)
+        self.assertIn('saída', form.fields['justificativa'].help_text)
+        material = criar_material(nome='Luvas', codigo='LUV-01', quantidade_inicial=8, unidade='CAIXA')
+        escolha = form.fields['material'].label_from_instance(
+            Material.objects.com_saldo().get(pk=material.pk)
+        )
+        self.assertIn('saldo: 8 Caixa', escolha)
+
+    def test_tela_de_movimentacao_permite_pesquisar_material(self):
+        admin = criar_usuario('Administrador', 'admin-busca@teste.org', 'ADMIN')
+        sessao = self.client.session
+        sessao['usuario_id'] = admin.id_usuario
+        sessao['usuario_nome'] = admin.id_voluntario.nome
+        sessao['usuario_tipo'] = admin.tipo
+        sessao.save()
+        resposta = self.client.get(reverse('cadastrar_movimentacao_estoque'))
+
+        self.assertContains(resposta, 'id="material-search"')
+        self.assertContains(resposta, 'Digite o nome ou código do material')
+        self.assertContains(resposta, 'aria-controls="material-options"')
+        self.assertContains(resposta, 'name="material"')
+
+
 class AcessoTests(EstoqueTestCase):
     URLS = [
         'materiais', 'cadastrar_material', 'movimentacoes_estoque',
         'cadastrar_movimentacao_estoque', 'exportar_movimentacoes_estoque',
-        'doacoes_estoque', 'cadastrar_doacao_estoque', 'relatorio_estoque',
+        'relatorio_estoque',
     ]
 
     def test_anonimo_vai_para_login(self):
@@ -132,6 +196,20 @@ class MaterialTests(EstoqueTestCase):
     def test_nome_duplicado_sem_distinguir_maiusculas(self):
         criar_material(nome='Luva de Proteção M', codigo='A')
         form = MaterialForm(data=dados_material(nome='luva de proteção m', codigo='B'))
+        self.assertFalse(form.is_valid())
+        self.assertIn('já existe', str(form.errors))
+
+    def test_cadastro_exibe_nomes_existentes_para_alerta_em_tempo_real(self):
+        self.entrar(self.admin)
+        criar_material(nome='Álcool em gel', codigo='ALC-1')
+        resposta = self.client.get(reverse('cadastrar_material'))
+
+        self.assertContains(resposta, 'materiais-existentes')
+        self.assertEqual(resposta.context['materiais_existentes'][0]['nome'], 'Álcool em gel')
+
+    def test_nome_duplicado_ignorando_espacos(self):
+        criar_material(nome='Álcool em gel', codigo='A')
+        form = MaterialForm(data=dados_material(nome='  álcool em gel  ', codigo='B'))
         self.assertFalse(form.is_valid())
         self.assertIn('já existe', str(form.errors))
 
@@ -319,41 +397,38 @@ class DoacaoTests(EstoqueTestCase):
         self.entrar(self.admin)
 
     def test_doacao_gera_entrada_e_auditoria(self):
-        r = self.client.post(reverse('cadastrar_doacao_estoque'), {
-            'doador': 'Maria', 'material': self.material.pk, 'quantidade': 7, 'observacao': 'Lote 1',
-        }, follow=True)
-        self.assertRedirects(r, reverse('doacoes_estoque'))
-        self.assertContains(r, 'entrada lançada')
-        doacao = Doacao.objects.get()
-        self.assertEqual(doacao.registrado_por, self.admin)
-        entrada = doacao.movimentacoes.get()
-        self.assertEqual((entrada.tipo, entrada.origem, entrada.quantidade), ('ENTRADA', 'DOACAO', 7))
-        self.assertEqual(entrada.registrado_por_nome, 'Administrador')
-        self.assertEqual(entrada.origem_detalhada, 'Doação (Maria)')
-        self.assertEqual(self.material.calcular_saldo(), 7)
-        self.assertTrue(EventoAuditoria.objects.filter(entidade='DOACAO', acao='CRIACAO').exists())
-        self.assertTrue(EventoAuditoria.objects.filter(entidade='MOVIMENTACAO_ESTOQUE').exists())
+        response = self.client.get(reverse('doacoes_estoque'))
+        self.assertRedirects(response, reverse('doacoes'), fetch_redirect_response=False)
+        response = self.client.get(reverse('cadastrar_doacao_estoque'))
+        self.assertRedirects(response, reverse('cadastro_doacao'), fetch_redirect_response=False)
 
-    def test_doacao_invalida_nao_grava_nada(self):
-        r = self.client.post(reverse('cadastrar_doacao_estoque'), {
-            'doador': '', 'material': self.material.pk, 'quantidade': 0,
-        })
-        self.assertEqual(r.status_code, 200)
-        self.assertEqual(Doacao.objects.count(), 0)
+    def test_gravacao_direta_nao_substitui_fluxo_de_confirmacao(self):
+        doador = Doador.objects.create(
+            tipo=Doador.PESSOA_FISICA,
+            nome='Maria',
+            cadastrado_por=self.admin,
+            cadastrado_por_nome='Administrador',
+        )
+        doacao = Doacao.objects.create(
+            tipo=Doacao.MATERIAL,
+            doador=doador,
+            status=Doacao.CONFIRMADA,
+            registrado_por=self.admin,
+            registrado_por_nome='Administrador',
+            registrado_por_tipo='ADMIN',
+        )
+        ItemDoacaoMaterial.objects.create(
+            doacao=doacao,
+            nome='Luvas',
+            categoria='EPI',
+            quantidade=7,
+            unidade='caixas',
+            condicao=ItemDoacaoMaterial.CONDICAO_NOVO,
+        )
+
+        self.assertEqual(self.material.calcular_saldo(), 0)
         self.assertEqual(MovimentacaoEstoque.objects.count(), 0)
-
-    def test_editar_doacao_nao_duplica_entrada(self):
-        doacao = Doacao.objects.create(doador='Maria', material=self.material, quantidade=3)
-        doacao.observacao = 'Ajustada'
-        doacao.save()
-        self.assertEqual(MovimentacaoEstoque.objects.count(), 1)
-
-    def test_listagem_e_busca(self):
-        Doacao.objects.create(doador='Maria', material=self.material, quantidade=3)
-        Doacao.objects.create(doador='Pedro', material=self.material, quantidade=2)
-        r = self.client.get(reverse('doacoes_estoque'), {'busca': 'maria'})
-        self.assertContains(r, 'Maria')
-        self.assertNotContains(r, 'Pedro')
+        self.assertContains(self.client.get(reverse('doacoes')), 'Maria')
 
 
 class ConsultaTests(EstoqueTestCase):
@@ -384,7 +459,28 @@ class ConsultaTests(EstoqueTestCase):
         self.assertEqual(r.context['total_baixo_estoque'], 1)
 
     def test_total_doado_no_periodo(self):
-        Doacao.objects.create(doador='Maria', material=self.tinta, quantidade=4)
+        doador = Doador.objects.create(
+            tipo=Doador.PESSOA_FISICA,
+            nome='Maria',
+            cadastrado_por=self.admin,
+            cadastrado_por_nome='Administrador',
+        )
+        doacao = Doacao.objects.create(
+            tipo=Doacao.MATERIAL,
+            doador=doador,
+            status=Doacao.CONFIRMADA,
+            registrado_por=self.admin,
+            registrado_por_nome='Administrador',
+            registrado_por_tipo='ADMIN',
+        )
+        ItemDoacaoMaterial.objects.create(
+            doacao=doacao,
+            nome='Tinta',
+            categoria='Pintura',
+            quantidade=4,
+            unidade='litros',
+            condicao=ItemDoacaoMaterial.CONDICAO_NOVO,
+        )
         r = self.client.get(reverse('materiais'))
         self.assertEqual(r.context['doado_total'], 4)
         r = self.client.get(reverse('materiais'), {'data_inicio': '2000-01-01', 'data_fim': '2000-12-31'})
@@ -393,7 +489,7 @@ class ConsultaTests(EstoqueTestCase):
     def test_consulta_sem_n_mais_um(self):
         for i in range(5):
             criar_material(nome=f'Item {i}', codigo=f'I{i}')
-        with self.assertNumQueries(7):
+        with self.assertNumQueries(8):
             self.client.get(reverse('materiais'))
 
     def test_relatorio_por_origem(self):
@@ -424,10 +520,22 @@ class HistoricoTests(EstoqueTestCase):
 
     def test_paginacao_de_dez_itens(self):
         r = self.client.get(reverse('movimentacoes_estoque'))
-        self.assertEqual(len(r.context['page_obj']), 10)
-        self.assertEqual(r.context['page_obj'].paginator.num_pages, 2)
+        self.assertEqual(len(r.context['page_obj']), 13)
+        self.assertEqual(r.context['page_obj'].paginator.per_page, 20)
+        self.assertEqual(r.context['page_obj'].paginator.num_pages, 1)
+
+    def test_resumo_mostra_contagem_de_movimentacoes_filtradas(self):
+        r = self.client.get(reverse('movimentacoes_estoque'), {'tipo': 'ENTRADA'})
+        self.assertEqual(r.context['total_movimentacoes'], 12)
+        self.assertEqual(r.context['total_entradas'], 12)
+        self.assertEqual(r.context['total_saidas'], 0)
 
     def test_paginacao_preserva_filtros(self):
+        for i in range(9):
+            MovimentacaoEstoque.objects.create(
+                material=self.material, tipo='ENTRADA', quantidade=1, origem='COMPRA',
+                registrado_por=self.admin, registrado_por_nome='Administrador',
+            )
         r = self.client.get(reverse('movimentacoes_estoque'), {'busca': 'Tinta'})
         self.assertContains(r, 'busca=Tinta&amp;page=2')
 
@@ -527,6 +635,38 @@ class FiltroOrigemELiveTests(EstoqueTestCase):
         r = self.client.post(reverse('cadastrar_material'), dados_material(), follow=True)
         self.assertContains(r, 'Material cadastrado com sucesso.')
         self.assertContains(r, 'data-toast')
+
+    def test_material_e_movimentacao_exibem_links_de_navegacao_relacionada(self):
+        materiais = self.client.get(reverse('materiais'))
+        self.assertContains(
+            materiais,
+            f'href="{reverse("movimentacoes_estoque")}?busca=C1"',
+            html=False,
+        )
+        historico = self.client.get(reverse('movimentacoes_estoque'))
+        self.assertContains(
+            historico,
+            f'href="{reverse("materiais")}?busca=C1"',
+            html=False,
+        )
+
+    def test_menu_lateral_destaca_movimentacoes_sem_destacar_estoque(self):
+        for url in (
+            reverse('movimentacoes_estoque'),
+            reverse('cadastrar_movimentacao_estoque'),
+        ):
+            resposta = self.client.get(url)
+            self.assertEqual(resposta.status_code, 200)
+            self.assertContains(
+                resposta,
+                '<a href="/estoque/movimentacoes/" class="sidebar-link active">Controle de Movimentações</a>',
+                html=True,
+            )
+            self.assertContains(
+                resposta,
+                '<a href="/estoque/" class="sidebar-link ">Controle de Estoque</a>',
+                html=True,
+            )
 
 
 class CriteriosAceiteTests(EstoqueTestCase):

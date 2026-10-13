@@ -17,10 +17,10 @@
     </div>
 
     <div class="stats-grid">
-        <article class="stat-card"><span>Arrecadação confirmada</span><strong>R$ {{ total_financeiro|floatformat:2 }}</strong></article>
+        <article class="stat-card"><span>Arrecadação confirmada</span><strong>R$ {{ total_financeiro|floatformat:"2u" }}</strong></article>
         <article class="stat-card"><span>Doações confirmadas</span><strong>{{ quantidade_doacoes }}</strong></article>
         <article class="stat-card"><span>Aguardando confirmação</span><strong>{{ quantidade_pendentes }}</strong></article>
-        <article class="stat-card"><span>Materiais recebidos</span><strong>{{ quantidade_materiais|floatformat:2 }}</strong></article>
+        <article class="stat-card"><span>Materiais recebidos</span><strong>{{ quantidade_materiais|floatformat:"2u" }}</strong></article>
     </div>
 
     <section class="card volunteer-control donation-records">

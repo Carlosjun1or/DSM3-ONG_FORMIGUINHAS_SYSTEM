@@ -1,6 +1,8 @@
 {% extends 'sistema/template-sistema.html' %}
+{% load static %}
 
 {% block page_title %}Detalhes da doação{% endblock %}
+{% block estilos %}<link rel="stylesheet" href="{% static 'estoque/estoque.css' %}?v=2">{% endblock %}
 
 {% block conteudo %}
 <section class="card donation-detail donation-detail-hero">
@@ -46,6 +48,7 @@
 <section class="card donation-detail-content">
     <div class="section-heading donation-content-heading">
         <div>
+            <span class="section-kicker">Recebimento</span>
             <h2>{% if doacao.tipo == 'FINANCEIRA' %}Dados financeiros{% else %}Itens recebidos{% endif %}</h2>
             <p class="form-subtitle">Informações detalhadas desta doação.</p>
         </div>
@@ -70,6 +73,7 @@
                     <th>Categoria</th>
                     <th>Quantidade</th>
                     <th>Condição</th>
+                    <th>Controle de estoque</th>
                     <th>Observações</th>
                 </tr>
             </thead>
@@ -80,14 +84,34 @@
                     <td>{{ item.categoria }}</td>
                     <td>{{ item.quantidade }} {{ item.unidade }}</td>
                     <td>{{ item.get_condicao_display }}</td>
+                    <td>
+                        {% if item.material %}
+                            {{ item.material.nome }}
+                            {% if item.movimentacao_estoque %}
+                                <small class="estoque-detalhe-vinculo">
+                                    <span class="status-badge status-ativo">Entrada aplicada</span>
+                                    <a class="table-link" href="{% url 'movimentacoes_estoque' %}?origem=DOACAO&amp;busca={{ item.material.codigo|urlencode }}">Movimentação #{{ item.movimentacao_estoque.id_movimentacao }} · {{ item.movimentacao_estoque.dt_cadastro|date:"d/m/Y H:i" }}</a>
+                                </small>
+                            {% else %}
+                                <small>Aguardando confirmação</small>
+                            {% endif %}
+                        {% else %}
+                            Não vinculado ao catálogo
+                        {% endif %}
+                    </td>
                     <td>{{ item.observacoes|default:'-' }}</td>
                 </tr>
                 {% empty %}
-                <tr><td colspan="5">Nenhum item informado.</td></tr>
+                <tr><td colspan="6">Nenhum item informado.</td></tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
+    {% if tem_movimentacoes_estoque %}
+    <p class="form-subtitle">
+        <a class="table-link" href="{% url 'movimentacoes_estoque' %}">Abrir controle de movimentações do estoque</a>
+    </p>
+    {% endif %}
     {% endif %}
 
     <div class="donation-notes-grid">

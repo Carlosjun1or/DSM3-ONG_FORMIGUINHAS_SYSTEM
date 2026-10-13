@@ -2,7 +2,7 @@ from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
 from django.db import models, transaction
 from django.db.models import F, Q, Sum
-from django.db.models.functions import Coalesce
+from django.db.models.functions import Coalesce, Lower, Trim
 
 
 class MaterialQuerySet(models.QuerySet):
@@ -64,6 +64,12 @@ class Material(models.Model):
         ordering = ['nome']
         verbose_name = 'Material'
         verbose_name_plural = 'Materiais'
+        constraints = [
+            models.UniqueConstraint(
+                Lower(Trim('nome')),
+                name='material_nome_normalizado_unico',
+            ),
+        ]
 
     def __str__(self):
         origem = 'Donativo' if self.donativo else 'Comprado'
@@ -71,10 +77,12 @@ class Material(models.Model):
 
     def clean(self):
         if self.nome:
-            duplicado = Material.objects.filter(
-                nome__iexact=self.nome.strip()
-            ).exclude(pk=self.pk)
-            if duplicado.exists():
+            nome_normalizado = self.nome.strip().casefold()
+            duplicados = Material.objects.exclude(pk=self.pk).only('pk', 'nome')
+            if any(
+                material.nome.strip().casefold() == nome_normalizado
+                for material in duplicados
+            ):
                 raise ValidationError({'nome': 'Este material já existe no estoque.'})
 
     def calcular_saldo(self, excluir_movimentacao_pk=None):
@@ -102,50 +110,6 @@ class Material(models.Model):
         return self.saldo <= 0 or self.saldo < self.estoque_minimo
 
 
-class Doacao(models.Model):
-    """Registro de doação. Gera automaticamente a entrada correspondente."""
-
-    id_doacao = models.AutoField(primary_key=True)
-    doador = models.CharField(max_length=100)
-    material = models.ForeignKey(Material, on_delete=models.PROTECT, related_name='doacoes')
-    quantidade = models.PositiveIntegerField(validators=[MinValueValidator(1)])
-    observacao = models.TextField(blank=True)
-    dt_cadastro = models.DateTimeField(auto_now_add=True)
-    registrado_por = models.ForeignKey(
-        'usuario.Usuario',
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name='doacoes_registradas',
-    )
-    registrado_por_nome = models.CharField(max_length=150, blank=True)
-
-    class Meta:
-        db_table = 'doacao'
-        ordering = ['-dt_cadastro', '-id_doacao']
-        verbose_name = 'Doação'
-        verbose_name_plural = 'Doações'
-
-    def __str__(self):
-        return f'{self.doador} - {self.material.nome} ({self.quantidade})'
-
-    def save(self, *args, **kwargs):
-        with transaction.atomic():
-            nova = self._state.adding
-            super().save(*args, **kwargs)
-            if nova:
-                MovimentacaoEstoque.objects.create(
-                    material=self.material,
-                    tipo='ENTRADA',
-                    quantidade=self.quantidade,
-                    origem='DOACAO',
-                    doacao=self,
-                    registrado_por=self.registrado_por,
-                    registrado_por_nome=self.registrado_por_nome,
-                    justificativa=self.observacao,
-                )
-
-
 class MovimentacaoEstoque(models.Model):
     TIPO_CHOICES = [('ENTRADA', 'Entrada'), ('SAIDA', 'Saída')]
     ORIGEM_CHOICES = [('DOACAO', 'Doação'), ('COMPRA', 'Compra'), ('AJUSTE', 'Ajuste')]
@@ -159,11 +123,18 @@ class MovimentacaoEstoque(models.Model):
     origem = models.CharField(max_length=10, choices=ORIGEM_CHOICES, blank=True)
     justificativa = models.TextField(blank=True)
     doacao = models.ForeignKey(
-        Doacao,
+        'doacao.Doacao',
         on_delete=models.PROTECT,
         null=True,
         blank=True,
-        related_name='movimentacoes',
+        related_name='movimentacoes_estoque',
+    )
+    item_doacao = models.OneToOneField(
+        'doacao.ItemDoacaoMaterial',
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name='movimentacao_estoque',
     )
     dt_cadastro = models.DateTimeField(auto_now_add=True)
     registrado_por = models.ForeignKey(
@@ -187,7 +158,8 @@ class MovimentacaoEstoque(models.Model):
     @property
     def origem_detalhada(self):
         if self.origem == 'DOACAO' and self.doacao_id:
-            return f'Doação ({self.doacao.doador})'
+            doador = self.doacao.doador.nome if self.doacao.doador_id else 'Anônima'
+            return f'Doação ({doador})'
         return self.get_origem_display() or '-'
 
     def _validar(self, material):
@@ -199,6 +171,15 @@ class MovimentacaoEstoque(models.Model):
             )
         if self.doacao_id and self.origem != 'DOACAO':
             raise ValidationError("Movimentação vinculada a doação deve ter origem 'Doação'.")
+        if self.item_doacao_id and (
+            self.item_doacao.doacao_id != self.doacao_id
+            or self.item_doacao.material_id != self.material_id
+        ):
+            raise ValidationError(
+                'O item movimentado deve pertencer à doação e ao material vinculados.'
+            )
+        if self.item_doacao_id and self.tipo != 'ENTRADA':
+            raise ValidationError('Itens de doação só podem gerar entradas no estoque.')
         if self.tipo == 'SAIDA':
             saldo = material.calcular_saldo(excluir_movimentacao_pk=self.pk)
             if self.quantidade > saldo:

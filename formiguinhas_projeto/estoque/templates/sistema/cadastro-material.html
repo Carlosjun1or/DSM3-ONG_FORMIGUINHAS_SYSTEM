@@ -3,21 +3,33 @@
 
 {% block titulo %}{% if modo_edicao %}Editar material{% else %}Novo material{% endif %} | Sistema{% endblock %}
 {% block page_title %}{% if modo_edicao %}Editar material{% else %}Cadastrar material{% endif %}{% endblock %}
-{% block estilos %}<link rel="stylesheet" href="{% static 'estoque/estoque.css' %}">
+{% block estilos %}<link rel="stylesheet" href="{% static 'estoque/estoque.css' %}?v=2">
 <script src="{% static 'estoque/estoque.js' %}" defer></script>{% endblock %}
 
 {% block conteudo %}
-<section class="form-card">
+<section class="form-card estoque-form-card">
     <div class="section-heading">
         <div>
+            <span class="form-kicker">{% if modo_edicao %}Cadastro de materiais{% else %}Inventário{% endif %}</span>
             <h2>{% if modo_edicao %}{{ material.nome }}{% else %}Novo material{% endif %}</h2>
             <p class="form-subtitle">{% if modo_edicao %}Atualize os dados do material. O saldo continua calculado pelas movimentações.{% else %}Preencha os dados abaixo para adicionar um novo material ao estoque.{% endif %}</p>
         </div>
-        <a href="{% url 'materiais' %}" class="btn btn-outline">Voltar</a>
+        <div class="estoque-acoes">
+            {% if modo_edicao %}<a href="{% url 'movimentacoes_estoque' %}?busca={{ material.codigo|urlencode }}" class="btn btn-outline">Ver movimentações</a>{% endif %}
+            <a href="{% url 'materiais' %}" class="btn btn-outline">Voltar ao estoque</a>
+        </div>
     </div>
 
+    {% if modo_edicao %}
+    <section class="estoque-detalhe-resumo" aria-label="Resumo do material">
+        <div><span>Saldo atual</span><strong>{{ material.saldo }} {{ material.get_unidade_display }}</strong></div>
+        <div><span>Estoque mínimo</span><strong>{{ material.estoque_minimo }} {{ material.get_unidade_display }}</strong></div>
+        <div><span>Situação</span><strong>{% if material.sem_estoque %}Sem estoque{% elif material.baixo_estoque %}Estoque baixo{% else %}Normal{% endif %}</strong></div>
+    </section>
+    {% endif %}
+
     <form method="post" class="system-form" novalidate>{% csrf_token %}
-        {% if form.errors %}<div class="error-box" role="alert">Não foi possível salvar. Preencha ou corrija os campos destacados em vermelho.</div>{% endif %}
+        {% if form.errors %}<div class="error-box" role="alert" tabindex="-1" data-form-error>Não foi possível salvar. Revise os campos destacados em vermelho e tente novamente.</div>{% endif %}
         {% for error in form.non_field_errors %}<div class="error-box">{{ error }}</div>{% endfor %}
 
         <h3 class="form-section-title">Identificação</h3>
@@ -31,6 +43,7 @@
         </div>
 
         <h3 class="form-section-title">Quantidades</h3>
+        <p class="form-help estoque-form-orientacao">A quantidade inicial é o saldo existente antes de registrar qualquer movimentação. Use zero se o material ainda não estiver disponível.</p>
         <div class="form-grid">
             {% include 'sistema/_campo-estoque.html' with field=form.quantidade_inicial ajuda='Saldo de partida, antes das movimentações.' %}
             {% include 'sistema/_campo-estoque.html' with field=form.estoque_minimo ajuda='Abaixo deste valor o material aparece como estoque baixo.' %}
@@ -44,21 +57,65 @@
             </div>
         </div>
 
+        {% if modo_edicao %}
+        <p class="estoque-nota-form">O saldo atual não é editado aqui. Registre entradas ou saídas no histórico de movimentações para manter a rastreabilidade.</p>
+        {% endif %}
+
         <div class="form-actions">
-            <button type="submit" class="btn btn-primary">Salvar material</button>
+            <button type="submit" class="btn btn-primary" data-salvar-material>Salvar material</button>
             <a href="{% url 'materiais' %}" class="btn btn-outline">Cancelar</a>
         </div>
     </form>
 </section>
+{{ materiais_existentes|json_script:"materiais-existentes" }}
 
 <script>
     (function () {
+        var erro = document.querySelector('[data-form-error]');
+        var primeiroCampoInvalido = document.querySelector('.campo-invalido input, .campo-invalido select, .campo-invalido textarea');
+        if (primeiroCampoInvalido) {
+            primeiroCampoInvalido.focus();
+        } else if (erro) {
+            erro.focus();
+        }
+
         var checkbox = document.getElementById('id_donativo');
         var doador = document.getElementById('doador-field');
         function alternar() { doador.style.display = checkbox.checked ? 'block' : 'none'; }
         if (checkbox && doador) {
             checkbox.addEventListener('change', alternar);
             alternar();
+        }
+
+        var nome = document.getElementById('id_nome');
+        var dadosExistentes = document.getElementById('materiais-existentes');
+        var botaoSalvar = document.querySelector('[data-salvar-material]');
+        if (nome && dadosExistentes) {
+            var materiaisExistentes = JSON.parse(dadosExistentes.textContent);
+            var avisoDuplicado = document.createElement('small');
+            avisoDuplicado.className = 'field-error material-duplicado-aviso';
+            avisoDuplicado.setAttribute('role', 'alert');
+            avisoDuplicado.hidden = true;
+            nome.parentNode.appendChild(avisoDuplicado);
+
+            function verificarNome() {
+                var valor = nome.value.trim().toLocaleLowerCase();
+                var existente = materiaisExistentes.find(function (material) {
+                    return material.nome.trim().toLocaleLowerCase() === valor;
+                });
+                avisoDuplicado.textContent = existente
+                    ? 'Este material já existe no estoque. Escolha outro nome.'
+                    : '';
+                avisoDuplicado.hidden = !existente;
+                nome.setAttribute('aria-invalid', existente ? 'true' : 'false');
+                nome.classList.toggle('campo-duplicado', Boolean(existente));
+                if (botaoSalvar) {
+                    botaoSalvar.disabled = Boolean(existente);
+                }
+            }
+
+            nome.addEventListener('input', verificarNome);
+            verificarNome();
         }
     })();
 </script>

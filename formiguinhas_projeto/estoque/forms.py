@@ -1,6 +1,11 @@
 from django import forms
 
-from .models import Doacao, Material, MovimentacaoEstoque
+from .models import Material, MovimentacaoEstoque
+
+
+class MaterialChoiceField(forms.ModelChoiceField):
+    def label_from_instance(self, obj):
+        return f'{obj.nome} — saldo: {obj.saldo} {obj.get_unidade_display()}'
 
 
 def aplicar_classes(form):
@@ -36,17 +41,33 @@ class MaterialForm(forms.ModelForm):
             'codigo': {'unique': 'Já existe um material com este código.'},
         }
         widgets = {
-            'nome': forms.TextInput(attrs={'placeholder': 'Nome do material'}),
+            'nome': forms.TextInput(attrs={
+                'placeholder': 'Ex.: Luvas de proteção tamanho M',
+                'autofocus': True,
+            }),
             'codigo': forms.TextInput(attrs={'placeholder': 'Ex.: MAT-0001'}),
             'categoria': forms.TextInput(attrs={
                 'list': 'categorias-list',
                 'autocomplete': 'off',
                 'placeholder': 'Ex.: EPI, Limpeza, Papelaria',
             }),
-            'descricao': forms.Textarea(attrs={'rows': 3}),
-            'quantidade_inicial': forms.NumberInput(attrs={'min': 0}),
-            'estoque_minimo': forms.NumberInput(attrs={'min': 0}),
-            'doador': forms.TextInput(attrs={'placeholder': 'Nome do doador'}),
+            'descricao': forms.Textarea(attrs={
+                'rows': 3,
+                'placeholder': 'Detalhes para identificar ou orientar o uso do material (opcional)',
+            }),
+            'quantidade_inicial': forms.NumberInput(attrs={
+                'min': 0,
+                'placeholder': 'Ex.: 20',
+                'inputmode': 'numeric',
+            }),
+            'estoque_minimo': forms.NumberInput(attrs={
+                'min': 0,
+                'placeholder': 'Ex.: 5',
+                'inputmode': 'numeric',
+            }),
+            'doador': forms.TextInput(attrs={
+                'placeholder': 'Nome da pessoa ou organização doadora',
+            }),
         }
 
     def __init__(self, *args, **kwargs):
@@ -68,18 +89,34 @@ class MaterialForm(forms.ModelForm):
 class MovimentacaoEstoqueForm(forms.ModelForm):
     """Regras de saldo, origem e justificativa ficam em MovimentacaoEstoque.clean()."""
 
+    material = MaterialChoiceField(
+        queryset=Material.objects.none(),
+        error_messages={
+            'required': 'Selecione um item do catálogo.',
+            'invalid_choice': 'Selecione um item do catálogo.',
+        },
+    )
+
     class Meta:
         model = MovimentacaoEstoque
         fields = ['material', 'tipo', 'quantidade', 'origem', 'justificativa']
         labels = {
+            'material': 'Material',
             'tipo': 'Tipo de movimentação',
             'quantidade': 'Quantidade',
             'origem': 'Origem (apenas entradas)',
             'justificativa': 'Justificativa / destino',
         }
         widgets = {
-            'quantidade': forms.NumberInput(attrs={'min': 1}),
-            'justificativa': forms.Textarea(attrs={'rows': 3}),
+            'quantidade': forms.NumberInput(attrs={
+                'min': 1,
+                'placeholder': 'Ex.: 10',
+                'inputmode': 'numeric',
+            }),
+            'justificativa': forms.Textarea(attrs={
+                'rows': 3,
+                'placeholder': 'Ex.: Entrega de 10 unidades para o mutirão de limpeza',
+            }),
         }
         error_messages = {
             'material': {
@@ -90,38 +127,21 @@ class MovimentacaoEstoqueForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['material'].queryset = Material.objects.order_by('nome')
+        self.fields['material'].queryset = Material.objects.com_saldo().order_by('nome')
         self.fields['material'].empty_label = 'Selecione um material'
+        self.fields['material'].help_text = 'O saldo atual aparece ao lado de cada material.'
         self.fields['tipo'].choices = (
             [('', 'Selecione o tipo')] + list(MovimentacaoEstoque.TIPO_CHOICES)
         )
+        self.fields['tipo'].help_text = 'Escolha entrada para reposição ou saída para consumo/uso.'
         # Doação só pelo registro de doação.
         self.fields['origem'].choices = [('', 'Selecione a origem')] + [
             c for c in MovimentacaoEstoque.ORIGEM_CHOICES if c[0] != 'DOACAO'
         ]
         self.fields['origem'].required = False
-        aplicar_classes(self)
-
-
-class DoacaoForm(forms.ModelForm):
-    class Meta:
-        model = Doacao
-        fields = ['doador', 'material', 'quantidade', 'observacao']
-        labels = {'quantidade': 'Quantidade', 'observacao': 'Observação'}
-        widgets = {
-            'doador': forms.TextInput(attrs={'placeholder': 'Nome do doador'}),
-            'quantidade': forms.NumberInput(attrs={'min': 1}),
-            'observacao': forms.Textarea(attrs={'rows': 3}),
-        }
-        error_messages = {
-            'material': {
-                'required': 'Selecione um item do catálogo.',
-                'invalid_choice': 'Selecione um item do catálogo.',
-            },
-        }
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields['material'].queryset = Material.objects.order_by('nome')
-        self.fields['material'].empty_label = 'Selecione um material'
+        self.fields['origem'].help_text = 'Obrigatória para entradas; saídas não precisam de origem.'
+        self.fields['quantidade'].help_text = 'Informe um número inteiro maior que zero.'
+        self.fields['justificativa'].help_text = (
+            'Descreva o motivo ou destino, especialmente para registrar uma saída.'
+        )
         aplicar_classes(self)
