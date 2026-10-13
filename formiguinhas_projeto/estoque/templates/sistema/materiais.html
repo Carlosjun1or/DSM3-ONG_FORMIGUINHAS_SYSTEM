@@ -1,0 +1,134 @@
+{% extends 'sistema/template-sistema.html' %}
+{% load static %}
+
+{% block titulo %}Controle de Estoque | Sistema{% endblock %}
+{% block page_title %}Controle de Estoque{% endblock %}
+{% block estilos %}<link rel="stylesheet" href="{% static 'estoque/estoque.css' %}">
+<script src="{% static 'estoque/estoque.js' %}" defer></script>{% endblock %}
+
+{% block conteudo %}
+<section class="card-grid volunteer-metrics" data-live="metricas">
+    <article class="card">
+        <h3>Materiais cadastrados</h3>
+        <div class="metric">{{ total_materiais }}</div>
+    </article>
+    <article class="card">
+        <h3>Estoque baixo ou zerado</h3>
+        <div class="metric">{{ total_baixo_estoque }}</div>
+    </article>
+    <article class="card">
+        <h3>Doado no período</h3>
+        <div class="metric">{{ doado_total }}</div>
+        <small class="form-help">{{ doado_registros }} doação(ões) entre {{ data_inicio }} e {{ data_fim }}</small>
+    </article>
+</section>
+
+<section class="card volunteer-control">
+    <div class="section-heading">
+        <div>
+            <h2>Materiais e saldos</h2>
+            <p class="form-subtitle">Consulte o saldo atual de cada material e acompanhe o estoque mínimo.</p>
+        </div>
+        <div class="table-actions">
+            <a href="{% url 'relatorio_estoque' %}" class="btn btn-outline">Relatório</a>
+            {% if usuario.tipo == 'ADMIN' %}
+            <a href="{% url 'movimentacoes_estoque' %}" class="btn btn-outline">Histórico</a>
+            <a href="{% url 'doacoes_estoque' %}" class="btn btn-outline">Doações</a>
+            <a href="{% url 'cadastrar_movimentacao_estoque' %}" class="btn btn-outline">Registrar movimentação</a>
+            <a href="{% url 'cadastrar_material' %}" class="btn btn-primary">Novo material</a>
+            {% endif %}
+        </div>
+    </div>
+
+    <form method="get" class="volunteer-filters" data-filtro-vivo>
+        <div class="form-group">
+            <label for="id_busca">Buscar</label>
+            <input id="id_busca" name="busca" type="search" value="{{ busca }}" class="form-control" placeholder="Nome ou código" autocomplete="off">
+        </div>
+        <div class="form-group">
+            <label for="id_categoria">Categoria</label>
+            <select id="id_categoria" name="categoria" class="form-control">
+                <option value="">Todas as categorias</option>
+                {% for c in categorias %}<option value="{{ c }}" {% if categoria_selecionada|lower == c|lower %}selected{% endif %}>{{ c }}</option>{% endfor %}
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="id_situacao">Situação</label>
+            <select id="id_situacao" name="situacao" class="form-control">
+                <option value="">Todas</option>
+                <option value="BAIXO" {% if situacao_selecionada == 'BAIXO' %}selected{% endif %}>Estoque baixo ou zerado</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="id_origem">Origem</label>
+            <select id="id_origem" name="origem" class="form-control">
+                <option value="">Todas</option>
+                <option value="DONATIVO" {% if origem_selecionada == 'DONATIVO' %}selected{% endif %}>Donativo</option>
+                <option value="COMPRADO" {% if origem_selecionada == 'COMPRADO' %}selected{% endif %}>Comprado</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="id_data_inicio">Doações de</label>
+            <input id="id_data_inicio" name="data_inicio" type="date" value="{{ data_inicio }}" class="form-control">
+        </div>
+        <div class="form-group">
+            <label for="id_data_fim">até</label>
+            <input id="id_data_fim" name="data_fim" type="date" value="{{ data_fim }}" class="form-control">
+        </div>
+        <div class="filter-actions" data-live="acoes">
+            <button type="submit" class="btn btn-primary">Filtrar</button>
+            {% if busca or categoria_selecionada or situacao_selecionada or origem_selecionada %}<a href="{% url 'materiais' %}" class="form-link">Limpar</a>{% endif %}
+        </div>
+    </form>
+
+    <div data-live="resultado">
+    {% if materiais %}
+    <div class="table-wrap">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Material</th>
+                    <th>Categoria</th>
+                    <th>Código</th>
+                    <th>Saldo</th>
+                    <th>Situação</th>
+                    <th>Origem</th>
+                    <th>Auditoria</th>
+                    {% if usuario.tipo == 'ADMIN' %}<th>Ações</th>{% endif %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for mat in materiais %}
+                <tr class="{% if mat.baixo_estoque %}estoque-baixo{% elif mat.donativo %}estoque-donativo{% endif %}">
+                    <td><strong>{{ mat.nome }}</strong></td>
+                    <td>{{ mat.categoria }}</td>
+                    <td>{{ mat.codigo }}</td>
+                    <td>{{ mat.saldo }} {{ mat.get_unidade_display }}</td>
+                    <td>
+                        {% if mat.sem_estoque %}<span class="status-badge status-inativo">Sem estoque</span>
+                        {% elif mat.baixo_estoque %}<span class="status-badge status-pausado">Estoque baixo (mín. {{ mat.estoque_minimo }})</span>
+                        {% else %}<span class="status-badge status-ativo">Normal</span>{% endif %}
+                    </td>
+                    <td>{% if mat.donativo %}Donativo{% if mat.doador %} ({{ mat.doador }}){% endif %}{% else %}Comprado{% endif %}</td>
+                    <td class="audit-cell">
+                        <strong>{% if mat.cadastrado_por_nome %}Cadastrado por {{ mat.cadastrado_por_nome }}{% else %}Cadastro anterior{% endif %}</strong>
+                        <small>{{ mat.dt_cadastro|date:'d/m/Y H:i' }}</small>
+                        {% if mat.ultimo_editado_por_nome %}<small>Editado por {{ mat.ultimo_editado_por_nome }} em {{ mat.dt_ultima_edicao|date:'d/m/Y H:i' }}</small>{% else %}<small>Sem edições</small>{% endif %}
+                    </td>
+                    {% if usuario.tipo == 'ADMIN' %}
+                    <td class="table-actions"><a class="btn btn-outline btn-small" href="{% url 'editar_material' mat.id_material %}">Editar</a></td>
+                    {% endif %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state table-empty">
+        <h3>Nenhum material encontrado</h3>
+        <p class="form-subtitle">Ajuste os filtros{% if usuario.tipo == 'ADMIN' %} ou cadastre um novo material{% endif %}.</p>
+    </div>
+    {% endif %}
+    </div>
+</section>
+{% endblock %}

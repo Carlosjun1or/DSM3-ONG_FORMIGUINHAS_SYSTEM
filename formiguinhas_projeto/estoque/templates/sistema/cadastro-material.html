@@ -1,0 +1,65 @@
+{% extends 'sistema/template-sistema.html' %}
+{% load static %}
+
+{% block titulo %}{% if modo_edicao %}Editar material{% else %}Novo material{% endif %} | Sistema{% endblock %}
+{% block page_title %}{% if modo_edicao %}Editar material{% else %}Cadastrar material{% endif %}{% endblock %}
+{% block estilos %}<link rel="stylesheet" href="{% static 'estoque/estoque.css' %}">
+<script src="{% static 'estoque/estoque.js' %}" defer></script>{% endblock %}
+
+{% block conteudo %}
+<section class="form-card">
+    <div class="section-heading">
+        <div>
+            <h2>{% if modo_edicao %}{{ material.nome }}{% else %}Novo material{% endif %}</h2>
+            <p class="form-subtitle">{% if modo_edicao %}Atualize os dados do material. O saldo continua calculado pelas movimentações.{% else %}Preencha os dados abaixo para adicionar um novo material ao estoque.{% endif %}</p>
+        </div>
+        <a href="{% url 'materiais' %}" class="btn btn-outline">Voltar</a>
+    </div>
+
+    <form method="post" class="system-form" novalidate>{% csrf_token %}
+        {% if form.errors %}<div class="error-box" role="alert">Não foi possível salvar. Preencha ou corrija os campos destacados em vermelho.</div>{% endif %}
+        {% for error in form.non_field_errors %}<div class="error-box">{{ error }}</div>{% endfor %}
+
+        <h3 class="form-section-title">Identificação</h3>
+        <div class="form-grid">
+            {% include 'sistema/_campo-estoque.html' with field=form.nome %}
+            {% include 'sistema/_campo-estoque.html' with field=form.codigo ajuda='Use um código único.' %}
+            {% include 'sistema/_campo-estoque.html' with field=form.categoria ajuda='Escolha uma existente ou digite uma nova.' %}
+            <datalist id="categorias-list">{% for c in categorias %}<option value="{{ c }}">{% endfor %}</datalist>
+            {% include 'sistema/_campo-estoque.html' with field=form.unidade %}
+            {% include 'sistema/_campo-estoque.html' with field=form.descricao full=True %}
+        </div>
+
+        <h3 class="form-section-title">Quantidades</h3>
+        <div class="form-grid">
+            {% include 'sistema/_campo-estoque.html' with field=form.quantidade_inicial ajuda='Saldo de partida, antes das movimentações.' %}
+            {% include 'sistema/_campo-estoque.html' with field=form.estoque_minimo ajuda='Abaixo deste valor o material aparece como estoque baixo.' %}
+        </div>
+
+        <h3 class="form-section-title">Origem</h3>
+        <div class="form-grid">
+            {% include 'sistema/_campo-estoque.html' with field=form.donativo %}
+            <div id="doador-field">
+                {% include 'sistema/_campo-estoque.html' with field=form.doador %}
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Salvar material</button>
+            <a href="{% url 'materiais' %}" class="btn btn-outline">Cancelar</a>
+        </div>
+    </form>
+</section>
+
+<script>
+    (function () {
+        var checkbox = document.getElementById('id_donativo');
+        var doador = document.getElementById('doador-field');
+        function alternar() { doador.style.display = checkbox.checked ? 'block' : 'none'; }
+        if (checkbox && doador) {
+            checkbox.addEventListener('change', alternar);
+            alternar();
+        }
+    })();
+</script>
+{% endblock %}
