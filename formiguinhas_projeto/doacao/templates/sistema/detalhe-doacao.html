@@ -16,7 +16,9 @@
         </div>
         <div class="button-group donation-detail-actions">
             <a class="btn btn-outline" href="{% url 'doacoes' %}">Voltar às doações</a>
+            {% if usuario.tipo == 'ADMIN' %}
             <a class="btn btn-primary" href="{% url 'editar_doacao' doacao.id_doacao %}">Editar doação</a>
+            {% endif %}
         </div>
     </div>
 
@@ -133,6 +135,7 @@
         <h2>Atualizar situação</h2>
         <p class="form-subtitle">A alteração fica registrada no histórico de auditoria.</p>
     </div>
+    {% if usuario.tipo == 'ADMIN' %}
     <form method="post" action="{% url 'atualizar_status_doacao' doacao.id_doacao %}" class="inline-status-form donation-status-control">
         {% csrf_token %}
         <input type="hidden" name="retorno" value="detalhe">
@@ -145,6 +148,11 @@
             {% endfor %}
         </select>
     </form>
+    {% else %}
+    <div class="donation-status-control">
+        <span class="status-badge status-{{ doacao.status|lower }}">{{ doacao.get_status_display }}</span>
+    </div>
+    {% endif %}
 </section>
 
 <details class="card donation-audit">

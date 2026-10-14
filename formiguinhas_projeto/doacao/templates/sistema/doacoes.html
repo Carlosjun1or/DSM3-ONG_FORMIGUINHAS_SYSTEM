@@ -10,10 +10,12 @@
             <h2>Doações recebidas</h2>
             <p class="form-subtitle donation-page-guidance">Acompanhe valores, materiais e situação das doações recebidas.</p>
         </div>
-        <div class="button-group">
-            <a class="btn btn-outline" href="{% url 'doadores' %}">Doadores</a>
-            <a class="btn btn-primary" href="{% url 'cadastro_doacao' %}">Nova doação</a>
-        </div>
+        {% if usuario.tipo == 'ADMIN' %}
+            <div class="button-group">
+                <a class="btn btn-outline" href="{% url 'doadores' %}">Doadores</a>
+                <a class="btn btn-primary" href="{% url 'cadastro_doacao' %}">Nova doação</a>
+            </div>
+        {% endif %}
     </div>
 
     <div class="stats-grid">
@@ -52,6 +54,7 @@
                         <td>{% if doacao.anonima %}<span class="muted">Anônima</span>{% elif doacao.doador %}<a class="table-link" href="{% url 'doador_detalhe' doacao.doador.id_doador %}"><strong>{{ doacao.doador.nome }}</strong></a>{% else %}<span class="muted">Não informado</span>{% endif %}</td>
                         <td class="donation-value">{% if doacao.tipo == 'FINANCEIRA' %}<strong>R$ {{ doacao.financeira.valor|floatformat:2 }}</strong>{% else %}<a class="table-link" href="{% url 'doacao_detalhe' doacao.id_doacao %}">{{ doacao.itens_materiais.count }} item(ns)</a>{% endif %}</td>
                         <td>
+                            {% if usuario.tipo == 'ADMIN' %}
                             <form method="post" action="{% url 'atualizar_status_doacao' doacao.id_doacao %}" class="inline-status-form">
                                 {% csrf_token %}
                                 <select name="status" class="status-select status-{{ doacao.status|lower }}" aria-label="Situação da doação {{ doacao.id_doacao }}" onchange="this.form.submit()">
@@ -62,6 +65,9 @@
                                     {% endfor %}
                                 </select>
                             </form>
+                            {% else %}
+                            <span class="status-badge status-{{ doacao.status|lower }}">{{ doacao.get_status_display }}</span>
+                            {% endif %}
                         </td>
                         <td class="audit-cell">
                             <strong>Cadastrado por {{ doacao.registrado_por_nome }}</strong>
@@ -83,7 +89,9 @@
         <div class="empty-state table-empty">
             <h3>Nenhuma doação encontrada</h3>
             <p class="form-subtitle">Ajuste os filtros ou cadastre uma nova doação.</p>
-            <a class="btn btn-primary" href="{% url 'cadastro_doacao' %}">Nova doação</a>
+            {% if usuario.tipo == 'ADMIN' %}
+                <a class="btn btn-primary" href="{% url 'cadastro_doacao' %}">Nova doação</a>
+            {% endif %}
         </div>
         {% endif %}
     </section>

@@ -3,8 +3,8 @@
 
 {% block titulo %}{% if modo_edicao %}Editar material{% else %}Novo material{% endif %} | Sistema{% endblock %}
 {% block page_title %}{% if modo_edicao %}Editar material{% else %}Cadastrar material{% endif %}{% endblock %}
-{% block estilos %}<link rel="stylesheet" href="{% static 'estoque/estoque.css' %}?v=2">
-<script src="{% static 'estoque/estoque.js' %}" defer></script>{% endblock %}
+{% block estilos %}<link rel="stylesheet" href="{% static 'estoque/estoque.css' %}?v=5">
+<script src="{% static 'estoque/estoque.js' %}?v=3" defer></script>{% endblock %}
 
 {% block conteudo %}
 <section class="form-card estoque-form-card">
@@ -36,8 +36,15 @@
         <div class="form-grid">
             {% include 'sistema/_campo-estoque.html' with field=form.nome %}
             {% include 'sistema/_campo-estoque.html' with field=form.codigo ajuda='Use um código único.' %}
-            {% include 'sistema/_campo-estoque.html' with field=form.categoria ajuda='Escolha uma existente ou digite uma nova.' %}
-            <datalist id="categorias-list">{% for c in categorias %}<option value="{{ c }}">{% endfor %}</datalist>
+            <div class="form-group{% if form.categoria.errors %} campo-invalido{% endif %} categoria-picker">
+                <label for="{{ form.categoria.id_for_label }}">{{ form.categoria.label }}</label>
+                {{ form.categoria }}
+                <small class="form-help">Digite para consultar categorias existentes ou cadastrar uma nova.</small>
+                {% for error in form.categoria.errors %}<small class="field-error">{{ error }}</small>{% endfor %}
+                <div class="categoria-options" data-categoria-options hidden>
+                    {% for categoria in form.categorias %}<button type="button" class="categoria-option" data-value="{{ categoria }}">{{ categoria }}</button>{% endfor %}
+                </div>
+            </div>
             {% include 'sistema/_campo-estoque.html' with field=form.unidade %}
             {% include 'sistema/_campo-estoque.html' with field=form.descricao full=True %}
         </div>

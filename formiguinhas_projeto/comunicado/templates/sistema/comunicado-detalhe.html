@@ -38,7 +38,7 @@
         </div>
         <div class="communication-relation-list">
             {% for item in comunicado.praias.all %}
-            <a class="communication-relation" href="{% url 'editar_praia' item.praia.id_praia %}">
+            <a class="communication-relation" href="{% url 'praias' %}?praia={{ item.praia.id_praia }}">
                 <span class="communication-relation-kind">Praia</span>
                 <strong>{{ item.praia.nome }}</strong>
                 {% if item.praia.cidade %}<small>{{ item.praia.cidade }}</small>{% endif %}
@@ -48,6 +48,9 @@
             <a class="communication-relation" href="{% url 'equipe_detalhe' item.equipe.id_equipe %}">
                 <span class="communication-relation-kind">Equipe</span>
                 <strong>{{ item.equipe.nome }}</strong>
+                {% if item.equipe.praia %}
+                <small>{{ item.equipe.praia.nome }}{% if item.equipe.praia.cidade %} · {{ item.equipe.praia.cidade }}{% endif %}</small>
+                {% endif %}
             </a>
             {% endfor %}
             {% for item in comunicado.acoes.all %}
@@ -66,7 +69,7 @@
             </a>
             {% endfor %}
             {% for item in comunicado.doacoes.all %}
-            {% if request.session.usuario_tipo == 'ADMIN' %}
+            {% if request.session.usuario_tipo == 'ADMIN' or request.session.usuario_tipo == 'COORDENADOR' %}
             <a class="communication-relation" href="{% url 'doacao_detalhe' item.doacao.id_doacao %}">
                 <span class="communication-relation-kind">Doação</span>
                 <strong>Doação #{{ item.doacao.id_doacao }} · {{ item.doacao.get_tipo_display }}</strong>

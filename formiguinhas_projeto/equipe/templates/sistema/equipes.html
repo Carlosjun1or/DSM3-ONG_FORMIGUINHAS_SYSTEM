@@ -83,7 +83,7 @@
                 {% for equipe in equipes %}
                 <tr>
                     <td><a class="table-link" href="{% url 'equipe_detalhe' equipe.id_equipe %}"><strong>{{ equipe.nome }}</strong></a></td>
-                    <td>{% if equipe.praia %}{{ equipe.praia.nome }}{% else %}<span class="field-hint">Sem praia</span>{% endif %}</td>
+                    <td>{% if equipe.praia %}<a class="table-link" href="{% url 'praias' %}?praia={{ equipe.praia.id_praia }}">{{ equipe.praia.nome }}</a>{% else %}<span class="field-hint">Sem praia</span>{% endif %}</td>
                     <td>{% if equipe.praia %}{{ equipe.praia.cidade }}{% else %}<span class="field-hint">-</span>{% endif %}</td>
                     <td>{{ equipe.descricao|default:'-'|truncatechars:80 }}</td>
                     <td>{{ equipe.total_membros }}</td>

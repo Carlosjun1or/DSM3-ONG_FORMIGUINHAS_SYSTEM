@@ -11,6 +11,7 @@ from django.utils.dateparse import parse_date
 from auditoria.services import registrar_evento, snapshot
 from doacao.models import Doacao
 from usuario.models import Usuario
+from usuario.views import render_acesso_bloqueado
 from usuario.paginacao import paginar_queryset
 
 from .forms import MaterialForm, MovimentacaoEstoqueForm
@@ -41,8 +42,7 @@ def autenticar(request, somente_admin=False, mensagem=MSG_ADMIN):
         messages.error(request, mensagem if somente_admin else MSG_LOGIN)
         return None, redirect('login')
     if somente_admin and usuario.tipo != 'ADMIN':
-        messages.error(request, mensagem)
-        return usuario, redirect('materiais')
+        return usuario, render_acesso_bloqueado(request)
     return usuario, None
 
 
@@ -58,9 +58,12 @@ def _periodo(request):
 
 
 def materiais_view(request):
-    usuario, resposta = autenticar(request)
-    if resposta:
-        return resposta
+    usuario = get_session_usuario(request)
+    if not usuario:
+        messages.error(request, MSG_LOGIN)
+        return redirect('login')
+    if usuario.tipo != 'ADMIN':
+        return render_acesso_bloqueado(request)
 
     busca = request.GET.get('busca', '').strip()
     categoria = request.GET.get('categoria', '').strip()
@@ -234,7 +237,9 @@ def _filtrar_movimentacoes(request):
 
     if busca:
         movimentacoes = movimentacoes.filter(
-            Q(material__nome__icontains=busca) | Q(material__codigo__icontains=busca)
+            Q(material__nome__icontains=busca)
+            | Q(material__codigo__icontains=busca)
+            | Q(doacao__doador__nome__icontains=busca)
         )
     if tipo in dict(MovimentacaoEstoque.TIPO_CHOICES):
         movimentacoes = movimentacoes.filter(tipo=tipo)
@@ -318,9 +323,12 @@ def exportar_movimentacoes_estoque_view(request):
 
 
 def relatorio_estoque_view(request):
-    usuario, resposta = autenticar(request)
-    if resposta:
-        return resposta
+    usuario = get_session_usuario(request)
+    if not usuario:
+        messages.error(request, MSG_LOGIN)
+        return redirect('login')
+    if usuario.tipo != 'ADMIN':
+        return render_acesso_bloqueado(request)
 
     materiais = list(Material.objects.com_saldo())
     donativos = [m for m in materiais if m.donativo]

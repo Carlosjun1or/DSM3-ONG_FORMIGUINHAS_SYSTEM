@@ -93,8 +93,58 @@
         setTimeout(fechar, 6000);
     }
 
+    function iniciarCategorias() {
+        var campo = document.getElementById('id_categoria');
+        var campoNovo = document.querySelector('[data-categoria-nova]');
+        if (!campo || !campoNovo) {
+            return;
+        }
+        function alternarCategoriaNova() {
+            campoNovo.hidden = campo.value !== '__NOVA__';
+        }
+        campo.addEventListener('change', alternarCategoriaNova);
+        alternarCategoriaNova();
+    }
+
+    function iniciarCategorias() {
+        var campo = document.getElementById('id_categoria');
+        var lista = document.querySelector('[data-categoria-options]');
+        if (!campo || !lista) {
+            return;
+        }
+        var opcoes = Array.prototype.slice.call(lista.querySelectorAll('.categoria-option'));
+
+        function atualizarLista() {
+            var termo = campo.value.trim().toLowerCase();
+            var visiveis = 0;
+            opcoes.forEach(function (opcao) {
+                var visivel = !termo || opcao.dataset.value.toLowerCase().indexOf(termo) !== -1;
+                opcao.hidden = !visivel;
+                if (visivel) {
+                    visiveis += 1;
+                }
+            });
+            lista.hidden = visiveis === 0;
+        }
+
+        campo.addEventListener('focus', atualizarLista);
+        campo.addEventListener('input', atualizarLista);
+        opcoes.forEach(function (opcao) {
+            opcao.addEventListener('click', function () {
+                campo.value = opcao.dataset.value;
+                lista.hidden = true;
+            });
+        });
+        document.addEventListener('click', function (evento) {
+            if (evento.target !== campo && !lista.contains(evento.target)) {
+                lista.hidden = true;
+            }
+        });
+    }
+
     document.addEventListener('DOMContentLoaded', function () {
         document.querySelectorAll('form[data-filtro-vivo]').forEach(iniciarFiltroVivo);
         document.querySelectorAll('[data-toast]').forEach(iniciarToast);
+        iniciarCategorias();
     });
 }());

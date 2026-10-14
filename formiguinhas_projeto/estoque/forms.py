@@ -47,9 +47,8 @@ class MaterialForm(forms.ModelForm):
             }),
             'codigo': forms.TextInput(attrs={'placeholder': 'Ex.: MAT-0001'}),
             'categoria': forms.TextInput(attrs={
-                'list': 'categorias-list',
+                'placeholder': 'Digite ou escolha uma categoria',
                 'autocomplete': 'off',
-                'placeholder': 'Ex.: EPI, Limpeza, Papelaria',
             }),
             'descricao': forms.Textarea(attrs={
                 'rows': 3,
@@ -75,12 +74,22 @@ class MaterialForm(forms.ModelForm):
         self.fields['unidade'].choices = (
             [('', 'Selecione uma opção')] + list(Material.UNIDADE_CHOICES)
         )
-        if not self.instance.pk:
-            self.fields['categoria'].initial = ''
+        self.categorias = list(
+            Material.objects.order_by('categoria')
+            .values_list('categoria', flat=True)
+            .distinct()
+        )
         aplicar_classes(self)
 
     def clean(self):
         dados = super().clean()
+        categoria = (dados.get('categoria') or '').strip()
+        categoria_existente = next(
+            (valor for valor in self.categorias if valor.casefold() == categoria.casefold()),
+            None,
+        )
+        if categoria_existente:
+            dados['categoria'] = categoria_existente
         if not dados.get('donativo'):
             dados['doador'] = ''
         return dados

@@ -591,7 +591,23 @@ main {
 }
 
 .equipe-filters {
-    grid-template-columns: minmax(200px, 1fr) repeat(3, minmax(150px, 210px)) auto;
+    grid-template-columns: minmax(0, 1.4fr) repeat(3, minmax(0, 1fr)) auto;
+}
+
+.equipe-filters .form-group,
+.equipe-filters .filter-actions {
+    min-width: 0;
+}
+
+@media (max-width: 900px) {
+    .equipe-filters {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .equipe-filters .form-group:first-child,
+    .equipe-filters .filter-actions {
+        grid-column: 1 / -1;
+    }
 }
 
 .filter-actions {
