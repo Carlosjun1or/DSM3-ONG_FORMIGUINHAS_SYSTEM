@@ -166,7 +166,7 @@
         </div>
 
         <div id="material-fields" class="form-section">
-            <div class="form-section-heading"><span class="form-section-number">3</span><div><h3>Materiais recebidos</h3><p>Associe cada item ao material do estoque. Ao confirmar a doação, a entrada será registrada no histórico de movimentações.</p></div></div>
+            <div class="form-section-heading"><span class="form-section-number">3</span><div><h3>Materiais recebidos</h3><p>Associe cada item ao material do estoque. Ao confirmar a doação, a entrada será registrada no histórico de movimentações.</p></div><a class="btn btn-outline btn-small" href="{% url 'cadastrar_material' %}" target="_blank" rel="noopener">Cadastrar material</a></div>
             {% if estoque_bloqueado %}<p class="form-help">Esta doação já movimentou o estoque. O tipo, a situação e os itens não podem ser alterados para preservar o saldo e o histórico.</p>{% endif %}
             {{ itens_formset.management_form }}
             <div id="materiais-list">

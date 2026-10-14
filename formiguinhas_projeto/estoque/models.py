@@ -25,7 +25,6 @@ class Material(models.Model):
         ('PACOTE', 'Pacote'),
         ('KG', 'Kg'),
         ('LITRO', 'Litro'),
-        ('METRO', 'Metro'),
     ]
 
     id_material = models.AutoField(primary_key=True)

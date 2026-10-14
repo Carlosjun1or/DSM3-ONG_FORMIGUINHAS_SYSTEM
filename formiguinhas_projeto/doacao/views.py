@@ -3,7 +3,7 @@ from datetime import datetime
 
 from django.contrib import messages
 from django.core.exceptions import ValidationError
-from django.db import transaction
+from django.db import IntegrityError, transaction
 from django.db.models import Q, Sum, Value, DecimalField
 from django.db.models.functions import Coalesce
 from django.shortcuts import get_object_or_404, redirect, render
@@ -27,11 +27,13 @@ from .forms import (
 from .models import Doador, Doacao, DoacaoFinanceira
 
 
-def _usuario_com_acesso(request):
+def _usuario_com_acesso(request, somente_admin=False):
     usuario = get_session_usuario(request)
     if not usuario:
         return None
-    if usuario.tipo != 'ADMIN':
+    if somente_admin and usuario.tipo != 'ADMIN':
+        return False
+    if usuario.tipo not in ('ADMIN', 'COORDENADOR'):
         return False
     return usuario
 
@@ -217,9 +219,8 @@ def _salvar_doador_inline(request, usuario, inline_form, doacao_form):
     return doador
 
 
-@transaction.atomic
 def cadastro_doacao_view(request):
-    usuario = _usuario_com_acesso(request)
+    usuario = _usuario_com_acesso(request, somente_admin=True)
     if usuario is None:
         return redirect('login')
     if usuario is False:
@@ -229,33 +230,43 @@ def cadastro_doacao_view(request):
         if _validar_doacao_forms(
             form, financeira_form, itens_formset, doador_inline_form, request
         ):
-            doacao = form.save(commit=False)
-            doacao.doador = _salvar_doador_inline(
-                request, usuario, doador_inline_form, form
-            )
-            _preencher_auditoria(doacao, usuario, criacao=True)
-            doacao.save()
-            if doacao.tipo == Doacao.FINANCEIRA:
-                financeira = financeira_form.save(commit=False)
-                financeira.doacao = doacao
-                financeira.save()
+            try:
+                with transaction.atomic():
+                    doacao = form.save(commit=False)
+                    doacao.doador = _salvar_doador_inline(
+                        request, usuario, doador_inline_form, form
+                    )
+                    _preencher_auditoria(doacao, usuario, criacao=True)
+                    doacao.save()
+                    if doacao.tipo == Doacao.FINANCEIRA:
+                        financeira = financeira_form.save(commit=False)
+                        financeira.doacao = doacao
+                        financeira.save()
+                    else:
+                        itens_formset.instance = doacao
+                        itens_formset.save()
+                        if doacao.status == Doacao.CONFIRMADA:
+                            registrar_entradas_doacao(doacao, usuario)
+                    registrar_evento(
+                        entidade='DOACAO',
+                        instancia=doacao,
+                        acao='CRIACAO',
+                        usuario=usuario,
+                        resumo=f'Doação #{doacao.pk} cadastrada.',
+                    )
+            except ValidationError as erro:
+                form.add_error(None, erro)
+            except IntegrityError:
+                form.add_error(
+                    None,
+                    'O registro não pôde ser gravado por uma inconsistência nos dados.',
+                )
             else:
-                itens_formset.instance = doacao
-                itens_formset.save()
-                if doacao.status == Doacao.CONFIRMADA:
-                    registrar_entradas_doacao(doacao, usuario)
-            registrar_evento(
-                entidade='DOACAO',
-                instancia=doacao,
-                acao='CRIACAO',
-                usuario=usuario,
-                resumo=f'Doação #{doacao.pk} cadastrada.',
-            )
-            messages.success(request, 'Doação cadastrada com sucesso.')
-            return redirect('doacao_detalhe', doacao_id=doacao.pk)
+                messages.success(request, 'Doação cadastrada com sucesso.')
+                return redirect('doacao_detalhe', doacao_id=doacao.pk)
         messages.error(
             request,
-            'Não foi possível cadastrar a doação. Verifique os erros informados.',
+            'Não foi possível salvar a doação. Nenhuma alteração foi gravada.',
         )
     return render(request, 'sistema/cadastro-doacao.html', {
         'usuario': usuario,
@@ -267,9 +278,8 @@ def cadastro_doacao_view(request):
     })
 
 
-@transaction.atomic
 def editar_doacao_view(request, doacao_id):
-    usuario = _usuario_com_acesso(request)
+    usuario = _usuario_com_acesso(request, somente_admin=True)
     if usuario is None:
         return redirect('login')
     if usuario is False:
@@ -281,39 +291,49 @@ def editar_doacao_view(request, doacao_id):
         if _validar_doacao_forms(
             form, financeira_form, itens_formset, doador_inline_form, request
         ):
-            doacao = form.save(commit=False)
-            doacao.doador = _salvar_doador_inline(
-                request, usuario, doador_inline_form, form
-            )
-            _preencher_auditoria(doacao, usuario)
-            doacao.save()
-            if doacao.tipo == Doacao.FINANCEIRA:
-                financeira = financeira_form.save(commit=False)
-                financeira.doacao = doacao
-                financeira.save()
-                doacao.itens_materiais.all().delete()
+            try:
+                with transaction.atomic():
+                    doacao = form.save(commit=False)
+                    doacao.doador = _salvar_doador_inline(
+                        request, usuario, doador_inline_form, form
+                    )
+                    _preencher_auditoria(doacao, usuario)
+                    doacao.save()
+                    if doacao.tipo == Doacao.FINANCEIRA:
+                        financeira = financeira_form.save(commit=False)
+                        financeira.doacao = doacao
+                        financeira.save()
+                        doacao.itens_materiais.all().delete()
+                    else:
+                        DoacaoFinanceira.objects.filter(doacao=doacao).delete()
+                        itens_formset.instance = doacao
+                        itens_formset.save()
+                        if (
+                            doacao.status == Doacao.CONFIRMADA
+                            and not doacao.movimentacoes_estoque.exists()
+                        ):
+                            registrar_entradas_doacao(doacao, usuario)
+                    registrar_evento(
+                        entidade='DOACAO',
+                        instancia=doacao,
+                        acao='EDICAO',
+                        usuario=usuario,
+                        resumo=f'Doação #{doacao.pk} editada.',
+                        valores_anteriores=valores_anteriores,
+                    )
+            except ValidationError as erro:
+                form.add_error(None, erro)
+            except IntegrityError:
+                form.add_error(
+                    None,
+                    'A alteração não pôde ser gravada por uma inconsistência nos dados.',
+                )
             else:
-                DoacaoFinanceira.objects.filter(doacao=doacao).delete()
-                itens_formset.instance = doacao
-                itens_formset.save()
-                if (
-                    doacao.status == Doacao.CONFIRMADA
-                    and not doacao.movimentacoes_estoque.exists()
-                ):
-                    registrar_entradas_doacao(doacao, usuario)
-            registrar_evento(
-                entidade='DOACAO',
-                instancia=doacao,
-                acao='EDICAO',
-                usuario=usuario,
-                resumo=f'Doação #{doacao.pk} editada.',
-                valores_anteriores=valores_anteriores,
-            )
-            messages.success(request, 'Doação atualizada com sucesso.')
-            return redirect('doacao_detalhe', doacao_id=doacao.pk)
+                messages.success(request, 'Doação atualizada com sucesso.')
+                return redirect('doacao_detalhe', doacao_id=doacao.pk)
         messages.error(
             request,
-            'Não foi possível atualizar a doação. Verifique os erros informados.',
+            'Não foi possível atualizar a doação. Nenhuma alteração foi gravada.',
         )
     return render(request, 'sistema/cadastro-doacao.html', {
         'usuario': usuario,
@@ -374,7 +394,7 @@ def doacao_detalhe_view(request, doacao_id):
 
 @transaction.atomic
 def atualizar_status_doacao_view(request, doacao_id):
-    usuario = _usuario_com_acesso(request)
+    usuario = _usuario_com_acesso(request, somente_admin=True)
     if usuario is None:
         return redirect('login')
     if usuario is False:
@@ -425,7 +445,7 @@ def atualizar_status_doacao_view(request, doacao_id):
 
 
 def doadores_view(request):
-    usuario = _usuario_com_acesso(request)
+    usuario = _usuario_com_acesso(request, somente_admin=True)
     if usuario is None:
         return redirect('login')
     if usuario is False:
@@ -450,7 +470,7 @@ def doadores_view(request):
 
 
 def doador_detalhe_view(request, doador_id):
-    usuario = _usuario_com_acesso(request)
+    usuario = _usuario_com_acesso(request, somente_admin=True)
     if usuario is None:
         return redirect('login')
     if usuario is False:
@@ -476,7 +496,7 @@ def doador_detalhe_view(request, doador_id):
 
 @transaction.atomic
 def atualizar_status_doador_view(request, doador_id):
-    usuario = _usuario_com_acesso(request)
+    usuario = _usuario_com_acesso(request, somente_admin=True)
     if usuario is None:
         return redirect('login')
     if usuario is False:
@@ -515,7 +535,7 @@ def atualizar_status_doador_view(request, doador_id):
 
 
 def cadastro_doador_view(request):
-    usuario = _usuario_com_acesso(request)
+    usuario = _usuario_com_acesso(request, somente_admin=True)
     if usuario is None:
         return redirect('login')
     if usuario is False:
@@ -551,7 +571,7 @@ def cadastro_doador_view(request):
 
 
 def editar_doador_view(request, doador_id):
-    usuario = _usuario_com_acesso(request)
+    usuario = _usuario_com_acesso(request, somente_admin=True)
     if usuario is None:
         return redirect('login')
     if usuario is False:

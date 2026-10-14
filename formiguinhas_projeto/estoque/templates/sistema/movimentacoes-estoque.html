@@ -41,8 +41,8 @@
 
     <form method="get" class="volunteer-filters estoque-filtros movimentacoes-filtros" data-filtro-vivo aria-label="Filtrar movimentações">
         <div class="form-group">
-            <label for="f-busca">Material</label>
-            <input id="f-busca" name="busca" type="search" value="{{ filtros.busca }}" class="form-control" placeholder="Nome ou código" autocomplete="off">
+            <label for="f-busca">Material ou doador</label>
+            <input id="f-busca" name="busca" type="search" value="{{ filtros.busca }}" class="form-control" placeholder="Nome, código ou doador" autocomplete="off">
         </div>
         <div class="form-group">
             <label for="f-tipo">Tipo</label>
@@ -84,6 +84,7 @@
                     <th>Material</th>
                     <th>Quantidade</th>
                     <th>Responsável</th>
+                    <th>Origem</th>
                     <th>Detalhes</th>
                 </tr>
             </thead>
@@ -101,6 +102,7 @@
                     </td>
                     <td><strong>{% if mov.tipo == 'ENTRADA' %}+{% else %}−{% endif %}{{ mov.quantidade }}</strong><small class="table-secondary">{{ mov.material.get_unidade_display }}</small></td>
                     <td>{{ mov.registrado_por_nome|default:'-' }}</td>
+                    <td>{{ mov.get_origem_display|default:'-' }}</td>
                     <td class="movimentacao-detalhes">
                         {% if mov.doacao %}
                             <a class="table-link" href="{% url 'doacao_detalhe' mov.doacao.id_doacao %}">Doação #{{ mov.doacao.id_doacao }}</a>

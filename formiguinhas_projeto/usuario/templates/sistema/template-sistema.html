@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block titulo %}Formiguinhas | Sistema{% endblock %}</title>
-    <link rel="stylesheet" href="{% static 'css/style.css' %}?v=53">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}?v=54">
     {% block estilos %}{% endblock %}
 </head>
 <body class="system-page">
@@ -36,7 +36,11 @@
                 {% endif %}
                 {% if request.session.usuario_tipo == 'ADMIN' %}
                 <a href="{% url 'doadores' %}" class="sidebar-link {% if '/doacao/doadores/' in request.path %}active{% endif %}">Controle de Doadores</a>
+                {% endif %}
+                {% if request.session.usuario_tipo == 'ADMIN' or request.session.usuario_tipo == 'COORDENADOR' %}
                 <a href="{% url 'doacoes' %}" class="sidebar-link {% if '/doacao/' in request.path and '/doacao/doadores/' not in request.path %}active{% endif %}">Controle de Doações</a>
+                {% endif %}
+                {% if request.session.usuario_tipo == 'ADMIN' %}
                 <a href="{% url 'materiais' %}" class="sidebar-link {% if '/estoque/' in request.path and '/estoque/movimentacoes/' not in request.path %}active{% endif %}">Controle de Estoque</a>
                 <a href="{% url 'movimentacoes_estoque' %}" class="sidebar-link {% if '/estoque/movimentacoes/' in request.path %}active{% endif %}">Controle de Movimentações</a>
                 {% endif %}

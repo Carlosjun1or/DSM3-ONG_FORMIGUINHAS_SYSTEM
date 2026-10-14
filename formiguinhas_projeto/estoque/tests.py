@@ -129,20 +129,23 @@ class AcessoTests(EstoqueTestCase):
             r = self.client.get(reverse(nome))
             self.assertRedirects(r, reverse('login'), fetch_redirect_response=False, msg_prefix=nome)
 
-    def test_coordenador_consulta_estoque_e_relatorio(self):
+    def test_coordenador_e_bloqueado_no_estoque_e_relatorio(self):
         self.entrar(self.coordenador)
         for nome in ('materiais', 'relatorio_estoque'):
-            self.assertEqual(self.client.get(reverse(nome)).status_code, 200, nome)
+            resposta = self.client.get(reverse(nome))
+            self.assertEqual(resposta.status_code, 403, nome)
+            self.assertContains(resposta, 'Você não tem permissão', status_code=403)
 
     def test_coordenador_bloqueado_nas_telas_de_administrador(self):
         self.entrar(self.coordenador)
-        historico = ('movimentacoes_estoque', 'exportar_movimentacoes_estoque')
-        restritas = [n for n in self.URLS if n not in ('materiais', 'relatorio_estoque')]
+        restritas = [
+            n for n in self.URLS
+            if n not in ('materiais', 'relatorio_estoque')
+        ]
         for nome in restritas:
-            r = self.client.get(reverse(nome), follow=True)
-            self.assertRedirects(r, reverse('materiais'), msg_prefix=nome)
-            esperado = 'Acesso negado' if nome in historico else 'Permissão insuficiente'
-            self.assertContains(r, esperado, msg_prefix=nome)
+            r = self.client.get(reverse(nome))
+            self.assertEqual(r.status_code, 403, nome)
+            self.assertContains(r, 'Você não tem permissão', status_code=403, msg_prefix=nome)
 
     def test_coordenador_nao_cria_material_nem_movimenta(self):
         self.entrar(self.coordenador)
@@ -165,9 +168,11 @@ class AcessoTests(EstoqueTestCase):
         r = self.client.get(reverse('materiais'))
         self.assertRedirects(r, reverse('login'), fetch_redirect_response=False)
 
-    def test_menu_lateral_tem_link_do_estoque(self):
-        self.entrar(self.coordenador)
-        self.assertContains(self.client.get(reverse('materiais')), 'Controle de Estoque')
+    def test_menu_lateral_tem_links_do_estoque_apenas_para_admin(self):
+        self.entrar(self.admin)
+        resposta = self.client.get(reverse('materiais'))
+        self.assertContains(resposta, 'Controle de Estoque')
+        self.assertContains(resposta, 'Controle de Movimentações')
 
 
 class MaterialTests(EstoqueTestCase):
@@ -578,11 +583,11 @@ class AuditoriaEventosTests(EstoqueTestCase):
 
 
 class CoordenadorInicialTests(TestCase):
-    def test_login_do_coordenador_inicial_leva_ao_estoque(self):
+    def test_login_do_coordenador_inicial_leva_ao_home(self):
         r = self.client.post(reverse('login'), {'email': 'coordenador@gmail.com', 'senha': 'coordenador'})
-        self.assertRedirects(r, reverse('materiais'))
+        self.assertRedirects(r, reverse('home'))
         self.assertEqual(self.client.session['usuario_tipo'], 'COORDENADOR')
-        self.assertEqual(self.client.get(reverse('materiais')).status_code, 200)
+        self.assertEqual(self.client.get(reverse('materiais')).status_code, 403)
 
     def test_raiz_redireciona_para_estoque(self):
         self.assertRedirects(self.client.get('/'), reverse('materiais'), fetch_redirect_response=False)

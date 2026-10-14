@@ -556,7 +556,7 @@ class ComunicadoDoacaoRelacionamentoTests(TestCase):
         self.assertContains(response, reverse('doacao_detalhe', args=[self.doacao.id_doacao]))
         self.assertContains(response, 'R$ 125.50')
 
-    def test_coordenador_nao_visualiza_dados_privados_da_doacao_relacionada(self):
+    def test_coordenador_acessa_doacao_relacionada(self):
         comunicado = Comunicado.objects.create(
             tipo=Comunicado.AVISO,
             titulo='Aviso sobre doação privada',
@@ -578,9 +578,9 @@ class ComunicadoDoacaoRelacionamentoTests(TestCase):
         )
 
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'Há uma doação relacionada')
-        self.assertNotContains(response, 'R$ 125.50')
-        self.assertNotContains(
+        self.assertContains(response, f'Doação #{self.doacao.id_doacao}')
+        self.assertContains(
             response,
             reverse('doacao_detalhe', args=[self.doacao.id_doacao]),
         )
+        self.assertContains(response, 'R$ 125.50')
