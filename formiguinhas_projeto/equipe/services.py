@@ -1,8 +1,11 @@
+from django.db import transaction
 from django.utils import timezone
 
+from auditoria.services import registrar_evento, snapshot
 from .models import Equipe, EquipeMembro
 
 
+@transaction.atomic
 def encerrar_vinculos_voluntario(voluntario, usuario):
     agora = timezone.now()
     membros = list(
@@ -17,6 +20,7 @@ def encerrar_vinculos_voluntario(voluntario, usuario):
 
     equipes_ids = {membro.equipe_id for membro in membros}
     for membro in membros:
+        valores_anteriores = snapshot(membro)
         membro.status = 'INATIVO'
         membro.dt_saida = agora
         membro.ultimo_editado_por = usuario
@@ -31,6 +35,14 @@ def encerrar_vinculos_voluntario(voluntario, usuario):
             'ultimo_editado_por_tipo',
             'dt_ultima_edicao',
         ])
+        registrar_evento(
+            entidade='EQUIPE_MEMBRO',
+            instancia=membro,
+            acao='MUDANCA_STATUS',
+            usuario=usuario,
+            resumo=f'{voluntario.nome} removido da equipe "{membro.equipe.nome}" por inativação do voluntário.',
+            valores_anteriores=valores_anteriores,
+        )
 
     Equipe.objects.filter(id_equipe__in=equipes_ids).update(
         ultimo_editado_por=usuario,

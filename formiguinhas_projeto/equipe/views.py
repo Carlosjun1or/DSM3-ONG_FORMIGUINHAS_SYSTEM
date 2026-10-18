@@ -1,4 +1,5 @@
 from django.contrib import messages
+from django.db import transaction
 from django.db.models import Count, Q
 from django.db.models.deletion import ProtectedError
 from django.shortcuts import get_object_or_404, redirect, render
@@ -105,6 +106,7 @@ def equipes_view(request):
     })
 
 
+@transaction.atomic
 def cadastro_equipe_view(request):
     usuario = get_session_usuario(request)
     if not usuario:
@@ -131,6 +133,7 @@ def cadastro_equipe_view(request):
     })
 
 
+@transaction.atomic
 def editar_equipe_view(request, equipe_id):
     usuario = get_session_usuario(request)
     if not usuario:
@@ -216,6 +219,7 @@ def equipe_detalhe_view(request, equipe_id):
     })
 
 
+@transaction.atomic
 def adicionar_membro_view(request, equipe_id):
     usuario = get_session_usuario(request)
     if not usuario:
@@ -249,6 +253,7 @@ def adicionar_membro_view(request, equipe_id):
     return redirect('equipe_detalhe', equipe_id=equipe.id_equipe)
 
 
+@transaction.atomic
 def atualizar_funcao_membro_view(request, equipe_id, membro_id):
     usuario = get_session_usuario(request)
     if not usuario:
@@ -265,7 +270,8 @@ def atualizar_funcao_membro_view(request, equipe_id, membro_id):
     )
     if request.method == 'POST':
         papel = request.POST.get('papel')
-        if papel in dict(EquipeMembro.PAPEL_CHOICES):
+        if papel in dict(EquipeMembro.PAPEL_CHOICES) and papel != membro.papel:
+            valores_anteriores = snapshot(membro)
             membro.papel = papel
             preencher_auditoria(membro, usuario)
             membro.save(update_fields=[
@@ -282,9 +288,18 @@ def atualizar_funcao_membro_view(request, equipe_id, membro_id):
                 'ultimo_editado_por_tipo',
                 'dt_ultima_edicao',
             ])
+            registrar_evento(
+                entidade='EQUIPE_MEMBRO',
+                instancia=membro,
+                acao='EDICAO',
+                usuario=usuario,
+                resumo=f'Função de {membro.voluntario.nome} alterada na equipe "{equipe.nome}".',
+                valores_anteriores=valores_anteriores,
+            )
     return redirect('equipe_detalhe', equipe_id=equipe.id_equipe)
 
 
+@transaction.atomic
 def remover_membro_view(request, equipe_id, membro_id):
     usuario = get_session_usuario(request)
     if not usuario:
@@ -298,6 +313,7 @@ def remover_membro_view(request, equipe_id, membro_id):
         status='ATIVO',
     )
     if request.method == 'POST' and usuario_pode_adicionar_membro(usuario, equipe):
+        valores_anteriores = snapshot(membro)
         membro.status = 'INATIVO'
         membro.dt_saida = timezone.now()
         preencher_auditoria(membro, usuario)
@@ -316,9 +332,18 @@ def remover_membro_view(request, equipe_id, membro_id):
             'ultimo_editado_por_tipo',
             'dt_ultima_edicao',
         ])
+        registrar_evento(
+            entidade='EQUIPE_MEMBRO',
+            instancia=membro,
+            acao='MUDANCA_STATUS',
+            usuario=usuario,
+            resumo=f'{membro.voluntario.nome} removido da equipe "{equipe.nome}".',
+            valores_anteriores=valores_anteriores,
+        )
     return redirect('equipe_detalhe', equipe_id=equipe.id_equipe)
 
 
+@transaction.atomic
 def excluir_historico_membro_view(request, equipe_id, membro_id):
     usuario = get_session_usuario(request)
     if not usuario:
@@ -334,7 +359,17 @@ def excluir_historico_membro_view(request, equipe_id, membro_id):
         status='INATIVO',
     )
     if request.method == 'POST':
+        valores_anteriores = snapshot(membro)
+        membro_id_registro = membro.pk
         membro.delete()
+        registrar_evento(
+            entidade='EQUIPE_MEMBRO',
+            id_registro=membro_id_registro,
+            acao='EXCLUSAO',
+            usuario=usuario,
+            resumo=f'Histórico de membro removido da equipe "{equipe.nome}".',
+            valores_anteriores=valores_anteriores,
+        )
         preencher_auditoria(equipe, usuario)
         equipe.save(update_fields=[
             'ultimo_editado_por',
@@ -345,6 +380,7 @@ def excluir_historico_membro_view(request, equipe_id, membro_id):
     return redirect('equipe_detalhe', equipe_id=equipe.id_equipe)
 
 
+@transaction.atomic
 def atualizar_status_equipe_view(request, equipe_id):
     usuario = get_session_usuario(request)
     if not usuario:
@@ -355,7 +391,8 @@ def atualizar_status_equipe_view(request, equipe_id):
     equipe = get_object_or_404(Equipe, id_equipe=equipe_id)
     if request.method == 'POST':
         status = request.POST.get('status')
-        if status in dict(Equipe.STATUS_CHOICES):
+        if status in dict(Equipe.STATUS_CHOICES) and status != equipe.status:
+            valores_anteriores = snapshot(equipe)
             equipe.status = status
             preencher_auditoria(equipe, usuario)
             equipe.save(update_fields=[
@@ -365,9 +402,18 @@ def atualizar_status_equipe_view(request, equipe_id):
                 'ultimo_editado_por_tipo',
                 'dt_ultima_edicao',
             ])
+            registrar_evento(
+                entidade='EQUIPE',
+                instancia=equipe,
+                acao='MUDANCA_STATUS',
+                usuario=usuario,
+                resumo=f'Situação da equipe "{equipe.nome}" alterada.',
+                valores_anteriores=valores_anteriores,
+            )
     return redirect('equipes')
 
 
+@transaction.atomic
 def excluir_equipe_view(request, equipe_id):
     usuario = get_session_usuario(request)
     if not usuario:
@@ -384,7 +430,17 @@ def excluir_equipe_view(request, equipe_id):
             )
         else:
             try:
+                valores_anteriores = snapshot(equipe)
+                equipe_id_registro = equipe.pk
                 equipe.delete()
+                registrar_evento(
+                    entidade='EQUIPE',
+                    id_registro=equipe_id_registro,
+                    acao='EXCLUSAO',
+                    usuario=usuario,
+                    resumo=f'Equipe "{valores_anteriores.get("nome", equipe_id_registro)}" excluída.',
+                    valores_anteriores=valores_anteriores,
+                )
                 messages.success(request, 'Equipe excluída com sucesso.')
             except ProtectedError:
                 messages.error(
