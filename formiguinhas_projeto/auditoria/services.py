@@ -31,10 +31,11 @@ def snapshot(instance):
 
 
 def registrar_evento(*, entidade, instancia=None, acao, usuario=None, resumo,
-                     valores_anteriores=None, valores_novos=None, id_registro=None):
+                     valores_anteriores=None, valores_novos=None, id_registro=None,
+                     usuario_nome=None):
     from .models import EventoAuditoria
-    nome = ''
-    if usuario is not None:
+    nome = usuario_nome or ''
+    if not nome and usuario is not None:
         nome = getattr(getattr(usuario, 'id_voluntario', None), 'nome', '') or str(usuario)
     return EventoAuditoria.objects.create(
         entidade=entidade, id_registro=id_registro if id_registro is not None else getattr(instancia, 'pk', None),

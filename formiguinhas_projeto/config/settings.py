@@ -73,6 +73,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'comunicado.context_processors.notificacoes_comunicados',
+                'auditoria.context_processors.notificacoes_auditoria',
             ],
         },
     },

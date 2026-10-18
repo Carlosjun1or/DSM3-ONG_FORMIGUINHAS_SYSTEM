@@ -4,7 +4,7 @@ from django.utils.dateparse import parse_date
 from usuario.paginacao import paginar_queryset
 from usuario.models import Usuario
 from usuario.views import render_acesso_bloqueado
-from .models import EventoAuditoria
+from .models import EstadoLeituraAuditoria, EventoAuditoria
 
 
 def global_auditoria(request):
@@ -17,6 +17,14 @@ def global_auditoria(request):
         return redirect('login')
     if usuario.tipo != 'ADMIN':
         return render_acesso_bloqueado(request)
+    ultimo_evento_id = EventoAuditoria.objects.order_by('-id').values_list('id', flat=True).first() or 0
+    estado_leitura, _ = EstadoLeituraAuditoria.objects.get_or_create(
+        usuario=usuario,
+        defaults={'ultimo_evento_id': ultimo_evento_id},
+    )
+    if estado_leitura.ultimo_evento_id < ultimo_evento_id:
+        estado_leitura.ultimo_evento_id = ultimo_evento_id
+        estado_leitura.save(update_fields=['ultimo_evento_id'])
     eventos = EventoAuditoria.objects.select_related('usuario')
     entidade = request.GET.get('entidade', '').strip()
     acao = request.GET.get('acao', '').strip()
