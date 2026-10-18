@@ -1,0 +1,205 @@
+.reports-page {
+    display: grid;
+    gap: 1.5rem;
+}
+
+.reports-heading,
+.report-result-heading {
+    align-items: flex-start;
+}
+
+.reports-export-actions,
+.reports-switcher {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+}
+
+.reports-switcher {
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--border-color, #dce5df);
+}
+
+.reports-switch-link {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.5rem;
+    padding: 0.55rem 0.8rem;
+    border: 1px solid var(--border-color, #dce5df);
+    border-radius: 0.65rem;
+    color: var(--text-color, #274238);
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.reports-switch-link.is-active {
+    border-color: #155e4b;
+    background: #e9f4ef;
+    color: #155e4b;
+}
+
+.reports-filters {
+    align-items: end;
+}
+
+.report-filter[hidden] {
+    display: none !important;
+}
+
+.report-filter-actions {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.report-form-error {
+    grid-column: 1 / -1;
+}
+
+.report-result {
+    display: grid;
+    gap: 1rem;
+}
+
+.reports-metrics {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr));
+}
+
+.reports-metrics-general {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1rem;
+}
+
+.report-metric-card {
+    min-width: 0;
+}
+
+.report-metric-card .metric {
+    overflow-wrap: anywhere;
+}
+
+.reports-metrics-general .report-metric-card .metric {
+    font-size: clamp(1.45rem, 2vw, 1.8rem);
+    line-height: 1.25;
+    overflow-wrap: normal;
+    word-break: normal;
+}
+
+.report-metric-card--general {
+    display: grid;
+    align-content: start;
+    gap: 0.75rem;
+    min-height: 7.5rem;
+    padding: 1.25rem;
+    border: 1px solid #e1ebe5;
+    border-top: 3px solid #278065;
+    border-radius: 1rem;
+    background: linear-gradient(145deg, #fff 55%, #f2f8f4);
+    box-shadow: 0 0.5rem 1.25rem rgb(21 61 49 / 7%);
+}
+
+.report-metric-card--general .section-kicker {
+    font-size: 0.68rem;
+    line-height: 1.45;
+    letter-spacing: 0.09em;
+}
+
+.report-metric-card--detail .metric {
+    padding: 0.7rem 0.8rem;
+    border-radius: 0.7rem;
+    background: #edf5f0;
+    color: #245b49;
+    font-size: clamp(0.95rem, 1.1vw, 1.08rem);
+    line-height: 1.55;
+    font-weight: 700;
+}
+
+.report-section {
+    display: grid;
+    gap: 0.8rem;
+}
+
+.report-section h3 {
+    margin: 0;
+}
+
+.reports-table-wrap {
+    max-height: 38rem;
+    overflow: auto;
+}
+
+.reports-table {
+    min-width: 46rem;
+}
+
+.reports-table td {
+    max-width: 24rem;
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+
+.attendance-report-heading {
+    display: flex;
+    justify-content: space-between;
+    padding: 1rem;
+    border: 1px solid var(--border-color, #dce5df);
+    border-radius: 0.75rem;
+}
+
+.reports-freshness {
+    margin: 0;
+    color: #68766f;
+    font-size: 0.875rem;
+}
+
+@media (max-width: 600px) {
+    .reports-metrics-general {
+        grid-template-columns: 1fr;
+    }
+
+    .report-metric-card--general {
+        min-height: 0;
+    }
+}
+
+@media (min-width: 601px) and (max-width: 900px) {
+    .reports-metrics-general {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media print {
+    .sidebar,
+    .topbar,
+    .reports-export-actions,
+    .reports-switcher,
+    .reports-filters,
+    .enabled,
+    .uwy,
+    .report-metric-card {
+        display: none !important;
+    }
+
+    body,
+    .main-panel,
+    .card,
+    .reports-page {
+        background: #fff !important;
+        box-shadow: none !important;
+    }
+
+    .reports-page {
+        display: block;
+        padding: 0;
+    }
+
+    .reports-table-wrap {
+        max-height: none;
+        overflow: visible;
+    }
+
+    .reports-table {
+        min-width: 0;
+        font-size: 9pt;
+    }
+}

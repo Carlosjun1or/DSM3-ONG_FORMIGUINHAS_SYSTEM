@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     'comunicado',
     'doacao',
     'estoque',
+    'relatorios',
 ]
 
 MIDDLEWARE = [
