@@ -1,6 +1,7 @@
 import json
 
 from django.contrib import messages
+from django.db import transaction
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
@@ -128,6 +129,7 @@ def praias_view(request):
     })
 
 
+@transaction.atomic
 def cadastrar_praia_view(request):
     usuario = get_session_usuario(request)
     if not usuario:
@@ -179,6 +181,7 @@ def cadastrar_praia_view(request):
     })
 
 
+@transaction.atomic
 def editar_praia_view(request, praia_id):
     usuario = get_session_usuario(request)
     if not usuario:
@@ -212,6 +215,7 @@ def editar_praia_view(request, praia_id):
     })
 
 
+@transaction.atomic
 def atualizar_status_praia_view(request, praia_id):
     usuario = get_session_usuario(request)
     if not usuario:
@@ -237,6 +241,7 @@ def atualizar_status_praia_view(request, praia_id):
     return redirect('praias')
 
 
+@transaction.atomic
 def excluir_praia_view(request, praia_id):
     usuario = get_session_usuario(request)
     if not usuario:
