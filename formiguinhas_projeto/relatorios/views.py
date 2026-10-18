@@ -812,7 +812,7 @@ def relatorios_view(request):
 
     parametros = request.GET.copy()
     hoje = timezone.localdate()
-    parametros.setdefault('relatorio', 'indicadores')
+    parametros.setdefault('relatorio', 'geral')
     parametros.setdefault('periodo', 'MES')
     parametros.setdefault('data_inicio', hoje.replace(day=1).isoformat())
     parametros.setdefault('data_fim', hoje.isoformat())
