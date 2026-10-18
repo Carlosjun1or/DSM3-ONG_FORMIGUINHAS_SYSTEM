@@ -122,6 +122,10 @@ def registrar_coleta_bag_view(request, bag_id):
             entidade='COLETA_RESIDUO', instancia=coleta, acao='CRIACAO',
             usuario=usuario, resumo=f'Coleta #{coleta.pk} registrada para a bag {bag.codigo}.',
         )
+        registrar_evento(
+            entidade='ITEM_COLETA_RESIDUO', instancia=item, acao='CRIACAO',
+            usuario=usuario, resumo=f'Item de resíduo #{item.pk} registrado na coleta #{coleta.pk}.',
+        )
         messages.success(request, 'Coleta da bag registrada com sucesso.')
         return redirect('detalhe_coleta_residuo', coleta_id=coleta.pk)
     return render(request, 'sistema/cadastro-coleta-residuo.html', {
@@ -228,6 +232,13 @@ def registrar_residuo_view(request, acao_id):
                 usuario=usuario,
                 resumo=f'Coleta #{coleta.pk} registrada na ação #{acao.pk}.',
             )
+            registrar_evento(
+                entidade='ITEM_COLETA_RESIDUO',
+                instancia=item,
+                acao='CRIACAO',
+                usuario=usuario,
+                resumo=f'Item de resíduo #{item.pk} registrado na coleta #{coleta.pk}.',
+            )
             messages.success(request, 'Resíduo registrado com sucesso.')
         else:
             messages.error(request, 'Não foi possível registrar o resíduo. Verifique os dados informados.')
@@ -278,6 +289,7 @@ def registrar_destinacao_view(request, acao_id, residuo_id):
     })
 
 
+@transaction.atomic
 def editar_residuo_view(request, acao_id, residuo_id):
     usuario = usuario_admin(request)
     if usuario is None:
@@ -305,6 +317,7 @@ def editar_residuo_view(request, acao_id, residuo_id):
     })
 
 
+@transaction.atomic
 def excluir_residuo_view(request, acao_id, residuo_id):
     usuario = usuario_admin(request)
     if usuario is None:
@@ -323,6 +336,7 @@ def excluir_residuo_view(request, acao_id, residuo_id):
     return redirect('acao_detalhe', acao_id=acao_id)
 
 
+@transaction.atomic
 def editar_destinacao_view(request, acao_id, residuo_id, destinacao_id):
     usuario = usuario_admin(request)
     if usuario is None:
@@ -356,6 +370,7 @@ def editar_destinacao_view(request, acao_id, residuo_id, destinacao_id):
     })
 
 
+@transaction.atomic
 def excluir_destinacao_view(request, acao_id, residuo_id, destinacao_id):
     usuario = usuario_admin(request)
     if usuario is None:
