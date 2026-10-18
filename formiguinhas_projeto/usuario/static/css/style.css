@@ -328,6 +328,12 @@ main {
     font-weight: 600;
 }
 
+.alert-box.alert-error {
+    background: #fff1f0;
+    color: #b42318;
+    border-color: #f3b8b3;
+}
+
 .error-msg {
     color: #b42318;
     font-size: 0.8rem;

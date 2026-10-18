@@ -271,6 +271,18 @@ def acao_detalhe_view(request, acao_id):
         'papel',
         'voluntario__nome',
     )
+    estado_formulario = request.session.pop(
+        f'acao_material_utilizado_{acao.pk}',
+        None,
+    )
+    if estado_formulario:
+        material_utilizado_form = MaterialUtilizadoForm(
+            data=estado_formulario['dados'],
+        )
+        for erro in estado_formulario['erros']:
+            material_utilizado_form.add_error('quantidade', erro)
+    else:
+        material_utilizado_form = MaterialUtilizadoForm()
     if busca_responsavel:
         responsaveis = responsaveis.filter(
             Q(voluntario__nome__icontains=busca_responsavel)
@@ -296,7 +308,7 @@ def acao_detalhe_view(request, acao_id):
         'residuos': acao.residuos_coletados.all(),
         'residuo_form': residuo_form,
         'destinacao_form': DestinacaoResiduoForm(),
-        'material_utilizado_form': MaterialUtilizadoForm(),
+        'material_utilizado_form': material_utilizado_form,
         'materiais_utilizados': materiais_utilizados,
     })
 
@@ -313,7 +325,9 @@ def adicionar_material_utilizado_view(request, acao_id):
 
     acao = get_object_or_404(Acao, id_acao=acao_id)
     form = MaterialUtilizadoForm(request.POST)
-    if form.is_valid():
+    erros = []
+    formulario_valido = form.is_valid()
+    if formulario_valido:
         material = form.cleaned_data['material']
         quantidade = form.cleaned_data['quantidade']
         movimentacao = MovimentacaoEstoque(
@@ -326,15 +340,20 @@ def adicionar_material_utilizado_view(request, acao_id):
         try:
             registrar_movimentacao(movimentacao, usuario)
         except ValidationError as erro:
-            messages.error(request, str(erro))
+            erros.extend(erro.messages)
         else:
             messages.success(request, 'Material utilizado registrado e saldo atualizado.')
             return redirect('acao_detalhe', acao_id=acao.pk)
 
-    for campo, erros in form.errors.items():
-        for erro in erros:
-            messages.error(request, erro)
-    messages.error(request, 'Não foi possível registrar o material utilizado. Verifique os dados.')
+    if not formulario_valido:
+        erros = []
+    request.session[f'acao_material_utilizado_{acao.pk}'] = {
+        'dados': {
+            'material': request.POST.get('material', ''),
+            'quantidade': request.POST.get('quantidade', ''),
+        },
+        'erros': erros,
+    }
     return redirect('acao_detalhe', acao_id=acao.pk)
 
 
