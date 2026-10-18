@@ -48,6 +48,7 @@
                 <a href="{% url 'condominios' %}" class="sidebar-link {% if '/condominio/' in request.path and '/condominio/bags/' not in request.path and '/condominio/auditoria/' not in request.path %}active{% endif %}">Controle de Condomínios</a>
                 <a href="{% url 'bags' %}" class="sidebar-link {% if '/condominio/bags/' in request.path %}active{% endif %}">Controle de Bags</a>
                 <a href="{% url 'auditoria_global' %}" class="sidebar-link {% if '/auditoria/' in request.path or '/condominio/auditoria/' in request.path %}active{% endif %}">Auditoria global</a>
+                <a href="{% url 'relatorios' %}" class="sidebar-link {% if '/relatorios/' in request.path %}active{% endif %}">Relatórios</a>
                 {% endif %}
                 {% if request.session.usuario_tipo == 'ADMIN' or request.session.usuario_tipo == 'COORDENADOR' %}
                 <a href="{% url 'central_comunicados' %}" class="sidebar-link {% if '/comunicado/central/' in request.path %}active{% endif %}">Central de comunicados</a>
