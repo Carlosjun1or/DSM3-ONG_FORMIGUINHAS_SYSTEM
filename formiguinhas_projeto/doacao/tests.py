@@ -6,11 +6,12 @@ from django.urls import reverse
 from django.utils import timezone
 
 from acao.models import Acao
+from auditoria.models import EventoAuditoria
 from estoque.models import Material, MovimentacaoEstoque
 from praia.models import Praia
 from usuario.models import Usuario, Voluntario
 
-from .forms import DoadorForm, DoadorInlineForm, DoacaoForm
+from .forms import DoadorForm, DoadorInlineForm, DoacaoForm, ItemDoacaoMaterialForm
 from .models import Doador, Doacao, DoacaoFinanceira, ItemDoacaoMaterial
 
 
@@ -40,6 +41,102 @@ class DoacaoTestCase(TestCase):
             cadastrado_por=self.usuario,
             cadastrado_por_nome=voluntario.nome,
         )
+
+    def test_categoria_do_item_e_definida_pelo_material_selecionado(self):
+        material = Material.objects.create(
+            nome='Arroz',
+            codigo='ALIM-01',
+            categoria='Alimentação',
+            unidade='KG',
+        )
+        form = ItemDoacaoMaterialForm(data={
+            'material': material.pk,
+            'nome': 'Arroz',
+            'categoria': 'Categoria divergente',
+            'quantidade': '5',
+            'condicao': ItemDoacaoMaterial.CONDICAO_NOVO,
+            'observacoes': '',
+        })
+
+        self.assertTrue(form.is_valid(), form.errors)
+        self.assertEqual(form.cleaned_data['categoria'], 'Alimentação')
+        self.assertIn('data-categoria="Alimentação"', str(form['material']))
+
+    def test_categoria_existente_e_reutilizada_ao_cadastrar_material_na_doacao(self):
+        Material.objects.create(
+            nome='Detergente',
+            codigo='LIMP-01',
+            categoria='Limpeza',
+            unidade='LITRO',
+        )
+        form = ItemDoacaoMaterialForm(data={
+            'material': '',
+            'nome': 'Sabonete',
+            'categoria': '  limpeza  ',
+            'unidade_nova': 'UNIDADE',
+            'quantidade': '4',
+            'condicao': ItemDoacaoMaterial.CONDICAO_NOVO,
+            'observacoes': '',
+        })
+
+        self.assertTrue(form.is_valid(), form.errors)
+        self.assertEqual(form.cleaned_data['categoria'], 'Limpeza')
+
+    def test_novo_material_da_doacao_e_cadastrado_e_recebe_estoque(self):
+        response = self.client.post(reverse('cadastro_doacao'), {
+            'tipo': Doacao.MATERIAL,
+            'doador': self.doador.pk,
+            'anonima': '',
+            'data_recebimento': timezone.localdate().isoformat(),
+            'status': Doacao.CONFIRMADA,
+            'finalidade': Doacao.FINALIDADE_GERAL,
+            'descricao_finalidade': '',
+            'praia': '',
+            'acao': '',
+            'observacoes': '',
+            'referencia_comprovante': '',
+            'financeira-valor': '',
+            'financeira-forma_recebimento': '',
+            'itens-TOTAL_FORMS': '1',
+            'itens-INITIAL_FORMS': '0',
+            'itens-MIN_NUM_FORMS': '1',
+            'itens-MAX_NUM_FORMS': '1000',
+            'itens-0-material': '',
+            'itens-0-nome': 'Sabonete',
+            'itens-0-categoria': 'Higiene',
+            'itens-0-unidade_nova': 'UNIDADE',
+            'itens-0-quantidade': '4',
+            'itens-0-condicao': ItemDoacaoMaterial.CONDICAO_NOVO,
+            'itens-0-observacoes': '',
+        })
+
+        self.assertEqual(response.status_code, 302)
+        material = Material.objects.get(nome='Sabonete')
+        item = ItemDoacaoMaterial.objects.get(nome='Sabonete')
+        movimentacao = MovimentacaoEstoque.objects.get(item_doacao=item)
+        self.assertEqual(item.material, material)
+        self.assertEqual(item.categoria, 'Higiene')
+        self.assertEqual(material.unidade, 'UNIDADE')
+        self.assertEqual(material.calcular_saldo(), 4)
+        self.assertEqual(movimentacao.origem, 'DOACAO')
+
+    def test_formulario_permite_pesquisar_material_e_categoria(self):
+        Material.objects.create(
+            nome='Água mineral',
+            codigo='BEB-01',
+            categoria='Bebidas',
+            unidade='LITRO',
+        )
+
+        response = self.client.get(reverse('cadastro_doacao'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Pesquise e selecione um material existente')
+        self.assertContains(response, 'data-nome="Água mineral"')
+        self.assertContains(response, 'data-categoria="Bebidas"')
+        self.assertContains(response, 'data-categoria-combobox')
+        self.assertContains(response, 'data-categoria-options')
+        self.assertContains(response, 'data-value="Bebidas"')
 
     def test_doacao_anonima_nao_exige_doador(self):
         form = DoacaoForm(data={
@@ -226,6 +323,16 @@ class DoacaoTestCase(TestCase):
         self.assertTrue(all(mov.origem == 'DOACAO' for mov in movimentacoes))
         self.assertEqual(luvas.calcular_saldo(), 20)
         self.assertEqual(sacos.calcular_saldo(), 5)
+        evento = EventoAuditoria.objects.get(
+            entidade='DOACAO',
+            id_registro=Doacao.objects.get().pk,
+            acao='CRIACAO',
+        )
+        self.assertEqual(len(evento.valores_novos['itens_materiais']), 2)
+        self.assertEqual(
+            {item['nome'] for item in evento.valores_novos['itens_materiais']},
+            {'Luvas', 'Sacos de lixo'},
+        )
 
     def test_confirmar_doacao_material_cria_movimentacao_uma_unica_vez(self):
         material = Material.objects.create(
