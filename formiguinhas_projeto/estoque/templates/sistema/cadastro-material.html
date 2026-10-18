@@ -3,11 +3,11 @@
 
 {% block titulo %}{% if modo_edicao %}Editar material{% else %}Novo material{% endif %} | Sistema{% endblock %}
 {% block page_title %}{% if modo_edicao %}Editar material{% else %}Cadastrar material{% endif %}{% endblock %}
-{% block estilos %}<link rel="stylesheet" href="{% static 'estoque/estoque.css' %}?v=5">
-<script src="{% static 'estoque/estoque.js' %}?v=3" defer></script>{% endblock %}
+{% block estilos %}<link rel="stylesheet" href="{% static 'estoque/estoque.css' %}?v=11">
+<script src="{% static 'estoque/estoque.js' %}?v=5" defer></script>{% endblock %}
 
 {% block conteudo %}
-<section class="form-card estoque-form-card">
+<section class="form-card estoque-form-card {% if modo_edicao %}estoque-form-edicao{% else %}estoque-form-cadastro{% endif %}">
     <div class="section-heading">
         <div>
             <span class="form-kicker">{% if modo_edicao %}Cadastro de materiais{% else %}Inventário{% endif %}</span>
@@ -15,7 +15,10 @@
             <p class="form-subtitle">{% if modo_edicao %}Atualize os dados do material. O saldo continua calculado pelas movimentações.{% else %}Preencha os dados abaixo para adicionar um novo material ao estoque.{% endif %}</p>
         </div>
         <div class="estoque-acoes">
-            {% if modo_edicao %}<a href="{% url 'movimentacoes_estoque' %}?busca={{ material.codigo|urlencode }}" class="btn btn-outline">Ver movimentações</a>{% endif %}
+            {% if modo_edicao %}
+            <a href="{% url 'cadastrar_movimentacao_estoque' %}?material={{ material.pk }}" class="btn btn-primary">Registrar movimentação deste material</a>
+            <a href="{% url 'movimentacoes_estoque' %}?busca={{ material.codigo|urlencode }}" class="btn btn-outline">Ver movimentações</a>
+            {% endif %}
             <a href="{% url 'materiais' %}" class="btn btn-outline">Voltar ao estoque</a>
         </div>
     </div>
@@ -32,49 +35,70 @@
         {% if form.errors %}<div class="error-box" role="alert" tabindex="-1" data-form-error>Não foi possível salvar. Revise os campos destacados em vermelho e tente novamente.</div>{% endif %}
         {% for error in form.non_field_errors %}<div class="error-box">{{ error }}</div>{% endfor %}
 
-        <h3 class="form-section-title">Identificação</h3>
+        <section class="estoque-form-section">
+        <div class="estoque-form-section-heading">
+            <span class="form-section-number">1</span>
+            <div><h3>Identificação</h3><p>Informe como o material será reconhecido no catálogo.</p></div>
+        </div>
         <div class="form-grid">
-            {% include 'sistema/_campo-estoque.html' with field=form.nome %}
+            {% if modo_edicao %}
+                {% include 'sistema/_campo-estoque.html' with field=form.nome %}
+            {% else %}
+                <div class="form-group material-name-picker{% if form.nome.errors %} campo-invalido{% endif %}">
+                    <label for="{{ form.nome.id_for_label }}">{{ form.nome.label }}</label>
+                    <div class="material-combobox">
+                        {{ form.nome }}
+                        <div id="materiais-nome-resultados" class="material-options" data-material-name-options role="region" aria-live="polite" hidden></div>
+                    </div>
+                    <small class="form-help">Pesquise para conferir materiais existentes. Se não houver, continue preenchendo para cadastrar um novo.</small>
+                    {% for error in form.nome.errors %}<small class="field-error">{{ error }}</small>{% endfor %}
+                </div>
+            {% endif %}
             {% include 'sistema/_campo-estoque.html' with field=form.codigo ajuda='Use um código único.' %}
             <div class="form-group{% if form.categoria.errors %} campo-invalido{% endif %} categoria-picker">
                 <label for="{{ form.categoria.id_for_label }}">{{ form.categoria.label }}</label>
-                {{ form.categoria }}
+                <div class="categoria-combobox" data-categoria-combobox>
+                    {{ form.categoria }}
+                    <div id="lista-categorias-material" class="categoria-options" data-categoria-options role="listbox" aria-label="Categorias existentes" hidden>
+                        {% for categoria in form.categorias %}<button type="button" class="categoria-option" data-value="{{ categoria }}" role="option" aria-selected="false">{{ categoria }}</button>{% endfor %}
+                        <small class="material-options-empty" data-categoria-empty role="status" hidden>Nenhuma categoria encontrada.</small>
+                        <button type="button" class="categoria-option categoria-option-nova" data-categoria-nova role="option" aria-selected="false" hidden></button>
+                    </div>
+                </div>
                 <small class="form-help">Digite para consultar categorias existentes ou cadastrar uma nova.</small>
                 {% for error in form.categoria.errors %}<small class="field-error">{{ error }}</small>{% endfor %}
-                <div class="categoria-options" data-categoria-options hidden>
-                    {% for categoria in form.categorias %}<button type="button" class="categoria-option" data-value="{{ categoria }}">{{ categoria }}</button>{% endfor %}
-                </div>
             </div>
             {% include 'sistema/_campo-estoque.html' with field=form.unidade %}
             {% include 'sistema/_campo-estoque.html' with field=form.descricao full=True %}
         </div>
+        </section>
 
-        <h3 class="form-section-title">Quantidades</h3>
-        <p class="form-help estoque-form-orientacao">A quantidade inicial é o saldo existente antes de registrar qualquer movimentação. Use zero se o material ainda não estiver disponível.</p>
+        <section class="estoque-form-section">
+        <div class="estoque-form-section-heading">
+            <span class="form-section-number">2</span>
+            <div><h3>Estoque inicial</h3><p>Defina o saldo de partida e o limite para receber alertas de estoque baixo.</p></div>
+        </div>
+        <p class="form-help estoque-form-orientacao">Use zero na quantidade inicial se ainda não houver unidades. As entradas e saídas posteriores devem ser registradas como movimentações.</p>
         <div class="form-grid">
             {% include 'sistema/_campo-estoque.html' with field=form.quantidade_inicial ajuda='Saldo de partida, antes das movimentações.' %}
             {% include 'sistema/_campo-estoque.html' with field=form.estoque_minimo ajuda='Abaixo deste valor o material aparece como estoque baixo.' %}
         </div>
-
-        <h3 class="form-section-title">Origem</h3>
-        <div class="form-grid">
-            {% include 'sistema/_campo-estoque.html' with field=form.donativo %}
-            <div id="doador-field">
-                {% include 'sistema/_campo-estoque.html' with field=form.doador %}
-            </div>
-        </div>
+        </section>
 
         {% if modo_edicao %}
-        <p class="estoque-nota-form">O saldo atual não é editado aqui. Registre entradas ou saídas no histórico de movimentações para manter a rastreabilidade.</p>
+        <p class="estoque-nota-form">O saldo atual não é editado aqui. Use “Registrar movimentação deste material” para lançar uma entrada ou saída mantendo o histórico.</p>
         {% endif %}
 
-        <div class="form-actions">
-            <button type="submit" class="btn btn-primary" data-salvar-material>Salvar material</button>
+        <div class="form-actions estoque-form-actions">
             <a href="{% url 'materiais' %}" class="btn btn-outline">Cancelar</a>
+            <button type="submit" class="btn btn-primary" data-salvar-material>{% if modo_edicao %}Salvar alterações{% else %}Cadastrar material{% endif %}</button>
         </div>
     </form>
 </section>
+{% if not modo_edicao %}
+<div hidden data-material-edit-url="{% url 'editar_material' 0 %}"></div>
 {{ materiais_existentes|json_script:"materiais-existentes" }}
+{% endif %}
 
 <script>
     (function () {
@@ -86,43 +110,75 @@
             erro.focus();
         }
 
-        var checkbox = document.getElementById('id_donativo');
-        var doador = document.getElementById('doador-field');
-        function alternar() { doador.style.display = checkbox.checked ? 'block' : 'none'; }
-        if (checkbox && doador) {
-            checkbox.addEventListener('change', alternar);
-            alternar();
-        }
-
         var nome = document.getElementById('id_nome');
         var dadosExistentes = document.getElementById('materiais-existentes');
+        var resultadosNome = document.querySelector('[data-material-name-options]');
         var botaoSalvar = document.querySelector('[data-salvar-material]');
-        if (nome && dadosExistentes) {
+        if (nome && dadosExistentes && resultadosNome) {
+            var urlEdicao = document.querySelector('[data-material-edit-url]').dataset.materialEditUrl;
             var materiaisExistentes = JSON.parse(dadosExistentes.textContent);
             var avisoDuplicado = document.createElement('small');
             avisoDuplicado.className = 'field-error material-duplicado-aviso';
             avisoDuplicado.setAttribute('role', 'alert');
             avisoDuplicado.hidden = true;
-            nome.parentNode.appendChild(avisoDuplicado);
+            nome.closest('.material-name-picker').appendChild(avisoDuplicado);
 
-            function verificarNome() {
-                var valor = nome.value.trim().toLocaleLowerCase();
-                var existente = materiaisExistentes.find(function (material) {
-                    return material.nome.trim().toLocaleLowerCase() === valor;
-                });
-                avisoDuplicado.textContent = existente
-                    ? 'Este material já existe no estoque. Escolha outro nome.'
-                    : '';
-                avisoDuplicado.hidden = !existente;
-                nome.setAttribute('aria-invalid', existente ? 'true' : 'false');
-                nome.classList.toggle('campo-duplicado', Boolean(existente));
-                if (botaoSalvar) {
-                    botaoSalvar.disabled = Boolean(existente);
+            function atualizarResultadosNome() {
+                var termo = nome.value.trim().toLocaleLowerCase();
+                resultadosNome.innerHTML = '';
+                avisoDuplicado.hidden = true;
+                nome.classList.remove('campo-duplicado');
+                nome.setAttribute('aria-invalid', 'false');
+                if (!termo) {
+                    resultadosNome.hidden = true;
+                    nome.setAttribute('aria-expanded', 'false');
+                    if (botaoSalvar) botaoSalvar.disabled = false;
+                    return;
                 }
+
+                var encontrados = materiaisExistentes.filter(function (material) {
+                    return [material.nome, material.codigo, material.categoria]
+                        .some(function (valor) {
+                            return valor.toLocaleLowerCase().indexOf(termo) !== -1;
+                        });
+                });
+                encontrados.forEach(function (material) {
+                    var link = document.createElement('a');
+                    link.className = 'material-option material-name-result';
+                    link.href = urlEdicao.replace('/0/', '/' + material.id_material + '/');
+                    link.textContent = material.nome + ' — ' + material.codigo
+                        + (material.categoria ? ' · ' + material.categoria : '');
+                    resultadosNome.appendChild(link);
+                });
+                if (!encontrados.length) {
+                    var vazio = document.createElement('div');
+                    vazio.className = 'material-options-empty';
+                    vazio.textContent = 'Nenhum material encontrado. Você pode cadastrar "' + nome.value.trim() + '".';
+                    resultadosNome.appendChild(vazio);
+                }
+                var nomeExistente = materiaisExistentes.some(function (material) {
+                    return material.nome.trim().toLocaleLowerCase() === termo;
+                });
+                avisoDuplicado.textContent = nomeExistente
+                    ? 'Este material já está cadastrado. Abra o resultado para consultar ou editar.'
+                    : '';
+                avisoDuplicado.hidden = !nomeExistente;
+                nome.setAttribute('aria-invalid', nomeExistente ? 'true' : 'false');
+                nome.classList.toggle('campo-duplicado', nomeExistente);
+                if (botaoSalvar) botaoSalvar.disabled = nomeExistente;
+                resultadosNome.hidden = false;
+                nome.setAttribute('aria-expanded', 'true');
             }
 
-            nome.addEventListener('input', verificarNome);
-            verificarNome();
+            nome.addEventListener('focus', atualizarResultadosNome);
+            nome.addEventListener('input', atualizarResultadosNome);
+            nome.addEventListener('blur', function () {
+                setTimeout(function () {
+                    resultadosNome.hidden = true;
+                    nome.setAttribute('aria-expanded', 'false');
+                }, 120);
+            });
+            atualizarResultadosNome();
         }
     })();
 </script>

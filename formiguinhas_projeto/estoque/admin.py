@@ -1,12 +1,13 @@
 from django.contrib import admin
 
+from auditoria.admin_utils import AuditedModelAdmin
 from .models import Material, MovimentacaoEstoque
 
 
 @admin.register(Material)
-class MaterialAdmin(admin.ModelAdmin):
-    list_display = ('nome', 'codigo', 'categoria', 'unidade', 'donativo', 'estoque_minimo')
-    list_filter = ('categoria', 'donativo')
+class MaterialAdmin(AuditedModelAdmin):
+    list_display = ('nome', 'codigo', 'categoria', 'unidade', 'estoque_minimo')
+    list_filter = ('categoria',)
     search_fields = ('nome', 'codigo')
 
 

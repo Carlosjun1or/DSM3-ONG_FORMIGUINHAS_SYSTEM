@@ -2,6 +2,7 @@ import csv
 
 from django.contrib import messages
 from django.core.exceptions import ValidationError
+from django.db import transaction
 from django.db.models import Count, F, Q, Sum
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -79,9 +80,9 @@ def materiais_view(request):
     if situacao == 'BAIXO':
         materiais = materiais.filter(_estoque_baixo())
     if origem == 'DONATIVO':
-        materiais = materiais.filter(donativo=True)
+        materiais = materiais.filter(movimentacoes__doacao__isnull=False).distinct()
     elif origem == 'COMPRADO':
-        materiais = materiais.filter(donativo=False)
+        materiais = materiais.exclude(movimentacoes__doacao__isnull=False)
 
     doado = Doacao.objects.filter(
         tipo=Doacao.MATERIAL,
@@ -106,9 +107,7 @@ def materiais_view(request):
         'categoria_selecionada': categoria,
         'situacao_selecionada': situacao,
         'origem_selecionada': origem if origem in ('DONATIVO', 'COMPRADO') else '',
-        'categorias': Material.objects.order_by('categoria').values_list(
-            'categoria', flat=True
-        ).distinct(),
+        'categorias': _categorias(),
         'data_inicio': inicio.isoformat(),
         'data_fim': fim.isoformat(),
         'doado_total': doado['total'] or 0,
@@ -119,16 +118,26 @@ def materiais_view(request):
 
 
 def _categorias():
-    return Material.objects.order_by('categoria').values_list('categoria', flat=True).distinct()
+    valores = Material.objects.order_by('categoria').values_list('categoria', flat=True)
+    categorias = []
+    categorias_vistas = set()
+    for valor in valores:
+        categoria = ' '.join(valor.split())
+        chave = categoria.casefold()
+        if chave and chave not in categorias_vistas:
+            categorias_vistas.add(chave)
+            categorias.append(categoria)
+    return categorias
 
 
 def _nomes_materiais_existentes(material=None):
-    materiais = Material.objects.only('id_material', 'nome')
+    materiais = Material.objects.only('id_material', 'nome', 'codigo', 'categoria')
     if material:
         materiais = materiais.exclude(pk=material.pk)
-    return list(materiais.values('id_material', 'nome'))
+    return list(materiais.values('id_material', 'nome', 'codigo', 'categoria'))
 
 
+@transaction.atomic
 def cadastrar_material_view(request):
     usuario, resposta = autenticar(
         request, True, 'Permissão insuficiente: apenas administradores podem cadastrar materiais.'
@@ -161,6 +170,7 @@ def cadastrar_material_view(request):
     })
 
 
+@transaction.atomic
 def editar_material_view(request, material_id):
     usuario, resposta = autenticar(
         request, True, 'Permissão insuficiente: apenas administradores podem editar materiais.'
@@ -218,6 +228,11 @@ def cadastrar_movimentacao_estoque_view(request):
                 return redirect('movimentacoes_estoque')
     else:
         form = MovimentacaoEstoqueForm()
+        material_id = request.GET.get('material', '')
+        if material_id.isdigit():
+            material = form.fields['material'].queryset.filter(pk=material_id).first()
+            if material:
+                form.initial['material'] = material
 
     return render(request, 'sistema/cadastro-movimentacao-estoque.html', {
         'usuario': usuario,
@@ -331,8 +346,8 @@ def relatorio_estoque_view(request):
         return render_acesso_bloqueado(request)
 
     materiais = list(Material.objects.com_saldo())
-    donativos = [m for m in materiais if m.donativo]
-    comprados = [m for m in materiais if not m.donativo]
+    donativos = [m for m in materiais if m.eh_donativo]
+    comprados = [m for m in materiais if not m.eh_donativo]
     return render(request, 'sistema/relatorio-estoque.html', {
         'usuario': usuario,
         'total_materiais': len(materiais),

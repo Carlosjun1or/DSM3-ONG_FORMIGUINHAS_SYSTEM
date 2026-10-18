@@ -3,7 +3,7 @@
 
 {% block titulo %}Registrar movimentação | Sistema{% endblock %}
 {% block page_title %}Registrar movimentação de estoque{% endblock %}
-{% block estilos %}<link rel="stylesheet" href="{% static 'estoque/estoque.css' %}?v=2">
+{% block estilos %}<link rel="stylesheet" href="{% static 'estoque/estoque.css' %}?v=11">
 <script src="{% static 'estoque/estoque.js' %}" defer></script>{% endblock %}
 
 {% block conteudo %}
@@ -20,15 +20,20 @@
         </div>
     </div>
 
-    <div class="estoque-nota-form">
+    <div class="estoque-nota-form estoque-movimentacao-aviso">
+        <strong>Importante</strong>
         As doações de materiais devem ser confirmadas no <a class="table-link" href="{% url 'doacoes' %}">controle de doações</a>. A confirmação cria automaticamente uma entrada vinculada à doação.
     </div>
 
-    <form method="post" class="system-form" novalidate>{% csrf_token %}
+    <form method="post" class="system-form estoque-movimentacao-form" novalidate>{% csrf_token %}
         {% if form.errors %}<div class="error-box" role="alert" tabindex="-1" data-form-error>Não foi possível salvar. Preencha ou corrija os campos destacados em vermelho.</div>{% endif %}
         {% for error in form.non_field_errors %}<div class="error-box">{{ error }}</div>{% endfor %}
-        <h3 class="form-section-title">Dados da movimentação</h3>
-        <div class="form-grid">
+        <section class="estoque-form-section">
+        <div class="estoque-form-section-heading">
+            <span class="form-section-number">1</span>
+            <div><h3>Material e tipo de movimentação</h3><p>Pesquise o item do catálogo e informe se está entrando ou saindo do estoque.</p></div>
+        </div>
+        <div class="form-grid movimento-principal-grid">
             <div class="form-group material-picker{% if form.material.errors %} campo-invalido{% endif %}">
                 <label for="material-search">{{ form.material.label }}</label>
                 <div class="material-combobox" data-material-combobox>
@@ -41,15 +46,24 @@
             </div>
             {% include 'sistema/_campo-estoque.html' with field=form.tipo %}
             {% include 'sistema/_campo-estoque.html' with field=form.quantidade %}
+        </div>
+        </section>
+        <section class="estoque-form-section">
+        <div class="estoque-form-section-heading">
+            <span class="form-section-number">2</span>
+            <div><h3>Detalhes do registro</h3><p>Explique a origem da entrada ou o motivo da saída.</p></div>
+        </div>
+        <div class="form-grid">
             <div id="origem-field">
                 {% include 'sistema/_campo-estoque.html' with field=form.origem %}
             </div>
             {% include 'sistema/_campo-estoque.html' with field=form.justificativa full=True %}
         </div>
-        <p id="movimentacao-orientacao" class="estoque-nota-form" role="status" aria-live="polite"></p>
-        <div class="form-actions">
-            <button type="submit" class="btn btn-primary">Salvar movimentação</button>
+        <p id="movimentacao-orientacao" class="estoque-nota-form movimento-orientacao" role="status" aria-live="polite"></p>
+        </section>
+        <div class="form-actions estoque-form-actions">
             <a href="{% url 'movimentacoes_estoque' %}" class="btn btn-outline">Cancelar</a>
+            <button type="submit" class="btn btn-primary">Salvar movimentação</button>
         </div>
     </form>
 </section>

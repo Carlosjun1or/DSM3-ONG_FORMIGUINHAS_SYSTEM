@@ -103,7 +103,7 @@
             </thead>
             <tbody>
                 {% for mat in materiais %}
-                <tr class="{% if mat.baixo_estoque %}estoque-baixo{% elif mat.donativo %}estoque-donativo{% endif %}">
+                <tr class="{% if mat.baixo_estoque %}estoque-baixo{% elif mat.eh_donativo %}estoque-donativo{% endif %}">
                     <td>
                         {% if usuario.tipo == 'ADMIN' %}<a class="table-link" href="{% url 'editar_material' mat.id_material %}"><strong>{{ mat.nome }}</strong></a>{% else %}<strong>{{ mat.nome }}</strong>{% endif %}
                         <small class="table-secondary">{{ mat.categoria }}</small>
@@ -115,7 +115,7 @@
                         {% elif mat.baixo_estoque %}<span class="status-badge status-pausado">Estoque baixo (mín. {{ mat.estoque_minimo }})</span>
                         {% else %}<span class="status-badge status-ativo">Normal</span>{% endif %}
                     </td>
-                    <td>{% if mat.donativo %}Donativo{% if mat.doador %} ({{ mat.doador }}){% endif %}{% else %}Comprado{% endif %}</td>
+                    <td>{% if mat.eh_donativo %}Donativo{% if mat.doador_origem %} ({{ mat.doador_origem }}){% endif %}{% else %}Comprado{% endif %}</td>
                     <td class="audit-cell estoque-auditoria">
                         <strong>{% if mat.cadastrado_por_nome %}Cadastrado por {{ mat.cadastrado_por_nome }}{% else %}Cadastro anterior{% endif %}</strong>
                         <small>{{ mat.dt_cadastro|date:'d/m/Y H:i' }}</small>

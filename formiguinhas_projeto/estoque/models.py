@@ -1,13 +1,17 @@
 from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
 from django.db import models, transaction
-from django.db.models import F, Q, Sum
+from django.db.models import Exists, F, OuterRef, Q, Subquery, Sum
 from django.db.models.functions import Coalesce, Lower, Trim
 
 
 class MaterialQuerySet(models.QuerySet):
     def com_saldo(self):
         """Anota `saldo_db` em uma única consulta (evita N+1)."""
+        movimentacoes_doacao = MovimentacaoEstoque.objects.filter(
+            material_id=OuterRef('pk'),
+            doacao__isnull=False,
+        )
         return self.annotate(
             entradas_total=Coalesce(
                 Sum('movimentacoes__quantidade', filter=Q(movimentacoes__tipo='ENTRADA')), 0
@@ -15,7 +19,14 @@ class MaterialQuerySet(models.QuerySet):
             saidas_total=Coalesce(
                 Sum('movimentacoes__quantidade', filter=Q(movimentacoes__tipo='SAIDA')), 0
             ),
-        ).annotate(saldo_db=F('quantidade_inicial') + F('entradas_total') - F('saidas_total'))
+        ).annotate(
+            saldo_db=F('quantidade_inicial') + F('entradas_total') - F('saidas_total'),
+            eh_donativo_db=Exists(movimentacoes_doacao),
+            doador_origem_db=Subquery(
+                movimentacoes_doacao.order_by('-dt_cadastro', '-pk')
+                .values('doacao__doador__nome')[:1]
+            ),
+        )
 
 
 class Material(models.Model):
@@ -35,8 +46,6 @@ class Material(models.Model):
     quantidade_inicial = models.PositiveIntegerField(default=0)
     estoque_minimo = models.PositiveIntegerField(default=0)
     unidade = models.CharField(max_length=20, choices=UNIDADE_CHOICES)
-    donativo = models.BooleanField(default=False)
-    doador = models.CharField(max_length=100, blank=True)
     dt_cadastro = models.DateTimeField(auto_now_add=True)
     cadastrado_por = models.ForeignKey(
         'usuario.Usuario',
@@ -70,8 +79,27 @@ class Material(models.Model):
             ),
         ]
 
+    @property
+    def eh_donativo(self):
+        """Um material é doado quando pelo menos uma movimentação registrada parte de uma doação."""
+        if hasattr(self, 'eh_donativo_db'):
+            return self.eh_donativo_db
+        return self.movimentacoes.filter(doacao__isnull=False).exists()
+
+    @property
+    def doador_origem(self):
+        """Retorna o doador mais recente da origem da doação do material."""
+        if hasattr(self, 'doador_origem_db'):
+            return self.doador_origem_db or ''
+        movimentacao = self.movimentacoes.select_related('doacao__doador').filter(
+            doacao__isnull=False,
+        ).order_by('-dt_cadastro').first()
+        if movimentacao and movimentacao.doacao and movimentacao.doacao.doador_id:
+            return movimentacao.doacao.doador.nome
+        return ''
+
     def __str__(self):
-        origem = 'Donativo' if self.donativo else 'Comprado'
+        origem = 'Donativo' if self.eh_donativo else 'Comprado'
         return f'{self.nome} ({self.codigo}) - {origem}'
 
     def clean(self):
@@ -83,6 +111,9 @@ class Material(models.Model):
                 for material in duplicados
             ):
                 raise ValidationError({'nome': 'Este material já existe no estoque.'})
+
+        if self.categoria:
+            self.categoria = self.categoria.strip()
 
     def calcular_saldo(self, excluir_movimentacao_pk=None):
         movimentacoes = self.movimentacoes.all()

@@ -94,51 +94,127 @@
     }
 
     function iniciarCategorias() {
-        var campo = document.getElementById('id_categoria');
-        var campoNovo = document.querySelector('[data-categoria-nova]');
-        if (!campo || !campoNovo) {
-            return;
-        }
-        function alternarCategoriaNova() {
-            campoNovo.hidden = campo.value !== '__NOVA__';
-        }
-        campo.addEventListener('change', alternarCategoriaNova);
-        alternarCategoriaNova();
-    }
+        document.querySelectorAll('[data-categoria-combobox]').forEach(function (combobox) {
+            var campo = combobox.querySelector('input');
+            var lista = combobox.querySelector('[data-categoria-options]');
+            if (!campo || !lista) return;
 
-    function iniciarCategorias() {
-        var campo = document.getElementById('id_categoria');
-        var lista = document.querySelector('[data-categoria-options]');
-        if (!campo || !lista) {
-            return;
-        }
-        var opcoes = Array.prototype.slice.call(lista.querySelectorAll('.categoria-option'));
+            var opcoes = Array.prototype.slice.call(
+                lista.querySelectorAll('.categoria-option[data-value]')
+            );
+            var nenhuma = lista.querySelector('[data-categoria-empty]');
+            var nova = lista.querySelector('[data-categoria-nova]');
+            var indiceAtivo = -1;
 
-        function atualizarLista() {
-            var termo = campo.value.trim().toLowerCase();
-            var visiveis = 0;
-            opcoes.forEach(function (opcao) {
-                var visivel = !termo || opcao.dataset.value.toLowerCase().indexOf(termo) !== -1;
-                opcao.hidden = !visivel;
-                if (visivel) {
-                    visiveis += 1;
+            function fecharLista() {
+                lista.hidden = true;
+                combobox.classList.remove('is-open');
+                campo.setAttribute('aria-expanded', 'false');
+                campo.removeAttribute('aria-activedescendant');
+                indiceAtivo = -1;
+            }
+
+            function atualizarLista() {
+                if (campo.readOnly || campo.disabled) {
+                    fecharLista();
+                    return;
+                }
+                var termo = campo.value.trim().toLocaleLowerCase();
+                var visiveis = 0;
+                var categoriaExata = false;
+                opcoes.forEach(function (opcao) {
+                    var valor = opcao.dataset.value;
+                    var visivel = !termo || valor.toLocaleLowerCase().indexOf(termo) !== -1;
+                    opcao.hidden = !visivel;
+                    opcao.classList.remove('is-active');
+                    opcao.setAttribute('aria-selected', 'false');
+                    if (visivel) visiveis += 1;
+                    if (termo && valor.toLocaleLowerCase() === termo) categoriaExata = true;
+                });
+                if (nenhuma) {
+                    nenhuma.hidden = visiveis > 0;
+                    nenhuma.textContent = termo
+                        ? 'Nenhuma categoria encontrada com esse nome.'
+                        : 'Ainda não há categorias. Digite um nome para cadastrar a primeira.';
+                }
+                if (nova) {
+                    nova.hidden = !termo || categoriaExata;
+                    nova.textContent = 'Usar "' + campo.value.trim() + '" como nova categoria';
+                    nova.id = campo.id + '-categoria-nova';
+                    nova.setAttribute('aria-selected', 'false');
+                }
+                lista.hidden = false;
+                combobox.classList.add('is-open');
+                campo.setAttribute('aria-expanded', 'true');
+            }
+
+            function opcoesVisiveis() {
+                return Array.prototype.filter.call(
+                    lista.querySelectorAll('.categoria-option'),
+                    function (opcao) { return !opcao.hidden; }
+                );
+            }
+
+            function definirAtivo(indice) {
+                var visiveis = opcoesVisiveis();
+                visiveis.forEach(function (opcao, posicao) {
+                    var ativo = posicao === indice;
+                    opcao.classList.toggle('is-active', ativo);
+                    opcao.setAttribute('aria-selected', ativo ? 'true' : 'false');
+                    if (ativo) {
+                        campo.setAttribute('aria-activedescendant', opcao.id);
+                        opcao.scrollIntoView({ block: 'nearest' });
+                    }
+                });
+                indiceAtivo = indice;
+            }
+
+            opcoes.forEach(function (opcao, indice) {
+                opcao.id = campo.id + '-categoria-' + indice;
+                opcao.addEventListener('mousedown', function (evento) {
+                    evento.preventDefault();
+                    campo.value = opcao.dataset.value;
+                    campo.dispatchEvent(new Event('change', { bubbles: true }));
+                    fecharLista();
+                });
+            });
+            if (nova) {
+                nova.addEventListener('mousedown', function (evento) {
+                    evento.preventDefault();
+                    fecharLista();
+                });
+            }
+            campo.addEventListener('focus', atualizarLista);
+            campo.addEventListener('input', function () {
+                indiceAtivo = -1;
+                atualizarLista();
+            });
+            campo.addEventListener('keydown', function (evento) {
+                if (evento.key === 'Escape') {
+                    fecharLista();
+                } else if (evento.key === 'ArrowDown' || evento.key === 'ArrowUp') {
+                    evento.preventDefault();
+                    atualizarLista();
+                    var visiveis = opcoesVisiveis();
+                    if (!visiveis.length) return;
+                    var proximo = evento.key === 'ArrowDown'
+                        ? (indiceAtivo + 1) % visiveis.length
+                        : (indiceAtivo - 1 + visiveis.length) % visiveis.length;
+                    definirAtivo(proximo);
+                } else if (evento.key === 'Enter' && indiceAtivo >= 0) {
+                    evento.preventDefault();
+                    var ativo = opcoesVisiveis()[indiceAtivo];
+                    if (!ativo) return;
+                    if (ativo.dataset.value) {
+                        campo.value = ativo.dataset.value;
+                        campo.dispatchEvent(new Event('change', { bubbles: true }));
+                    }
+                    fecharLista();
                 }
             });
-            lista.hidden = visiveis === 0;
-        }
-
-        campo.addEventListener('focus', atualizarLista);
-        campo.addEventListener('input', atualizarLista);
-        opcoes.forEach(function (opcao) {
-            opcao.addEventListener('click', function () {
-                campo.value = opcao.dataset.value;
-                lista.hidden = true;
+            document.addEventListener('mousedown', function (evento) {
+                if (!combobox.contains(evento.target)) fecharLista();
             });
-        });
-        document.addEventListener('click', function (evento) {
-            if (evento.target !== campo && !lista.contains(evento.target)) {
-                lista.hidden = true;
-            }
         });
     }
 
