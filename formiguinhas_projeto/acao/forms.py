@@ -3,6 +3,7 @@ from django.db.models import Q
 from PIL import Image
 
 from praia.models import Praia
+from estoque.models import Material
 from usuario.models import Voluntario
 
 from .models import (
@@ -14,6 +15,42 @@ from .models import (
 )
 
 MAX_IMAGE_SIZE = 5 * 1024 * 1024
+
+
+class MaterialUtilizadoChoiceField(forms.ModelChoiceField):
+    def label_from_instance(self, obj):
+        return f'{obj.nome} — saldo: {obj.saldo} {obj.get_unidade_display()}'
+
+
+class MaterialUtilizadoForm(forms.Form):
+    material = MaterialUtilizadoChoiceField(
+        label='Material',
+        queryset=Material.objects.none(),
+        empty_label='Selecione um material',
+        widget=forms.Select(attrs={'class': 'form-control'}),
+    )
+    quantidade = forms.IntegerField(
+        label='Quantidade utilizada',
+        min_value=1,
+        widget=forms.NumberInput(attrs={
+            'class': 'form-control',
+            'min': 1,
+            'inputmode': 'numeric',
+        }),
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['material'].queryset = Material.objects.com_saldo().order_by('nome')
+        self.fields['material'].help_text = 'O saldo atual aparece ao lado de cada material.'
+
+    def clean(self):
+        dados = super().clean()
+        material = dados.get('material')
+        quantidade = dados.get('quantidade')
+        if material and quantidade and quantidade > material.saldo:
+            self.add_error('quantidade', 'A quantidade utilizada não pode superar o saldo atual.')
+        return dados
 
 
 class AcaoForm(forms.ModelForm):
