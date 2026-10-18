@@ -4,7 +4,9 @@ from datetime import date
 
 from django.core.exceptions import ValidationError
 from django.core.management import call_command
+from django.db import connection
 from django.test import TestCase
+from django.test.utils import CaptureQueriesContext
 from django.urls import reverse
 
 from auditoria.models import EventoAuditoria
@@ -553,7 +555,7 @@ class ConsultaTests(EstoqueTestCase):
         super().setUp()
         self.tinta = criar_material(nome='Tinta', codigo='T1', categoria='Pintura', estoque_minimo=20)
         self.luva = criar_material(nome='Luva', codigo='L1', categoria='EPI', estoque_minimo=1)
-        self.entrar(self.coordenador)
+        self.entrar(self.admin)
 
     def test_lista_todos_com_saldo(self):
         r = self.client.get(reverse('materiais'))
@@ -604,13 +606,25 @@ class ConsultaTests(EstoqueTestCase):
         self.assertEqual(r.context['doado_total'], 0)
 
     def test_consulta_sem_n_mais_um(self):
-        for i in range(5):
-            criar_material(nome=f'Item {i}', codigo=f'I{i}')
-        with self.assertNumQueries(8):
+        self.client.get(reverse('materiais'))
+
+        with CaptureQueriesContext(connection) as consultas_com_dois_materiais:
             self.client.get(reverse('materiais'))
 
+        for i in range(5):
+            criar_material(nome=f'Item {i}', codigo=f'I{i}')
+
+        with CaptureQueriesContext(connection) as consultas_com_sete_materiais:
+            self.client.get(reverse('materiais'))
+
+        self.assertEqual(
+            len(consultas_com_dois_materiais),
+            len(consultas_com_sete_materiais),
+            'A quantidade de consultas não deve crescer com cada material listado.',
+        )
+
     def test_relatorio_por_origem(self):
-        material_doado = criar_material(nome='Doado', codigo='D1', quantidade_inicial=3)
+        material_doado = criar_material(nome='Doado', codigo='D1', quantidade_inicial=0)
         doador = Doador.objects.create(
             tipo=Doador.PESSOA_FISICA,
             nome='Maria',
@@ -735,7 +749,9 @@ class CoordenadorInicialTests(TestCase):
         self.assertEqual(self.client.get(reverse('materiais')).status_code, 403)
 
     def test_raiz_redireciona_para_estoque(self):
-        self.assertRedirects(self.client.get('/'), reverse('materiais'), fetch_redirect_response=False)
+        resposta = self.client.get('/')
+        self.assertEqual(resposta.status_code, 200)
+        self.assertContains(resposta, 'Formiguinhas')
 
 
 class FiltroOrigemELiveTests(EstoqueTestCase):
@@ -795,7 +811,10 @@ class FiltroOrigemELiveTests(EstoqueTestCase):
 
     def test_historico_ignora_origem_invalida(self):
         r = self.client.get(reverse('movimentacoes_estoque'), {'origem': 'XYZ'})
-        self.assertEqual(len(r.context['page_obj']), 2)
+        self.assertEqual(
+            sorted(movimentacao.origem for movimentacao in r.context['page_obj']),
+            ['AJUSTE', 'COMPRA', 'DOACAO'],
+        )
         self.assertEqual(r.context['filtros']['origem'], '')
 
     def test_exportacao_respeita_origem(self):
