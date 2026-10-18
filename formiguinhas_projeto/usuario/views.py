@@ -1,4 +1,5 @@
 from django.db.models import Prefetch, Q
+from django.db import transaction
 from django.shortcuts import render, redirect
 from django.utils import timezone
 
@@ -154,6 +155,7 @@ def voluntarios_view(request):
     })
 
 
+@transaction.atomic
 def editar_voluntario_view(request, voluntario_id):
     usuario_id = request.session.get('usuario_id')
     if not usuario_id:
@@ -195,13 +197,15 @@ def editar_voluntario_view(request, voluntario_id):
                     'Somente um administrador pode alterar o status de um voluntário.'
                 )
             if not email_proibido and not status_proibido:
+                status_anterior = voluntario.status
                 voluntario = form.save(commit=False)
                 voluntario.ultimo_editado_por = usuario
                 voluntario.ultimo_editado_por_nome = usuario.id_voluntario.nome
                 voluntario.ultimo_editado_por_tipo = usuario.tipo
                 voluntario.dt_ultima_edicao = timezone.now()
                 voluntario.save()
-                registrar_evento(entidade='VOLUNTARIO', instancia=voluntario, acao='EDICAO',
+                registrar_evento(entidade='VOLUNTARIO', instancia=voluntario,
+                                 acao='MUDANCA_STATUS' if status_anterior != voluntario.status else 'EDICAO',
                                  usuario=usuario, resumo=f'Voluntário "{voluntario.nome}" editado.',
                                  valores_anteriores=valores_anteriores)
                 if voluntario.status == 'INATIVO':
@@ -224,6 +228,7 @@ def editar_voluntario_view(request, voluntario_id):
     })
 
 
+@transaction.atomic
 def atualizar_status_voluntario_view(request, voluntario_id):
     usuario = get_session_usuario(request)
     if not usuario:
@@ -247,7 +252,12 @@ def atualizar_status_voluntario_view(request, voluntario_id):
             and voluntario.usuario.tipo == 'ADMIN'
             and status != 'ATIVO'
         )
-        if status in status_validos and not status_proibido_para_coordenador and not status_proibido_para_admin:
+        if (
+            status in status_validos
+            and status != voluntario.status
+            and not status_proibido_para_coordenador
+            and not status_proibido_para_admin
+        ):
             valores_anteriores = snapshot(voluntario)
             voluntario.status = status
             voluntario.ultimo_editado_por = usuario
@@ -272,6 +282,7 @@ def atualizar_status_voluntario_view(request, voluntario_id):
     return redirect('voluntarios')
 
 
+@transaction.atomic
 def excluir_voluntario_view(request, voluntario_id):
     usuario_id = request.session.get('usuario_id')
     if not usuario_id:
@@ -289,10 +300,24 @@ def excluir_voluntario_view(request, voluntario_id):
 
     if request.method == 'POST':
         valores_anteriores = snapshot(voluntario)
+        usuario_vinculado = Usuario.objects.filter(id_voluntario=voluntario).first()
+        valores_usuario_vinculado = (
+            snapshot(usuario_vinculado) if usuario_vinculado else None
+        )
+        usuario_vinculado_id = usuario_vinculado.pk if usuario_vinculado else None
         voluntario.delete()
         registrar_evento(entidade='VOLUNTARIO', id_registro=voluntario_id, acao='EXCLUSAO',
                          usuario=usuario, resumo=f'Voluntário "{valores_anteriores.get("nome", voluntario_id)}" excluído.',
                          valores_anteriores=valores_anteriores)
+        if usuario_vinculado_id is not None:
+            registrar_evento(
+                entidade='USUARIO',
+                id_registro=usuario_vinculado_id,
+                acao='EXCLUSAO',
+                usuario=usuario,
+                resumo=f'Usuário de "{valores_anteriores.get("nome", voluntario_id)}" excluído junto com o voluntário.',
+                valores_anteriores=valores_usuario_vinculado,
+            )
 
     return redirect('voluntarios')
 
@@ -362,6 +387,7 @@ def usuarios_view(request):
     })
 
 
+@transaction.atomic
 def atualizar_tipo_usuario_view(request, usuario_id):
     usuario_logado = get_session_usuario(request)
     if not usuario_logado:
@@ -373,7 +399,8 @@ def atualizar_tipo_usuario_view(request, usuario_id):
         novo_tipo = request.POST.get('tipo')
         if novo_tipo in dict(Usuario.TIPO_CHOICES):
             usuario_editado = Usuario.objects.filter(id_usuario=usuario_id).first()
-            if usuario_editado:
+            if usuario_editado and usuario_editado.tipo != novo_tipo:
+                valores_anteriores = snapshot(usuario_editado)
                 usuario_editado.tipo = novo_tipo
                 usuario_editado.ultimo_editado_por = usuario_logado
                 usuario_editado.ultimo_editado_por_nome = usuario_logado.id_voluntario.nome
@@ -386,10 +413,19 @@ def atualizar_tipo_usuario_view(request, usuario_id):
                     'ultimo_editado_por_tipo',
                     'dt_ultima_edicao',
                 ])
+                registrar_evento(
+                    entidade='USUARIO',
+                    instancia=usuario_editado,
+                    acao='EDICAO',
+                    usuario=usuario_logado,
+                    resumo=f'Tipo de usuário de "{usuario_editado.id_voluntario.nome}" alterado.',
+                    valores_anteriores=valores_anteriores,
+                )
 
     return redirect('usuarios')
 
 
+@transaction.atomic
 def editar_usuario_view(request, usuario_id):
     usuario_logado = get_session_usuario(request)
     if not usuario_logado:
@@ -426,6 +462,9 @@ def editar_usuario_view(request, usuario_id):
                     'Coordenadores não podem alterar o e-mail de um voluntário com usuário cadastrado.'
                 )
             else:
+                status_anterior = usuario_editado.id_voluntario.status
+                voluntario_anterior = snapshot(usuario_editado.id_voluntario)
+                usuario_anterior = snapshot(usuario_editado)
                 voluntario = voluntario_form.save(commit=False)
                 voluntario.ultimo_editado_por = usuario_logado
                 voluntario.ultimo_editado_por_nome = usuario_logado.id_voluntario.nome
@@ -442,6 +481,26 @@ def editar_usuario_view(request, usuario_id):
                 usuario_editado.ultimo_editado_por_tipo = usuario_logado.tipo
                 usuario_editado.dt_ultima_edicao = timezone.now()
                 usuario_editado.save()
+                registrar_evento(
+                    entidade='VOLUNTARIO',
+                    instancia=voluntario,
+                    acao=(
+                        'MUDANCA_STATUS'
+                        if status_anterior != voluntario.status
+                        else 'EDICAO'
+                    ),
+                    usuario=usuario_logado,
+                    resumo=f'Voluntário "{voluntario.nome}" editado pelo controle de usuários.',
+                    valores_anteriores=voluntario_anterior,
+                )
+                registrar_evento(
+                    entidade='USUARIO',
+                    instancia=usuario_editado,
+                    acao='EDICAO',
+                    usuario=usuario_logado,
+                    resumo=f'Usuário de "{voluntario.nome}" editado.',
+                    valores_anteriores=usuario_anterior,
+                )
                 return redirect('usuarios')
     else:
         form = UsuarioEdicaoForm(initial={'tipo': usuario_editado.tipo})
@@ -462,6 +521,7 @@ def editar_usuario_view(request, usuario_id):
     })
 
 
+@transaction.atomic
 def excluir_usuario_view(request, usuario_id):
     usuario_logado = get_session_usuario(request)
     if not usuario_logado:
@@ -472,11 +532,31 @@ def excluir_usuario_view(request, usuario_id):
     if request.method == 'POST' and usuario_id != usuario_logado.id_usuario:
         usuario_excluido = Usuario.objects.filter(id_usuario=usuario_id).first()
         if usuario_excluido:
+            usuario_anterior = snapshot(usuario_excluido)
+            voluntario = usuario_excluido.id_voluntario
+            voluntario_anterior = snapshot(voluntario)
             usuario_excluido.delete()
+            registrar_evento(
+                entidade='USUARIO',
+                id_registro=usuario_id,
+                acao='EXCLUSAO',
+                usuario=usuario_logado,
+                resumo=f'Usuário de "{voluntario_anterior.get("nome", usuario_id)}" excluído.',
+                valores_anteriores=usuario_anterior,
+            )
+            registrar_evento(
+                entidade='VOLUNTARIO',
+                id_registro=voluntario.pk,
+                acao='EXCLUSAO',
+                usuario=usuario_logado,
+                resumo=f'Voluntário "{voluntario_anterior.get("nome", voluntario.pk)}" excluído junto com seu usuário.',
+                valores_anteriores=voluntario_anterior,
+            )
 
     return redirect('usuarios')
 
 
+@transaction.atomic
 def login_view(request):
     usuario_logado = get_session_usuario(request)
     if usuario_logado:
@@ -497,7 +577,21 @@ def login_view(request):
 
             cadastro_form = CadastroForm(request.POST)
             if cadastro_form.is_valid():
-                cadastro_form.save(cadastrado_por=usuario)
+                voluntario, novo_usuario = cadastro_form.save(cadastrado_por=usuario)
+                registrar_evento(
+                    entidade='VOLUNTARIO',
+                    instancia=voluntario,
+                    acao='CRIACAO',
+                    usuario=usuario,
+                    resumo=f'Voluntário "{voluntario.nome}" cadastrado com usuário.',
+                )
+                registrar_evento(
+                    entidade='USUARIO',
+                    instancia=novo_usuario,
+                    acao='CRIACAO',
+                    usuario=usuario,
+                    resumo=f'Usuário de "{voluntario.nome}" cadastrado.',
+                )
                 return redirect('usuarios')
         else:
             form = LoginForm(request.POST)
@@ -518,6 +612,7 @@ def logout_view(request):
     return render(request, 'sistema/logout.html', {'mensagem': 'Logout realizado com sucesso!'})
 
 
+@transaction.atomic
 def cadastro_voluntario_view(request):
     usuario_logado = get_session_usuario(request)
     if not usuario_logado:
@@ -531,6 +626,13 @@ def cadastro_voluntario_view(request):
             voluntario.cadastrado_por_nome = usuario_logado.id_voluntario.nome
             voluntario.cadastrado_por_tipo = usuario_logado.tipo
             voluntario.save()
+            registrar_evento(
+                entidade='VOLUNTARIO',
+                instancia=voluntario,
+                acao='CRIACAO',
+                usuario=usuario_logado,
+                resumo=f'Voluntário "{voluntario.nome}" cadastrado.',
+            )
             return redirect('voluntarios')
     else:
         form = VoluntarioForm()
@@ -538,6 +640,7 @@ def cadastro_voluntario_view(request):
     return render(request, 'sistema/cadastro-voluntario.html', {'form': form})
 
 
+@transaction.atomic
 def cadastro_usuario_view(request):
     usuario_logado = get_session_usuario(request)
     if not usuario_logado:
@@ -558,6 +661,13 @@ def cadastro_usuario_view(request):
             )
             usuario.set_password(form.cleaned_data['senha'])
             usuario.save()
+            registrar_evento(
+                entidade='USUARIO',
+                instancia=usuario,
+                acao='CRIACAO',
+                usuario=usuario_logado,
+                resumo=f'Usuário de "{voluntario.nome}" cadastrado.',
+            )
             return redirect('usuarios')
     else:
         form = UsuarioForm()
@@ -565,6 +675,7 @@ def cadastro_usuario_view(request):
     return render(request, 'sistema/cadastro-usuario.html', {'form': form})
 
 
+@transaction.atomic
 def cadastro_view(request):
     usuario_logado = get_session_usuario(request)
     if not usuario_logado:
@@ -575,7 +686,21 @@ def cadastro_view(request):
     if request.method == 'POST':
         form = CadastroForm(request.POST)
         if form.is_valid():
-            form.save(cadastrado_por=usuario_logado)
+            voluntario, novo_usuario = form.save(cadastrado_por=usuario_logado)
+            registrar_evento(
+                entidade='VOLUNTARIO',
+                instancia=voluntario,
+                acao='CRIACAO',
+                usuario=usuario_logado,
+                resumo=f'Voluntário "{voluntario.nome}" cadastrado com usuário.',
+            )
+            registrar_evento(
+                entidade='USUARIO',
+                instancia=novo_usuario,
+                acao='CRIACAO',
+                usuario=usuario_logado,
+                resumo=f'Usuário de "{voluntario.nome}" cadastrado.',
+            )
             return redirect('usuarios')
     else:
         form = CadastroForm()
@@ -583,6 +708,7 @@ def cadastro_view(request):
     return render(request, 'sistema/cadastro.html', {'form': form})
 
 
+@transaction.atomic
 def perfil_view(request):
     usuario_id = request.session.get('usuario_id')
     if not usuario_id:
@@ -609,12 +735,21 @@ def perfil_view(request):
                     'Coordenadores não podem alterar o e-mail de um voluntário com usuário cadastrado.'
                 )
             else:
+                valores_anteriores = snapshot(voluntario)
                 voluntario = form.save(commit=False)
                 voluntario.ultimo_editado_por = usuario
                 voluntario.ultimo_editado_por_nome = usuario.id_voluntario.nome
                 voluntario.ultimo_editado_por_tipo = usuario.tipo
                 voluntario.dt_ultima_edicao = timezone.now()
                 voluntario.save()
+                registrar_evento(
+                    entidade='VOLUNTARIO',
+                    instancia=voluntario,
+                    acao='EDICAO',
+                    usuario=usuario,
+                    resumo=f'Perfil do voluntário "{voluntario.nome}" atualizado.',
+                    valores_anteriores=valores_anteriores,
+                )
                 usuario = Usuario.objects.get(id_usuario=usuario_id)
                 return render(request, 'sistema/perfil.html', {
                     'usuario': usuario,
@@ -627,6 +762,7 @@ def perfil_view(request):
     return render(request, 'sistema/perfil.html', {'usuario': usuario, 'form': form})
 
 
+@transaction.atomic
 def alterar_senha_view(request):
     usuario_id = request.session.get('usuario_id')
     if not usuario_id:
@@ -657,6 +793,14 @@ def alterar_senha_view(request):
 
         usuario.set_password(nova_senha)
         usuario.save()
+        registrar_evento(
+            entidade='USUARIO',
+            instancia=usuario,
+            acao='EDICAO',
+            usuario=usuario,
+            resumo='Senha do usuário alterada; credenciais não são armazenadas na auditoria.',
+            valores_novos={'senha_alterada': True},
+        )
         return render(request, 'sistema/perfil.html', {'usuario': usuario, 'mensagem': 'Senha alterada com sucesso!'})
 
     return render(request, 'sistema/alterar-senha.html')

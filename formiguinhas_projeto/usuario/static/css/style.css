@@ -1760,13 +1760,14 @@ details summary {
     cursor: not-allowed;
 }
 
-.volunteer-picker-options {
+.volunteer-picker-options,
+.categoria-options,
+.material-options {
     position: absolute;
     z-index: 20;
     top: calc(100% + 4px);
     right: 0;
     left: 0;
-    display: none;
     max-height: 230px;
     overflow-y: auto;
     padding: 5px;
@@ -1776,15 +1777,26 @@ details summary {
     box-shadow: 0 10px 24px rgba(23, 61, 49, 0.14);
 }
 
+.volunteer-picker-options {
+    display: none;
+}
+
 .volunteer-picker-options.is-open {
     display: block;
 }
 
-.volunteer-picker-option {
+.categoria-options[hidden],
+.material-options[hidden] {
+    display: none;
+}
+
+.volunteer-picker-option,
+.categoria-option,
+.material-option {
     display: flex;
     width: 100%;
     align-items: center;
-    justify-content: space-between;
+    justify-content: flex-start;
     gap: 12px;
     padding: 9px 10px;
     border: 0;
@@ -1796,13 +1808,33 @@ details summary {
     text-align: left;
 }
 
+.volunteer-picker-option {
+    justify-content: space-between;
+}
+
+.categoria-option-nova,
+.material-option-new {
+    margin-top: 4px;
+    border-top: 1px solid #edf1ee;
+    color: #215b45;
+    font-weight: 600;
+}
+
 .volunteer-picker-option[hidden],
-.volunteer-picker-empty[hidden] {
+.volunteer-picker-empty[hidden],
+.categoria-option[hidden],
+.material-option[hidden] {
     display: none;
 }
 
 .volunteer-picker-option:hover,
-.volunteer-picker-option:focus {
+.volunteer-picker-option:focus,
+.categoria-option:hover,
+.categoria-option:focus-visible,
+.categoria-option.is-active,
+.material-option:hover,
+.material-option:focus-visible,
+.material-option.is-active {
     outline: none;
     background: #edf7f0;
 }
@@ -1815,7 +1847,9 @@ details summary {
     white-space: nowrap;
 }
 
-.volunteer-picker-empty {
+.volunteer-picker-empty,
+.categoria-options .material-options-empty,
+.material-options-empty {
     display: block;
     padding: 10px;
     color: #6b7d76;
@@ -1938,6 +1972,12 @@ details summary {
     background: #f9fbfa;
     font-size: 1rem;
     color: #173d31;
+}
+
+.form-control[readonly] {
+    background: #f4f7f5;
+    color: #5b6f68;
+    cursor: default;
 }
 
 .relationship-select {
@@ -2481,11 +2521,6 @@ select.select-control:disabled {
     accent-color: #1b684d;
 }
 
-.donation-form .form-control::placeholder {
-    color: #879890;
-    opacity: 1;
-}
-
 .form-control {
     width: 100%;
 }
@@ -2657,26 +2692,6 @@ select.select-control:disabled {
 
 .inline-volunteer-picker {
     margin-bottom: 2px;
-}
-
-.inline-donor-card .form-control {
-    min-height: 42px;
-}
-
-.inline-donor-card .form-field label {
-    font-size: 0.84rem;
-}
-
-.inline-volunteer-picker .volunteer-picker-options {
-    max-height: 190px;
-}
-
-.relationship-picker .form-control {
-    min-height: 44px;
-}
-
-.relationship-picker .volunteer-picker-options {
-    max-height: 220px;
 }
 
 .relationship-picker-option[aria-selected="true"] {
