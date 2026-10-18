@@ -34,8 +34,8 @@
             <p class="form-subtitle">Consulte o saldo atual de cada material e acompanhe o estoque mínimo.</p>
         </div>
         <div class="estoque-acoes">
-            <a href="{% url 'relatorio_estoque' %}" class="btn btn-outline">Relatório</a>
             {% if usuario.tipo == 'ADMIN' %}
+            <a href="{% url 'relatorios' %}?relatorio=estoque" class="btn btn-outline">Relatório</a>
             <a href="{% url 'movimentacoes_estoque' %}" class="btn btn-outline">Histórico</a>
             <a href="{% url 'doacoes' %}" class="btn btn-outline">Doações</a>
             <a href="{% url 'cadastrar_movimentacao_estoque' %}" class="btn btn-outline">Registrar movimentação</a>
