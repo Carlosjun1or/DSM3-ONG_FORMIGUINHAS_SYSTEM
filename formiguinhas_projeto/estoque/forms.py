@@ -8,6 +8,24 @@ class MaterialChoiceField(forms.ModelChoiceField):
         return f'{obj.nome} — saldo: {obj.saldo} {obj.get_unidade_display()}'
 
 
+class MaterialCategoriaSelect(forms.Select):
+    def create_option(self, name, value, label, selected, index, subindex=None, attrs=None):
+        option = super().create_option(
+            name, value, label, selected, index, subindex=subindex, attrs=attrs
+        )
+        material_id = str(getattr(value, 'value', value))
+        categoria = getattr(self, 'categorias_por_material', {}).get(material_id)
+        nome = getattr(self, 'nomes_por_material', {}).get(material_id)
+        unidade = getattr(self, 'unidades_por_material', {}).get(material_id)
+        if categoria:
+            option['attrs']['data-categoria'] = categoria
+        if nome:
+            option['attrs']['data-nome'] = nome
+        if unidade:
+            option['attrs']['data-unidade'] = unidade
+        return option
+
+
 def aplicar_classes(form):
     """Padrão visual do sistema: form-control (e select-control nas listas)."""
     for field in form.fields.values():
@@ -26,7 +44,7 @@ class MaterialForm(forms.ModelForm):
         model = Material
         fields = [
             'nome', 'codigo', 'categoria', 'descricao', 'quantidade_inicial',
-            'estoque_minimo', 'unidade', 'donativo', 'doador',
+            'estoque_minimo', 'unidade',
         ]
         labels = {
             'codigo': 'Código',
@@ -35,7 +53,6 @@ class MaterialForm(forms.ModelForm):
             'quantidade_inicial': 'Quantidade inicial',
             'estoque_minimo': 'Estoque mínimo',
             'unidade': 'Unidade de medida',
-            'donativo': 'É donativo?',
         }
         error_messages = {
             'codigo': {'unique': 'Já existe um material com este código.'},
@@ -44,11 +61,20 @@ class MaterialForm(forms.ModelForm):
             'nome': forms.TextInput(attrs={
                 'placeholder': 'Ex.: Luvas de proteção tamanho M',
                 'autofocus': True,
+                'autocomplete': 'off',
+                'aria-autocomplete': 'list',
+                'aria-expanded': 'false',
+                'aria-controls': 'materiais-nome-resultados',
             }),
             'codigo': forms.TextInput(attrs={'placeholder': 'Ex.: MAT-0001'}),
             'categoria': forms.TextInput(attrs={
                 'placeholder': 'Digite ou escolha uma categoria',
                 'autocomplete': 'off',
+                'role': 'combobox',
+                'aria-autocomplete': 'list',
+                'aria-expanded': 'false',
+                'aria-controls': 'lista-categorias-material',
+                'aria-haspopup': 'listbox',
             }),
             'descricao': forms.Textarea(attrs={
                 'rows': 3,
@@ -64,9 +90,6 @@ class MaterialForm(forms.ModelForm):
                 'placeholder': 'Ex.: 5',
                 'inputmode': 'numeric',
             }),
-            'doador': forms.TextInput(attrs={
-                'placeholder': 'Nome da pessoa ou organização doadora',
-            }),
         }
 
     def __init__(self, *args, **kwargs):
@@ -74,24 +97,35 @@ class MaterialForm(forms.ModelForm):
         self.fields['unidade'].choices = (
             [('', 'Selecione uma opção')] + list(Material.UNIDADE_CHOICES)
         )
-        self.categorias = list(
+        categorias_existentes = (
             Material.objects.order_by('categoria')
             .values_list('categoria', flat=True)
             .distinct()
         )
+        self.categorias = []
+        categorias_vistas = set()
+        for categoria in categorias_existentes:
+            normalizada = ' '.join(categoria.split())
+            chave = normalizada.casefold()
+            if chave and chave not in categorias_vistas:
+                categorias_vistas.add(chave)
+                self.categorias.append(normalizada)
         aplicar_classes(self)
 
     def clean(self):
         dados = super().clean()
-        categoria = (dados.get('categoria') or '').strip()
-        categoria_existente = next(
-            (valor for valor in self.categorias if valor.casefold() == categoria.casefold()),
-            None,
-        )
-        if categoria_existente:
-            dados['categoria'] = categoria_existente
-        if not dados.get('donativo'):
-            dados['doador'] = ''
+        categoria = ' '.join((dados.get('categoria') or '').split())
+        if categoria:
+            categoria_existente = next(
+                (
+                    existente for existente in self.categorias
+                    if existente.casefold() == categoria.casefold()
+                ),
+                None,
+            )
+            if categoria_existente:
+                categoria = categoria_existente
+        dados['categoria'] = categoria
         return dados
 
 

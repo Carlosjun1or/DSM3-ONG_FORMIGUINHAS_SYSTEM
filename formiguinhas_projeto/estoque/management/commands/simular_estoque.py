@@ -59,8 +59,6 @@ class Command(BaseCommand):
                 'quantidade_inicial': 0,
                 'estoque_minimo': 2,
                 'unidade': 'UNIDADE',
-                'donativo': True,
-                'doador': 'Doador demonstrativo do estoque',
             },
             {
                 'codigo': 'DEMO-HIG-001',

@@ -130,38 +130,12 @@
     position: relative;
 }
 
-.categoria-options {
-    position: absolute;
-    z-index: 10;
-    top: calc(100% - 12px);
-    right: 0;
-    left: 0;
-    max-height: 220px;
-    overflow-y: auto;
-    padding: 6px;
-    border: 1px solid #cfe0d5;
-    border-radius: 10px;
-    background: #fff;
-    box-shadow: 0 8px 24px rgba(23, 61, 49, 0.14);
+.material-name-picker {
+    position: relative;
 }
 
-.categoria-option {
-    display: block;
-    width: 100%;
-    padding: 9px 10px;
-    border: 0;
-    border-radius: 7px;
-    background: transparent;
-    color: #173d31;
-    cursor: pointer;
-    font: inherit;
-    text-align: left;
-}
-
-.categoria-option:hover,
-.categoria-option:focus {
-    background: #edf7f0;
-    outline: none;
+.categoria-combobox {
+    position: relative;
 }
 
 .material-picker {
@@ -181,43 +155,27 @@
     white-space: nowrap;
 }
 
-.material-options {
-    position: absolute;
-    z-index: 10;
-    top: calc(100% + 4px);
-    right: 0;
-    left: 0;
-    max-height: 240px;
-    overflow-y: auto;
-    padding: 6px;
-    border: 1px solid #cfe0d5;
-    border-radius: 10px;
-    background: #fff;
-    box-shadow: 0 8px 24px rgba(23, 61, 49, 0.14);
-}
-
-.material-option {
+.material-name-result {
     display: block;
-    width: 100%;
-    padding: 10px 12px;
-    border: 0;
+    margin: 2px 0;
     border-radius: 7px;
-    background: transparent;
     color: #173d31;
-    cursor: pointer;
-    font: inherit;
-    text-align: left;
+    text-decoration: none !important;
 }
 
-.material-option:hover,
-.material-option.is-active {
+.material-name-result:link,
+.material-name-result:visited,
+.material-name-result:hover,
+.material-name-result:focus {
+    color: #173d31;
+    text-decoration: none !important;
+}
+
+.material-name-result:hover,
+.material-name-result:focus {
     background: #edf7f0;
-}
-
-.material-options-empty {
-    padding: 10px 12px;
-    color: #71827b;
-    font-size: 0.9rem;
+    outline: 2px solid #cfe0d5;
+    outline-offset: -2px;
 }
 
 .material-duplicado-aviso {
@@ -471,4 +429,350 @@
 
 .campo-invalido .form-control:focus {
     outline-color: #b42318;
+}
+
+.estoque-form-card {
+    width: min(100%, 960px);
+    padding: 34px;
+}
+
+.estoque-form-movimentacao {
+    width: min(100%, 900px);
+}
+
+.estoque-form-card > .section-heading {
+    gap: 24px;
+    align-items: flex-start;
+    padding-bottom: 24px;
+}
+
+.estoque-form-card > .section-heading h2 {
+    margin-top: 4px;
+}
+
+.estoque-form-card > .section-heading .form-subtitle {
+    max-width: 620px;
+    margin-bottom: 0;
+    line-height: 1.55;
+}
+
+.estoque-form-card .form-kicker {
+    color: #287252;
+    font-size: 0.75rem;
+    font-weight: 800;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+}
+
+.estoque-form-card .system-form {
+    display: grid;
+    gap: 20px;
+    margin-top: 24px;
+}
+
+.estoque-form-section {
+    min-width: 0;
+    padding: 22px;
+    border: 1px solid #e2ebe5;
+    border-radius: 16px;
+    background: #fbfdfb;
+}
+
+.estoque-form-section-heading {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.estoque-form-section-heading .form-section-number {
+    display: grid;
+    width: 30px;
+    height: 30px;
+    flex: 0 0 30px;
+    place-items: center;
+    border-radius: 50%;
+    background: #e2f1e8;
+    color: #176146;
+    font-size: 0.85rem;
+    font-weight: 800;
+}
+
+.estoque-form-section-heading h3 {
+    margin: 2px 0 4px;
+    color: #173d31;
+    font-size: 1.05rem;
+}
+
+.estoque-form-section-heading p {
+    margin: 0;
+    color: #6b7d76;
+    font-size: 0.85rem;
+    line-height: 1.45;
+}
+
+.estoque-form-card .form-grid {
+    gap: 16px 20px;
+}
+
+.estoque-form-card .form-group {
+    min-width: 0;
+    margin-bottom: 4px;
+}
+
+.estoque-form-orientacao {
+    margin: -4px 0 18px;
+}
+
+.estoque-detalhe-resumo > div {
+    min-height: 88px;
+    align-content: center;
+    padding: 16px 18px;
+}
+
+.estoque-detalhe-resumo > div:last-child strong {
+    color: #287252;
+}
+
+.estoque-nota-form {
+    border-color: #d8e8de;
+    background: #f4faf6;
+}
+
+.estoque-movimentacao-aviso {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    column-gap: 10px;
+    align-items: start;
+    margin: 22px 0 0;
+}
+
+.estoque-movimentacao-aviso strong {
+    color: #174d3c;
+}
+
+.estoque-movimentacao-aviso strong::before {
+    content: "i";
+    display: inline-grid;
+    width: 20px;
+    height: 20px;
+    margin-right: 8px;
+    place-items: center;
+    border-radius: 50%;
+    background: #dcefe3;
+    color: #176146;
+    font-size: 0.8rem;
+}
+
+.movimento-principal-grid .material-picker {
+    grid-column: 1 / -1;
+}
+
+.movimento-orientacao {
+    min-height: 48px;
+    margin: 18px 0 0;
+}
+
+.estoque-form-actions {
+    align-items: center;
+    padding-top: 4px;
+}
+
+.donation-page {
+    padding-top: 8px;
+    padding-bottom: 28px;
+}
+
+.donation-page .form-error-summary {
+    border: 1px solid #f0caca;
+    box-shadow: 0 6px 20px rgba(81, 30, 30, 0.05);
+}
+
+.donation-form {
+    width: min(100%, 1040px);
+    padding: 34px;
+    gap: 16px;
+}
+
+.donation-form-heading {
+    align-items: flex-start;
+    padding-bottom: 22px;
+    border-bottom: 1px solid #e7efe9;
+    margin-bottom: 2px;
+}
+
+.donation-form-heading h2 {
+    margin-bottom: 8px;
+}
+
+.donation-form-heading .form-subtitle {
+    margin-bottom: 0;
+    line-height: 1.5;
+}
+
+.donation-form > .form-section {
+    padding: 24px;
+    border-color: #e0eae3;
+    border-radius: 16px;
+    background: #fbfdfb;
+}
+
+.donation-form .form-section-heading {
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 22px;
+}
+
+.donation-form .form-section-heading h3 {
+    margin: 0 0 4px;
+    font-size: 1.05rem;
+}
+
+.donation-form .form-section-heading p {
+    margin: 0;
+    line-height: 1.45;
+}
+
+.donation-form .form-field {
+    min-width: 0;
+    margin-bottom: 12px;
+}
+
+.donation-form .material-card {
+    min-width: 0;
+    margin: 16px 0;
+    padding: 20px;
+    border-color: #d9e6dd;
+    border-radius: 14px;
+    background: #fff;
+    box-shadow: 0 4px 14px rgba(23, 61, 49, 0.04);
+}
+
+.donation-form .material-card legend {
+    padding: 0 10px;
+    color: #174d3c;
+    font-size: 0.95rem;
+}
+
+.donation-form .material-number {
+    display: inline-grid;
+    width: 24px;
+    height: 24px;
+    margin-left: 4px;
+    place-items: center;
+    border-radius: 50%;
+    background: #e2f1e8;
+    color: #176146;
+    font-size: 0.8rem;
+}
+
+.donation-form .material-grid {
+    gap: 12px 18px;
+}
+
+.donation-form .material-card .form-field {
+    margin-bottom: 4px;
+}
+
+.donation-form .material-card .material-picker,
+.donation-form .material-card .material-combobox {
+    min-width: 0;
+}
+
+.donation-form .remove-material {
+    margin-top: 10px;
+    color: #a33b37;
+}
+
+.donation-form #add-material {
+    margin-top: 4px;
+}
+
+.donation-form-actions {
+    justify-content: flex-end;
+    padding-top: 20px;
+    border-top: 1px solid #e7efe9;
+    margin-top: 2px;
+}
+
+.donation-form .errorlist {
+    padding-left: 16px;
+}
+
+@media (max-width: 700px) {
+    .estoque-form-card,
+    .donation-form {
+        padding: 24px 20px;
+    }
+
+    .estoque-form-card > .section-heading {
+        align-items: flex-start;
+    }
+
+    .estoque-form-section,
+    .donation-form > .form-section {
+        padding: 18px;
+    }
+
+    .donation-form .form-section-heading {
+        flex-wrap: wrap;
+    }
+
+    .donation-form .form-section-heading > .btn {
+        margin-left: 42px;
+    }
+}
+
+@media (max-width: 480px) {
+    .estoque-form-card,
+    .donation-form {
+        padding: 20px 16px;
+        border-radius: 14px;
+    }
+
+    .estoque-form-card > .section-heading {
+        gap: 16px;
+    }
+
+    .estoque-form-card > .section-heading h2,
+    .donation-form-heading h2 {
+        font-size: 1.55rem;
+    }
+
+    .estoque-form-section,
+    .donation-form > .form-section {
+        padding: 16px 14px;
+    }
+
+    .estoque-form-card .form-grid,
+    .donation-form .form-grid.two-columns,
+    .donation-form .material-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .estoque-form-actions,
+    .donation-form-actions {
+        flex-direction: column-reverse;
+        align-items: stretch;
+    }
+
+    .estoque-form-actions .btn,
+    .donation-form-actions .btn,
+    .estoque-form-card .estoque-acoes .btn {
+        width: 100%;
+        justify-content: center;
+        text-align: center;
+    }
+
+    .estoque-movimentacao-aviso {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .estoque-movimentacao-aviso strong {
+        margin-bottom: 4px;
+    }
+
+    .donation-form .material-card {
+        padding: 16px 12px;
+    }
 }

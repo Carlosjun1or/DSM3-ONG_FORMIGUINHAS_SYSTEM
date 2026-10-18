@@ -28,7 +28,18 @@ def criar_usuario(nome, email, tipo):
 
 
 def criar_material(**kw):
-    dados = dict(nome='Tinta', codigo='T1', categoria='Pintura', unidade='LITRO', quantidade_inicial=10)
+    codigo = kw.get('codigo', 'T1')
+    nome = kw.get('nome', 'Tinta')
+    categoria = kw.get('categoria')
+    if categoria is None:
+        categoria = f'Categoria-{codigo or nome}'
+    dados = dict(
+        nome=nome,
+        codigo=codigo,
+        categoria=categoria,
+        unidade='LITRO',
+        quantidade_inicial=10,
+    )
     dados.update(kw)
     return Material.objects.create(**dados)
 
@@ -115,6 +126,25 @@ class FormulariosEstoqueTests(TestCase):
         self.assertContains(resposta, 'Digite o nome ou código do material')
         self.assertContains(resposta, 'aria-controls="material-options"')
         self.assertContains(resposta, 'name="material"')
+
+    def test_tela_de_movimentacao_preseleciona_material_da_url(self):
+        admin = criar_usuario('Administrador', 'admin-material-url@teste.org', 'ADMIN')
+        sessao = self.client.session
+        sessao['usuario_id'] = admin.id_usuario
+        sessao['usuario_nome'] = admin.id_voluntario.nome
+        sessao['usuario_tipo'] = admin.tipo
+        sessao.save()
+        material = criar_material(nome='Luvas', codigo='LUV-URL')
+
+        resposta = self.client.get(
+            reverse('cadastrar_movimentacao_estoque'),
+            {'material': material.pk},
+        )
+
+        self.assertEqual(resposta.status_code, 200)
+        self.assertEqual(resposta.context['form'].initial['material'], material)
+        self.assertContains(resposta, f'value="{material.pk}" selected')
+        self.assertContains(resposta, 'Luvas — saldo: 10 Litro')
 
 
 class AcessoTests(EstoqueTestCase):
@@ -210,7 +240,41 @@ class MaterialTests(EstoqueTestCase):
         resposta = self.client.get(reverse('cadastrar_material'))
 
         self.assertContains(resposta, 'materiais-existentes')
+        self.assertContains(resposta, 'data-material-name-options')
+        self.assertContains(resposta, 'materiais-nome-resultados')
         self.assertEqual(resposta.context['materiais_existentes'][0]['nome'], 'Álcool em gel')
+        self.assertEqual(resposta.context['materiais_existentes'][0]['codigo'], 'ALC-1')
+
+    def test_busca_de_material_existente_inclui_categoria_para_consulta(self):
+        criar_material(
+            nome='Álcool em gel',
+            codigo='ALC-1',
+            categoria='Higiene',
+        )
+        self.entrar(self.admin)
+
+        resposta = self.client.get(reverse('cadastrar_material'))
+
+        self.assertEqual(resposta.context['materiais_existentes'][0]['categoria'], 'Higiene')
+        self.assertContains(resposta, 'data-material-edit-url')
+        self.assertContains(resposta, 'data-categoria-empty')
+        self.assertContains(resposta, 'data-value="Higiene"')
+        self.assertContains(resposta, 'aria-haspopup="listbox"')
+
+    def test_edicao_nao_exibe_seletor_de_busca_de_material(self):
+        self.entrar(self.admin)
+        material = criar_material(nome='Luvas', codigo='LUV-EDIT')
+
+        resposta = self.client.get(reverse('editar_material', args=[material.pk]))
+
+        self.assertEqual(resposta.status_code, 200)
+        self.assertNotContains(resposta, 'id="materiais-nome-resultados"')
+        self.assertNotContains(resposta, 'id="materiais-existentes"')
+        self.assertContains(
+            resposta,
+            f'href="{reverse("cadastrar_movimentacao_estoque")}?material={material.pk}"',
+        )
+        self.assertContains(resposta, 'Registrar movimentação deste material')
 
     def test_nome_duplicado_ignorando_espacos(self):
         criar_material(nome='Álcool em gel', codigo='A')
@@ -228,15 +292,24 @@ class MaterialTests(EstoqueTestCase):
             self.assertIn(esperado, rotulos)
         self.assertFalse(MaterialForm(data=dados_material(unidade='xyz')).is_valid())
 
-    def test_doador_limpo_quando_nao_donativo(self):
-        form = MaterialForm(data=dados_material(doador='Fulano'))
+    def test_categoria_aceita_espacos_e_normaliza(self):
+        form = MaterialForm(data=dados_material(categoria='  Pintura  '))
         self.assertTrue(form.is_valid(), form.errors)
-        self.assertEqual(form.cleaned_data['doador'], '')
+        self.assertEqual(form.cleaned_data['categoria'], 'Pintura')
 
-    def test_doador_mantido_quando_donativo(self):
-        form = MaterialForm(data=dados_material(donativo='on', doador='Fulano'))
+    def test_categoria_existente_e_reutilizada_sem_variacao_de_caixa(self):
+        criar_material(categoria='Equipamentos')
+        form = MaterialForm(data=dados_material(categoria='  equipamentos  '))
+
         self.assertTrue(form.is_valid(), form.errors)
-        self.assertEqual(form.cleaned_data['doador'], 'Fulano')
+        self.assertEqual(form.cleaned_data['categoria'], 'Equipamentos')
+
+    def test_formulario_nao_exibe_origem_removida_do_material(self):
+        self.entrar(self.admin)
+        resposta = self.client.get(reverse('cadastrar_material'))
+
+        self.assertNotContains(resposta, 'id_donativo')
+        self.assertNotContains(resposta, 'id_doador')
 
     def test_edicao_registra_editor_e_valores_anteriores(self):
         material = criar_material(nome='Tinta', codigo='T1')
@@ -407,6 +480,45 @@ class DoacaoTests(EstoqueTestCase):
         response = self.client.get(reverse('cadastrar_doacao_estoque'))
         self.assertRedirects(response, reverse('cadastro_doacao'), fetch_redirect_response=False)
 
+    def test_lista_materiais_mostra_origem_derivada_da_doacao(self):
+        doador = Doador.objects.create(
+            tipo=Doador.PESSOA_FISICA,
+            nome='Maria',
+            cadastrado_por=self.admin,
+            cadastrado_por_nome='Administrador',
+        )
+        doacao = Doacao.objects.create(
+            tipo=Doacao.MATERIAL,
+            doador=doador,
+            status=Doacao.CONFIRMADA,
+            registrado_por=self.admin,
+            registrado_por_nome='Administrador',
+            registrado_por_tipo='ADMIN',
+        )
+        item = ItemDoacaoMaterial.objects.create(
+            doacao=doacao,
+            material=self.material,
+            nome=self.material.nome,
+            categoria=self.material.categoria,
+            quantidade=2,
+            unidade=self.material.get_unidade_display(),
+            condicao=ItemDoacaoMaterial.CONDICAO_NOVO,
+        )
+        MovimentacaoEstoque.objects.create(
+            material=self.material,
+            tipo='ENTRADA',
+            quantidade=2,
+            origem='DOACAO',
+            doacao=doacao,
+            item_doacao=item,
+            registrado_por=self.admin,
+            registrado_por_nome='Administrador',
+        )
+
+        resposta = self.client.get(reverse('materiais'))
+
+        self.assertContains(resposta, 'Donativo (Maria)')
+
     def test_gravacao_direta_nao_substitui_fluxo_de_confirmacao(self):
         doador = Doador.objects.create(
             tipo=Doador.PESSOA_FISICA,
@@ -498,7 +610,40 @@ class ConsultaTests(EstoqueTestCase):
             self.client.get(reverse('materiais'))
 
     def test_relatorio_por_origem(self):
-        criar_material(nome='Doado', codigo='D1', donativo=True, quantidade_inicial=3)
+        material_doado = criar_material(nome='Doado', codigo='D1', quantidade_inicial=3)
+        doador = Doador.objects.create(
+            tipo=Doador.PESSOA_FISICA,
+            nome='Maria',
+            cadastrado_por=self.admin,
+            cadastrado_por_nome='Administrador',
+        )
+        doacao = Doacao.objects.create(
+            tipo=Doacao.MATERIAL,
+            doador=doador,
+            status=Doacao.CONFIRMADA,
+            registrado_por=self.admin,
+            registrado_por_nome='Administrador',
+            registrado_por_tipo='ADMIN',
+        )
+        ItemDoacaoMaterial.objects.create(
+            doacao=doacao,
+            material=material_doado,
+            nome='Doado',
+            categoria='Pintura',
+            quantidade=3,
+            unidade='unidades',
+            condicao=ItemDoacaoMaterial.CONDICAO_NOVO,
+        )
+        MovimentacaoEstoque.objects.create(
+            material=material_doado,
+            tipo='ENTRADA',
+            quantidade=3,
+            origem='DOACAO',
+            doacao=doacao,
+            item_doacao=ItemDoacaoMaterial.objects.get(material=material_doado),
+            registrado_por=self.admin,
+            registrado_por_nome='Administrador',
+        )
         r = self.client.get(reverse('relatorio_estoque'))
         self.assertEqual(r.context['total_donativos'], 1)
         self.assertEqual(r.context['quantidade_donativos'], 3)
@@ -597,7 +742,40 @@ class FiltroOrigemELiveTests(EstoqueTestCase):
     def setUp(self):
         super().setUp()
         self.entrar(self.admin)
-        self.doado = criar_material(nome='Doado', codigo='D1', donativo=True, doador='Ana')
+        self.doado = criar_material(nome='Doado', codigo='D1')
+        doador = Doador.objects.create(
+            tipo=Doador.PESSOA_FISICA,
+            nome='Ana',
+            cadastrado_por=self.admin,
+            cadastrado_por_nome='Administrador',
+        )
+        doacao = Doacao.objects.create(
+            tipo=Doacao.MATERIAL,
+            doador=doador,
+            status=Doacao.CONFIRMADA,
+            registrado_por=self.admin,
+            registrado_por_nome='Administrador',
+            registrado_por_tipo='ADMIN',
+        )
+        item = ItemDoacaoMaterial.objects.create(
+            doacao=doacao,
+            material=self.doado,
+            nome='Doado',
+            categoria='Pintura',
+            quantidade=1,
+            unidade='unidades',
+            condicao=ItemDoacaoMaterial.CONDICAO_NOVO,
+        )
+        MovimentacaoEstoque.objects.create(
+            material=self.doado,
+            tipo='ENTRADA',
+            quantidade=1,
+            origem='DOACAO',
+            doacao=doacao,
+            item_doacao=item,
+            registrado_por=self.admin,
+            registrado_por_nome='Administrador',
+        )
         self.comprado = criar_material(nome='Comprado', codigo='C1')
         MovimentacaoEstoque.objects.create(
             material=self.comprado, tipo='ENTRADA', quantidade=1, origem='COMPRA')
