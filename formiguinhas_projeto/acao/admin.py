@@ -1,5 +1,6 @@
 from django.contrib import admin
 
+from auditoria.admin_utils import AuditedModelAdmin
 from .models import (
     Acao,
     AcaoEquipe,
@@ -11,35 +12,35 @@ from .models import (
 
 
 @admin.register(Acao)
-class AcaoAdmin(admin.ModelAdmin):
+class AcaoAdmin(AuditedModelAdmin):
     list_display = ('id_acao', 'tipo', 'praia', 'data', 'status')
     list_filter = ('tipo', 'status', 'praia')
     search_fields = ('local', 'descricao')
 
 
 @admin.register(AcaoImagem)
-class AcaoImagemAdmin(admin.ModelAdmin):
+class AcaoImagemAdmin(AuditedModelAdmin):
     list_display = ('id_acao_imagem', 'acao', 'descricao', 'dt_cadastro')
     list_filter = ('acao__tipo',)
     search_fields = ('acao__local', 'descricao')
 
 
 @admin.register(AcaoEquipe)
-class AcaoEquipeAdmin(admin.ModelAdmin):
+class AcaoEquipeAdmin(AuditedModelAdmin):
     list_display = ('id_acao_equipe', 'acao', 'equipe')
     list_filter = ('acao__tipo', 'equipe__praia')
     search_fields = ('acao__local', 'equipe__nome')
 
 
 @admin.register(AcaoParticipante)
-class AcaoParticipanteAdmin(admin.ModelAdmin):
+class AcaoParticipanteAdmin(AuditedModelAdmin):
     list_display = ('id_acao_participante', 'acao', 'voluntario', 'status', 'compareceu')
     list_filter = ('status', 'compareceu', 'acao__tipo')
     search_fields = ('voluntario__nome', 'acao__local')
 
 
 @admin.register(AcaoParticipanteHistorico)
-class AcaoParticipanteHistoricoAdmin(admin.ModelAdmin):
+class AcaoParticipanteHistoricoAdmin(AuditedModelAdmin):
     list_display = (
         'id_historico',
         'acao',
@@ -53,7 +54,7 @@ class AcaoParticipanteHistoricoAdmin(admin.ModelAdmin):
 
 
 @admin.register(AcaoResponsavel)
-class AcaoResponsavelAdmin(admin.ModelAdmin):
+class AcaoResponsavelAdmin(AuditedModelAdmin):
     list_display = ('id_acao_responsavel', 'acao', 'voluntario', 'papel')
     list_filter = ('papel', 'acao__tipo')
     search_fields = ('voluntario__nome', 'acao__local')
