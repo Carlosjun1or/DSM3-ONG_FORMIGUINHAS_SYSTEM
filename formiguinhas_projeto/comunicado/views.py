@@ -149,6 +149,7 @@ def internos(request):
     })
 
 
+@transaction.atomic
 def interno_detalhe(request, comunicado_id):
     usuario = get_session_usuario(request)
     if not usuario:
@@ -159,7 +160,18 @@ def interno_detalhe(request, comunicado_id):
         _vigentes_internos(usuario),
         id_comunicado=comunicado_id,
     )
-    ComunicadoLeitura.objects.get_or_create(comunicado=comunicado, usuario=usuario)
+    leitura, criada = ComunicadoLeitura.objects.get_or_create(
+        comunicado=comunicado,
+        usuario=usuario,
+    )
+    if criada:
+        registrar_evento(
+            entidade='COMUNICADO_LEITURA',
+            instancia=leitura,
+            acao='VINCULO',
+            usuario=usuario,
+            resumo=f'{usuario.id_voluntario.nome} leu o comunicado "{comunicado.titulo}".',
+        )
     return render(request, 'sistema/comunicado-detalhe.html', {'comunicado': comunicado})
 
 
@@ -365,6 +377,7 @@ def relacionamentos(request):
     })
 
 
+@transaction.atomic
 def admin_status(request, comunicado_id, acao):
     usuario, resposta = _admin(request)
     if resposta:
@@ -441,11 +454,13 @@ def temas(request):
     })
 
 
+@transaction.atomic
 def tema_form(request, tema_id=None):
     usuario, resposta = _admin(request)
     if resposta:
         return resposta
     tema = get_object_or_404(Tema, pk=tema_id) if tema_id else None
+    valores_anteriores = snapshot(tema) if tema else {}
     form = TemaForm(request.POST or None, instance=tema)
     if request.method == 'POST' and form.is_valid():
         item = form.save(commit=False)
@@ -454,6 +469,7 @@ def tema_form(request, tema_id=None):
             item.criado_por = usuario
         item.save()
         registrar_evento(entidade='TEMA_COMUNICADO', instancia=item, acao='EDICAO' if tema else 'CRIACAO',
-                         usuario=usuario, resumo='Tema de comunicados salvo')
+                         usuario=usuario, resumo='Tema de comunicados salvo',
+                         valores_anteriores=valores_anteriores)
         return redirect('temas_comunicados')
     return render(request, 'sistema/tema-form.html', {'form': form, 'tema': tema})
