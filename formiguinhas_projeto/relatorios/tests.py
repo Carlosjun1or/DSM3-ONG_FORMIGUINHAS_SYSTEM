@@ -284,7 +284,17 @@ class MateriaisUtilizadosTests(RelatoriosTestCase):
             {'material': self.material.pk, 'quantidade': 3},
         )
 
-        self.assertRedirects(resposta, reverse('acao_detalhe', args=[self.acao.pk]))
+        self.assertRedirects(
+            resposta,
+            reverse('acao_detalhe', args=[self.acao.pk]),
+            fetch_redirect_response=False,
+        )
+        resposta_detalhe = self.client.get(resposta.url)
+        self.assertContains(
+            resposta_detalhe,
+            'Material utilizado registrado e saldo atualizado.',
+        )
+        self.assertContains(resposta_detalhe, 'alert-success')
         movimento = MovimentacaoEstoque.objects.get(acao=self.acao)
         self.assertEqual(movimento.tipo, 'SAIDA')
         self.assertEqual(movimento.quantidade, 3)
@@ -304,9 +314,18 @@ class MateriaisUtilizadosTests(RelatoriosTestCase):
         resposta = self.client.post(
             reverse('adicionar_material_utilizado_acao', args=[self.acao.pk]),
             {'material': self.material.pk, 'quantidade': 11},
+            follow=True,
         )
 
-        self.assertRedirects(resposta, reverse('acao_detalhe', args=[self.acao.pk]))
+        self.assertEqual(
+            resposta.redirect_chain,
+            [(reverse('acao_detalhe', args=[self.acao.pk]), 302)],
+        )
+        self.assertContains(
+            resposta,
+            'A quantidade utilizada não pode superar o saldo atual.',
+        )
+        self.assertContains(resposta, 'value="11"')
         self.assertFalse(MovimentacaoEstoque.objects.filter(acao=self.acao).exists())
         self.assertEqual(self.material.calcular_saldo(), 10)
 
