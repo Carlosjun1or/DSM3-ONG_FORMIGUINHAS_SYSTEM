@@ -1,0 +1,152 @@
+{% extends 'sistema/template-sistema.html' %}
+{% load static %}
+
+{% block titulo %}Relatórios | Sistema{% endblock %}
+{% block page_title %}Relatórios e indicadores{% endblock %}
+{% block estilos %}<link rel="stylesheet" href="{% static 'relatorios/relatorios.css' %}?v=4">{% endblock %}
+
+{% block conteudo %}
+<section class="card volunteer-control reports-page">
+    <div class="section-heading reports-heading">
+        <div>
+            <span class="section-kicker">Gestão da ONG</span>
+            <h2>Central de relatórios</h2>
+            <p class="form-subtitle">Escolha o relatório, aplique os filtros e exporte os dados atualizados.</p>
+        </div>
+        <div class="reports-export-actions">
+            <button type="submit" form="report-filters" name="formato" value="xlsx" class="btn btn-outline">Baixar Excel</button>
+            <button type="submit" form="report-filters" name="formato" value="pdf" class="btn btn-primary">Baixar PDF</button>
+            {% if form.relatorio.value == 'doacoes' %}
+            <button type="submit" form="report-filters" name="formato" value="csv" class="btn btn-outline">Baixar CSV</button>
+            {% endif %}
+        </div>
+    </div>
+
+    <nav class="reports-switcher" aria-label="Alternar tipo de relatório">
+        {% for valor, rotulo in report_types %}
+        <a href="{% url 'relatorios' %}?relatorio={{ valor }}" class="reports-switch-link{% if form.relatorio.value == valor %} is-active{% endif %}"{% if form.relatorio.value == valor %} aria-current="page"{% endif %}>{{ rotulo }}</a>
+        {% endfor %}
+    </nav>
+
+    <form id="report-filters" method="get" class="volunteer-filters reports-filters">
+        <div class="form-group report-filter" data-report-filter="selector">
+            <label for="{{ form.relatorio.id_for_label }}">{{ form.relatorio.label }}</label>
+            {{ form.relatorio }}
+            {% for error in form.relatorio.errors %}<small class="field-error">{{ error }}</small>{% endfor %}
+        </div>
+        <div class="form-group report-filter" data-report-filter="start">
+            <label for="{{ form.data_inicio.id_for_label }}">{{ form.data_inicio.label }}</label>
+            {{ form.data_inicio }}
+            {% for error in form.data_inicio.errors %}<small class="field-error">{{ error }}</small>{% endfor %}
+        </div>
+        <div class="form-group report-filter" data-report-filter="end">
+            <label for="{{ form.data_fim.id_for_label }}">{{ form.data_fim.label }}</label>
+            {{ form.data_fim }}
+            {% for error in form.data_fim.errors %}<small class="field-error">{{ error }}</small>{% endfor %}
+        </div>
+        <div class="form-group report-filter" data-report-filter="period">
+            <label for="{{ form.periodo.id_for_label }}">{{ form.periodo.label }}</label>
+            {{ form.periodo }}
+        </div>
+        <div class="form-group report-filter" data-report-filter="beach">
+            <label for="{{ form.praia.id_for_label }}">{{ form.praia.label }}</label>
+            {{ form.praia }}
+        </div>
+        <div class="form-group report-filter" data-report-filter="action">
+            <label for="{{ form.acao.id_for_label }}">{{ form.acao.label }}</label>
+            {{ form.acao }}
+        </div>
+        <div class="form-group report-filter" data-report-filter="action-type">
+            <label for="{{ form.tipo_acao.id_for_label }}">{{ form.tipo_acao.label }}</label>
+            {{ form.tipo_acao }}
+        </div>
+        <div class="form-group report-filter" data-report-filter="waste-type">
+            <label for="{{ form.tipo_residuo.id_for_label }}">{{ form.tipo_residuo.label }}</label>
+            {{ form.tipo_residuo }}
+        </div>
+        {% for error in form.non_field_errors %}<div class="error-box report-form-error">{{ error }}</div>{% endfor %}
+        <div class="filter-actions report-filter-actions">
+            <button type="submit" class="btn btn-primary">Aplicar filtros</button>
+            <a href="{% url 'relatorios' %}?relatorio={{ form.relatorio.value|default:'indicadores' }}" class="form-link">Limpar filtros</a>
+        </div>
+    </form>
+
+    {% if form.errors and request.GET %}
+    <div class="error-box report-form-error" role="alert">Revise os filtros informados antes de gerar o relatório.</div>
+    {% endif %}
+
+    {% if report %}
+    <div class="report-result">
+        <div class="report-result-heading">
+            <div>
+                <span class="section-kicker">Resultado</span>
+                <h2>{{ report.title }}</h2>
+                <p class="form-subtitle">Período: {{ report.period }}</p>
+            </div>
+        </div>
+        {% if report.attendance_action %}
+        <div class="attendance-report-heading">
+            <strong>{{ report.attendance_action }}</strong>
+            <span>{{ report.attendance_action.data|date:'d/m/Y' }}</span>
+        </div>
+        {% endif %}
+
+        {% if report.metrics %}
+        <div class="card-grid volunteer-metrics reports-metrics{% if form.relatorio.value == 'geral' %} reports-metrics-general{% endif %}">
+            {% for label, value in report.metrics %}
+            <article class="card report-metric-card{% if form.relatorio.value == 'geral' %} report-metric-card--general{% endif %}{% if form.relatorio.value == 'geral' and label == 'Resíduos coletados' or form.relatorio.value == 'geral' and label == 'Saldo atual em estoque' %} report-metric-card--detail{% endif %}">
+                <span class="section-kicker">{{ label }}</span>
+                <div class="metric">{{ value }}</div>
+            </article>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% for section in report.sections %}
+        <section class="report-section">
+            <h3>{{ section.title }}</h3>
+            {% if section.rows %}
+            <div class="table-wrap reports-table-wrap">
+                <table class="data-table reports-table">
+                    <thead><tr>{% for header in section.headers %}<th>{{ header }}</th>{% endfor %}</tr></thead>
+                    <tbody>
+                        {% for row in section.rows %}
+                        <tr>{% for value in row %}<td>{{ value|default:'-' }}</td>{% endfor %}</tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty-state table-empty"><h3>Nenhum dado encontrado neste período</h3><p class="form-subtitle">Altere os filtros e tente novamente.</p></div>
+            {% endif %}
+        </section>
+        {% endfor %}
+        <p class="reports-freshness">Dados consultados no momento da geração do relatório.</p>
+    </div>
+    {% endif %}
+</section>
+
+<script>
+    (function () {
+        var seletor = document.getElementById('{{ form.relatorio.id_for_label }}');
+        var camposPorRelatorio = {
+            geral: ['selector', 'start', 'end', 'beach'],
+            indicadores: ['selector', 'period', 'beach'],
+            acoes: ['selector', 'start', 'end', 'beach', 'action', 'action-type'],
+            voluntarios: ['selector', 'start', 'end', 'action-type'],
+            presenca: ['selector', 'start', 'end', 'beach', 'action', 'action-type'],
+            residuos: ['selector', 'start', 'end', 'beach', 'action', 'waste-type'],
+            estoque: ['selector', 'start', 'end'],
+            doacoes: ['selector', 'start', 'end']
+        };
+        function atualizarFiltros() {
+            var visiveis = camposPorRelatorio[seletor.value] || camposPorRelatorio.indicadores;
+            document.querySelectorAll('[data-report-filter]').forEach(function (campo) {
+                campo.hidden = visiveis.indexOf(campo.getAttribute('data-report-filter')) === -1;
+            });
+        }
+        seletor.addEventListener('change', atualizarFiltros);
+        atualizarFiltros();
+    }());
+</script>
+{% endblock %}
