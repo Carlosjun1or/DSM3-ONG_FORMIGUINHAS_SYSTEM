@@ -95,6 +95,14 @@ class RenderizacaoRelatoriosTests(RelatoriosTestCase):
         hoje = date.today().isoformat()
         return {'data_inicio': hoje, 'data_fim': hoje}
 
+    def test_rota_padrao_abre_relatorio_geral(self):
+        resposta = self.client.get(reverse('relatorios'))
+
+        self.assertEqual(resposta.status_code, 200)
+        self.assertContains(resposta, '<h2>Relatório geral</h2>')
+        self.assertContains(resposta, 'name="relatorio"')
+        self.assertContains(resposta, '<option value="geral" selected')
+
     def test_renderiza_os_oito_tipos_de_relatorio(self):
         tipos = ('geral', 'indicadores', 'acoes', 'voluntarios', 'presenca', 'residuos', 'estoque', 'doacoes')
         for tipo in tipos:
