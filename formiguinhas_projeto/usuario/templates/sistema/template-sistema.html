@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block titulo %}Formiguinhas | Sistema{% endblock %}</title>
-    <link rel="stylesheet" href="{% static 'css/style.css' %}?v=54">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}?v=58">
     {% block estilos %}{% endblock %}
 </head>
 <body class="system-page">
@@ -78,6 +78,12 @@
                         <span class="notification-icon" aria-hidden="true">🔔</span>
                         {% if comunicados_nao_lidos_count %}<span class="notification-badge">{{ comunicados_nao_lidos_count }}</span>{% endif %}
                     </a>
+                    {% if request.session.usuario_tipo == 'ADMIN' %}
+                    <a href="{% url 'auditoria_global' %}" class="notification-link" aria-label="Auditoria global{% if auditoria_nao_lida_count %}, {{ auditoria_nao_lida_count }} alterações novas{% endif %}" title="Auditoria global">
+                        <span class="notification-icon" aria-hidden="true">📋</span>
+                        {% if auditoria_nao_lida_count %}<span class="notification-badge" aria-hidden="true">!</span>{% endif %}
+                    </a>
+                    {% endif %}
                     <a class="btn btn-outline" href="{% url 'perfil' %}">Perfil</a>
                 </div>
             </header>
