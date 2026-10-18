@@ -1,5 +1,6 @@
 from django.db import transaction
 from django.db.models import Q
+from django.core.exceptions import ValidationError
 from django.contrib import messages
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
@@ -26,6 +27,9 @@ from .models import (
 )
 from residuo.forms import DestinacaoResiduoForm, ResiduoColetadoForm
 from auditoria.services import registrar_evento, snapshot
+from estoque.models import MovimentacaoEstoque
+from estoque.services import registrar_movimentacao
+from .forms import MaterialUtilizadoForm
 
 
 def preencher_auditoria(acao, usuario, criacao=False):
@@ -260,6 +264,9 @@ def acao_detalhe_view(request, acao_id):
     responsavel_form = AcaoResponsavelForm(acao=acao)
     imagem_form = AcaoImagemForm()
     residuo_form = ResiduoColetadoForm()
+    materiais_utilizados = acao.movimentacoes_estoque.filter(
+        tipo='SAIDA',
+    ).select_related('material').order_by('-dt_cadastro')
     responsaveis = acao.responsaveis.select_related('voluntario').order_by(
         'papel',
         'voluntario__nome',
@@ -289,7 +296,46 @@ def acao_detalhe_view(request, acao_id):
         'residuos': acao.residuos_coletados.all(),
         'residuo_form': residuo_form,
         'destinacao_form': DestinacaoResiduoForm(),
+        'material_utilizado_form': MaterialUtilizadoForm(),
+        'materiais_utilizados': materiais_utilizados,
     })
+
+
+@transaction.atomic
+def adicionar_material_utilizado_view(request, acao_id):
+    usuario = get_session_usuario(request)
+    if not usuario:
+        return redirect('login')
+    if usuario.tipo != 'ADMIN':
+        return render_acesso_bloqueado(request)
+    if request.method != 'POST':
+        return redirect('acao_detalhe', acao_id=acao_id)
+
+    acao = get_object_or_404(Acao, id_acao=acao_id)
+    form = MaterialUtilizadoForm(request.POST)
+    if form.is_valid():
+        material = form.cleaned_data['material']
+        quantidade = form.cleaned_data['quantidade']
+        movimentacao = MovimentacaoEstoque(
+            material=material,
+            acao=acao,
+            tipo='SAIDA',
+            quantidade=quantidade,
+            justificativa=f'Uso na ação #{acao.pk}: {acao.get_tipo_display()} - {acao.data:%d/%m/%Y}',
+        )
+        try:
+            registrar_movimentacao(movimentacao, usuario)
+        except ValidationError as erro:
+            messages.error(request, str(erro))
+        else:
+            messages.success(request, 'Material utilizado registrado e saldo atualizado.')
+            return redirect('acao_detalhe', acao_id=acao.pk)
+
+    for campo, erros in form.errors.items():
+        for erro in erros:
+            messages.error(request, erro)
+    messages.error(request, 'Não foi possível registrar o material utilizado. Verifique os dados.')
+    return redirect('acao_detalhe', acao_id=acao.pk)
 
 
 @transaction.atomic

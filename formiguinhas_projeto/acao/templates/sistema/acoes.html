@@ -22,7 +22,10 @@
             <p class="form-subtitle">Gerencie mutirões e coletas voluntárias da ONG.</p>
         </div>
         {% if usuario.tipo == 'ADMIN' %}
-        <a href="{% url 'cadastro_acao' %}" class="btn btn-primary">Nova ação</a>
+        <div class="table-actions">
+            <a href="{% url 'relatorios' %}?relatorio=acoes" class="btn btn-outline">Relatório de ações</a>
+            <a href="{% url 'cadastro_acao' %}" class="btn btn-primary">Nova ação</a>
+        </div>
         {% endif %}
     </div>
 

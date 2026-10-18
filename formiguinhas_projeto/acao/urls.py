@@ -7,6 +7,7 @@ urlpatterns = [
     path('cadastrar/', views.cadastro_acao_view, name='cadastro_acao'),
     path('<int:acao_id>/', views.acao_detalhe_view, name='acao_detalhe'),
     path('<int:acao_id>/editar/', views.editar_acao_view, name='editar_acao'),
+    path('<int:acao_id>/materiais-utilizados/adicionar/', views.adicionar_material_utilizado_view, name='adicionar_material_utilizado_acao'),
     path('<int:acao_id>/excluir/', views.excluir_acao_view, name='excluir_acao'),
     path('<int:acao_id>/status/', views.atualizar_status_acao_view, name='atualizar_status_acao'),
     path('<int:acao_id>/participantes/adicionar/', views.adicionar_participante_view, name='adicionar_participante_acao'),

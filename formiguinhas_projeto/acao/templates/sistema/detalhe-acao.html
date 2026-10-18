@@ -1,7 +1,10 @@
 {% extends 'sistema/template-sistema.html' %}
+{% load static %}
 
 {% block titulo %}{{ acao.get_tipo_display }} | Sistema{% endblock %}
 {% block page_title %}{{ acao.get_tipo_display }}{% endblock %}
+{% block estilos %}<link rel="stylesheet" href="{% static 'estoque/estoque.css' %}?v=11">{% endblock %}
+{% block scripts %}<script src="{% static 'estoque/material-combobox.js' %}?v=1" defer></script>{% endblock %}
 
 {% block conteudo %}
 <section class="team-detail volunteer-control action-detail-hero">
@@ -143,7 +146,12 @@
             <tbody>
                 {% for residuo in residuos %}
                 <tr>
-                    <td><strong>{{ residuo.get_tipo_display }}</strong><br><small>{{ residuo.get_categoria_display }}</small></td>
+                    <td>
+                        <a class="table-link" href="{% url 'residuos' %}?acao={{ acao.id_acao }}&amp;tipo={{ residuo.tipo|urlencode }}" title="Ver este tipo de resíduo na lista geral">
+                            <strong>{{ residuo.get_tipo_display }}</strong>
+                        </a>
+                        <br><small>{{ residuo.get_categoria_display }}</small>
+                    </td>
                     <td>{{ residuo.quantidade }} {{ residuo.get_unidade_display }}</td>
                     <td>
                         {{ residuo.registrado_por_nome }}<br><small>{{ residuo.dt_registro|date:'d/m/Y H:i' }}</small>
@@ -177,6 +185,77 @@
     <div class="empty-state table-empty">
         <h3>Nenhum resíduo registrado</h3>
         <p class="form-subtitle">Os registros desta ação aparecerão aqui.</p>
+    </div>
+    {% endif %}
+</section>
+
+<section class="card volunteer-control action-detail-section" id="materiais-utilizados">
+    <div class="section-heading">
+        <div>
+            <h2>Materiais utilizados <span class="section-count">{{ materiais_utilizados|length }}</span></h2>
+            <p class="form-subtitle">Cada registro cria uma saída no estoque e fica vinculado a esta ação.</p>
+        </div>
+    </div>
+    {% if usuario.tipo == 'ADMIN' %}
+    <div class="member-form-panel">
+        <h3>Registrar material utilizado</h3>
+        <form method="post" action="{% url 'adicionar_material_utilizado_acao' acao.id_acao %}">
+            {% csrf_token %}
+            <div class="form-grid">
+                <div class="form-group material-picker{% if material_utilizado_form.material.errors %} campo-invalido{% endif %}">
+                    <label for="material-utilizado-search">{{ material_utilizado_form.material.label }}</label>
+                    <div class="material-combobox" data-material-combobox>
+                        <input id="material-utilizado-search" data-material-search type="search" class="form-control" placeholder="Digite o nome ou código do material" autocomplete="off" role="combobox" aria-autocomplete="list" aria-controls="material-utilizado-options" aria-expanded="false">
+                        <div id="material-utilizado-options" data-material-options class="material-options" role="listbox" hidden></div>
+                        <div class="material-select-real">{{ material_utilizado_form.material }}</div>
+                    </div>
+                    <small class="form-help">Digite para pesquisar e selecione um material da lista.</small>
+                    {% if material_utilizado_form.material.help_text %}<small class="form-help">{{ material_utilizado_form.material.help_text }}</small>{% endif %}
+                    {% for error in material_utilizado_form.material.errors %}<small class="field-error">{{ error }}</small>{% endfor %}
+                </div>
+                <div class="form-group">
+                    {{ material_utilizado_form.quantidade.label_tag }}
+                    {{ material_utilizado_form.quantidade }}
+                    {% for error in material_utilizado_form.quantidade.errors %}<small class="field-error">{{ error }}</small>{% endfor %}
+                </div>
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Registrar uso e atualizar estoque</button>
+            </div>
+        </form>
+    </div>
+    {% endif %}
+    {% if materiais_utilizados %}
+    <div class="table-wrap">
+        <table class="data-table">
+            <thead>
+                <tr><th>Material</th><th>Quantidade utilizada</th><th>Registrado em</th><th>Responsável</th></tr>
+            </thead>
+            <tbody>
+                {% for movimentacao in materiais_utilizados %}
+                <tr>
+                    <td>
+                        {% if usuario.tipo == 'ADMIN' %}
+                        <a class="table-link" href="{% url 'materiais' %}?busca={{ movimentacao.material.codigo|urlencode }}" title="Ver este material no estoque">
+                            <strong>{{ movimentacao.material.nome }}</strong>
+                        </a>
+                        {% else %}
+                        <strong>{{ movimentacao.material.nome }}</strong>
+                        {% endif %}
+                        <br><small>{{ movimentacao.material.codigo }}</small>
+                    </td>
+                    <td>{{ movimentacao.quantidade }} {{ movimentacao.material.get_unidade_display }}</td>
+                    <td>{{ movimentacao.dt_cadastro|date:'d/m/Y H:i' }}</td>
+                    <td>{{ movimentacao.registrado_por_nome|default:'-' }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state table-empty">
+        <h3>Nenhum material utilizado registrado</h3>
+        <p class="form-subtitle">Registre aqui os materiais consumidos durante esta ação.</p>
     </div>
     {% endif %}
 </section>
