@@ -32,6 +32,7 @@
         </div>
         <div class="section-heading-actions">
             <span class="section-count">{{ residuos|length }}</span>
+            {% if usuario.tipo == 'ADMIN' %}<a href="{% url 'relatorios' %}?relatorio=residuos" class="btn btn-outline">Relatório de resíduos</a>{% endif %}
             <a href="{% url 'acoes' %}" class="btn btn-outline">Ver ações</a>
         </div>
     </div>
