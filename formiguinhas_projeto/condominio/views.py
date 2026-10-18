@@ -133,6 +133,7 @@ def auditorias_view(request):
     return global_auditoria(request)
 
 
+@transaction.atomic
 def cadastrar_condominio_view(request):
     usuario = exigir_admin(request)
     if usuario is None:
@@ -158,6 +159,7 @@ def cadastrar_condominio_view(request):
     return render(request, 'sistema/cadastro-condominio.html', {'usuario': usuario, 'form': form})
 
 
+@transaction.atomic
 def editar_condominio_view(request, condominio_id):
     usuario = exigir_admin(request)
     if usuario is None:
@@ -220,6 +222,7 @@ def detalhe_condominio_view(request, condominio_id):
     })
 
 
+@transaction.atomic
 def cadastrar_bag_view(request):
     usuario = exigir_admin(request)
     if usuario is None:
@@ -245,6 +248,7 @@ def cadastrar_bag_view(request):
     return render(request, 'sistema/cadastro-bag.html', {'usuario': usuario, 'form': form})
 
 
+@transaction.atomic
 def editar_bag_view(request, bag_id):
     usuario = exigir_admin(request)
     if usuario is None:
@@ -370,6 +374,7 @@ def detalhe_bag_view(request, bag_id):
     })
 
 
+@transaction.atomic
 def cadastrar_movimentacao_view(request, bag_id):
     usuario = exigir_admin(request)
     if usuario is None:
