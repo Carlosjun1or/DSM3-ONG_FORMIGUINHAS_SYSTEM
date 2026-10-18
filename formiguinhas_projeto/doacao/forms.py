@@ -1,13 +1,22 @@
+import uuid
+
 from django import forms
 from django.db.models import Q
 from django.forms import BaseInlineFormSet, inlineformset_factory
 from django.utils import timezone
 
 from acao.models import Acao
+from auditoria.services import registrar_evento
+from estoque.forms import MaterialCategoriaSelect
 from estoque.models import Material
 from praia.models import Praia
 
 from .models import Doador, Doacao, DoacaoFinanceira, ItemDoacaoMaterial
+
+
+class MaterialDoacaoChoiceField(forms.ModelChoiceField):
+    def label_from_instance(self, obj):
+        return f'{obj.nome} — {obj.categoria} ({obj.get_unidade_display()})'
 
 
 class DoadorForm(forms.ModelForm):
@@ -301,31 +310,52 @@ class DoacaoFinanceiraForm(forms.ModelForm):
 
 
 class ItemDoacaoMaterialForm(forms.ModelForm):
+    material = MaterialDoacaoChoiceField(
+        queryset=Material.objects.none(),
+        required=False,
+        widget=MaterialCategoriaSelect(attrs={'class': 'material-select-real'}),
+    )
+    categoria = forms.CharField(
+        max_length=100,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Pesquise ou digite uma nova categoria',
+            'autocomplete': 'off',
+            'role': 'combobox',
+            'aria-autocomplete': 'list',
+            'aria-expanded': 'false',
+            'aria-haspopup': 'listbox',
+        }),
+    )
+    unidade_nova = forms.ChoiceField(
+        label='Unidade do novo material',
+        required=False,
+        choices=[('', 'Selecione a unidade')],
+        widget=forms.Select(attrs={'class': 'form-control'}),
+    )
+
     class Meta:
         model = ItemDoacaoMaterial
         fields = ['material', 'nome', 'categoria', 'quantidade', 'condicao', 'observacoes']
         labels = {
-            'material': 'Material do estoque',
-            'nome': 'Nome do material',
+            'material': 'Material existente',
+            'nome': 'Material',
             'categoria': 'Categoria',
             'quantidade': 'Quantidade',
             'condicao': 'Condição',
             'observacoes': 'Observações do material',
         }
         help_texts = {
-            'material': 'Selecione o material correspondente para integrar a entrada ao estoque.',
+            'material': 'Pesquise e selecione um material existente ou cadastre um novo pelo nome.',
+            'categoria': 'Pesquise uma categoria existente ou digite uma nova para o material.',
             'quantidade': 'Use um valor maior que zero. Para confirmar a doação, informe uma quantidade inteira.',
             'observacoes': 'Opcional. Registre detalhes sobre o material recebido.',
         }
         widgets = {
-            'material': forms.Select(attrs={'class': 'form-control'}),
+            'material': MaterialCategoriaSelect(attrs={'class': 'form-control'}),
             'nome': forms.TextInput(attrs={
                 'class': 'form-control',
                 'placeholder': 'Ex.: saco de lixo reforçado',
-            }),
-            'categoria': forms.TextInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'Ex.: limpeza, alimentação ou escritório',
             }),
             'quantidade': forms.NumberInput(attrs={
                 'class': 'form-control',
@@ -343,9 +373,36 @@ class ItemDoacaoMaterialForm(forms.ModelForm):
 
     def __init__(self, *args, estoque_bloqueado=False, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['material'].queryset = Material.objects.order_by('nome')
+        materiais = Material.objects.order_by('nome')
+        self.fields['material'].queryset = materiais
+        self.fields['material'].widget.categorias_por_material = {}
+        self.fields['material'].widget.nomes_por_material = {}
+        self.fields['material'].widget.unidades_por_material = {}
+        for material in materiais:
+            material_id = str(material.pk)
+            self.fields['material'].widget.categorias_por_material[material_id] = material.categoria
+            self.fields['material'].widget.nomes_por_material[material_id] = material.nome
+            self.fields['material'].widget.unidades_por_material[material_id] = material.unidade
         self.fields['material'].empty_label = 'Selecione o material do estoque'
         self.fields['material'].required = False
+        self.fields['unidade_nova'].choices = [
+            ('', 'Selecione a unidade'),
+            *Material.UNIDADE_CHOICES,
+        ]
+        self.fields['nome'].widget.attrs.update({
+            'class': 'form-control material-donation-search',
+            'placeholder': 'Pesquise um material ou digite um nome novo',
+            'autocomplete': 'off',
+            'role': 'combobox',
+            'aria-autocomplete': 'list',
+            'aria-expanded': 'false',
+            'aria-controls': f'{self["nome"].auto_id}-opcoes',
+        })
+        self.categorias_existentes = {}
+        for categoria in Material.objects.values_list('categoria', flat=True):
+            normalizada = ' '.join(categoria.split())
+            if normalizada:
+                self.categorias_existentes.setdefault(normalizada.casefold(), normalizada)
         if estoque_bloqueado:
             for field in self.fields.values():
                 field.disabled = True
@@ -354,15 +411,54 @@ class ItemDoacaoMaterialForm(forms.ModelForm):
             *ItemDoacaoMaterial.CONDICAO_CHOICES,
         ]
 
+    def clean(self):
+        cleaned = super().clean()
+        material = cleaned.get('material')
+        if material:
+            cleaned['categoria'] = material.categoria
+        else:
+            nome = ' '.join((cleaned.get('nome') or '').split())
+            cleaned['nome'] = nome
+            categoria = ' '.join((cleaned.get('categoria') or '').split())
+            cleaned['categoria'] = self.categorias_existentes.get(
+                categoria.casefold(), categoria
+            )
+            if nome:
+                if len(nome) > 100:
+                    self.add_error('nome', 'O nome de um novo material deve ter até 100 caracteres.')
+                if len(cleaned['categoria']) > 50:
+                    self.add_error(
+                        'categoria',
+                        'A categoria de um novo material deve ter até 50 caracteres.',
+                    )
+                if Material.objects.filter(nome__iexact=nome).exists():
+                    self.add_error(
+                        'material',
+                        'Este material já existe. Selecione-o na lista de resultados.',
+                    )
+                if not cleaned.get('unidade_nova'):
+                    self.add_error(
+                        'unidade_nova',
+                        'Informe a unidade do novo material para cadastrá-lo no estoque.',
+                    )
+        return cleaned
+
     def save(self, commit=True):
-        if self.cleaned_data.get('material'):
-            self.instance.unidade = self.cleaned_data['material'].get_unidade_display()
+        material = self.cleaned_data.get('material')
+        if material:
+            self.instance.unidade = material.get_unidade_display()
+            self.instance.categoria = material.categoria
+        else:
+            self.instance.unidade = dict(Material.UNIDADE_CHOICES).get(
+                self.cleaned_data.get('unidade_nova'), ''
+            )
         return super().save(commit=commit)
 
 
 class ItemDoacaoMaterialFormSetBase(forms.BaseInlineFormSet):
     def __init__(self, *args, **kwargs):
         instance = kwargs.get('instance')
+        self.usuario = kwargs.pop('usuario', None)
         self.estoque_bloqueado = bool(
             instance
             and instance.pk
@@ -371,6 +467,43 @@ class ItemDoacaoMaterialFormSetBase(forms.BaseInlineFormSet):
         )
         kwargs.setdefault('form_kwargs', {})['estoque_bloqueado'] = self.estoque_bloqueado
         super().__init__(*args, **kwargs)
+
+    def _vincular_material_novo(self, form, commit):
+        if form.cleaned_data.get('material') is None:
+            usuario = self.usuario
+            material = Material(
+                nome=form.cleaned_data['nome'],
+                codigo=f"DOACAO-{uuid.uuid4().hex.upper()}",
+                categoria=form.cleaned_data['categoria'],
+                quantidade_inicial=0,
+                estoque_minimo=0,
+                unidade=form.cleaned_data['unidade_nova'],
+                cadastrado_por=usuario,
+                cadastrado_por_nome=(
+                    usuario.id_voluntario.nome if usuario else ''
+                ),
+            )
+            material.full_clean()
+            if commit:
+                material.save()
+            form.cleaned_data['material'] = material
+            form.instance.material = material
+            if usuario and commit:
+                registrar_evento(
+                    entidade='MATERIAL',
+                    instancia=material,
+                    acao='CRIACAO',
+                    usuario=usuario,
+                    resumo=f'Material "{material.nome}" cadastrado com uma doação.',
+                )
+
+    def save_new(self, form, commit=True):
+        self._vincular_material_novo(form, commit)
+        return super().save_new(form, commit)
+
+    def save_existing(self, form, instance, commit=True):
+        self._vincular_material_novo(form, commit)
+        return super().save_existing(form, instance, commit=commit)
 
     def clean(self):
         super().clean()
@@ -402,8 +535,8 @@ class ItemDoacaoMaterialFormSetBase(forms.BaseInlineFormSet):
             material = form.cleaned_data.get('material')
             quantidade = form.cleaned_data.get('quantidade')
             condicao = form.cleaned_data.get('condicao')
-            if not material:
-                form.add_error('material', 'Selecione o material do estoque antes de confirmar.')
+            if not material and not form.cleaned_data.get('nome'):
+                form.add_error('nome', 'Selecione um material existente ou informe o nome de um novo.')
             if quantidade is not None and quantidade != quantidade.to_integral_value():
                 form.add_error(
                     'quantidade',

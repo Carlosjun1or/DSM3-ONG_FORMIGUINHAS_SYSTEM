@@ -1,15 +1,16 @@
 from django.contrib import admin
 
+from auditoria.admin_utils import AuditedModelAdmin
 from .models import Doador, Doacao, DoacaoFinanceira, ItemDoacaoMaterial
 
 
 @admin.register(Doacao)
-class DoacaoAdmin(admin.ModelAdmin):
+class DoacaoAdmin(AuditedModelAdmin):
     readonly_fields = ('tipo', 'status')
 
 
 @admin.register(ItemDoacaoMaterial)
-class ItemDoacaoMaterialAdmin(admin.ModelAdmin):
+class ItemDoacaoMaterialAdmin(AuditedModelAdmin):
     readonly_fields = tuple(field.name for field in ItemDoacaoMaterial._meta.fields)
 
     def has_add_permission(self, request):
@@ -19,4 +20,4 @@ class ItemDoacaoMaterialAdmin(admin.ModelAdmin):
         return False
 
 
-admin.site.register([Doador, DoacaoFinanceira])
+admin.site.register([Doador, DoacaoFinanceira], AuditedModelAdmin)

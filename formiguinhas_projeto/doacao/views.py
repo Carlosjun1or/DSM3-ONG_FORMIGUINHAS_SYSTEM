@@ -13,6 +13,7 @@ from django.utils.dateparse import parse_date
 from auditoria.services import registrar_evento, snapshot
 
 from auditoria.models import EventoAuditoria
+from estoque.models import Material
 from estoque.services import registrar_entradas_doacao
 from usuario.views import get_session_usuario, render_acesso_bloqueado
 from usuario.paginacao import paginar_queryset
@@ -49,6 +50,19 @@ def _preencher_auditoria(instancia, usuario, criacao=False):
         instancia.ultimo_editado_por_nome = nome
         instancia.ultimo_editado_por_tipo = usuario.tipo
         instancia.dt_ultima_edicao = timezone.now()
+
+
+def _snapshot_doacao_completa(doacao):
+    valores = snapshot(doacao)
+    valores['itens_materiais'] = [
+        snapshot(item)
+        for item in doacao.itens_materiais.select_related('material').order_by('pk')
+    ]
+    try:
+        valores['financeira'] = snapshot(doacao.financeira)
+    except DoacaoFinanceira.DoesNotExist:
+        valores['financeira'] = None
+    return valores
 
 
 def _periodo(request):
@@ -144,7 +158,16 @@ def doacoes_view(request):
     })
 
 
-def _formulario_doacao(request, doacao=None):
+def _categorias_materiais():
+    categorias = {}
+    for categoria in Material.objects.values_list('categoria', flat=True):
+        normalizada = ' '.join(categoria.split())
+        if normalizada:
+            categorias.setdefault(normalizada.casefold(), normalizada)
+    return sorted(categorias.values(), key=str.casefold)
+
+
+def _formulario_doacao(request, doacao=None, usuario=None):
     form = DoacaoForm(request.POST or None, instance=doacao)
     estoque_bloqueado = bool(doacao and doacao.movimentacoes_estoque.exists())
     if estoque_bloqueado:
@@ -160,6 +183,7 @@ def _formulario_doacao(request, doacao=None):
         request.POST or None,
         instance=doacao,
         prefix='itens',
+        usuario=usuario,
     )
     doador_inline_form = DoadorInlineForm(
         request.POST or None,
@@ -225,7 +249,9 @@ def cadastro_doacao_view(request):
         return redirect('login')
     if usuario is False:
         return render_acesso_bloqueado(request)
-    form, financeira_form, itens_formset, doador_inline_form = _formulario_doacao(request)
+    form, financeira_form, itens_formset, doador_inline_form = _formulario_doacao(
+        request, usuario=usuario
+    )
     if request.method == 'POST':
         if _validar_doacao_forms(
             form, financeira_form, itens_formset, doador_inline_form, request
@@ -253,6 +279,7 @@ def cadastro_doacao_view(request):
                         acao='CRIACAO',
                         usuario=usuario,
                         resumo=f'Doação #{doacao.pk} cadastrada.',
+                        valores_novos=_snapshot_doacao_completa(doacao),
                     )
             except ValidationError as erro:
                 form.add_error(None, erro)
@@ -273,6 +300,7 @@ def cadastro_doacao_view(request):
         'form': form,
         'financeira_form': financeira_form,
         'itens_formset': itens_formset,
+        'categorias_materiais': _categorias_materiais(),
         'doador_inline_form': doador_inline_form,
         'modo': 'cadastro',
     })
@@ -285,8 +313,10 @@ def editar_doacao_view(request, doacao_id):
     if usuario is False:
         return render_acesso_bloqueado(request)
     doacao = get_object_or_404(Doacao, pk=doacao_id)
-    valores_anteriores = snapshot(doacao)
-    form, financeira_form, itens_formset, doador_inline_form = _formulario_doacao(request, doacao)
+    form, financeira_form, itens_formset, doador_inline_form = _formulario_doacao(
+        request, doacao, usuario
+    )
+    valores_anteriores = _snapshot_doacao_completa(doacao)
     if request.method == 'POST':
         if _validar_doacao_forms(
             form, financeira_form, itens_formset, doador_inline_form, request
@@ -320,6 +350,7 @@ def editar_doacao_view(request, doacao_id):
                         usuario=usuario,
                         resumo=f'Doação #{doacao.pk} editada.',
                         valores_anteriores=valores_anteriores,
+                        valores_novos=_snapshot_doacao_completa(doacao),
                     )
             except ValidationError as erro:
                 form.add_error(None, erro)
@@ -340,6 +371,7 @@ def editar_doacao_view(request, doacao_id):
         'form': form,
         'financeira_form': financeira_form,
         'itens_formset': itens_formset,
+        'categorias_materiais': _categorias_materiais(),
         'doador_inline_form': doador_inline_form,
         'doacao': doacao,
         'modo': 'edicao',
@@ -415,6 +447,8 @@ def atualizar_status_doacao_view(request, doacao_id):
             'Não é possível retirar a confirmação: a doação já gerou movimentações no estoque.',
         )
         return redirect(destino, **({'doacao_id': doacao.pk} if retornar_aos_detalhes else {}))
+    status_alterado = novo_status != doacao.status
+    valores_anteriores = _snapshot_doacao_completa(doacao)
     status_anterior = doacao.get_status_display()
     try:
         with transaction.atomic():
@@ -430,13 +464,16 @@ def atualizar_status_doacao_view(request, doacao_id):
                 and not doacao.movimentacoes_estoque.exists()
             ):
                 registrar_entradas_doacao(doacao, usuario)
-            registrar_evento(
-                entidade='DOACAO',
-                instancia=doacao,
-                acao='MUDANCA_STATUS',
-                usuario=usuario,
-                resumo=f'Doação #{doacao.pk}: {status_anterior} para {doacao.get_status_display()}.',
-            )
+            if status_alterado:
+                registrar_evento(
+                    entidade='DOACAO',
+                    instancia=doacao,
+                    acao='MUDANCA_STATUS',
+                    usuario=usuario,
+                    resumo=f'Doação #{doacao.pk}: {status_anterior} para {doacao.get_status_display()}.',
+                    valores_anteriores=valores_anteriores,
+                    valores_novos=_snapshot_doacao_completa(doacao),
+                )
     except ValidationError as erro:
         messages.error(request, 'Não foi possível confirmar a doação: ' + ' '.join(erro.messages))
         return redirect(destino, **({'doacao_id': doacao.pk} if retornar_aos_detalhes else {}))
@@ -512,7 +549,10 @@ def atualizar_status_doador_view(request, doador_id):
     if request.method != 'POST' or novo_status not in ('ATIVO', 'INATIVO'):
         messages.error(request, 'Situação de doador inválida.')
         return redirect(destino, **({'doador_id': doador.pk} if retornar_aos_detalhes else {}))
+    if (novo_status == 'ATIVO') == doador.ativo:
+        return redirect(destino, **({'doador_id': doador.pk} if retornar_aos_detalhes else {}))
 
+    valores_anteriores = snapshot(doador)
     ativo_anterior = doador.ativo
     doador.ativo = novo_status == 'ATIVO'
     doador.ultimo_editado_por = usuario
@@ -529,11 +569,13 @@ def atualizar_status_doador_view(request, doador_id):
         resumo=f'Doador #{doador.pk}: '
         f'{"Ativo" if ativo_anterior else "Inativo"} para '
         f'{"Ativo" if doador.ativo else "Inativo"}.',
+        valores_anteriores=valores_anteriores,
     )
     messages.success(request, 'Situação do doador atualizada.')
     return redirect(destino, **({'doador_id': doador.pk} if retornar_aos_detalhes else {}))
 
 
+@transaction.atomic
 def cadastro_doador_view(request):
     usuario = _usuario_com_acesso(request, somente_admin=True)
     if usuario is None:
@@ -570,6 +612,7 @@ def cadastro_doador_view(request):
     })
 
 
+@transaction.atomic
 def editar_doador_view(request, doador_id):
     usuario = _usuario_com_acesso(request, somente_admin=True)
     if usuario is None:

@@ -1,6 +1,8 @@
 {% extends 'sistema/template-sistema.html' %}
+{% load static %}
 
 {% block page_title %}{% if modo == 'edicao' %}Editar doação{% else %}Nova doação{% endif %}{% endblock %}
+{% block estilos %}<link rel="stylesheet" href="{% static 'estoque/estoque.css' %}?v=11">{% endblock %}
 
 {% block conteudo %}
 <section class="page-section donation-page donation-form-shell">
@@ -176,7 +178,45 @@
                     {% for hidden in item_form.hidden_fields %}{{ hidden }}{% endfor %}
                     {% for field in item_form.visible_fields %}{% if field.name == 'DELETE' %}{{ field.as_hidden }}{% endif %}{% endfor %}
                     <div class="form-grid material-grid">
-                        {% for field in item_form.visible_fields %}{% if field.name != 'DELETE' %}<div class="form-field {% if field.name == 'observacoes' %}full-width{% endif %}">{{ field.errors }}<label for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %} <span class="required-indicator">*</span>{% endif %}</label>{{ field }}{% if field.help_text %}<small class="form-help">{{ field.help_text }}</small>{% endif %}</div>{% endif %}{% endfor %}
+                        {% for field in item_form.visible_fields %}
+                            {% if field.name == 'nome' %}
+                            <div class="form-field full-width{% if field.errors or item_form.material.errors %} campo-invalido{% endif %}">
+                                <label for="{{ field.id_for_label }}">Material{% if field.field.required %} <span class="required-indicator">*</span>{% endif %}</label>
+                                <div class="material-combobox" data-material-combobox>
+                                    {{ field }}
+                                    <div id="{{ field.auto_id }}-opcoes" class="material-options" data-material-options role="listbox" hidden></div>
+                                    <div class="material-select-real">{{ item_form.material }}</div>
+                                </div>
+                                <small class="form-help">Pesquise e selecione um material existente ou digite um novo nome. O código será gerado automaticamente.</small>
+                                {% for error in field.errors %}<small class="field-error">{{ error }}</small>{% endfor %}
+                                {% for error in item_form.material.errors %}<small class="field-error">{{ error }}</small>{% endfor %}
+                            </div>
+                            {% elif field.name == 'material' or field.name == 'DELETE' %}
+                            {% elif field.name == 'unidade_nova' %}
+                            <div class="form-field" data-new-material-unit>
+                                {{ field.errors }}
+                                <label for="{{ field.id_for_label }}">{{ field.label }} <span class="required-indicator">*</span></label>
+                                {{ field }}
+                                <small class="form-help">Necessária para cadastrar este material no estoque.</small>
+                            </div>
+                            {% else %}
+                            <div class="form-field {% if field.name == 'observacoes' %}full-width{% endif %}{% if field.errors %} campo-invalido{% endif %}">
+                                {{ field.errors }}
+                                <label for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %} <span class="required-indicator">*</span>{% endif %}</label>
+                                {% if field.name == 'categoria' %}
+                                <div class="categoria-combobox" data-categoria-combobox>
+                                    {{ field }}
+                                    <div class="categoria-options" data-categoria-options role="listbox" aria-label="Categorias existentes" hidden>
+                                        {% for categoria in categorias_materiais %}<button type="button" class="categoria-option" data-value="{{ categoria }}" role="option" aria-selected="false">{{ categoria }}</button>{% endfor %}
+                                        <small class="material-options-empty" data-categoria-empty role="status" hidden>Nenhuma categoria encontrada.</small>
+                                        <button type="button" class="categoria-option categoria-option-nova" data-categoria-nova role="option" aria-selected="false" hidden></button>
+                                    </div>
+                                </div>
+                                {% else %}{{ field }}{% endif %}
+                                {% if field.help_text %}<small class="form-help">{{ field.help_text }}</small>{% endif %}
+                            </div>
+                            {% endif %}
+                        {% endfor %}
                     </div>
                 </fieldset>
                 {% endfor %}
@@ -185,7 +225,41 @@
                 <fieldset class="material-card">
                     <legend>Material <span class="material-number"></span></legend>
                     <div class="form-grid material-grid">
-                        {% for field in itens_formset.empty_form.visible_fields %}{% if field.name != 'DELETE' %}<div class="form-field {% if field.name == 'observacoes' %}full-width{% endif %}"><label for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %} <span class="required-indicator">*</span>{% endif %}</label>{{ field }}{% if field.help_text %}<small class="form-help">{{ field.help_text }}</small>{% endif %}</div>{% endif %}{% endfor %}
+                        {% for field in itens_formset.empty_form.visible_fields %}
+                            {% if field.name == 'nome' %}
+                            <div class="form-field full-width">
+                                <label for="{{ field.id_for_label }}">Material{% if field.field.required %} <span class="required-indicator">*</span>{% endif %}</label>
+                                <div class="material-combobox" data-material-combobox>
+                                    {{ field }}
+                                    <div id="{{ field.auto_id }}-opcoes" class="material-options" data-material-options role="listbox" hidden></div>
+                                    <div class="material-select-real">{{ itens_formset.empty_form.material }}</div>
+                                </div>
+                                <small class="form-help">Pesquise e selecione um material existente ou digite um novo nome. O código será gerado automaticamente.</small>
+                            </div>
+                            {% elif field.name == 'material' or field.name == 'DELETE' %}
+                            {% elif field.name == 'unidade_nova' %}
+                            <div class="form-field" data-new-material-unit hidden>
+                                <label for="{{ field.id_for_label }}">{{ field.label }} <span class="required-indicator">*</span></label>
+                                {{ field }}
+                                <small class="form-help">Necessária para cadastrar este material no estoque.</small>
+                            </div>
+                            {% else %}
+                            <div class="form-field {% if field.name == 'observacoes' %}full-width{% endif %}">
+                                <label for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %} <span class="required-indicator">*</span>{% endif %}</label>
+                                {% if field.name == 'categoria' %}
+                                <div class="categoria-combobox" data-categoria-combobox>
+                                    {{ field }}
+                                    <div class="categoria-options" data-categoria-options role="listbox" aria-label="Categorias existentes" hidden>
+                                        {% for categoria in categorias_materiais %}<button type="button" class="categoria-option" data-value="{{ categoria }}" role="option" aria-selected="false">{{ categoria }}</button>{% endfor %}
+                                        <small class="material-options-empty" data-categoria-empty role="status" hidden>Nenhuma categoria encontrada.</small>
+                                        <button type="button" class="categoria-option categoria-option-nova" data-categoria-nova role="option" aria-selected="false" hidden></button>
+                                    </div>
+                                </div>
+                                {% else %}{{ field }}{% endif %}
+                                {% if field.help_text %}<small class="form-help">{{ field.help_text }}</small>{% endif %}
+                            </div>
+                            {% endif %}
+                        {% endfor %}
                     </div>
                     <button type="button" class="btn btn-link remove-material">Remover material</button>
                 </fieldset>
@@ -198,7 +272,7 @@
             <div class="form-field">{{ form.observacoes.errors }}<label for="{{ form.observacoes.id_for_label }}">{{ form.observacoes.label }}{% if form.observacoes.field.required %} <span class="required-indicator">*</span>{% endif %}</label>{{ form.observacoes }}{% if form.observacoes.help_text %}<small class="form-help">{{ form.observacoes.help_text }}</small>{% endif %}</div>
             <div class="form-field">{{ form.referencia_comprovante.errors }}<label for="{{ form.referencia_comprovante.id_for_label }}">{{ form.referencia_comprovante.label }}{% if form.referencia_comprovante.field.required %} <span class="required-indicator">*</span>{% endif %}</label>{{ form.referencia_comprovante }}{% if form.referencia_comprovante.help_text %}<small class="form-help">{{ form.referencia_comprovante.help_text }}</small>{% endif %}</div>
         </div>
-        <div class="form-actions"><button class="btn btn-primary" type="submit">Salvar doação</button><a class="btn btn-outline" href="{% if modo == 'edicao' %}{% url 'doacao_detalhe' doacao.id_doacao %}{% else %}{% url 'doacoes' %}{% endif %}">Cancelar</a></div>
+        <div class="form-actions donation-form-actions"><a class="btn btn-outline" href="{% if modo == 'edicao' %}{% url 'doacao_detalhe' doacao.id_doacao %}{% else %}{% url 'doacoes' %}{% endif %}">Cancelar</a><button class="btn btn-primary" type="submit">Salvar doação</button></div>
     </form>
 </section>
 {% endblock %}
@@ -524,6 +598,250 @@
                 card.querySelector('.material-number').textContent = index + 1;
             });
         }
+        function configurarCategoria(categoria) {
+            var combobox = categoria.closest('[data-categoria-combobox]');
+            var opcoesCategoria = combobox && combobox.querySelector('[data-categoria-options]');
+            if (!combobox || !opcoesCategoria) return;
+
+            var opcoes = Array.from(opcoesCategoria.querySelectorAll('.categoria-option[data-value]'));
+            var nenhuma = opcoesCategoria.querySelector('[data-categoria-empty]');
+            var nova = opcoesCategoria.querySelector('[data-categoria-nova]');
+            var indiceAtivo = -1;
+            opcoesCategoria.id = categoria.id + '-opcoes';
+            categoria.setAttribute('aria-controls', opcoesCategoria.id);
+
+            function fechar() {
+                opcoesCategoria.hidden = true;
+                combobox.classList.remove('is-open');
+                categoria.setAttribute('aria-expanded', 'false');
+                categoria.removeAttribute('aria-activedescendant');
+                indiceAtivo = -1;
+            }
+            function visiveis() {
+                return Array.from(opcoesCategoria.querySelectorAll('.categoria-option'))
+                    .filter(function (opcao) { return !opcao.hidden; });
+            }
+            function atualizar() {
+                if (categoria.readOnly || categoria.disabled) {
+                    fechar();
+                    return;
+                }
+                var termo = categoria.value.trim().toLocaleLowerCase();
+                var quantidade = 0;
+                var exata = false;
+                opcoes.forEach(function (opcao, indice) {
+                    var valor = opcao.dataset.value;
+                    var mostrar = !termo || valor.toLocaleLowerCase().indexOf(termo) !== -1;
+                    opcao.hidden = !mostrar;
+                    opcao.classList.remove('is-active');
+                    opcao.setAttribute('aria-selected', 'false');
+                    opcao.id = categoria.id + '-categoria-' + indice;
+                    if (mostrar) quantidade += 1;
+                    if (termo && valor.toLocaleLowerCase() === termo) exata = true;
+                });
+                if (nenhuma) {
+                    nenhuma.hidden = quantidade > 0;
+                    nenhuma.textContent = termo
+                        ? 'Nenhuma categoria encontrada com esse nome.'
+                        : 'Ainda não há categorias. Digite um nome para cadastrar a primeira.';
+                }
+                if (nova) {
+                    nova.hidden = !termo || exata;
+                    nova.textContent = 'Usar "' + categoria.value.trim() + '" como nova categoria';
+                    nova.id = categoria.id + '-categoria-nova';
+                }
+                opcoesCategoria.hidden = false;
+                combobox.classList.add('is-open');
+                categoria.setAttribute('aria-expanded', 'true');
+            }
+            function ativar(indice) {
+                var itens = visiveis();
+                itens.forEach(function (opcao, posicao) {
+                    var ativo = posicao === indice;
+                    opcao.classList.toggle('is-active', ativo);
+                    opcao.setAttribute('aria-selected', ativo ? 'true' : 'false');
+                    if (ativo) {
+                        categoria.setAttribute('aria-activedescendant', opcao.id);
+                        opcao.scrollIntoView({ block: 'nearest' });
+                    }
+                });
+                indiceAtivo = indice;
+            }
+
+            opcoes.forEach(function (opcao) {
+                opcao.addEventListener('mousedown', function (evento) {
+                    evento.preventDefault();
+                    categoria.value = opcao.dataset.value;
+                    fechar();
+                });
+            });
+            if (nova) nova.addEventListener('mousedown', function (evento) {
+                evento.preventDefault();
+                fechar();
+            });
+            categoria.addEventListener('focus', atualizar);
+            categoria.addEventListener('input', function () {
+                indiceAtivo = -1;
+                atualizar();
+            });
+            categoria.addEventListener('keydown', function (evento) {
+                if (evento.key === 'Escape') {
+                    fechar();
+                } else if (evento.key === 'ArrowDown' || evento.key === 'ArrowUp') {
+                    evento.preventDefault();
+                    atualizar();
+                    var itens = visiveis();
+                    if (!itens.length) return;
+                    ativar(evento.key === 'ArrowDown'
+                        ? (indiceAtivo + 1) % itens.length
+                        : (indiceAtivo - 1 + itens.length) % itens.length);
+                } else if (evento.key === 'Enter' && indiceAtivo >= 0) {
+                    evento.preventDefault();
+                    var selecionada = visiveis()[indiceAtivo];
+                    if (selecionada && selecionada.dataset.value) {
+                        categoria.value = selecionada.dataset.value;
+                    }
+                    fechar();
+                }
+            });
+            document.addEventListener('mousedown', function (evento) {
+                if (!combobox.contains(evento.target)) fechar();
+            });
+        }
+        function configurarMaterialCard(card) {
+            var busca = card.querySelector('input[name$="-nome"]');
+            var select = card.querySelector('select[name$="-material"]');
+            var categoria = card.querySelector('input[name$="-categoria"]');
+            var unidade = card.querySelector('select[name$="-unidade_nova"]');
+            var unidadeWrapper = card.querySelector('[data-new-material-unit]');
+            var opcoesMaterial = card.querySelector('[data-material-options]');
+            if (!busca || !select || !categoria || !unidade || !unidadeWrapper || !opcoesMaterial) {
+                return;
+            }
+            configurarCategoria(categoria);
+            var opcoes = Array.from(select.options).filter(function (opcao) {
+                return opcao.value;
+            });
+            var indiceAtivo = -1;
+
+            function abrirLista() {
+                opcoesMaterial.hidden = false;
+                busca.setAttribute('aria-expanded', 'true');
+            }
+            function fecharLista() {
+                opcoesMaterial.hidden = true;
+                busca.setAttribute('aria-expanded', 'false');
+                indiceAtivo = -1;
+            }
+            function selecionarMaterial(opcao) {
+                select.value = opcao.value;
+                busca.value = opcao.dataset.nome || opcao.textContent;
+                categoria.value = opcao.dataset.categoria || '';
+                categoria.readOnly = true;
+                unidade.value = opcao.dataset.unidade || '';
+                unidadeWrapper.hidden = true;
+                fecharLista();
+            }
+            function habilitarNovoMaterial() {
+                select.value = '';
+                categoria.readOnly = false;
+                categoria.value = '';
+                unidade.value = '';
+                unidadeWrapper.hidden = false;
+                fecharLista();
+                categoria.focus();
+            }
+            function renderizarOpcoes() {
+                var termo = busca.value.trim().toLocaleLowerCase();
+                var encontradas = opcoes.filter(function (opcao) {
+                    var texto = [
+                        opcao.dataset.nome || opcao.textContent,
+                        opcao.dataset.categoria || '',
+                    ].join(' ').toLocaleLowerCase();
+                    return !termo || texto.indexOf(termo) !== -1;
+                });
+                opcoesMaterial.innerHTML = '';
+                encontradas.forEach(function (opcao, indice) {
+                    var item = document.createElement('button');
+                    item.type = 'button';
+                    item.className = 'material-option';
+                    item.setAttribute('role', 'option');
+                    item.dataset.value = opcao.value;
+                    item.textContent = opcao.textContent;
+                    item.addEventListener('mousedown', function (evento) {
+                        evento.preventDefault();
+                        selecionarMaterial(opcao);
+                    });
+                    if (indice === indiceAtivo) item.classList.add('is-active');
+                    opcoesMaterial.appendChild(item);
+                });
+                if (termo) {
+                    var criar = document.createElement('button');
+                    criar.type = 'button';
+                    criar.className = 'material-option material-option-new';
+                    criar.textContent = 'Cadastrar "' + busca.value.trim() + '" como novo material';
+                    criar.addEventListener('mousedown', function (evento) {
+                        evento.preventDefault();
+                        habilitarNovoMaterial();
+                    });
+                    opcoesMaterial.appendChild(criar);
+                } else if (!encontradas.length) {
+                    var vazio = document.createElement('div');
+                    vazio.className = 'material-options-empty';
+                    vazio.textContent = 'Digite o nome do material para pesquisar ou cadastrar.';
+                    opcoesMaterial.appendChild(vazio);
+                }
+                abrirLista();
+            }
+            function limparSelecaoAoDigitar() {
+                if (select.value) {
+                    var selecionado = select.options[select.selectedIndex];
+                    if (busca.value !== (selecionado.dataset.nome || selecionado.textContent)) {
+                        select.value = '';
+                        categoria.readOnly = false;
+                        categoria.value = '';
+                        unidade.value = '';
+                    }
+                }
+                unidadeWrapper.hidden = true;
+                renderizarOpcoes();
+            }
+
+            if (select.value) {
+                selecionarMaterial(select.options[select.selectedIndex]);
+            } else {
+                unidadeWrapper.hidden = !busca.value.trim();
+            }
+            busca.addEventListener('focus', renderizarOpcoes);
+            busca.addEventListener('input', limparSelecaoAoDigitar);
+            busca.addEventListener('keydown', function (evento) {
+                var botoes = opcoesMaterial.querySelectorAll('.material-option');
+                if (evento.key === 'Escape') {
+                    fecharLista();
+                } else if (evento.key === 'ArrowDown' || evento.key === 'ArrowUp') {
+                    evento.preventDefault();
+                    if (!botoes.length) return;
+                    indiceAtivo = evento.key === 'ArrowDown'
+                        ? (indiceAtivo + 1) % botoes.length
+                        : (indiceAtivo - 1 + botoes.length) % botoes.length;
+                    Array.from(botoes).forEach(function (botao, indice) {
+                        botao.classList.toggle('is-active', indice === indiceAtivo);
+                    });
+                } else if (evento.key === 'Enter' && indiceAtivo >= 0 && botoes[indiceAtivo]) {
+                    evento.preventDefault();
+                    var valorSelecionado = botoes[indiceAtivo].dataset.value;
+                    var opcao = opcoes.find(function (item) {
+                        return item.value === valorSelecionado;
+                    });
+                    if (opcao) selecionarMaterial(opcao);
+                    else habilitarNovoMaterial();
+                }
+            });
+            busca.addEventListener('blur', function () {
+                setTimeout(fecharLista, 120);
+            });
+        }
+        lista.querySelectorAll('.material-card').forEach(configurarMaterialCard);
         var acaoPickerControle;
         var praiaPickerControle = prepararBuscaRelacionamento(
             buscaPraia,
@@ -711,6 +1029,8 @@
             var index = Number(totalForms.value);
             lista.insertAdjacentHTML('beforeend', modelo.replace(/__prefix__/g, index));
             totalForms.value = index + 1;
+            var novoCartao = lista.querySelectorAll('.material-card')[index];
+            if (novoCartao) configurarMaterialCard(novoCartao);
             atualizarNumeracao();
         });
         lista.addEventListener('click', function (event) {
