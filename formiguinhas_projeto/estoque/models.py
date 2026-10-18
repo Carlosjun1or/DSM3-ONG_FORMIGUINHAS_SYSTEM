@@ -148,6 +148,13 @@ class MovimentacaoEstoque(models.Model):
     material = models.ForeignKey(
         Material, on_delete=models.PROTECT, related_name='movimentacoes'
     )
+    acao = models.ForeignKey(
+        'acao.Acao',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='movimentacoes_estoque',
+    )
     tipo = models.CharField(max_length=10, choices=TIPO_CHOICES)
     quantidade = models.PositiveIntegerField(validators=[MinValueValidator(1)])
     origem = models.CharField(max_length=10, choices=ORIGEM_CHOICES, blank=True)
@@ -195,6 +202,8 @@ class MovimentacaoEstoque(models.Model):
     def _validar(self, material):
         if self.quantidade is None or self.quantidade < 1:
             raise ValidationError('A quantidade deve ser maior que zero.')
+        if self.acao_id and self.tipo != 'SAIDA':
+            raise ValidationError('Uma ação só pode ser vinculada a uma saída de estoque.')
         if self.origem == 'DOACAO' and not self.doacao_id:
             raise ValidationError(
                 'Entradas de doação só podem ser criadas pelo registro de doação.'

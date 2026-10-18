@@ -242,7 +242,7 @@ def cadastrar_movimentacao_estoque_view(request):
 
 def _filtrar_movimentacoes(request):
     movimentacoes = MovimentacaoEstoque.objects.select_related(
-        'material', 'doacao', 'doacao__doador'
+        'material', 'doacao', 'doacao__doador', 'acao'
     ).order_by('-dt_cadastro', '-id_movimentacao')
     busca = request.GET.get('busca', '').strip()
     tipo = request.GET.get('tipo', '').strip()
@@ -320,7 +320,7 @@ def exportar_movimentacoes_estoque_view(request):
     escritor = csv.writer(resposta, delimiter=';')
     escritor.writerow([
         'Data/hora', 'Tipo', 'Material', 'Código', 'Quantidade', 'Unidade',
-        'Responsável', 'Justificativa', 'Origem',
+        'Responsável', 'Justificativa', 'Origem', 'Ação',
     ])
     for mov in movimentacoes:
         escritor.writerow([
@@ -333,6 +333,7 @@ def exportar_movimentacoes_estoque_view(request):
             _csv_seguro(mov.registrado_por_nome or '-'),
             _csv_seguro(mov.justificativa),
             _csv_seguro(mov.origem_detalhada),
+            _csv_seguro(str(mov.acao) if mov.acao_id else '-'),
         ])
     return resposta
 

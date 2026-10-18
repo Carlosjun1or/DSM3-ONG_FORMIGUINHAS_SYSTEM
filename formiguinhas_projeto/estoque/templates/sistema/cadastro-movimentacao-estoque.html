@@ -4,7 +4,8 @@
 {% block titulo %}Registrar movimentação | Sistema{% endblock %}
 {% block page_title %}Registrar movimentação de estoque{% endblock %}
 {% block estilos %}<link rel="stylesheet" href="{% static 'estoque/estoque.css' %}?v=11">
-<script src="{% static 'estoque/estoque.js' %}" defer></script>{% endblock %}
+<script src="{% static 'estoque/estoque.js' %}" defer></script>
+<script src="{% static 'estoque/material-combobox.js' %}?v=1" defer></script>{% endblock %}
 
 {% block conteudo %}
 <section class="form-card estoque-form-card estoque-form-movimentacao">
@@ -37,8 +38,8 @@
             <div class="form-group material-picker{% if form.material.errors %} campo-invalido{% endif %}">
                 <label for="material-search">{{ form.material.label }}</label>
                 <div class="material-combobox" data-material-combobox>
-                    <input id="material-search" type="search" class="form-control" placeholder="Digite o nome ou código do material" autocomplete="off" autofocus role="combobox" aria-autocomplete="list" aria-controls="material-options" aria-expanded="false">
-                    <div id="material-options" class="material-options" role="listbox" hidden></div>
+                    <input id="material-search" data-material-search type="search" class="form-control" placeholder="Digite o nome ou código do material" autocomplete="off" autofocus role="combobox" aria-autocomplete="list" aria-controls="material-options" aria-expanded="false">
+                    <div id="material-options" data-material-options class="material-options" role="listbox" hidden></div>
                     <div class="material-select-real">{{ form.material }}</div>
                 </div>
                 <small class="form-help">Digite para pesquisar e selecione um material da lista.</small>
@@ -51,7 +52,7 @@
         <section class="estoque-form-section">
         <div class="estoque-form-section-heading">
             <span class="form-section-number">2</span>
-            <div><h3>Detalhes do registro</h3><p>Explique a origem da entrada ou o motivo da saída.</p></div>
+            <div><h3>Detalhes do registro</h3><p>Explique a origem da entrada ou o motivo da saída. Para vincular consumo a uma ação, registre os materiais na página de detalhes da própria ação.</p></div>
         </div>
         <div class="form-grid">
             <div id="origem-field">
@@ -73,10 +74,6 @@
         var tipo = document.getElementById('id_tipo');
         var origem = document.getElementById('origem-field');
         var orientacao = document.getElementById('movimentacao-orientacao');
-        var buscaMaterial = document.getElementById('material-search');
-        var material = document.getElementById('id_material');
-        var opcoesMaterial = document.getElementById('material-options');
-        var comboboxMaterial = document.querySelector('[data-material-combobox]');
         function alternar() {
             var ehSaida = tipo.value === 'SAIDA';
             origem.style.display = ehSaida ? 'none' : 'block';
@@ -94,92 +91,6 @@
         if (tipo && origem) {
             tipo.addEventListener('change', alternar);
             alternar();
-        }
-        if (buscaMaterial && material && opcoesMaterial && comboboxMaterial) {
-            var opcoes = Array.prototype.filter.call(material.options, function (opcao) {
-                return opcao.value;
-            });
-            var indiceAtivo = -1;
-
-            function selecionar(opcao) {
-                material.value = opcao.value;
-                buscaMaterial.value = opcao.textContent;
-                fecharOpcoes();
-                material.dispatchEvent(new Event('change', { bubbles: true }));
-            }
-
-            function fecharOpcoes() {
-                opcoesMaterial.hidden = true;
-                buscaMaterial.setAttribute('aria-expanded', 'false');
-                indiceAtivo = -1;
-            }
-
-            function renderizarOpcoes() {
-                var termo = buscaMaterial.value.trim().toLowerCase();
-                var encontradas = opcoes.filter(function (opcao) {
-                    return opcao.textContent.toLowerCase().indexOf(termo) !== -1;
-                });
-                opcoesMaterial.innerHTML = '';
-                encontradas.forEach(function (opcao, indice) {
-                    var item = document.createElement('button');
-                    item.type = 'button';
-                    item.className = 'material-option';
-                    item.setAttribute('role', 'option');
-                    item.setAttribute('data-value', opcao.value);
-                    item.textContent = opcao.textContent;
-                    item.addEventListener('mousedown', function (evento) {
-                        evento.preventDefault();
-                        selecionar(opcao);
-                    });
-                    if (indice === indiceAtivo) {
-                        item.classList.add('is-active');
-                    }
-                    opcoesMaterial.appendChild(item);
-                });
-                if (!encontradas.length) {
-                    var vazio = document.createElement('div');
-                    vazio.className = 'material-options-empty';
-                    vazio.textContent = 'Nenhum material encontrado.';
-                    opcoesMaterial.appendChild(vazio);
-                }
-                opcoesMaterial.hidden = false;
-                buscaMaterial.setAttribute('aria-expanded', 'true');
-                return encontradas;
-            }
-
-            buscaMaterial.value = material.value
-                ? material.options[material.selectedIndex].textContent
-                : '';
-            buscaMaterial.addEventListener('focus', renderizarOpcoes);
-            buscaMaterial.addEventListener('input', function () {
-                indiceAtivo = -1;
-                renderizarOpcoes();
-            });
-            buscaMaterial.addEventListener('keydown', function (evento) {
-                var itens = opcoesMaterial.querySelectorAll('.material-option');
-                if (evento.key === 'ArrowDown' || evento.key === 'ArrowUp') {
-                    evento.preventDefault();
-                    if (!itens.length) return;
-                    indiceAtivo = evento.key === 'ArrowDown'
-                        ? (indiceAtivo + 1) % itens.length
-                        : (indiceAtivo - 1 + itens.length) % itens.length;
-                    Array.prototype.forEach.call(itens, function (item, indice) {
-                        item.classList.toggle('is-active', indice === indiceAtivo);
-                    });
-                } else if (evento.key === 'Enter' && indiceAtivo >= 0 && itens[indiceAtivo]) {
-                    evento.preventDefault();
-                    selecionar(opcoes.find(function (opcao) {
-                        return opcao.value === itens[indiceAtivo].getAttribute('data-value');
-                    }));
-                } else if (evento.key === 'Escape') {
-                    fecharOpcoes();
-                }
-            });
-            document.addEventListener('click', function (evento) {
-                if (!comboboxMaterial.contains(evento.target)) {
-                    fecharOpcoes();
-                }
-            });
         }
     })();
 </script>

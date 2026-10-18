@@ -84,6 +84,7 @@
                     <th>Material</th>
                     <th>Quantidade</th>
                     <th>Responsável</th>
+                    <th>Ação</th>
                     <th>Origem</th>
                     <th>Detalhes</th>
                 </tr>
@@ -102,6 +103,7 @@
                     </td>
                     <td><strong>{% if mov.tipo == 'ENTRADA' %}+{% else %}−{% endif %}{{ mov.quantidade }}</strong><small class="table-secondary">{{ mov.material.get_unidade_display }}</small></td>
                     <td>{{ mov.registrado_por_nome|default:'-' }}</td>
+                    <td>{{ mov.acao|default:'-' }}</td>
                     <td>{{ mov.get_origem_display|default:'-' }}</td>
                     <td class="movimentacao-detalhes">
                         {% if mov.doacao %}
