@@ -47,7 +47,7 @@
                 <a href="https://wa.me/5513997284132?text=Olá!%20Quero%20mais%20informações%20sobre%20ONG" 
                 target="_blank" 
                 rel="noopener noreferrer"
-                class="botao-whatsapp"
+                class="btn"
                 aria-label="Fale com nossos coordenadores no WhatsApp">Faça parte da Formiguinha</a>
                 
             </div>
@@ -160,9 +160,9 @@
         </strong>
 
 
-        <div class="multirao-chamada">
+        <div class="multiroes-cards">
             {% for mutirao in mutiroes %}
-            <article>
+            <article class="card multirao-card">
                 <div class="multirao-imagem">
                     {% with imagem=mutirao.imagens_acao.all|first %}
                         {% if imagem %}
@@ -189,9 +189,10 @@
 
         </div>
 
-        <a href="{% url 'multiroes' %}">Conheça nossos mutirões</a>
-        <a href="{% url 'calendario' %}">Veja o calendário e participe</a>
-
+        <div class="button-multiroes">
+            <a class="btn" href="{% url 'multiroes' %}">Conheça nossos mutirões</a>
+            <a class="btn" href="{% url 'calendario' %}">Veja o calendário e participe</a>
+        </div>
     </div>
 
 </div>

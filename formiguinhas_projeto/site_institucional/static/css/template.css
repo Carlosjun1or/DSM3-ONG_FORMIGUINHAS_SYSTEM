@@ -1,0 +1,824 @@
+/* ==========================================================================
+   Formiguinhas da Praia — CSS base (v0.1)
+   Fonte: manual-identidade-visual-formiguinhas (Figma + SVG)
+
+   Legenda:
+   [MANUAL]   valor tirado do manual
+   [SUGESTÃO] valor que NÃO está no manual; é palpite e precisa de confirmação
+   ========================================================================== */
+
+@import url("https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700&family=Quicksand:wght@400;500;600;700&display=swap");
+
+/* --------------------------------------------------------------------------
+   1. TOKENS
+   -------------------------------------------------------------------------- */
+:root {
+  /* Marca [MANUAL] */
+  --azul: #0058b9;
+  --azul-profundo: #00306b;
+  --roxo: #7657cb;
+  --amarelo: #f4e01e;
+  --papel: #f9f6ee;
+  --azul-claro: #00a3e0; /* só decorativo, nunca como cor de texto */
+
+  /* Botões [MANUAL] — o amarelo do botão é o mesmo Amarelo da paleta */
+  --amarelo-botao: var(--amarelo);
+  --amarelo-botao-base: #de8c1a;
+  --azul-base: #00306b;
+  --roxo-base: #4f3a88; /* borda do card roxo e divisor */
+  --roxo-botao-base: #5934be; /* base do botão roxo, conferida no Figma */
+
+  /* Feedback [MANUAL] */
+  --sucesso: #2e8b57; /* fundos e bordas */
+  --sucesso-contraste: #287a4d; /* texto e ícone */
+  --erro: #d64545; /* fundos e bordas */
+  --erro-contraste: #cc2d2d; /* texto e ícone */
+
+  /* Texto corrido sobre Papel [MANUAL] */
+  --texto: #0b1e3d;
+
+  /* Fundos de alerta [MANUAL, vindo do SVG] */
+  --alerta-erro-fundo: #f3cbc6;
+  --alerta-sucesso-fundo: #cbddcb;
+  --alerta-cuidado-fundo: #fceeb4;
+  --alerta-aviso-fundo: #bcd0e3;
+
+  /* Neutros que aparecem no SVG mas não têm nome na paleta */
+  --borda-neutra: #e3dcc6;
+  --borda-neutra-forte: #b5afa4;
+  --selecionado-fundo: #efe9fb;
+
+  /* Tipografia [MANUAL] */
+  --fonte-titulo: "Fredoka", system-ui, sans-serif;
+  --fonte-corpo: "Quicksand", system-ui, sans-serif;
+  --texto-corpo: 1rem; /* 16 px, mínimo */
+  --texto-auxiliar: 0.875rem; /* 14 px, mínimo */
+
+  /* Tamanhos de título [SUGESTÃO] — o manual diz que são palpite */
+  --h1: 2.5rem;
+  --h2: 2rem;
+  --h3: 1.5rem;
+  --h4: 1.25rem;
+
+  /* Raios [MANUAL] */
+  --raio-botao: 999px; /* pílula */
+  --raio-card: 16px;
+  --raio-alerta: 14px;
+  --raio-selecao: 12px;
+
+  /* Medidas [MANUAL] */
+  --area-clique: 44px; /* mínimo para botões e links */
+  --botao-altura: 56px;
+  --botao-relevo: 7px; /* altura da base escura */
+  --borda: 2px;
+
+  /* Espaçamento [SUGESTÃO] */
+  --espaco-1: 0.25rem;
+  --espaco-2: 0.5rem;
+  --espaco-3: 0.75rem;
+  --espaco-4: 1rem;
+  --espaco-5: 1.5rem;
+  --espaco-6: 2rem;
+  --espaco-7: 3rem;
+  --largura-max: 1100px; /* [SUGESTÃO] mesma largura do conteúdo da Home no Figma */
+
+  /* Foco [SUGESTÃO] */
+  --foco: 3px solid var(--azul);
+  --foco-offset: 3px;
+}
+
+/* --------------------------------------------------------------------------
+   2. BASE
+   -------------------------------------------------------------------------- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--papel); /* nunca branco puro */
+  color: var(--texto);
+  font-family: var(--fonte-corpo);
+  font-size: var(--texto-corpo);
+  line-height: 1.5; /* [SUGESTÃO] */
+}
+
+h1,
+h2,
+h3,
+h4 {
+  margin: 0 0 var(--espaco-3);
+  color: var(--azul-profundo);
+  font-family: var(--fonte-titulo);
+  line-height: 1.2; /* [SUGESTÃO] */
+}
+
+h1 { font-size: var(--h1); font-weight: 700; }
+h2 { font-size: var(--h2); font-weight: 700; }
+h3 { font-size: var(--h3); font-weight: 600; }
+h4 { font-size: var(--h4); font-weight: 600; }
+
+p { margin: 0 0 var(--espaco-4); }
+
+a {
+  color: var(--azul);
+  text-underline-offset: 3px; /* [SUGESTÃO] */
+}
+
+/* Texto auxiliar: dica de campo e mensagem de erro, nunca abaixo de 14 px */
+.texto-auxiliar,
+.campo__dica,
+.campo__erro {
+  font-size: var(--texto-auxiliar);
+}
+
+:focus-visible {
+  outline: var(--foco);
+  outline-offset: var(--foco-offset);
+}
+
+.container {
+  width: min(100% - 2rem, var(--largura-max));
+  margin-inline: auto;
+}
+
+/* --------------------------------------------------------------------------
+   3. BOTÕES — pílula com base escura que dá relevo [MANUAL]
+   -------------------------------------------------------------------------- */
+.btn {
+  --btn-bg: var(--amarelo-botao) !important;
+  --btn-base: var(--amarelo-botao-base) !important;
+  --btn-cor: var(--azul-profundo) !important;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--espaco-2);
+  min-width: var(--area-clique);
+  min-height: var(--botao-altura);
+  padding: 0 var(--espaco-6);
+  border: 0;
+  border-radius: var(--raio-botao);
+  background: var(--btn-bg);
+  color: var(--btn-cor);
+  box-shadow: 0 var(--botao-relevo) 0 var(--btn-base);
+  font-family: var(--fonte-corpo);
+  font-size: var(--texto-corpo);
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform 0.08s ease, box-shadow 0.08s ease; /* [SUGESTÃO] */
+}
+
+/* Estados [SUGESTÃO] — o manual não define hover, ativo nem desabilitado */
+.btn:hover {
+  filter: brightness(1.05);
+}
+
+.btn:active {
+  transform: translateY(4px);
+  box-shadow: 0 calc(var(--botao-relevo) - 4px) 0 var(--btn-base);
+}
+
+.btn:disabled,
+.btn[aria-disabled="true"] {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Amarelo = ação principal (padrão). Texto SEMPRE Azul profundo #00306B */
+
+.btn--azul {
+  --btn-bg: var(--azul);
+  --btn-base: var(--azul-base);
+  --btn-cor: #fff;
+}
+
+
+/* Azul = ação de navegação */
+.btn--azul {
+  --btn-bg: var(--azul);
+  --btn-base: var(--azul-base);
+  --btn-cor: #fff;
+}
+
+/* Roxo = ação de apoio */
+.btn--roxo {
+  --btn-bg: var(--roxo);
+  --btn-base: var(--roxo-botao-base);
+  --btn-cor: #fff;
+}
+
+/* Contorno = ação leve (sem base escura) */
+.btn--contorno {
+  background: transparent;
+  color: var(--azul);
+  border: 3px solid var(--azul);
+  box-shadow: none;
+}
+
+.btn--contorno:active {
+  transform: none;
+  background: var(--selecionado-fundo);
+}
+
+/* Links de texto também respeitam a área de clique de 44 px */
+.link {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--area-clique);
+  color: var(--azul);
+  font-weight: 600;
+}
+
+/* --------------------------------------------------------------------------
+   4. CARDS [MANUAL]
+   -------------------------------------------------------------------------- */
+.card {
+  padding: var(--espaco-5); /* [SUGESTÃO] */
+  background: var(--papel);
+  border: var(--borda) solid var(--borda-neutra-forte);
+  border-radius: var(--raio-card);
+}
+
+.card--roxo {
+  border-color: var(--roxo-base);
+}
+
+/* Contorno azul e amarelo: gradiente de 3 px */
+.card--destaque {
+  border: 3px solid transparent;
+  background:
+    linear-gradient(var(--papel), var(--papel)) padding-box,
+    linear-gradient(135deg, var(--azul), var(--amarelo)) border-box;
+}
+
+/* --------------------------------------------------------------------------
+   5. ALERTAS [MANUAL]
+   Texto sempre Azul profundo (contraste); a cor aparece na borda e no ícone.
+   -------------------------------------------------------------------------- */
+.alerta {
+  --alerta-borda: var(--azul-claro);
+  --alerta-fundo: var(--alerta-aviso-fundo);
+
+  display: flex;
+  align-items: center;
+  gap: var(--espaco-3);
+  min-height: 66px;
+  padding: var(--espaco-3) var(--espaco-5);
+  background: var(--alerta-fundo);
+  color: var(--texto);
+  border: var(--borda) solid var(--alerta-borda);
+  border-radius: var(--raio-alerta);
+  font-weight: 600;
+}
+
+.alerta__icone {
+  flex: none;
+  color: var(--alerta-borda); /* ícone na cor do alerta */
+}
+
+.alerta--erro {
+  --alerta-borda: var(--erro);
+  --alerta-fundo: var(--alerta-erro-fundo);
+}
+
+.alerta--sucesso {
+  --alerta-borda: var(--sucesso);
+  --alerta-fundo: var(--alerta-sucesso-fundo);
+}
+
+.alerta--cuidado {
+  --alerta-borda: var(--amarelo-botao);
+  --alerta-fundo: var(--alerta-cuidado-fundo);
+}
+
+.alerta--aviso {
+  --alerta-borda: var(--azul-claro);
+  --alerta-fundo: var(--alerta-aviso-fundo);
+}
+
+/* --------------------------------------------------------------------------
+   6. SELEÇÃO (perfil: Administrador, Gestor...) [MANUAL]
+   -------------------------------------------------------------------------- */
+.selecao {
+  display: block;
+  min-height: 76px;
+  padding: var(--espaco-3) var(--espaco-5);
+  background: #fff;
+  border: var(--borda) solid var(--borda-neutra);
+  border-radius: var(--raio-selecao);
+  cursor: pointer;
+}
+
+.selecao:has(input:checked),
+.selecao[aria-checked="true"] {
+  background: var(--selecionado-fundo);
+  border-color: var(--roxo);
+}
+
+/* --------------------------------------------------------------------------
+   7. DIVISOR [MANUAL] — tracejado roxo para separar blocos grandes
+   -------------------------------------------------------------------------- */
+.divisor {
+  height: 0;
+  margin: var(--espaco-6) 0;
+  border: 0;
+  border-top: 6px dashed var(--roxo-base);
+}
+
+/* --------------------------------------------------------------------------
+   8. BREADCRUMB [MANUAL]
+   Fica acima do "Painel administrativo"; itens anteriores são links
+   azuis com 44 px de altura; o item atual não tem link e fica em negrito;
+   não aparece em telas de primeiro nível.
+   -------------------------------------------------------------------------- */
+.breadcrumb {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--espaco-2);
+  margin: 0 0 var(--espaco-3);
+  padding: 0;
+  list-style: none;
+}
+
+.breadcrumb li + li::before {
+  content: ">";
+  margin-right: var(--espaco-2);
+  color: var(--azul-profundo);
+}
+
+.breadcrumb a {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--area-clique);
+  color: var(--azul);
+}
+
+.breadcrumb [aria-current="page"] {
+  color: var(--azul-profundo);
+  font-weight: 700;
+}
+
+/* --------------------------------------------------------------------------
+   9. CAMPOS DE FORMULÁRIO [MANUAL — baseado em "8.1 Cadastro Ações"]
+   Rótulo 18 px negrito, campo de 56 px, cantos de 8 px, borda de 2 px,
+   texto e placeholder em 18 px. Dica e erro com 14 px no mínimo.
+   O Figma tem placeholder #6F7075 e fundo #FFFDF7. A cor da borda é
+   estimada do print; confirme no Figma.
+   -------------------------------------------------------------------------- */
+:root {
+  --campo-fundo: #fffdf7;
+  --campo-borda: #d0cec8; /* [SUGESTÃO] estimada do print; contraste baixo (~1,5:1) */
+  --campo-placeholder: #6f7075;
+  --campo-off-fundo: #efead9;
+  --campo-raio: 8px;
+}
+
+.campo {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: var(--espaco-5);
+}
+
+.campo__label {
+  font-size: 1.125rem; /* 18 px */
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.campo__obrig {
+  color: var(--roxo); /* asterisco roxo marca o campo obrigatório */
+}
+
+.campo__input,
+.campo__select,
+.campo__area {
+  width: 100%;
+  min-height: 56px;
+  padding: 0 16px;
+  background: var(--campo-fundo);
+  color: var(--texto);
+  border: var(--borda) solid var(--campo-borda);
+  border-radius: var(--campo-raio);
+  font-family: var(--fonte-corpo);
+  font-size: 1.125rem; /* 18 px */
+  font-weight: 500;
+}
+
+.campo__input::placeholder,
+.campo__area::placeholder {
+  color: var(--campo-placeholder);
+  opacity: 1;
+}
+
+.campo__area {
+  min-height: 154px;
+  padding-top: 14px;
+  resize: vertical;
+}
+
+/* Lista de opções: seta para baixo à direita */
+.campo__select {
+  appearance: none;
+  padding-right: 52px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='20' viewBox='0 0 18 20' fill='none' stroke='%230b1e3d' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 2v16M3 12l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 16px center;
+}
+
+/* Estados */
+.campo__input:focus-visible,
+.campo__select:focus-visible,
+.campo__area:focus-visible {
+  border-color: var(--azul);
+  outline: var(--foco);
+  outline-offset: var(--foco-offset);
+}
+
+.campo--erro .campo__input,
+.campo--erro .campo__select,
+.campo--erro .campo__area {
+  border-color: var(--erro);
+}
+
+.campo--sucesso .campo__input,
+.campo--sucesso .campo__select,
+.campo--sucesso .campo__area {
+  border-color: var(--sucesso);
+}
+
+.campo__input:disabled,
+.campo__select:disabled,
+.campo__area:disabled {
+  background-color: var(--campo-off-fundo);
+  border-color: var(--borda-neutra);
+  color: var(--campo-placeholder);
+  cursor: not-allowed;
+}
+
+/* Dica e mensagens: 14 px no mínimo */
+.campo__dica {
+  font-size: var(--texto-auxiliar);
+  font-weight: 500;
+}
+
+.campo__erro {
+  font-size: var(--texto-auxiliar);
+  font-weight: 700;
+  color: var(--erro-contraste); /* versão de contraste para texto pequeno */
+}
+
+.campo__ok {
+  font-size: var(--texto-auxiliar);
+  font-weight: 700;
+  color: var(--sucesso-contraste);
+}
+
+/* Legenda "* Campos obrigatórios" */
+.legenda-obrigatorio {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 0 12px;
+  background: #f2eefc;
+  color: var(--roxo);
+  border-radius: 999px;
+  font-size: var(--texto-auxiliar);
+  font-weight: 700;
+}
+
+
+/* --------------------------------------------------------------------------
+   10. BARRA SUPERIOR [MANUAL: breadcrumb, sino e perfil]
+   Breadcrumb à esquerda (só em telas de segundo nível ou mais),
+   sino e perfil à direita. A altura é fixa para a barra não "pular".
+   -------------------------------------------------------------------------- */
+.barra-topo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--espaco-4);
+  height: 64px;
+  padding: 0 var(--espaco-5);
+  background: var(--papel);
+  border-bottom: var(--borda) solid var(--borda-neutra);
+}
+
+.barra-topo__acoes {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-left: auto; /* mantém as ações à direita mesmo sem breadcrumb */
+}
+
+.barra-topo .breadcrumb {
+  margin: 0;
+}
+
+/* Sino de notificações: botão redondo no estilo contorno, 44 x 44 px */
+.btn-sino {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--area-clique);
+  height: var(--area-clique);
+  padding: 0;
+  background: var(--papel);
+  color: var(--azul);
+  border: 3px solid var(--azul);
+  border-radius: 50%;
+  font-size: 1.375rem;
+  cursor: pointer;
+}
+
+/* Número de avisos novos: vermelho de contraste, texto de 14 px */
+.btn-sino__selo {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 5px;
+  background: var(--erro-contraste);
+  color: #fff;
+  border-radius: 11px;
+  font-family: var(--fonte-corpo);
+  font-size: var(--texto-auxiliar);
+  font-weight: 700;
+}
+
+.btn-sino__selo[hidden] {
+  display: none;
+}
+
+/* Perfil: avatar + primeiro nome + seta */
+.btn-perfil {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--espaco-2);
+  height: var(--area-clique);
+  padding: 0 12px 0 3px;
+  background: var(--papel);
+  color: var(--azul-profundo);
+  border: 3px solid var(--azul);
+  border-radius: var(--raio-botao);
+  font-family: var(--fonte-titulo);
+  font-size: 1.0625rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 32px;
+  height: 32px;
+  background: var(--roxo);
+  color: #fff;
+  border-radius: 10px;
+  font-family: var(--fonte-titulo);
+  font-size: 1.0625rem;
+  font-weight: 600;
+}
+
+.btn-sino:focus-visible,
+.btn-perfil:focus-visible {
+  outline: var(--foco);
+  outline-offset: var(--foco-offset);
+}
+
+/* No celular: o perfil mostra só o avatar */
+@media (max-width: 640px) {
+  .btn-perfil {
+    justify-content: center;
+    width: var(--area-clique);
+    padding: 0 3px;
+  }
+
+  .btn-perfil__nome,
+  .btn-perfil__seta {
+    display: none;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   11. PAINÉIS SUSPENSOS (lista de notificações e menu do perfil)
+   Abrem embaixo do botão, alinhados à direita. Um aberto por vez.
+   -------------------------------------------------------------------------- */
+.menu-suspenso {
+  position: relative;
+}
+
+.painel {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  z-index: 20;
+  width: 300px;
+  max-width: calc(100vw - 2rem);
+  padding: 6px 0;
+  background: var(--campo-fundo);
+  border: var(--borda) solid var(--borda-neutra);
+  border-radius: var(--raio-alerta);
+}
+
+.painel[hidden] {
+  display: none;
+}
+
+.painel--estreito {
+  width: 230px;
+}
+
+.painel__titulo {
+  padding: 8px 16px 4px;
+  color: var(--azul-profundo);
+  font-family: var(--fonte-titulo);
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+
+.painel__sub {
+  padding: 0 16px;
+  font-size: var(--texto-auxiliar);
+  color: var(--campo-placeholder);
+}
+
+.painel__divisor {
+  height: var(--borda);
+  margin: 6px 0;
+  background: var(--borda-neutra);
+}
+
+.painel__item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: var(--area-clique);
+  padding: 0 16px;
+  background: none;
+  border: 0;
+  color: var(--azul-profundo);
+  font-family: var(--fonte-corpo);
+  font-size: var(--texto-corpo);
+  font-weight: 700;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.painel__item:hover {
+  background: var(--selecionado-fundo);
+}
+
+.painel__item:focus-visible {
+  outline: var(--foco);
+  outline-offset: -3px;
+}
+
+/* Link no rodapé da lista de notificações */
+.painel__item--link {
+  color: var(--azul);
+  text-decoration: underline;
+}
+
+/* Notificação: título em negrito, hora embaixo, ponto azul se não lida */
+.notificacao {
+  display: flex;
+  gap: 10px;
+  padding: 8px 16px;
+}
+
+.notificacao__ponto {
+  flex: none;
+  width: 10px;
+  height: 10px;
+  margin-top: 6px;
+  background: var(--azul);
+  border-radius: 50%;
+}
+
+.notificacao__titulo {
+  font-weight: 700;
+}
+
+.notificacao__hora {
+  font-size: var(--texto-auxiliar);
+  color: var(--campo-placeholder);
+}
+
+/* --------------------------------------------------------------------------
+   12. MENU LATERAL [MANUAL: cores e item ativo; medidas são SUGESTÃO]
+   Azul em degradê, item ativo com fundo claro e barra amarela à esquerda.
+   O item destacado e os itens visíveis mudam por tela e por perfil.
+   -------------------------------------------------------------------------- */
+.menu {
+  --menu-largura: 280px; /* [SUGESTÃO] */
+  display: flex;
+  flex-direction: column;
+  width: var(--menu-largura);
+  min-height: 100vh;
+  background: linear-gradient(160deg, var(--azul) 0%, var(--azul-profundo) 100%);
+  color: #fff;
+}
+
+.menu__logo {
+  display: flex;
+  align-items: center;
+  gap: var(--espaco-3);
+  padding: var(--espaco-5) var(--espaco-4);
+}
+
+.menu__grupo {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.menu__grupo + .menu__grupo {
+  margin-top: 28px; /* só espaço entre grupos, sem separador */
+}
+
+.menu__item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 52px; /* acima dos 44 px de clique */
+  padding: 0 var(--espaco-4);
+  color: #fff;
+  font-family: var(--fonte-titulo);
+  font-size: 1.375rem; /* 22 px */
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.menu__item svg,
+.menu__item i {
+  flex: none;
+  width: 26px;
+  height: 26px;
+  font-size: 26px;
+}
+
+.menu__item:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.menu__item[aria-current="page"] {
+  background: rgba(255, 255, 255, 0.18);
+  box-shadow: inset 5px 0 0 var(--amarelo);
+}
+
+.menu__item:focus-visible {
+  outline: 3px solid #fff;
+  outline-offset: -3px;
+}
+
+/* Item que o perfil não pode ver: some do menu (e o servidor também
+   precisa conferir o perfil em cada rota; esconder não protege a página) */
+.menu__item[hidden] {
+  display: none;
+}
+
+/* --------------------------------------------------------------------------
+   COMO USAR (resumo do HTML)
+
+   <header class="barra-topo">
+     <nav aria-label="Você está aqui">
+       <ol class="breadcrumb">
+         <li><a href="/voluntarios">Voluntários</a></li>
+         <li aria-current="page">Novo voluntário</li>
+       </ol>
+     </nav>
+     <div class="barra-topo__acoes">
+       <div class="menu-suspenso">
+         <button class="btn-sino" aria-label="Notificações, 3 novas"
+                 aria-expanded="false" aria-controls="painel-notif">
+           <i class="ti ti-bell"></i><span class="btn-sino__selo">3</span>
+         </button>
+         <div class="painel" id="painel-notif" hidden> ... </div>
+       </div>
+       <div class="menu-suspenso">
+         <button class="btn-perfil" aria-expanded="false" aria-controls="painel-perfil">
+           <span class="avatar">A</span>
+           <span class="btn-perfil__nome">Alessandra</span>
+           <i class="ti ti-chevron-down btn-perfil__seta"></i>
+         </button>
+         <div class="painel painel--estreito" id="painel-perfil" hidden> ... </div>
+       </div>
+     </div>
+   </header>
+   -------------------------------------------------------------------------- */
