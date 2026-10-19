@@ -16,6 +16,7 @@ body {
 header {
     display: inline-flex;
     width: 100%;
+    justify-content: space-between;
     padding: 0.85rem 1.25rem;
     background: var(--site-azul-profundo);
     position: sticky;
@@ -28,6 +29,7 @@ header .logo {
     align-items: center;
     justify-content: space-between;
     gap: 1.5rem;
+    width: 100%;
 }
 
 header .logo > a {
@@ -306,6 +308,32 @@ main .container {
     justify-content: space-evenly;
     margin-top: 1.5rem;
     padding: 0.75rem 1.25rem;
+}
+
+#calendario-index .container .calendario-index-conteudo {
+    display: flex;
+    flex-direction: column;
+    padding: 1.75rem 2rem;
+}
+
+
+#calendario-index .container .calendario-index-conteudo .calendario-index-card {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    font-weight: 700;
+}
+
+#calendario-index .container .calendario-index-conteudo .calendario-index-card p{
+    margin: 0;
+}
+
+#calendario-index .container .calendario-index-conteudo .calendario-index-card .calendario-index-data {
+    font-size: 5rem;
+    color: var(--site-azul)
+    
 }
 
 footer {

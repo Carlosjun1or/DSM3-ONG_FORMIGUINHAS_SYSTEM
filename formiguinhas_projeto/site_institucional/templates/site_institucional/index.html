@@ -209,7 +209,7 @@
             <h2>Participe do nosso próximo mutirão</h2>
 
             {% if proximo_mutirao %}
-            <article class="calendario-index-card">
+            <article class="card calendario-index-card">
                 <div class="calendario-index-data">
                     <strong>{{ proximo_mutirao.data|date:'d' }}</strong>
                     <span>{{ proximo_mutirao.data|date:'M' }}</span>
@@ -233,7 +233,7 @@
                     href="https://wa.me/5513997284132?text=Olá!%20Quero%20participar%20do%20próximo%20mutirão%20em%20{{ proximo_mutirao.praia.nome }}%20no%20dia%20{{ proximo_mutirao.data|date:'d/m/Y' }}"
                     target="_blank"
                     rel="noopener noreferrer"
-                    class="botao-participar-mutirao"
+                    class="btn"
                 >
                     Quero participar
                 </a>
