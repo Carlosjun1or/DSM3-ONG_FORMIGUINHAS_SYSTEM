@@ -1,0 +1,319 @@
+/* Shared public-site layout layered over template.css. */
+
+:root {
+    --site-azul-profundo: #00306b;
+    --site-azul: #0058b9;
+    --site-amarelo: #f4e01e;
+    --site-papel: #f9f6ee;
+}
+
+body {
+    width: 100%;
+    background: var(--site-papel);
+    color: #111820;
+}
+
+header {
+    display: inline-flex;
+    width: 100%;
+    padding: 0.85rem 1.25rem;
+    background: var(--site-azul-profundo);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+header .logo {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+}
+
+header .logo > a {
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    gap: 0.55rem;
+    color: #fff;
+    font-family: var(--fonte-titulo);
+    font-size: 1rem;
+    font-weight: 700;
+    line-height: 1.05;
+    text-decoration: none;
+}
+
+header .logo > a span:first-child {
+    font-size: 1.8rem;
+}
+
+header nav {
+    display: flex;
+    flex: 1 1 auto;
+    align-items: center;
+    justify-content: center;
+    gap: clamp(0.65rem, 1.5vw, 1.35rem);
+}
+
+header nav a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    color: #fff;
+    font-size: 0.9rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+header nav a:hover,
+header nav a:focus-visible {
+    color: var(--site-amarelo);
+    text-decoration: underline;
+    text-underline-offset: 0.35rem;
+}
+
+main {
+    width: 100%;
+    margin: 0 auto;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+main h1,
+main h2,
+main h3,
+main h4 {
+    color: inherit;
+}
+
+main a:not(.botao-whatsapp):not(.botao-participar):not(.botao-participar-mutirao) {
+    color: inherit;
+}
+
+main .container {
+    width: min(100% - 2rem, 1300px);
+}
+
+.btn {
+    --btn-cor: var(--site-azul-profundo) !important;
+}
+
+#inicio {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    padding: 2rem 0 1.75rem;
+    background: linear-gradient(110deg, #00306b 0%, #0058b9 100%);
+    color: #fff;
+}
+
+#inicio::before {
+    position: absolute;
+    z-index: -1;
+    top: -7rem;
+    right: -3rem;
+    width: 15rem;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: rgb(0 120 230 / 22%);
+    content: "";
+}
+
+#inicio .cabecalho {
+    width: min(100%, 670px);
+    margin: 0 auto 1.25rem;
+    text-align: center;
+}
+
+#inicio .cabecalho > span,
+#calendario-index .calendario-index-conteudo > span {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 0.7rem;
+    padding: 0.35rem 0.8rem;
+    border-radius: 999px;
+    background: rgb(0 163 224 / 28%);
+    color: var(--site-amarelo);
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+#inicio .cabecalho h2 {
+    margin-bottom: 0.5rem;
+    color: #fff;
+    font-size: clamp(2rem, 4vw, 2.65rem);
+}
+
+#inicio .cabecalho p {
+    max-width: 690px;
+    margin: 0 auto;
+    color: #fff;
+    font-size: 1rem;
+    font-weight: 600;
+    line-height: 1.45;
+}
+
+#inicio .inicio-conteudo {
+    width: min(100%, 670px);
+    margin: 0 auto;
+}
+
+#inicio .inicio-conteudo article {
+    padding: 1.75rem 2rem;
+    border-radius: 18px;
+    background: var(--site-papel);
+    color: #111820;
+    text-align: center;
+}
+
+#inicio .inicio-conteudo article h3 {
+    margin-bottom: 0.35rem;
+    color: #111820;
+    font-size: 1.45rem;
+}
+
+#inicio .inicio-conteudo article p {
+    max-width: 540px;
+    color: #111820;
+    font-size: 0.9rem;
+    font-weight: 600;
+    line-height: 1.45;
+}
+
+#inicio .referencias {
+    display: flex;
+    justify-content: center;
+}
+
+#historia .container .historia-conteudo {
+    display: flex;
+    flex-direction: row;
+}
+
+#historia .container .historia-conteudo article {
+    flex: 1 1;
+    padding: 1.75rem 2rem;
+    border-radius: 18px;
+    background: var(--site-papel);
+    color: #111820;
+    display: flex;
+    flex-direction: column;
+}
+
+#historia h3, #multiroes h2 {
+    margin-bottom: 0.35rem;
+    color: var(--roxo) !important;
+}
+
+#historia .container .historia-conteudo article p {
+    max-width: 540px;
+    color: #111820;
+    font-size: 0.9rem;
+    font-weight: 600;
+    line-height: 1.45;
+}
+
+#historia .container .historia-conteudo article .pillar {
+    display: inline-flex;
+    max-width: fit-content;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+#historia .container .historia-conteudo article .pillar p {
+    margin-right: 0.5rem;
+    color: #111820;
+    font-size: 0.9rem;
+    font-weight: 600;
+    align-items: center;
+    margin-bottom: 0;
+}
+
+#historia .container .historia-conteudo article .pillar .badge {
+    color: var(--roxo);
+    border: 3px solid var(--roxo);
+    border-radius: 999px;
+    font-weight: 700;
+    /* tamanho de um circulo */
+    width: 2.5rem;
+    height: 2.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#multiroes .container .multiroes-conteudo {
+    display: flex;
+    flex-direction: column;
+    padding: 1.75rem 2rem;
+}
+
+#multiroes .container .multiroes-cards {
+    align-items: center;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    width: 100%;
+    height: 100%;
+    margin-top: 2.5rem;
+
+}
+
+#multiroes .container .multiroes-conteudo .multiroes-cards .multirao-card {
+    display: flex;
+    flex-direction: row;
+    width: calc(70% - 2rem);
+}
+
+#multiroes .container .multiroes-conteudo .multiroes-cards .multirao-card .multirao-descricao {
+    flex: 1 1;
+    padding: 1.75rem 2rem;
+    border-radius: 18px;
+    background: var(--site-papel);
+    color: #111820;
+
+}
+
+#multiroes .container #conheca-mutiroes, #multiroes .container #veja-calendario {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 1.5rem;
+    padding: 0.75rem 1.25rem;
+    border-radius: 999px;
+    background: var(--site-amarelo);
+    color: var(--site-azul-profundo);
+    font-size: 0.9rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-decoration: none;
+}
+
+#multiroes .container .button-multiroes {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    flex-direction: row;
+    gap: 1rem;
+    justify-content: space-evenly;
+    margin-top: 1.5rem;
+    padding: 0.75rem 1.25rem;
+}
+
+footer {
+    width: 100%;
+    padding: 1.5rem 1.25rem;
+    background: var(--site-azul-profundo);
+    color: #fff;
+    text-align: center;
+    position: relative;
+    bottom: 0;
+}

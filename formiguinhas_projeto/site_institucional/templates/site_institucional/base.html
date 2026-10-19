@@ -6,12 +6,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Formiguinhas da Praia | Cuidar da praia é cuidar da vida</title>
     <meta name="description" content="Conheça a história, as ações, os mutirões, as coletas e as formas de apoiar a ONG Formiguinhas da Praia.">
-    <link rel="stylesheet" href="{% static 'css/base.css' %}?v=3">
+    <link rel="stylesheet" href="{% static 'css/template.css' %}?v=4">
+    {% block style %}<link rel="stylesheet" href="{% static 'css/site-layout.css' %}?v=4">{% endblock %}
 </head>
 <body>
     <header>
         <div class="logo">
-            <a href="{% url 'index' %}"><span>🐜</span><span>Formiguinhas<br>da Praia</span></a>
+            <a href="{% url 'index' %}"><span aria-hidden="true">🐜</span><span>Formiguinhas<br><span id="destaque-title">DA PRAIA</span></span></a>
             <nav>
             <a href="#historia">Nossa história</a>
             <a href="{% url 'praias_atuacao' %}">Praias</a>
@@ -26,7 +27,7 @@
             <a href="https://wa.me/5513997284132?text=Olá!%20Quero%20mais%20informações%20sobre%20ONG" 
                 target="_blank" 
                 rel="noopener noreferrer"
-                class="botao-whatsapp"
+                class="btn btn--amarelo"
                 aria-label="Fale com nossos coordenadores no WhatsApp">Quero participar</a>
         </div>
     </header>
