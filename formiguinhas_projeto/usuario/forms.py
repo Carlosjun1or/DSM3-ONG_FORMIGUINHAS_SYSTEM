@@ -1,6 +1,53 @@
 from django import forms
+from django.contrib.auth import password_validation
 from django.utils import timezone
 from .models import Usuario, Voluntario
+
+
+class PasswordResetRequestForm(forms.Form):
+    email = forms.EmailField(
+        label='E-mail',
+        widget=forms.EmailInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'coordenacao@example.org',
+            'autocomplete': 'email',
+            'autofocus': True,
+        })
+    )
+
+
+class SetNewPasswordForm(forms.Form):
+    senha = forms.CharField(
+        label='Nova senha',
+        widget=forms.PasswordInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Digite a nova senha',
+            'autocomplete': 'new-password',
+        })
+    )
+    confirmar_senha = forms.CharField(
+        label='Confirmar nova senha',
+        widget=forms.PasswordInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Repita a nova senha',
+            'autocomplete': 'new-password',
+        })
+    )
+
+    def clean(self):
+        cleaned_data = super().clean()
+        senha = cleaned_data.get('senha')
+        confirmar_senha = cleaned_data.get('confirmar_senha')
+
+        if senha and confirmar_senha and senha != confirmar_senha:
+            self.add_error('confirmar_senha', 'As senhas não coincidem.')
+        elif senha:
+            try:
+                password_validation.validate_password(senha)
+            except forms.ValidationError as error:
+                self.add_error('senha', error)
+
+        return cleaned_data
 
 
 def validar_maioridade(data_nascimento):
@@ -36,7 +83,8 @@ class LoginForm(forms.Form):
         label='Senha',
         widget=forms.PasswordInput(attrs={
             'class': 'form-control',
-            'placeholder': 'Digite sua senha'
+            'placeholder': 'Digite sua senha',
+            'autocomplete': 'current-password',
         })
     )
 

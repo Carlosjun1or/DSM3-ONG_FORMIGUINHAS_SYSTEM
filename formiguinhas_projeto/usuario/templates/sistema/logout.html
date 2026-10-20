@@ -1,12 +1,26 @@
 {% extends 'sistema/template-sistema.html' %}
 
 {% block titulo %}Logout | Sistema{% endblock %}
-{% block page_title %}Logout{% endblock %}
+{% block body_class %}login-page{% endblock %}
 
 {% block conteudo %}
-<section class="empty-state">
-    <h2>Você saiu do sistema</h2>
-    <p class="form-subtitle">Sua sessão foi encerrada com sucesso.</p>
-    <a href="{% url 'login' %}" class="btn btn-primary">Fazer login novamente</a>
+<section class="auth-shell auth-login-shell">
+    <div class="auth-card auth-login-card auth-logout-card">
+        <header class="auth-login-heading">
+            <p class="auth-brand-name">Formiguinhas da Praia</p>
+            <h1>Você saiu do sistema</h1>
+            <p class="auth-subtitle">Sua sessão foi encerrada com sucesso.</p>
+        </header>
+
+        <div class="auth-logout-actions">
+            <a href="{% url 'login' %}" class="btn btn-primary auth-submit-button">Fazer login novamente</a>
+            <a href="{% url 'index' %}" class="auth-site-link">
+                <svg class="auth-site-link-icon" viewBox="0 0 20 20" aria-hidden="true" focusable="false">
+                    <path d="M12.5 4.5 7 10l5.5 5.5M7.5 10h9" />
+                </svg>
+                <span>Voltar para o site institucional</span>
+            </a>
+        </div>
+    </div>
 </section>
 {% endblock %}

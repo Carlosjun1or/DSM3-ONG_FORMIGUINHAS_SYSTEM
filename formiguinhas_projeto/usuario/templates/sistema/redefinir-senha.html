@@ -1,0 +1,55 @@
+{% extends 'sistema/template-sistema.html' %}
+
+{% block titulo %}Redefinir senha | Sistema{% endblock %}
+{% block body_class %}login-page{% endblock %}
+
+{% block conteudo %}
+<section class="auth-shell auth-login-shell">
+    <div class="auth-card auth-login-card">
+        <header class="auth-login-heading">
+            <p class="auth-brand-name">Formiguinhas da Praia</p>
+            <h1>Definir nova senha</h1>
+            {% if token_valido %}
+                <p class="auth-subtitle">Escolha uma senha nova para sua conta.</p>
+            {% else %}
+                <p class="auth-subtitle">Este link expirou ou já foi utilizado. Solicite uma nova recuperação.</p>
+            {% endif %}
+        </header>
+
+        {% if token_valido %}
+            <form method="post">
+                {% csrf_token %}
+                {% if form.non_field_errors %}
+                    <div class="error-box" role="alert">{{ form.non_field_errors|join:', ' }}</div>
+                {% endif %}
+
+                <div class="form-group">
+                    {{ form.senha.label_tag }}
+                    {{ form.senha }}
+                    {% if form.senha.errors %}
+                        <small class="error-msg">{{ form.senha.errors|join:', ' }}</small>
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    {{ form.confirmar_senha.label_tag }}
+                    {{ form.confirmar_senha }}
+                    {% if form.confirmar_senha.errors %}
+                        <small class="error-msg">{{ form.confirmar_senha.errors|join:', ' }}</small>
+                    {% endif %}
+                </div>
+
+                <button type="submit" class="btn btn-primary auth-submit-button">Salvar nova senha</button>
+            </form>
+        {% endif %}
+
+        <a href="{% url 'recuperar_senha' %}" class="form-link auth-back-link">Solicitar outro link</a>
+        <a href="{% url 'index' %}" class="auth-site-link">
+            <svg class="auth-site-link-icon" viewBox="0 0 20 20" aria-hidden="true" focusable="false">
+                <path d="M12.5 4.5 7 10l5.5 5.5M7.5 10h9" />
+            </svg>
+            <span>Voltar para o site institucional</span>
+        </a>
+    </div>
+</section>
+{% endblock %}

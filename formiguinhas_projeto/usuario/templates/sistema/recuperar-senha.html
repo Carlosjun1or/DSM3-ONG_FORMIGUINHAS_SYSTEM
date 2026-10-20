@@ -1,0 +1,54 @@
+{% extends 'sistema/template-sistema.html' %}
+
+{% block titulo %}Recuperar senha | Sistema{% endblock %}
+{% block body_class %}login-page{% endblock %}
+
+{% block conteudo %}
+<section class="auth-shell auth-login-shell">
+    <div class="auth-card auth-login-card auth-recovery-card{% if email_enviado %} auth-recovery-card--sent{% endif %}">
+        <header class="auth-login-heading">
+            <p class="auth-brand-name">Formiguinhas da Praia</p>
+            {% if email_enviado %}
+                <h1>Confira seu e-mail</h1>
+            {% else %}
+                <h1>Recuperar senha</h1>
+            {% endif %}
+            <p class="auth-subtitle">Demonstração com dados fictícios.</p>
+        </header>
+
+        {% if email_enviado %}
+            <p class="auth-feedback" role="status">
+                Se o e-mail estiver cadastrado, você receberá as instruções.
+            </p>
+            <a href="{% url 'login' %}" class="btn btn-primary auth-submit-button auth-confirmation-link">Voltar ao login</a>
+        {% else %}
+            <p class="auth-recovery-instruction">Informe seu e-mail para recuperar o acesso.</p>
+            <form method="post">
+                {% csrf_token %}
+                {% if form.non_field_errors %}
+                    <div class="error-box" role="alert">{{ form.non_field_errors|join:', ' }}</div>
+                {% endif %}
+
+                <div class="form-group">
+                    {{ form.email.label_tag }}
+                    {{ form.email }}
+                    {% if form.email.errors %}
+                        <small class="error-msg">{{ form.email.errors|join:', ' }}</small>
+                    {% endif %}
+                </div>
+
+                <div class="auth-login-actions auth-recovery-actions">
+                    <button type="submit" class="btn btn-primary auth-submit-button">Enviar instruções</button>
+                    <a href="{% url 'login' %}" class="btn btn-outline auth-recovery-back">Voltar</a>
+                </div>
+            </form>
+        {% endif %}
+        <a href="{% url 'index' %}" class="auth-site-link">
+            <svg class="auth-site-link-icon" viewBox="0 0 20 20" aria-hidden="true" focusable="false">
+                <path d="M12.5 4.5 7 10l5.5 5.5M7.5 10h9" />
+            </svg>
+            <span>Voltar para o site institucional</span>
+        </a>
+    </div>
+</section>
+{% endblock %}
