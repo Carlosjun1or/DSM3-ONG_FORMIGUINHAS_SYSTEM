@@ -1,81 +1,6 @@
 {% extends "site_institucional/base.html" %}
 
 {% block conteudo %}
-<style>
-    .secao-contato-whatsapp {
-        background: linear-gradient(135deg, #25d366 0%, #128c7e 100%);
-        padding: 60px 0;
-        margin-top: 40px;
-    }
-
-    .container-contato {
-        width: 90%;
-        max-width: 1200px;
-        margin: 0 auto;
-    }
-
-    .contato-conteudo {
-        max-width: 600px;
-        margin: 0 auto;
-        text-align: center;
-        color: #ffffff;
-    }
-
-    .contato-conteudo h2 {
-        font-size: 32px;
-        margin-bottom: 20px;
-        font-weight: bold;
-    }
-
-    .contato-conteudo p {
-        font-size: 16px;
-        line-height: 1.8;
-        margin-bottom: 30px;
-        color: #ffffff;
-    }
-
-    .botao-whatsapp {
-        display: inline-flex;
-        align-items: center;
-        gap: 10px;
-        padding: 16px 40px;
-        background-color: #ffffff;
-        color: #25d366;
-        text-decoration: none;
-        font-weight: bold;
-        font-size: 16px;
-        border-radius: 50px;
-        transition: all 0.3s ease;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-    }
-
-    .botao-whatsapp:hover {
-        background-color: #f0f0f0;
-        transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
-    }
-
-    .botao-whatsapp:active {
-        transform: translateY(0);
-    }
-
-    .icone-whatsapp {
-        font-size: 24px;
-    }
-
-    @media (max-width: 768px) {
-        .contato-conteudo h2 {
-            font-size: 24px;
-        }
-
-        .botao-whatsapp {
-            width: 100%;
-            justify-content: center;
-            padding: 14px 20px;
-        }
-    }
-</style>
-
 <section id="praias-pagina">
     <div class="container">
         <div class="praias-cabecalho">
@@ -87,6 +12,10 @@
                 praias mais próximas de você.
             </p>
             <button type="button" id="localizar-praias" class="botao-participar">
+                <svg class="icone-inline" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="M19 10.2c0 5.1-7 11-7 11s-7-5.9-7-11a7 7 0 1 1 14 0Z" stroke="currentColor" stroke-width="1.8"/>
+                    <circle cx="12" cy="10" r="2.3" stroke="currentColor" stroke-width="1.8"/>
+                </svg>
                 Encontrar praias próximas
             </button>
             <p id="localizacao-status" class="localizacao-status" role="status">
@@ -106,7 +35,13 @@
                     <h2>{{ praia.nome }}</h2>
                     <span class="praia-distancia" aria-live="polite"></span>
                 </div>
-                <p class="praia-cidade">{{ praia.cidade }}</p>
+                <p class="praia-cidade">
+                    <svg class="icone-inline" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <path d="M19 10.2c0 5.1-7 11-7 11s-7-5.9-7-11a7 7 0 1 1 14 0Z" stroke="currentColor" stroke-width="1.8"/>
+                        <circle cx="12" cy="10" r="2.3" stroke="currentColor" stroke-width="1.8"/>
+                    </svg>
+                    {{ praia.cidade }}
+                </p>
                 {% if praia.descricao %}<p>{{ praia.descricao }}</p>{% endif %}
                 <a
                     class="praia-mapa"
@@ -143,7 +78,10 @@
                 class="botao-whatsapp"
                 aria-label="Fale com nossos coordenadores no WhatsApp"
             >
-                <span class="icone-whatsapp">💬</span>
+                <svg class="icone-inline" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="M20 11.5a8 8 0 0 1-11.9 7L4 20l1.4-4A8 8 0 1 1 20 11.5Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+                    <path d="M9 9.1c.4 2.1 1.8 3.5 3.9 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                </svg>
                 Fale com nossos coordenadores
             </a>
         </div>
