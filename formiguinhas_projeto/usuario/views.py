@@ -1,6 +1,13 @@
-from django.db.models import Prefetch, Q
+import logging
+from smtplib import SMTPException
+
+from django.conf import settings
+from django.contrib import messages
+from django.core.mail import send_mail
 from django.db import transaction
+from django.db.models import Prefetch, Q
 from django.shortcuts import render, redirect
+from django.urls import reverse
 from django.utils import timezone
 
 from acao.services import calcular_frequencias_voluntarios
@@ -14,13 +21,18 @@ from .forms import (
     UsuarioEdicaoForm,
     CadastroForm,
     PerfilForm,
+    PasswordResetRequestForm,
+    SetNewPasswordForm,
 )
 from .models import Usuario, Voluntario
 from .paginacao import paginar_queryset
+from .tokens import password_reset_token
 from auditoria.services import registrar_evento, snapshot
 
 
 # Create your views here.
+logger = logging.getLogger(__name__)
+
 
 def get_session_usuario(request):
     usuario_id = request.session.get('usuario_id')
@@ -607,9 +619,99 @@ def login_view(request):
     return render(request, 'sistema/login.html', {'form': form, 'cadastro_form': cadastro_form})
 
 
+def recuperar_senha_view(request):
+    form = PasswordResetRequestForm(
+        request.POST if request.method == 'POST' else None
+    )
+    email_enviado = False
+
+    if request.method == 'POST' and form.is_valid():
+        email = form.cleaned_data['email']
+        usuario = Usuario.objects.select_related('id_voluntario').filter(
+            id_voluntario__email__iexact=email,
+            id_voluntario__status='ATIVO',
+        ).first()
+
+        if usuario:
+            url_redefinicao = request.build_absolute_uri(reverse(
+                'redefinir_senha',
+                args=[usuario.id_usuario, password_reset_token.make_token(usuario)],
+            ))
+            try:
+                send_mail(
+                    subject='Recuperação de senha | Formiguinhas da Praia',
+                    message=(
+                        f'Olá, {usuario.id_voluntario.nome}.\n\n'
+                        'Recebemos uma solicitação para redefinir a senha da sua conta. '
+                        'Acesse o link abaixo para cadastrar uma nova senha:\n\n'
+                        f'{url_redefinicao}\n\n'
+                        'Se você não solicitou esta alteração, ignore este e-mail.'
+                    ),
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    recipient_list=[usuario.id_voluntario.email],
+                    fail_silently=False,
+                )
+            except (OSError, SMTPException):
+                logger.exception('Falha ao enviar e-mail de recuperação de senha.')
+                form.add_error(
+                    None,
+                    'Não foi possível enviar o e-mail agora. Tente novamente mais tarde.',
+                )
+            else:
+                email_enviado = True
+        else:
+            email_enviado = True
+
+    return render(request, 'sistema/recuperar-senha.html', {
+        'form': form,
+        'email_enviado': email_enviado,
+    })
+
+
+def redefinir_senha_view(request, usuario_id, token):
+    usuario = Usuario.objects.select_related('id_voluntario').filter(
+        id_usuario=usuario_id,
+        id_voluntario__status='ATIVO',
+    ).first()
+    token_valido = bool(usuario and password_reset_token.check_token(usuario, token))
+
+    if not token_valido:
+        return render(
+            request,
+            'sistema/redefinir-senha.html',
+            {'token_valido': False},
+            status=400,
+        )
+
+    form = SetNewPasswordForm(
+        request.POST if request.method == 'POST' else None
+    )
+    if request.method == 'POST' and form.is_valid():
+        with transaction.atomic():
+            usuario = Usuario.objects.select_for_update().get(id_usuario=usuario_id)
+            if not password_reset_token.check_token(usuario, token):
+                return render(
+                    request,
+                    'sistema/redefinir-senha.html',
+                    {'token_valido': False},
+                    status=400,
+                )
+
+            usuario.set_password(form.cleaned_data['senha'])
+            usuario.save(update_fields=['senha'])
+
+        messages.success(request, 'Sua senha foi redefinida. Você já pode entrar.')
+        return redirect('login')
+
+    return render(request, 'sistema/redefinir-senha.html', {
+        'form': form,
+        'token_valido': True,
+    })
+
+
 def logout_view(request):
     request.session.flush()
-    return render(request, 'sistema/logout.html', {'mensagem': 'Logout realizado com sucesso!'})
+    return render(request, 'sistema/logout.html')
 
 
 @transaction.atomic

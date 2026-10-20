@@ -1,17 +1,21 @@
 {% extends 'sistema/template-sistema.html' %}
 
 {% block titulo %}Login | Sistema{% endblock %}
+{% block body_class %}login-page{% endblock %}
 
 {% block conteudo %}
-<section class="auth-shell" style="display: grid; gap: 24px;">
-    <div class="auth-card">
-        <h2>Bem-vindo de volta</h2>
-        <p class="auth-subtitle">Acesse o painel da ONG Formiguinhas.</p>
+<section class="auth-shell auth-login-shell">
+    <div class="auth-card auth-login-card">
+        <header class="auth-login-heading">
+            <p class="auth-brand-name">Formiguinhas da Praia</p>
+            <h1>Entrar no sistema</h1>
+            <p class="auth-subtitle">Acesse o painel da ONG Formiguinhas.</p>
+        </header>
 
         <form method="post">
             {% csrf_token %}
             {% if form.non_field_errors %}
-                <div class="error-box">{{ form.non_field_errors|join:', ' }}</div>
+                <div class="error-box" role="alert">{{ form.non_field_errors|join:', ' }}</div>
             {% endif %}
 
             <div class="form-group">
@@ -33,10 +37,18 @@
                 {% endif %}
             </div>
 
-            <div class="form-actions">
+            <div class="auth-login-actions">
                 <button type="submit" class="btn btn-primary">Entrar</button>
+                <a href="{% url 'recuperar_senha' %}" class="btn btn-outline auth-reset-link">Recuperar senha</a>
             </div>
         </form>
+        <p class="auth-login-note">Use seu e-mail cadastrado e sua senha para acessar o sistema.</p>
+        <a href="{% url 'index' %}" class="auth-site-link">
+            <svg class="auth-site-link-icon" viewBox="0 0 20 20" aria-hidden="true" focusable="false">
+                <path d="M12.5 4.5 7 10l5.5 5.5M7.5 10h9" />
+            </svg>
+            <span>Voltar para o site institucional</span>
+        </a>
     </div>
 
     {% if request.session.usuario_tipo == 'ADMIN' %}

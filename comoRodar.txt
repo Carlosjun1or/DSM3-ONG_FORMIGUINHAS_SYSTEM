@@ -27,3 +27,9 @@ python manage.py runserver
 
 # 6. (Opcional) Roda os testes automatizados do estoque.
 python manage.py test
+
+# Recuperação de senha:
+# Em desenvolvimento, o link enviado aparece no console do servidor Django.
+# Em produção, configure EMAIL_BACKEND, EMAIL_HOST, EMAIL_PORT,
+# EMAIL_HOST_USER, EMAIL_HOST_PASSWORD, EMAIL_USE_TLS e DEFAULT_FROM_EMAIL
+# como variáveis de ambiente para habilitar o envio SMTP.

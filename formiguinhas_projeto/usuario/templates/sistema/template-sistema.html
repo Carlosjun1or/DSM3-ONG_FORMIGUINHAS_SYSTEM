@@ -5,15 +5,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block titulo %}Formiguinhas | Sistema{% endblock %}</title>
-    <link rel="stylesheet" href="{% static 'css/style.css' %}?v=58">
+    <link rel="icon" type="image/svg+xml" href="{% static 'site_institucional/img/mascote-formiguinha.svg' %}?v=1">
+    <link rel="shortcut icon" href="{% static 'site_institucional/img/mascote-formiguinha.svg' %}?v=1">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}?v=69">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700&family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
     {% block estilos %}{% endblock %}
 </head>
-<body class="system-page">
+<body class="system-page {% block body_class %}{% endblock %}">
     <div class="app-shell">
-        {% if request.session.usuario_id %}
+        {% if request.session.usuario_id and request.resolver_match.url_name != 'recuperar_senha' and request.resolver_match.url_name != 'redefinir_senha' %}
         <aside class="sidebar">
             <div class="sidebar-brand">
-                <span class="brand-mark">🐜</span>
+                <img class="brand-mark" src="{% static 'site_institucional/img/mascote-formiguinha.svg' %}" alt="">
                 <div>
                     <strong>Formiguinhas</strong>
                     <small>ONG</small>
@@ -66,7 +71,7 @@
         {% endif %}
 
         <main class="main-panel">
-            {% if request.session.usuario_id %}
+            {% if request.session.usuario_id and request.resolver_match.url_name != 'recuperar_senha' and request.resolver_match.url_name != 'redefinir_senha' %}
             <header class="topbar">
                 <div>
                     <p class="topbar-kicker">Painel administrativo</p>
