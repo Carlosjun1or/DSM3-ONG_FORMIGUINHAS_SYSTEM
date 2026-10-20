@@ -4,14 +4,38 @@
 
 {% if ultimo_comunicado %}
 <div class="comunicado-modal" data-comunicado-modal hidden>
-    <div class="comunicado-modal-backdrop" data-fechar-comunicado></div>
-    <section class="comunicado-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="comunicado-modal-titulo">
-        <button type="button" class="comunicado-modal-fechar" data-fechar-comunicado aria-label="Fechar comunicado">×</button>
-        <small>{{ ultimo_comunicado.get_tipo_display }}{% if ultimo_comunicado.tema %} · {{ ultimo_comunicado.tema.nome }}{% endif %}</small>
-        <h2 id="comunicado-modal-titulo">{{ ultimo_comunicado.titulo }}</h2>
-        {% if ultimo_comunicado.resumo %}<p>{{ ultimo_comunicado.resumo }}</p>{% endif %}
-        <p class="comunicado-modal-data">{{ ultimo_comunicado.dt_publicacao|date:'d/m/Y H:i' }}</p>
-        <a class="botao-participar" href="{% url 'comunicado_publico_detalhe' ultimo_comunicado.id_comunicado %}">Ver comunicado</a>
+    <div class="comunicado-modal-backdrop" data-fechar-comunicado aria-hidden="true"></div>
+    <section class="comunicado-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="comunicado-modal-titulo" {% if ultimo_comunicado.resumo %}aria-describedby="comunicado-modal-resumo"{% endif %} tabindex="-1">
+        <div class="comunicado-modal-faixa" aria-hidden="true"></div>
+        <button type="button" class="comunicado-modal-fechar" data-fechar-comunicado aria-label="Fechar comunicado">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="m6 6 12 12M18 6 6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+        </button>
+        <div class="comunicado-modal-conteudo">
+            <div class="comunicado-modal-identificacao">
+                <span class="comunicado-modal-icone" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none">
+                        <path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9ZM10 21h4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </span>
+                <small class="comunicado-modal-tipo">{{ ultimo_comunicado.get_tipo_display }}</small>
+                {% if ultimo_comunicado.tema %}<span class="comunicado-modal-tema">{{ ultimo_comunicado.tema.nome }}</span>{% endif %}
+            </div>
+            <h2 id="comunicado-modal-titulo">{{ ultimo_comunicado.titulo }}</h2>
+            {% if ultimo_comunicado.resumo %}<p id="comunicado-modal-resumo" class="comunicado-modal-resumo">{{ ultimo_comunicado.resumo }}</p>{% endif %}
+            <p class="comunicado-modal-data">
+                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <rect x="3.5" y="5" width="17" height="16" rx="2" stroke="currentColor" stroke-width="1.7"/>
+                    <path d="M7.5 3v4M16.5 3v4M3.5 10h17" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+                </svg>
+                <time datetime="{{ ultimo_comunicado.dt_publicacao|date:'c' }}">{{ ultimo_comunicado.dt_publicacao|date:'d/m/Y · H:i' }}</time>
+            </p>
+            <div class="comunicado-modal-acoes">
+                <a class="btn btn--azul" href="{% url 'comunicado_publico_detalhe' ultimo_comunicado.id_comunicado %}">Ler comunicado</a>
+                <button type="button" class="comunicado-modal-mais-tarde" data-fechar-comunicado>Ver mais tarde</button>
+            </div>
+        </div>
     </section>
 </div>
 {% endif %}
@@ -35,7 +59,7 @@
     </div>
 
     <div class="inicio-conteudo">
-        <article>
+        <article id="participe">
             <h3>Junte-se a nós!</h3>
 
             <p>
@@ -44,19 +68,112 @@
             </p>
 
             <div class="referencias">
-                <a href="https://wa.me/5513997284132?text=Olá!%20Quero%20mais%20informações%20sobre%20ONG" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                class="btn"
-                aria-label="Fale com nossos coordenadores no WhatsApp">Faça parte da Formiguinha</a>
-                
+                <a class="btn" href="https://wa.me/5513997284132?text=Ol%C3%A1%21%20Quero%20ser%20volunt%C3%A1rio%28a%29%20da%20Formiguinhas%20da%20Praia.%20Gostaria%20de%20saber%20como%20posso%20participar." target="_blank" rel="noopener noreferrer">Quero ser voluntário</a>
+                <a class="btn btn--contorno" href="{% url 'login' %}">Entrar</a>
             </div>
         </article>
     </div>
 
+    <ul class="indicadores" aria-label="Formiguinhas da Praia em números">
+        <li><strong>2019</strong><span>desde o início</span></li>
+        <li><strong>+400</strong><span>voluntários</span></li>
+        <li><strong>85</strong><span>mutirões feitos</span></li>
+        <li><strong>32 km</strong><span>de praias atendidas</span></li>
+    </ul>
+
 </div>
 
+</section>
 
+<section class="secao-impacto" aria-labelledby="impacto-titulo">
+    <div class="container">
+        <div class="impacto-cabecalho">
+            <span>Nosso impacto positivo</span>
+            <h2 id="impacto-titulo">Formiguinhas da Praia na reciclagem em 2025</h2>
+            <p>Pequenas atitudes, somadas, geram resultados que fazem diferença.</p>
+        </div>
+
+        <ul class="impacto-indicadores">
+            <li class="impacto-indicador impacto-indicador--reciclaveis">
+                <svg viewBox="0 0 48 48" fill="none" aria-hidden="true">
+                    <path d="m19 7 4-4 4 7h-5l-3-3Zm13 4 6 1 1 6-4-2-3-5ZM9 21l-2 6 6 1-1-4 4-4-7 1Z" fill="currentColor"/>
+                    <path d="m17 15 5-3 5 1 4 7-4 2-3-5-5 3-2-5Zm13 11 5 2 1 5-3 5-8 1v-5l5-1 1-7Zm-13 1 1 6 5 2-2 5-7-3-2-5 5-5Z" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <strong>1.512 kg</strong>
+                <span>de recicláveis coletados</span>
+            </li>
+            <li class="impacto-indicador impacto-indicador--agua">
+                <svg viewBox="0 0 48 48" fill="none" aria-hidden="true">
+                    <path d="M24 4S11 20 11 29a13 13 0 0 0 26 0C37 20 24 4 24 4Z" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/>
+                    <path d="M17 30a7 7 0 0 0 7 7" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+                </svg>
+                <strong>132 mil L</strong>
+                <span>de água economizados</span>
+            </li>
+            <li class="impacto-indicador impacto-indicador--co2">
+                <svg viewBox="0 0 48 48" fill="none" aria-hidden="true">
+                    <path d="M39 8C24 7 12 11 9 23c-2 9 5 16 13 14 12-3 17-15 17-29Z" stroke="currentColor" stroke-width="2.8" stroke-linejoin="round"/>
+                    <path d="M8 42c6-12 14-19 25-26" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"/>
+                </svg>
+                <strong>8.500 kg</strong>
+                <span>de CO₂ evitados</span>
+            </li>
+            <li class="impacto-indicador impacto-indicador--garrafas">
+                <svg viewBox="0 0 48 48" fill="none" aria-hidden="true">
+                    <path d="M19 5h10v5l3 4v27H16V14l3-4V5Zm0 5h10m-13 9h16m-16 14h16" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <strong>43.729 mil</strong>
+                <span>garrafas plásticas recicladas</span>
+            </li>
+        </ul>
+
+        <p class="impacto-apoiador">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="m12 3 2.6 5.3 5.9.9-4.2 4.1 1 5.8-5.3-2.8-5.3 2.8 1-5.8-4.2-4.1 5.9-.9L12 3Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+            </svg>
+            Com apoio de <strong>Espaço Urbano</strong>
+        </p>
+    </div>
+</section>
+
+<section id="apoie" class="secao-apoie">
+    <div class="container">
+        <div class="apoie-cabecalho">
+            <span>Ajude a transformar</span>
+            <h2>Apoie as Formiguinhas da Praia</h2>
+            <p>
+                Sua contribuição ajuda a manter nossas praias limpas e a levar
+                nossas ações de cuidado e conscientização ainda mais longe.
+            </p>
+        </div>
+
+        <article class="apoie-pix-card">
+            <span class="apoie-pix-icone" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none">
+                    <path d="M7.05 7.05 4.7 4.7a2.4 2.4 0 0 0-3.4 3.4l3.1 3.1-3.1 3.1a2.4 2.4 0 0 0 3.4 3.4l2.35-2.35M16.95 7.05 19.3 4.7a2.4 2.4 0 0 1 3.4 3.4l-3.1 3.1 3.1 3.1a2.4 2.4 0 0 1-3.4 3.4l-2.35-2.35M7.05 16.95 4.7 19.3a2.4 2.4 0 0 1-3.4-3.4l3.1-3.1M16.95 16.95l2.35 2.35a2.4 2.4 0 0 0 3.4-3.4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="m8.5 8.5 7 7m0-7-7 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                </svg>
+            </span>
+            <div class="apoie-pix-conteudo">
+                <span class="apoie-pix-etiqueta">Doe via PIX</span>
+                <h3>Contribua com qualquer valor</h3>
+                <p>Use o CNPJ da ONG como chave PIX:</p>
+                <div class="apoie-chave-linha">
+                    <label class="visualmente-oculto" for="chave-pix-ong">Chave PIX CNPJ das Formiguinhas da Praia</label>
+                    <input id="chave-pix-ong" type="text" value="61.036.099/0001-76" readonly aria-describedby="pix-copiar-status">
+                    <button class="btn btn--azul" type="button" data-copiar-pix>
+                        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                            <rect x="8" y="8" width="12" height="13" rx="2" stroke="currentColor" stroke-width="1.8"/>
+                            <path d="M16 8V5a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h2" stroke="currentColor" stroke-width="1.8"/>
+                        </svg>
+                        Copiar chave
+                    </button>
+                </div>
+                <p id="pix-copiar-status" class="pix-copiar-status" role="status" aria-live="polite"></p>
+                <p class="apoie-pix-agradecimento">Juntos, cuidamos do litoral e fortalecemos essa transformação.</p>
+            </div>
+        </article>
+    </div>
 </section>
 
 <!-- HISTÓRIA -->
@@ -91,12 +208,13 @@
 
 
         <article>
-            <h3>Missão, visão e valores</h3>
+            <h3>5 motivos pra vir pro próximo mutirão</h3>
 
             <h4>Cada mutirão sustenta cinco coisas ao mesmo tempo</h4>
 
             <p>
-                Recolher o lixo é só a parte visível. O grupo existe pra sustentar isso toda semana, com quem topa caminhar junto.
+                Recolher o lixo é só a parte visível. O grupo existe para sustentar
+                essa iniciativa toda semana, com quem topa caminhar junto.
             </p>
 
             <div class="pillar">
@@ -163,16 +281,6 @@
         <div class="multiroes-cards">
             {% for mutirao in mutiroes %}
             <article class="card multirao-card">
-                <div class="multirao-imagem">
-                    {% with imagem=mutirao.imagens_acao.all|first %}
-                        {% if imagem %}
-                            <img src="{{ imagem.imagem.url }}" alt="{{ imagem.descricao|default:mutirao.descricao|default:'Imagem do mutirão' }}" loading="lazy">
-                        {% else %}
-                            <span>Registro do mutirão</span>
-                        {% endif %}
-                    {% endwith %}
-                </div>
-
                 <div class="multirao-descricao">
                     <h3>{{ mutirao.get_tipo_display }} em {{ mutirao.praia.nome }}</h3>
 
@@ -189,62 +297,35 @@
 
         </div>
 
+        {% if proximo_mutirao %}
+        <article class="proximo-mutirao">
+            <h3>Próximo encontro: {{ proximo_mutirao.praia.nome }}</h3>
+            <p>
+                {{ proximo_mutirao.data|date:'d/m/Y' }}
+                {% if proximo_mutirao.horario %} · {{ proximo_mutirao.horario|time:'H:i' }}{% endif %}
+                · {{ proximo_mutirao.local|default:proximo_mutirao.praia.cidade }}
+            </p>
+            {% if proximo_mutirao.descricao %}<p>{{ proximo_mutirao.descricao }}</p>{% endif %}
+            <a
+                class="btn proximo-mutirao-participar"
+                href="https://wa.me/5513997284132?text=Olá!%20Quero%20participar%20do%20próximo%20mutirão%20em%20{{ proximo_mutirao.praia.nome|urlencode }}%20no%20dia%20{{ proximo_mutirao.data|date:'d/m/Y'|urlencode }}"
+                target="_blank"
+                rel="noopener noreferrer"
+            >
+                Quero participar
+            </a>
+        </article>
+        {% endif %}
+
         <div class="button-multiroes">
-            <a class="btn" href="{% url 'multiroes' %}">Conheça nossos mutirões</a>
-            <a class="btn" href="{% url 'calendario' %}">Veja o calendário e participe</a>
+            <a class="btn btn--azul" href="{% url 'multiroes' %}">Conheça nossos mutirões</a>
+            <a class="btn btn--contorno" href="{% url 'calendario' %}">Veja o calendário</a>
         </div>
     </div>
 
 </div>
 
 
-</section>
-
-<!-- CALENDÁRIO -->
-
-<section id="calendario-index">
-    <div class="container">
-        <div class="calendario-index-conteudo">
-            <span>Próxima oportunidade</span>
-            <h2>Participe do nosso próximo mutirão</h2>
-
-            {% if proximo_mutirao %}
-            <article class="card calendario-index-card">
-                <div class="calendario-index-data">
-                    <strong>{{ proximo_mutirao.data|date:'d' }}</strong>
-                    <span>{{ proximo_mutirao.data|date:'M' }}</span>
-                </div>
-
-                <div>
-                    <h3>{{ proximo_mutirao.praia.nome }}</h3>
-                    <p class="mutirao-cidade">{{ proximo_mutirao.praia.cidade }}</p>
-                    {% if proximo_mutirao.horario %}
-                    <p>Horário: {{ proximo_mutirao.horario|time:'H:i' }}</p>
-                    {% endif %}
-                    {% if proximo_mutirao.local %}
-                    <p>Local: {{ proximo_mutirao.local }}</p>
-                    {% endif %}
-                    {% if proximo_mutirao.descricao %}
-                    <p>{{ proximo_mutirao.descricao }}</p>
-                    {% endif %}
-                </div>
-
-                <a
-                    href="https://wa.me/5513997284132?text=Olá!%20Quero%20participar%20do%20próximo%20mutirão%20em%20{{ proximo_mutirao.praia.nome }}%20no%20dia%20{{ proximo_mutirao.data|date:'d/m/Y' }}"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    class="btn"
-                >
-                    Quero participar
-                </a>
-            </article>
-            {% else %}
-            <p class="mutiroes-vazio">Ainda não há um próximo mutirão agendado.</p>
-            {% endif %}
-
-            <a href="{% url 'calendario' %}">Ver calendário completo</a>
-        </div>
-    </div>
 </section>
 
 <!-- PRAIAS -->
@@ -264,33 +345,36 @@
         </p>
 
         <p>
-            Conheça as praias onde as Formiguinhas da Praia estão presentes.
-            Podemos usar a localização do seu dispositivo, com sua autorização,
-            para mostrar primeiro a praia mais próxima de você.
+            Conheça as praias onde as Formiguinhas da Praia estão presentes e
+            acompanhe o calendário das próximas ações para saber quando e onde
+            podemos nos encontrar.
         </p>
 
         <button type="button" id="localizar-praias-index" class="botao-participar">
-            Encontrar a praia mais próxima
+            Veja a praia mais próxima de você
         </button>
         <p id="localizacao-status-index" class="localizacao-status" role="status">
             Sua localização não é armazenada.
         </p>
 
-        <div id="lista-praias-index" class="praias-resumo">
-            {% for praia in praias %}
-            <article
-                class="praia-resumo-card"
-                data-latitude="{{ praia.latitude }}"
-                data-longitude="{{ praia.longitude }}"
-            >
-                <h3>{{ praia.nome }}</h3>
-                <p>{{ praia.cidade }}</p>
-                <span class="praia-distancia" aria-live="polite"></span>
-            </article>
-            {% empty %}
-            <p>Nenhuma praia de atuação cadastrada no momento.</p>
-            {% endfor %}
-        </div>
+        <details class="praias-resumo-detalhes">
+            <summary>Ver praias atendidas</summary>
+            <div id="lista-praias-index" class="praias-resumo">
+                {% for praia in praias %}
+                <article
+                    class="praia-resumo-card"
+                    data-latitude="{{ praia.latitude }}"
+                    data-longitude="{{ praia.longitude }}"
+                >
+                    <h3>{{ praia.nome }}</h3>
+                    <p>{{ praia.cidade }}</p>
+                    <span class="praia-distancia" aria-live="polite"></span>
+                </article>
+                {% empty %}
+                <p>Nenhuma praia de atuação cadastrada no momento.</p>
+                {% endfor %}
+            </div>
+        </details>
 
         <a href="{% url 'praias_atuacao' %}">Veja as praias e encontre a mais próxima</a>
 
@@ -343,6 +427,7 @@
                                 `${distanciaKm.toFixed(1).replace('.', ',')} km de você`;
                             lista.appendChild(praia);
                         });
+                    lista.closest('details').open = true;
                     status.textContent = 'Praias ordenadas pela distância em relação à sua localização.';
                     botao.textContent = 'Atualizar praia mais próxima';
                 },
@@ -355,6 +440,29 @@
     })();
 </script>
 
+<script>
+(() => {
+    const botao = document.querySelector('[data-copiar-pix]');
+    const chave = document.getElementById('chave-pix-ong');
+    const status = document.getElementById('pix-copiar-status');
+    if (!botao || !chave || !status) return;
+
+    botao.addEventListener('click', async () => {
+        try {
+            if (!navigator.clipboard?.writeText) {
+                throw new Error('A cópia automática não está disponível neste navegador.');
+            }
+            await navigator.clipboard.writeText(chave.value.replace(/\D/g, ''));
+            status.textContent = 'Chave PIX copiada. Obrigado por apoiar!';
+        } catch {
+            status.textContent = 'Não foi possível copiar automaticamente. Selecione a chave acima e copie.';
+            chave.focus();
+            chave.select();
+        }
+    });
+})();
+</script>
+
 {% if ultimo_comunicado %}
 <script>
 (() => {
@@ -362,16 +470,34 @@
     if (!modal) return;
     const chave = 'comunicado-visto-{{ ultimo_comunicado.id_comunicado }}';
     if (window.localStorage.getItem(chave)) return;
+    const focoAnterior = document.activeElement;
     modal.hidden = false;
     const fechar = () => {
         modal.hidden = true;
         window.localStorage.setItem(chave, '1');
+        if (focoAnterior instanceof HTMLElement) focoAnterior.focus();
     };
     modal.querySelectorAll('[data-fechar-comunicado]').forEach((elemento) => {
         elemento.addEventListener('click', fechar);
     });
-    document.addEventListener('keydown', (evento) => {
-        if (evento.key === 'Escape' && !modal.hidden) fechar();
+    modal.querySelector('.comunicado-modal-fechar').focus();
+    modal.addEventListener('keydown', (evento) => {
+        if (evento.key === 'Escape') {
+            fechar();
+            return;
+        }
+        if (evento.key !== 'Tab') return;
+
+        const focaveis = Array.from(modal.querySelectorAll('a[href], button:not([disabled])'));
+        const primeiro = focaveis[0];
+        const ultimo = focaveis[focaveis.length - 1];
+        if (evento.shiftKey && document.activeElement === primeiro) {
+            evento.preventDefault();
+            ultimo.focus();
+        } else if (!evento.shiftKey && document.activeElement === ultimo) {
+            evento.preventDefault();
+            primeiro.focus();
+        }
     });
 })();
 </script>

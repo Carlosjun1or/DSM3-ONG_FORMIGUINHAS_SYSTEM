@@ -6,29 +6,30 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Formiguinhas da Praia | Cuidar da praia é cuidar da vida</title>
     <meta name="description" content="Conheça a história, as ações, os mutirões, as coletas e as formas de apoiar a ONG Formiguinhas da Praia.">
-    <link rel="stylesheet" href="{% static 'css/template.css' %}?v=4">
-    {% block style %}<link rel="stylesheet" href="{% static 'css/site-layout.css' %}?v=4">{% endblock %}
+    <link rel="icon" type="image/svg+xml" href="{% static 'site_institucional/img/mascote-formiguinha.svg' %}?v=1">
+    <link rel="shortcut icon" href="{% static 'site_institucional/img/mascote-formiguinha.svg' %}?v=1">
+    <link rel="stylesheet" href="{% static 'css/template.css' %}?v=6">
+    {% block style %}    <link rel="stylesheet" href="{% static 'css/site-layout.css' %}?v=8">{% endblock %}
 </head>
 <body>
     <header>
         <div class="logo">
-            <a href="{% url 'index' %}"><span aria-hidden="true">🐜</span><span>Formiguinhas<br><span id="destaque-title">DA PRAIA</span></span></a>
-            <nav>
-            <a href="#historia">Nossa história</a>
-            <a href="{% url 'praias_atuacao' %}">Praias</a>
-            <a href="{% url 'multiroes' %}">Mutirões</a>
-            <a href="{% url 'calendario' %}">Calendário</a>
-            <a href="{% url 'comunicados_publicos' %}">Notícias</a>
-           <!-- <a href="#">Bags</a> -->
-            <!-- <a href="#">Coletas</a> -->
-            <!-- <a href="#">Apoie</a> -->
-            <!-- <a href="#">Ongs Pareiras</a> -->
+            <a class="marca" href="{% url 'index' %}" aria-label="Formiguinhas da Praia — página inicial">
+                <img class="marca-icone" src="{% static 'site_institucional/img/mascote-formiguinha.svg' %}" alt="">
+                <span>Formiguinhas<br><span id="destaque-title">DA PRAIA</span></span>
+            </a>
+            <nav aria-label="Navegação principal">
+                <a href="{% url 'index' %}#historia">Nossa história</a>
+                <a href="{% url 'praias_atuacao' %}">Praias</a>
+                <a href="{% url 'multiroes' %}">Mutirões</a>
+                <a href="{% url 'calendario' %}">Calendário</a>
+                <a href="{% url 'comunicados_publicos' %}">Notícias</a>
+                <a href="{% url 'index' %}#apoie">Apoie</a>
             </nav>
-            <a href="https://wa.me/5513997284132?text=Olá!%20Quero%20mais%20informações%20sobre%20ONG" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                class="btn btn--amarelo"
-                aria-label="Fale com nossos coordenadores no WhatsApp">Quero participar</a>
+            <div class="acoes-cabecalho">
+                <a class="btn btn--contorno" href="{% url 'login' %}">Entrar</a>
+                <a class="btn" href="https://wa.me/5513997284132?text=Ol%C3%A1%21%20Quero%20ser%20volunt%C3%A1rio%28a%29%20da%20Formiguinhas%20da%20Praia.%20Gostaria%20de%20saber%20como%20posso%20participar." target="_blank" rel="noopener noreferrer">Seja voluntário</a>
+            </div>
         </div>
     </header>
     <main>
@@ -36,7 +37,7 @@
         {% endblock %}
     </main>
     <footer>
-        <p>&copy; 2026 Formiguinhas</p>
+        <p>&copy; {% now "Y" %} Formiguinhas da Praia</p>
     </footer>
 
     <script src="{% static 'site_institucional/js/script.js' %}"></script>
