@@ -15,6 +15,7 @@ class Tema(models.Model):
     atualizado_em = models.DateTimeField(auto_now=True)
 
     class Meta:
+        managed = False
         db_table = 'comunicado_tema'
         ordering = ('nome',)
 
@@ -66,6 +67,7 @@ class Comunicado(models.Model):
     atualizado_em = models.DateTimeField(auto_now=True)
 
     class Meta:
+        managed = False
         db_table = 'comunicado'
         ordering = ('-dt_publicacao', '-criado_em')
         indexes = [
@@ -109,33 +111,37 @@ class Comunicado(models.Model):
 
 class ComunicadoPraia(models.Model):
     comunicado = models.ForeignKey(Comunicado, on_delete=models.CASCADE, related_name='praias')
-    praia = models.ForeignKey('praia.Praia', on_delete=models.PROTECT, related_name='comunicados')
+    praia = models.ForeignKey('praia.Praia', on_delete=models.DO_NOTHING, db_constraint=False, related_name='comunicados')
     class Meta:
+        managed = False
         db_table = 'comunicado_praia'
         constraints = [models.UniqueConstraint(fields=('comunicado', 'praia'), name='comunicado_praia_unico')]
 
 
 class ComunicadoEquipe(models.Model):
     comunicado = models.ForeignKey(Comunicado, on_delete=models.CASCADE, related_name='equipes')
-    equipe = models.ForeignKey('equipe.Equipe', on_delete=models.PROTECT, related_name='comunicados')
+    equipe = models.ForeignKey('equipe.Equipe', on_delete=models.DO_NOTHING, db_constraint=False, related_name='comunicados')
     class Meta:
+        managed = False
         db_table = 'comunicado_equipe'
         constraints = [models.UniqueConstraint(fields=('comunicado', 'equipe'), name='comunicado_equipe_unico')]
 
 
 class ComunicadoAcao(models.Model):
     comunicado = models.ForeignKey(Comunicado, on_delete=models.CASCADE, related_name='acoes')
-    acao = models.ForeignKey('acao.Acao', on_delete=models.PROTECT, related_name='comunicados')
+    acao = models.ForeignKey('acao.Acao', on_delete=models.DO_NOTHING, db_constraint=False, related_name='comunicados')
     class Meta:
+        managed = False
         db_table = 'comunicado_acao'
         constraints = [models.UniqueConstraint(fields=('comunicado', 'acao'), name='comunicado_acao_unico')]
 
 
 class ComunicadoDoacao(models.Model):
     comunicado = models.ForeignKey(Comunicado, on_delete=models.CASCADE, related_name='doacoes')
-    doacao = models.ForeignKey('doacao.Doacao', on_delete=models.PROTECT, related_name='comunicados')
+    doacao = models.ForeignKey('doacao.Doacao', on_delete=models.DO_NOTHING, db_constraint=False, related_name='comunicados')
 
     class Meta:
+        managed = False
         db_table = 'comunicado_doacao'
         constraints = [
             models.UniqueConstraint(
@@ -159,6 +165,7 @@ class ComunicadoLeitura(models.Model):
     lido_em = models.DateTimeField(auto_now_add=True)
 
     class Meta:
+        managed = False
         db_table = 'comunicado_leitura'
         constraints = [
             models.UniqueConstraint(

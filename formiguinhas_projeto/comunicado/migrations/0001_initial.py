@@ -9,7 +9,7 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ('acao', '0005_acaoimagem'),
+        # ('acao', '0005_acaoimagem'),
         ('equipe', '0002_equipe_praia'),
         ('praia', '0003_praia_cadastrado_por_praia_dt_cadastro'),
         ('usuario', '0002_audit_snapshots'),
@@ -62,7 +62,7 @@ class Migration(migrations.Migration):
             name='ComunicadoAcao',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('acao', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='comunicados', to='acao.acao')),
+                ('acao', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='comunicados', to='acao.Acao')),
                 ('comunicado', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='acoes', to='comunicado.comunicado')),
             ],
             options={

@@ -12,7 +12,11 @@ def criar_registros_demonstrativos(apps, schema_editor):
     if not usuario:
         return
     nome = getattr(getattr(usuario, 'id_voluntario', None), 'nome', '') or 'Sistema'
-    for acao in Acao.objects.all():
+    try:
+        acoes = list(Acao.objects.all())
+    except Exception:
+        acoes = []
+    for acao in acoes:
         ResiduoColetado.objects.get_or_create(
             acao_id=acao.pk,
             tipo='OUTRO',

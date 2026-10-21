@@ -18,6 +18,21 @@ def caminho_imagem_acao(instance, filename):
 
 
 class Acao(models.Model):
+    @property
+    def movimentacoes_estoque(self):
+        from estoque.models import MovimentacaoEstoque
+        return MovimentacaoEstoque.objects.filter(acao_id=self.pk)
+
+    @property
+    def coletas_residuos(self):
+        from residuo.models import ColetaResiduo
+        return ColetaResiduo.objects.filter(acao_id=self.pk)
+
+    @property
+    def residuos_coletados(self):
+        from residuo.models import ResiduoColetado
+        return ResiduoColetado.objects.filter(acao_id=self.pk)
+
     TIPO_MUTIRAO = 'MUTIRAO'
     TIPO_COLETA_VOLUNTARIA = 'COLETA_VOLUNTARIA'
     TIPO_CHOICES = [
@@ -44,11 +59,12 @@ class Acao(models.Model):
     descricao = models.TextField(blank=True, default='')
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_PLANEJADA)
     imagens = models.JSONField(default=list, blank=True)
-    praia = models.ForeignKey(Praia, on_delete=models.PROTECT, related_name='acoes')
+    praia = models.ForeignKey(Praia, on_delete=models.DO_NOTHING, db_constraint=False, related_name='acoes')
     dt_cadastro = models.DateTimeField(auto_now_add=True)
     cadastrado_por = models.ForeignKey(
         Usuario,
-        on_delete=models.SET_NULL,
+        on_delete=models.DO_NOTHING,
+        db_constraint=False,
         null=True,
         blank=True,
         related_name='acoes_cadastradas',
@@ -58,7 +74,8 @@ class Acao(models.Model):
     dt_ultima_edicao = models.DateTimeField(null=True, blank=True)
     ultimo_editado_por = models.ForeignKey(
         Usuario,
-        on_delete=models.SET_NULL,
+        on_delete=models.DO_NOTHING,
+        db_constraint=False,
         null=True,
         blank=True,
         related_name='acoes_editadas',
@@ -67,6 +84,7 @@ class Acao(models.Model):
     ultimo_editado_por_tipo = models.CharField(max_length=20, null=True, blank=True)
 
     class Meta:
+        managed = False
         db_table = 'acao'
         verbose_name = 'Ação'
         verbose_name_plural = 'Ações'
@@ -88,6 +106,7 @@ class AcaoImagem(models.Model):
     dt_cadastro = models.DateTimeField(auto_now_add=True)
 
     class Meta:
+        managed = False
         db_table = 'acao_imagem'
         verbose_name = 'Imagem da ação'
         verbose_name_plural = 'Imagens da ação'
@@ -100,9 +119,10 @@ class AcaoImagem(models.Model):
 class AcaoEquipe(models.Model):
     id_acao_equipe = models.AutoField(primary_key=True)
     acao = models.ForeignKey(Acao, on_delete=models.CASCADE, related_name='equipes_vinculadas')
-    equipe = models.ForeignKey(Equipe, on_delete=models.PROTECT, related_name='acoes_vinculadas')
+    equipe = models.ForeignKey(Equipe, on_delete=models.DO_NOTHING, db_constraint=False, related_name='acoes_vinculadas')
 
     class Meta:
+        managed = False
         db_table = 'acao_equipe'
         verbose_name = 'Equipe da ação'
         verbose_name_plural = 'Equipes da ação'
@@ -128,7 +148,7 @@ class AcaoParticipante(models.Model):
 
     id_acao_participante = models.AutoField(primary_key=True)
     acao = models.ForeignKey(Acao, on_delete=models.CASCADE, related_name='participantes')
-    voluntario = models.ForeignKey(Voluntario, on_delete=models.PROTECT, related_name='acoes_participadas')
+    voluntario = models.ForeignKey(Voluntario, on_delete=models.DO_NOTHING, db_constraint=False, related_name='acoes_participadas')
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_PENDENTE)
     compareceu = models.BooleanField(default=False)
     observacao = models.TextField(blank=True, default='')
@@ -136,6 +156,7 @@ class AcaoParticipante(models.Model):
     dt_cadastro = models.DateTimeField(auto_now_add=True)
 
     class Meta:
+        managed = False
         db_table = 'acao_participante'
         verbose_name = 'Participante da ação'
         verbose_name_plural = 'Participantes da ação'
@@ -184,6 +205,7 @@ class AcaoParticipanteHistorico(models.Model):
     restaurado_por_tipo = models.CharField(max_length=20, null=True, blank=True)
 
     class Meta:
+        managed = False
         db_table = 'acao_participante_historico'
         verbose_name = 'Histórico de participante da ação'
         verbose_name_plural = 'Histórico de participantes da ação'
@@ -203,10 +225,11 @@ class AcaoResponsavel(models.Model):
 
     id_acao_responsavel = models.AutoField(primary_key=True)
     acao = models.ForeignKey(Acao, on_delete=models.CASCADE, related_name='responsaveis')
-    voluntario = models.ForeignKey(Voluntario, on_delete=models.PROTECT, related_name='acoes_responsavel')
+    voluntario = models.ForeignKey(Voluntario, on_delete=models.DO_NOTHING, db_constraint=False, related_name='acoes_responsavel')
     papel = models.CharField(max_length=20, choices=PAPEL_CHOICES, default=PAPEL_RESPONSAVEL)
 
     class Meta:
+        managed = False
         db_table = 'acao_responsavel'
         verbose_name = 'Responsável pela ação'
         verbose_name_plural = 'Responsáveis pela ação'

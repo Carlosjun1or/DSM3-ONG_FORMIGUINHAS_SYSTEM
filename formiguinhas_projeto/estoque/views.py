@@ -242,7 +242,7 @@ def cadastrar_movimentacao_estoque_view(request):
 
 def _filtrar_movimentacoes(request):
     movimentacoes = MovimentacaoEstoque.objects.select_related(
-        'material', 'doacao', 'doacao__doador', 'acao'
+        'material', 'doacao', 'doacao__doador'
     ).order_by('-dt_cadastro', '-id_movimentacao')
     busca = request.GET.get('busca', '').strip()
     tipo = request.GET.get('tipo', '').strip()

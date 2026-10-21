@@ -4,6 +4,7 @@ from datetime import timedelta
 from django.utils import timezone
 from auditoria.services import registrar_evento, snapshot
 from .models import Comunicado
+from .mongo_services import salvar_comunicado_mongo
 
 
 def calcular_expiracao(inicio, quantidade, unidade):
@@ -41,6 +42,7 @@ def publicar(comunicado, usuario):
     comunicado.dt_ultima_edicao = timezone.now()
     comunicado.full_clean()
     comunicado.save()
+    salvar_comunicado_mongo(comunicado)
     registrar_evento(entidade='COMUNICADO', instancia=comunicado, acao='MUDANCA_STATUS',
                      usuario=usuario, resumo='Comunicado publicado',
                      valores_anteriores=anterior)
@@ -52,6 +54,7 @@ def despublicar(comunicado, usuario):
     comunicado.ultimo_editado_por = usuario
     comunicado.dt_ultima_edicao = timezone.now()
     comunicado.save(update_fields=('status', 'ultimo_editado_por', 'dt_ultima_edicao', 'atualizado_em'))
+    salvar_comunicado_mongo(comunicado)
     registrar_evento(entidade='COMUNICADO', instancia=comunicado, acao='MUDANCA_STATUS',
                      usuario=usuario, resumo='Comunicado despublicado',
                      valores_anteriores=anterior)
@@ -63,6 +66,7 @@ def arquivar(comunicado, usuario):
     comunicado.ultimo_editado_por = usuario
     comunicado.dt_ultima_edicao = timezone.now()
     comunicado.save(update_fields=('status', 'ultimo_editado_por', 'dt_ultima_edicao', 'atualizado_em'))
+    salvar_comunicado_mongo(comunicado)
     registrar_evento(entidade='COMUNICADO', instancia=comunicado, acao='MUDANCA_STATUS',
                      usuario=usuario, resumo='Comunicado arquivado',
                      valores_anteriores=anterior)
@@ -74,6 +78,7 @@ def desarquivar(comunicado, usuario):
     comunicado.ultimo_editado_por = usuario
     comunicado.dt_ultima_edicao = timezone.now()
     comunicado.save(update_fields=('status', 'ultimo_editado_por', 'dt_ultima_edicao', 'atualizado_em'))
+    salvar_comunicado_mongo(comunicado)
     registrar_evento(entidade='COMUNICADO', instancia=comunicado, acao='MUDANCA_STATUS',
                      usuario=usuario, resumo='Comunicado desarquivado',
                      valores_anteriores=anterior)

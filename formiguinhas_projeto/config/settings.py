@@ -16,6 +16,9 @@ import os
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+from dotenv import load_dotenv
+load_dotenv(BASE_DIR / '.env')
+
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.1/howto/deployment/checklist/
@@ -26,7 +29,7 @@ SECRET_KEY = 'django-insecure-i2iftzn)*8usyz)!!q+mdwz-h$!xsh$9^61fraq4%kq1$2gd)p
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -148,3 +151,27 @@ EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
 EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'true').lower() == 'true'
 DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'noreply@formiguinhas.org')
 PASSWORD_RESET_TIMEOUT = 60 * 60
+
+
+
+
+# ==============================================================================
+
+# Configuração MongoDB Atlas (Persistência Poliglota - Cenário C)
+
+# ==============================================================================
+
+MONGODB_URI = os.getenv('MONGODB_URI', '')
+
+MONGODB_DATABASE = os.getenv('MONGODB_DATABASE', 'formiguinhas_db')
+
+MONGODB_TIMEOUT_MS = int(os.getenv('MONGODB_TIMEOUT_MS', '5000'))
+
+MONGODB_AUDITORIA_COLECAO = os.getenv('MONGODB_AUDITORIA_COLECAO', 'auditoria_eventos')
+
+MONGODB_ACOES_COLECAO = os.getenv('MONGODB_ACOES_COLECAO', 'acoes')
+
+MONGODB_COMUNICADOS_COLECAO = os.getenv('MONGODB_COMUNICADOS_COLECAO', 'comunicados')
+
+MONGODB_CONDOMINIOS_COLECAO = os.getenv('MONGODB_CONDOMINIOS_COLECAO', 'condominios')
+

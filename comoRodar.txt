@@ -1,8 +1,8 @@
 # Opcao mais simples (Windows):
 # Na pasta raiz do projeto, execute o arquivo
 iniciar.bat
-# Ele cria o ambiente virtual, instala as dependencias,
-# executa as migrations e inicia o servidor automaticamente.
+# Ele cria o ambiente virtual, instala todas as dependencias (Django, MongoDB Atlas e bibliotecas),
+# verifica a conexao com o Atlas, executa as migrations e inicia o servidor automaticamente.
 # Depois acesse: http://127.0.0.1:8000/
 
 # ----------------------------------------
@@ -16,20 +16,23 @@ python -m venv venv
 # 2. Ativa o ambiente virtual.
 venv\Scripts\activate
 
-# 3. Instala o Django, listado no requirements.txt.
+# 3. Instala todas as dependencias (incluindo pymongo, python-dotenv, certifi, dnspython).
 pip install -r requirements.txt
 
-# 4. Cria o banco e as tabelas (as migrations tambem criam os usuarios de teste: ver logins_teste.txt).
+# 4. (Opcional) Testa a conexao com o MongoDB Atlas:
+python testar_atlas.py
+
+# 5. Cria o banco e as tabelas relacionais do SQLite (as migrations tambem criam os usuarios de teste: ver logins_teste.txt).
 python manage.py migrate
 
-# 5. Inicia o servidor do projeto.
+# 6. (Opcional) Sincronizacao de dados com o MongoDB Atlas:
+python manage.py sincronizar_condominios_mongo
+python manage.py sincronizar_acoes_mongo
+python manage.py sincronizar_comunicados_mongo
+python manage.py sincronizar_auditoria_mongo
+
+# 7. Inicia o servidor do projeto.
 python manage.py runserver
 
-# 6. (Opcional) Roda os testes automatizados do estoque.
+# 8. (Opcional) Roda os testes automatizados.
 python manage.py test
-
-# Recuperação de senha:
-# Em desenvolvimento, o link enviado aparece no console do servidor Django.
-# Em produção, configure EMAIL_BACKEND, EMAIL_HOST, EMAIL_PORT,
-# EMAIL_HOST_USER, EMAIL_HOST_PASSWORD, EMAIL_USE_TLS e DEFAULT_FROM_EMAIL
-# como variáveis de ambiente para habilitar o envio SMTP.

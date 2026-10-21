@@ -16,6 +16,107 @@ from auditoria.models import EventoAuditoria
 
 from .models import Bag, Condominio, MovimentacaoBag
 from .services import registrar_auditoria, snapshot
+from config.mongodb import test_mongo_connection
+from .mongo_services import (
+    salvar_condominio_mongo,
+    salvar_condominio_por_bag,
+    remover_condominio_mongo,
+    consultar_condominios_mongo,
+    obter_condominio_mongo,
+    obter_metricas_condominios_mongo,
+)
+
+
+class MongoBagAdapter:
+    def __init__(self, item):
+        self.item = item
+        self.id_bag = item.get('id') or item.get('id_bag')
+        self.pk = self.id_bag
+        self.codigo = item.get('codigo', '')
+        self.status = item.get('status', '')
+        self._status_display = item.get('status_display', '')
+        self.peso_atual_kg = item.get('peso_atual_kg', 0)
+        self.percentual_ocupacao = item.get('percentual_ocupacao', 0)
+        
+        cond_data = item.get('condominio') or {}
+        praia_data = cond_data.get('praia')
+        self.condominio = type('CondominioProxy', (), {
+            'id_condominio': cond_data.get('id_condominio') or item.get('condominio_id'),
+            'pk': cond_data.get('id_condominio') or item.get('condominio_id'),
+            'nome': cond_data.get('nome') or item.get('condominio_nome', ''),
+            'cidade': cond_data.get('cidade', ''),
+            'estado': cond_data.get('estado', ''),
+            'praia': MongoPraiaAdapter(praia_data) if praia_data else None,
+        })()
+        self.movimentacoes = type('MovRel', (), {'all': lambda self: []})()
+
+    def get_status_display(self):
+        return self._status_display or self.status
+
+
+class MongoBagsRelAdapter:
+    def __init__(self, bags_list):
+        self._bags = [MongoBagAdapter(b) for b in bags_list]
+
+    def all(self):
+        return self._bags
+
+    def count(self):
+        return len(self._bags)
+
+
+class MongoPraiaAdapter:
+    def __init__(self, praia_dict):
+        self.praia = praia_dict or {}
+        self.id = self.praia.get('id')
+        self.nome = self.praia.get('nome', '')
+        self.cidade = self.praia.get('cidade', '')
+
+
+class MongoCondominioAdapter:
+    """Adapta documento de Condomínio do MongoDB para a interface esperada pelos templates."""
+    def __init__(self, doc):
+        self.doc = doc
+        self.id_condominio = doc.get('id_sql')
+        self.pk = doc.get('id_sql')
+        self.id = doc.get('id_sql')
+        self.nome = doc.get('nome', '')
+        resp = doc.get('responsavel') or {}
+        self.responsavel_nome = resp.get('nome', '')
+        self.responsavel_telefone = resp.get('telefone', '')
+        self.responsavel_email = resp.get('email', '')
+        end = doc.get('endereco') or {}
+        self.endereco = end.get('logradouro', '')
+        self.numero = end.get('numero', '')
+        self.complemento = end.get('complemento', '')
+        self.bairro = end.get('bairro', '')
+        self.cidade = end.get('cidade', '')
+        self.estado = end.get('estado', '')
+        self.cep = end.get('cep', '')
+        praia_data = doc.get('praia')
+        self.praia = MongoPraiaAdapter(praia_data) if praia_data else None
+        self.porte = doc.get('porte', '')
+        self._porte_display = doc.get('porte_display', '')
+        self.confiabilidade = doc.get('confiabilidade', '')
+        self._confiabilidade_display = doc.get('confiabilidade_display', '')
+        self.status = doc.get('status', '')
+        self._status_display = doc.get('status_display', '')
+        self.observacoes = doc.get('observacoes', '')
+        self.cadastrado_por_nome = doc.get('cadastrado_por_nome', '')
+        self.ultimo_editado_por_nome = doc.get('ultimo_editado_por_nome', '')
+        self.dt_cadastro = doc.get('dt_cadastro')
+        self.dt_ultima_edicao = doc.get('dt_ultima_edicao')
+        self.bags = MongoBagsRelAdapter(doc.get('bags', []))
+        self.is_from_mongo = True
+
+    def get_porte_display(self):
+        return self._porte_display or self.porte
+
+    def get_confiabilidade_display(self):
+        return self._confiabilidade_display or self.confiabilidade
+
+    def get_status_display(self):
+        return self._status_display or self.status
 
 
 def get_session_usuario(request):
@@ -53,15 +154,33 @@ def condominios_view(request):
     if usuario is False:
         return render_acesso_bloqueado(request)
 
+    # Fonte primária exclusiva: MongoDB Atlas
+    mongo_ok, mongo_msg, mongo_info = test_mongo_connection()
+    mongo_stats = obter_metricas_condominios_mongo() if mongo_ok else {'total': 0}
+
     busca = request.GET.get('busca', '').strip()
     status = request.GET.get('status', '').strip()
-    condominios = Condominio.objects.select_related('praia').prefetch_related('bags')
-    if busca:
-        condominios = condominios.filter(nome__icontains=busca)
-    if status in dict(Condominio.STATUS_CHOICES):
-        condominios = condominios.filter(status=status)
 
-    pagina, filtros_query = paginar_queryset(request, condominios)
+    if mongo_ok:
+        filtros_mql = {'busca': busca, 'status': status}
+        docs, total_docs = consultar_condominios_mongo(filtros_mql, pagina=1, por_pagina=1000)
+        lista_adaptada = [MongoCondominioAdapter(d) for d in docs]
+        pagina, filtros_query = paginar_queryset(request, lista_adaptada)
+
+        total_condominios = mongo_stats.get('total', 0)
+        condominios_ativos = mongo_stats.get('ativos', 0)
+        condominios_em_avaliacao = mongo_stats.get('em_avaliacao', 0)
+        total_bags = mongo_stats.get('total_bags', 0)
+        bags_cheias = mongo_stats.get('bags_cheias', 0)
+        bags_disponiveis = mongo_stats.get('bags_disponiveis', 0)
+        fonte = 'mongo'
+    # Fallback to SQL removed; MongoDB is the sole source.
+    # If MongoDB connection fails, render an error page.
+    if not mongo_ok:
+        # Simple error handling; could render a custom template.
+        from django.http import HttpResponseServerError
+        return HttpResponseServerError('Conexão com MongoDB falhou.')
+
     return render(request, 'sistema/condominios.html', {
         'usuario': usuario,
         'condominios': pagina.object_list,
@@ -70,14 +189,17 @@ def condominios_view(request):
         'busca': busca,
         'status_selecionado': status,
         'status_choices': Condominio.STATUS_CHOICES,
-        'total_condominios': Condominio.objects.count(),
-        'condominios_ativos': Condominio.objects.filter(status='ATIVO').count(),
-        'condominios_em_avaliacao': Condominio.objects.filter(
-            confiabilidade='EM_AVALIACAO'
-        ).count(),
-        'total_bags': Bag.objects.count(),
-        'bags_cheias': Bag.objects.filter(status='CHEIA').count(),
-        'bags_disponiveis': Bag.objects.filter(status='DISPONIVEL').count(),
+        'total_condominios': total_condominios,
+        'condominios_ativos': condominios_ativos,
+        'condominios_em_avaliacao': condominios_em_avaliacao,
+        'total_bags': total_bags,
+        'bags_cheias': bags_cheias,
+        'bags_disponiveis': bags_disponiveis,
+        # Metadados de persistência poliglota
+        'fonte_atual': fonte,
+        'mongo_conectado': mongo_ok,
+        'mongo_info': mongo_info,
+        'mongo_stats': mongo_stats,
     })
 
 
@@ -90,21 +212,60 @@ def bags_view(request):
 
     busca = request.GET.get('busca', '').strip()
     status = request.GET.get('status', '').strip()
-    bags = Bag.objects.select_related(
-        'condominio',
-        'condominio__praia',
-        'cadastrado_por',
-        'ultimo_editado_por',
-    ).prefetch_related('movimentacoes')
-    if busca:
-        bags = bags.filter(
-            models.Q(codigo__icontains=busca)
-            | models.Q(condominio__nome__icontains=busca)
-        )
-    if status in dict(Bag.STATUS_CHOICES):
-        bags = bags.filter(status=status)
 
-    pagina, filtros_query = paginar_queryset(request, bags)
+    # Bags estão embutidas nos documentos de Condomínio no MongoDB
+    mongo_ok, _, _ = test_mongo_connection()
+    if mongo_ok:
+        filtros_mql = {}
+        docs, _ = consultar_condominios_mongo(filtros_mql, pagina=1, por_pagina=1000)
+        # Desembala as bags de todos os condomínios
+        bags_raw = []
+        for doc in docs:
+            cond_nome = doc.get('nome', '')
+            cond_id = doc.get('id_sql')
+            cond_end = doc.get('endereco') or {}
+            cond_cidade = cond_end.get('cidade', '')
+            cond_estado = cond_end.get('estado', '')
+            cond_praia = doc.get('praia')
+            for b in doc.get('bags', []):
+                b['condominio'] = {
+                    'id_condominio': cond_id,
+                    'nome': cond_nome,
+                    'cidade': cond_cidade,
+                    'estado': cond_estado,
+                    'praia': cond_praia,
+                }
+                b['condominio_nome'] = cond_nome
+                b['condominio_id'] = cond_id
+                bags_raw.append(b)
+        # Filtragem em memória
+        if busca:
+            busca_lower = busca.lower()
+            bags_raw = [
+                b for b in bags_raw
+                if busca_lower in (b.get('codigo') or '').lower()
+                or busca_lower in (b.get('condominio_nome') or '').lower()
+            ]
+        if status:
+            bags_raw = [b for b in bags_raw if b.get('status') == status]
+
+        bags_adaptadas = [MongoBagAdapter(b) for b in bags_raw]
+        pagina, filtros_query = paginar_queryset(request, bags_adaptadas)
+
+        total_bags = len(bags_raw)
+        bags_cheias = sum(1 for b in bags_raw if b.get('status') == 'CHEIA')
+        bags_em_uso = sum(1 for b in bags_raw if b.get('status') == 'EM_USO')
+        bags_disponiveis = sum(1 for b in bags_raw if b.get('status') == 'DISPONIVEL')
+        bags_danificadas = sum(1 for b in bags_raw if b.get('status') == 'DANIFICADA')
+        ocupacao_media = (
+            sum(b.get('percentual_ocupacao', 0) for b in bags_raw) / len(bags_raw)
+            if bags_raw else 0
+        )
+    else:
+        pagina, filtros_query = paginar_queryset(request, [])
+        total_bags = bags_cheias = bags_em_uso = bags_disponiveis = bags_danificadas = 0
+        ocupacao_media = 0
+
     return render(request, 'sistema/bags.html', {
         'usuario': usuario,
         'bags': pagina.object_list,
@@ -113,12 +274,12 @@ def bags_view(request):
         'busca': busca,
         'status_selecionado': status,
         'status_choices': Bag.STATUS_CHOICES,
-        'total_bags': Bag.objects.count(),
-        'bags_cheias': Bag.objects.filter(status='CHEIA').count(),
-        'bags_em_uso': Bag.objects.filter(status='EM_USO').count(),
-        'bags_disponiveis': Bag.objects.filter(status='DISPONIVEL').count(),
-        'bags_danificadas': Bag.objects.filter(status='DANIFICADA').count(),
-        'ocupacao_media': Bag.objects.aggregate(media=Avg('percentual_ocupacao'))['media'] or 0,
+        'total_bags': total_bags,
+        'bags_cheias': bags_cheias,
+        'bags_em_uso': bags_em_uso,
+        'bags_disponiveis': bags_disponiveis,
+        'bags_danificadas': bags_danificadas,
+        'ocupacao_media': ocupacao_media,
     })
 
 
@@ -154,6 +315,8 @@ def cadastrar_condominio_view(request):
             usuario=usuario,
             resumo=f'Condomínio "{condominio.nome}" cadastrado.',
         )
+        # Persistencia Poliglota: salvar no MongoDB Atlas
+        salvar_condominio_mongo(condominio)
         messages.success(request, 'Condomínio cadastrado com sucesso.')
         return redirect('detalhe_condominio', condominio_id=condominio.id_condominio)
     return render(request, 'sistema/cadastro-condominio.html', {'usuario': usuario, 'form': form})
@@ -184,6 +347,8 @@ def editar_condominio_view(request, condominio_id):
             resumo=f'Condomínio "{condominio.nome}" editado.',
             valores_anteriores=valores_anteriores,
         )
+        # Persistencia Poliglota: salvar no MongoDB Atlas
+        salvar_condominio_mongo(condominio)
         messages.success(request, 'Condomínio atualizado com sucesso.')
         return redirect('detalhe_condominio', condominio_id=condominio.id_condominio)
     return render(request, 'sistema/cadastro-condominio.html', {
@@ -243,6 +408,8 @@ def cadastrar_bag_view(request):
             usuario=usuario,
             resumo=f'Bag "{bag.codigo}" cadastrada.',
         )
+        # Persistencia Poliglota: salvar no MongoDB Atlas
+        salvar_condominio_por_bag(bag)
         messages.success(request, 'Bag grande cadastrada com sucesso.')
         return redirect('detalhe_bag', bag_id=bag.id_bag)
     return render(request, 'sistema/cadastro-bag.html', {'usuario': usuario, 'form': form})
@@ -273,6 +440,8 @@ def editar_bag_view(request, bag_id):
             resumo=f'Bag "{bag.codigo}" editada.',
             valores_anteriores=valores_anteriores,
         )
+        # Persistencia Poliglota: salvar no MongoDB Atlas
+        salvar_condominio_por_bag(bag)
         messages.success(request, 'Bag atualizada com sucesso.')
         return redirect('detalhe_bag', bag_id=bag.id_bag)
     return render(request, 'sistema/cadastro-bag.html', {
@@ -308,7 +477,7 @@ def atualizar_status_bag_view(request, bag_id):
         status_anterior = bag.get_status_display()
         valores_anteriores = snapshot(bag)
         movimentacao = MovimentacaoBag.objects.create(
-            bag=bag,
+            bag_id=bag.pk,
             tipo='OUTRO',
             status_anterior=bag.status,
             status_novo=novo_status,
@@ -344,6 +513,8 @@ def atualizar_status_bag_view(request, bag_id):
             valores_anteriores=valores_anteriores,
             valores_novos=snapshot(bag),
         )
+        # Persistencia Poliglota: salvar no MongoDB Atlas
+        salvar_condominio_por_bag(bag)
         messages.success(request, 'Status da bag atualizado com movimentação registrada.')
     return redirect(f'{reverse("bags")}?{urlencode(filtros)}' if filtros else destino)
 
@@ -369,7 +540,7 @@ def detalhe_bag_view(request, bag_id):
             ),
         ).select_related('usuario').order_by('-data_evento', '-id')[:50],
         'coletas_residuos': ColetaResiduo.objects.filter(
-            bag=bag,
+            bag_id=bag.pk,
         ).prefetch_related('itens').order_by('-data_coleta'),
     })
 
@@ -415,6 +586,8 @@ def cadastrar_movimentacao_view(request, bag_id):
             valores_anteriores={'status': status_anterior},
             valores_novos={'status': bag.get_status_display()},
         )
+        # Persistencia Poliglota: salvar no MongoDB Atlas
+        salvar_condominio_por_bag(bag)
         messages.success(request, 'Movimentação registrada e status da bag atualizado.')
         return redirect('detalhe_bag', bag_id=bag.id_bag)
     return render(request, 'sistema/cadastro-movimentacao-bag.html', {

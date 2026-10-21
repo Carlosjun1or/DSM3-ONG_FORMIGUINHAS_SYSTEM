@@ -43,6 +43,7 @@ class EventoAuditoria(models.Model):
     valores_novos = models.JSONField(default=dict, blank=True)
 
     class Meta:
+        managed = False
         ordering = ('-data_evento', '-id')
         indexes = [
             models.Index(fields=('entidade', 'acao')),

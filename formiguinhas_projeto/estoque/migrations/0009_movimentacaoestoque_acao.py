@@ -7,7 +7,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('acao', '0005_acaoimagem'),
+        # ('acao', '0005_acaoimagem'),
         ('estoque', '0008_remove_material_doador_and_donativo'),
     ]
 
@@ -15,6 +15,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='movimentacaoestoque',
             name='acao',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='movimentacoes_estoque', to='acao.acao'),
+            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='movimentacoes_estoque', to='acao.Acao'),
         ),
     ]
