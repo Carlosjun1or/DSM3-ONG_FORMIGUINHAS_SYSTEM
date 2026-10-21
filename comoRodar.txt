@@ -28,8 +28,18 @@ python manage.py runserver
 # 6. (Opcional) Roda os testes automatizados do estoque.
 python manage.py test
 
-# Recuperação de senha:
-# Em desenvolvimento, o link enviado aparece no console do servidor Django.
-# Em produção, configure EMAIL_BACKEND, EMAIL_HOST, EMAIL_PORT,
-# EMAIL_HOST_USER, EMAIL_HOST_PASSWORD, EMAIL_USE_TLS e DEFAULT_FROM_EMAIL
-# como variáveis de ambiente para habilitar o envio SMTP.
+# Recuperacao de senha com Gmail:
+# 1. Ative a verificacao em duas etapas e crie uma senha de app em
+#    https://myaccount.google.com/apppasswords. Use a senha de app, nao a senha
+#    normal da conta. Algumas contas gerenciadas/protecao avancada nao permitem
+#    senhas de app.
+# 2. Copie formiguinhas_projeto\.env.example para
+#    formiguinhas_projeto\.env.
+# 3. Edite o .env: use o mesmo endereco Gmail em EMAIL_HOST_USER e
+#    DEFAULT_FROM_EMAIL e substitua EMAIL_HOST_PASSWORD pela senha de app
+#    (sem espacos).
+# 4. Salve o arquivo e inicie normalmente com iniciar.bat. O Django carrega o
+#    .env automaticamente, inclusive depois de fechar e reabrir o terminal.
+#    O arquivo .env esta ignorado pelo Git; nao o publique nem compartilhe.
+# O remetente sera esse Gmail. O link e enviado ao e-mail cadastrado no usuario
+# que solicitou a redefinicao. Sem SMTP configurado, o link aparece no terminal.

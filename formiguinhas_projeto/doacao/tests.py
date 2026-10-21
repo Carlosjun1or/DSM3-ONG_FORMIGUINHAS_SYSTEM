@@ -206,25 +206,21 @@ class DoacaoTestCase(TestCase):
         resposta_doadores = self.client.get(reverse('doadores'))
         self.assertContains(
             resposta_doadores,
-            '<a href="/doacao/doadores/" class="sidebar-link active">Controle de Doadores</a>',
-            html=True,
+            'href="/doacao/doadores/" class="sidebar-link active"',
         )
         self.assertContains(
             resposta_doadores,
-            '<a href="/doacao/" class="sidebar-link ">Controle de Doações</a>',
-            html=True,
+            'href="/doacao/" class="sidebar-link "',
         )
 
         resposta_doacoes = self.client.get(reverse('doacoes'))
         self.assertContains(
             resposta_doacoes,
-            '<a href="/doacao/" class="sidebar-link active">Controle de Doações</a>',
-            html=True,
+            'href="/doacao/" class="sidebar-link active"',
         )
         self.assertContains(
             resposta_doacoes,
-            '<a href="/doacao/doadores/" class="sidebar-link ">Controle de Doadores</a>',
-            html=True,
+            'href="/doacao/doadores/" class="sidebar-link "',
         )
 
     def test_controle_de_doacoes_pagina_e_preserva_filtros(self):

@@ -692,6 +692,10 @@ def recuperar_senha_view(request):
     return render(request, 'sistema/recuperar-senha.html', {
         'form': form,
         'email_enviado': email_enviado,
+        'email_backend_console': (
+            settings.EMAIL_BACKEND
+            == 'django.core.mail.backends.console.EmailBackend'
+        ),
     })
 
 

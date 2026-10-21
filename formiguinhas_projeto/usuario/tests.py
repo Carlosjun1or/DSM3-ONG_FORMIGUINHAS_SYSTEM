@@ -1,5 +1,9 @@
 from datetime import date, time, timedelta
 from decimal import Decimal
+import os
+from pathlib import Path
+from tempfile import TemporaryDirectory
+from unittest.mock import patch
 
 from django.core import mail
 from django.db.models import Sum
@@ -8,11 +12,37 @@ from django.urls import reverse
 from django.utils import timezone
 
 from acao.models import Acao
+from config.settings import load_local_environment
 from doacao.models import Doacao, DoacaoFinanceira
 from praia.models import Praia
 from .paginacao import paginar_queryset
 from .models import Usuario, Voluntario
 from .tokens import password_reset_token
+
+
+class LocalEnvironmentSettingsTests(SimpleTestCase):
+    def test_carrega_variaveis_do_arquivo_env_sem_substituir_ambiente(self):
+        with TemporaryDirectory() as temporary_directory:
+            env_path = Path(temporary_directory) / '.env'
+            env_path.write_text(
+                '# Configuracao local\nEMAIL_HOST=smtp.gmail.com\n'
+                'EMAIL_PORT="587"\nEMAIL_HOST_USER=arquivo@gmail.com\n',
+                encoding='utf-8',
+            )
+            with patch.dict(os.environ, {'EMAIL_HOST_USER': 'ambiente@gmail.com'}):
+                load_local_environment(env_path)
+
+                self.assertEqual(os.environ['EMAIL_HOST'], 'smtp.gmail.com')
+                self.assertEqual(os.environ['EMAIL_PORT'], '587')
+                self.assertEqual(os.environ['EMAIL_HOST_USER'], 'ambiente@gmail.com')
+
+    def test_arquivo_env_com_linha_invalida_gera_erro_explicito(self):
+        with TemporaryDirectory() as temporary_directory:
+            env_path = Path(temporary_directory) / '.env'
+            env_path.write_text('CONFIGURACAO_INVALIDA\n', encoding='utf-8')
+
+            with self.assertRaisesRegex(ValueError, 'linha 1'):
+                load_local_environment(env_path)
 
 
 class PaginacaoTests(SimpleTestCase):
@@ -227,6 +257,19 @@ class PermissoesStatusVoluntarioTests(TestCase):
             f'/voluntarios/{self.voluntario.id_voluntario}/status/',
         )
 
+    def test_menu_lateral_usa_identidade_visual_e_preserva_permissoes(self):
+        resposta = self.client.get(reverse('voluntarios'))
+
+        self.assertContains(resposta, 'DA PRAIA')
+        self.assertContains(resposta, 'href="/usuario/voluntarios/" class="sidebar-link active"')
+        self.assertContains(
+            resposta,
+            'href="/static/usuario/icons/sidebar-icons.svg#volunteers"',
+        )
+        self.assertContains(resposta, '<span>Resíduos</span>')
+        self.assertNotContains(resposta, 'href="/usuario/usuarios/"')
+        self.assertNotContains(resposta, 'href="/auditoria/"')
+
 
 @override_settings(EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend')
 class RecuperacaoSenhaTests(TestCase):
@@ -274,6 +317,21 @@ class RecuperacaoSenhaTests(TestCase):
         self.assertContains(resposta, 'Se o e-mail estiver cadastrado')
         self.assertEqual(len(mail.outbox), 0)
 
+    @override_settings(
+        DEBUG=True,
+        EMAIL_BACKEND='django.core.mail.backends.console.EmailBackend',
+    )
+    def test_modo_console_indica_onde_encontrar_link(self):
+        resposta = self.client.post(
+            reverse('recuperar_senha'),
+            {'email': self.voluntario.email},
+        )
+
+        self.assertContains(
+            resposta,
+            'o link aparecerá no terminal onde o servidor Django está rodando',
+        )
+
     def test_link_redefine_senha_e_fica_invalido_apos_uso(self):
         token = password_reset_token.make_token(self.usuario)
         url = reverse('redefinir_senha', args=[self.usuario.id_usuario, token])
@@ -281,12 +339,47 @@ class RecuperacaoSenhaTests(TestCase):
         resposta = self.client.post(url, {
             'senha': 'NovaSenhaSegura2026!',
             'confirmar_senha': 'NovaSenhaSegura2026!',
-        })
+        }, follow=True)
 
         self.assertRedirects(resposta, reverse('login'))
         self.usuario.refresh_from_db()
         self.assertTrue(self.usuario.check_password('NovaSenhaSegura2026!'))
         self.assertFalse(password_reset_token.check_token(self.usuario, token))
+        self.assertContains(resposta, 'auth-feedback auth-feedback--success')
+        self.assertContains(resposta, 'Sua senha foi redefinida.')
+        self.assertNotContains(resposta, 'data-toast')
+
+    def test_tela_de_redefinicao_permite_mostrar_senhas_e_explica_regras(self):
+        token = password_reset_token.make_token(self.usuario)
+        resposta = self.client.get(
+            reverse('redefinir_senha', args=[self.usuario.id_usuario, token]),
+        )
+
+        self.assertContains(resposta, 'class="password-toggle"')
+        self.assertContains(resposta, 'class="password-hint"')
+        self.assertContains(resposta, 'Senhas comuns ou formadas apenas por números')
+
+    def test_erro_de_senha_usa_alerta_com_identidade_visual(self):
+        token = password_reset_token.make_token(self.usuario)
+        resposta = self.client.post(
+            reverse('redefinir_senha', args=[self.usuario.id_usuario, token]),
+            {'senha': 'password', 'confirmar_senha': 'password'},
+        )
+
+        self.assertContains(resposta, 'class="auth-password-error" role="alert"')
+        self.assertContains(resposta, 'muito comum')
+
+    def test_redefinicao_rejeita_senha_comum_com_mensagem_de_validacao(self):
+        token = password_reset_token.make_token(self.usuario)
+        resposta = self.client.post(
+            reverse('redefinir_senha', args=[self.usuario.id_usuario, token]),
+            {'senha': 'password', 'confirmar_senha': 'password'},
+        )
+
+        self.assertEqual(resposta.status_code, 200)
+        self.assertContains(resposta, 'muito comum')
+        self.usuario.refresh_from_db()
+        self.assertTrue(self.usuario.check_password('SenhaAntigaSegura2026!'))
 
 
 class LogoutTests(TestCase):
