@@ -182,11 +182,18 @@ class DoadorInlineForm(forms.ModelForm):
 
 
 class DoacaoForm(forms.ModelForm):
+    acao = forms.ChoiceField(
+        required=False,
+        label='Ação ou mutirão',
+        help_text='Opcional. Busque pelo tipo, praia ou data da ação.',
+        widget=forms.Select(attrs={'class': 'form-control'}),
+    )
+
     class Meta:
         model = Doacao
         fields = [
             'tipo', 'doador', 'anonima', 'data_recebimento', 'status',
-            'finalidade', 'descricao_finalidade', 'praia', 'acao',
+            'finalidade', 'descricao_finalidade', 'praia',
             'observacoes', 'referencia_comprovante',
         ]
         labels = {
@@ -263,8 +270,26 @@ class DoacaoForm(forms.ModelForm):
         self.fields['doador'].empty_label = 'Selecione um doador'
         self.fields['praia'].queryset = Praia.objects.filter(praia_ativa='ATIVA').order_by('nome')
         self.fields['praia'].empty_label = 'Sem praia específica'
-        self.fields['acao'].queryset = Acao.objects.select_related('praia').order_by('-data')
-        self.fields['acao'].empty_label = 'Sem ação específica'
+        opcoes_acao = [('', 'Sem ação específica')]
+        try:
+            from acao.mongo_services import consultar_acoes_mongo
+            docs, _ = consultar_acoes_mongo(por_pagina=100)
+            for d in docs:
+                p_nome = (d.get('praia') or {}).get('nome', '')
+                t = d.get('tipo', '')
+                dt = d.get('data', '')
+                opcoes_acao.append((str(d.get('id_sql')), f'{t} - {p_nome} ({dt})'.strip(' -')))
+        except Exception:
+            pass
+        if len(opcoes_acao) <= 1:
+            try:
+                for a in Acao.objects.select_related('praia').order_by('-data')[:50]:
+                    opcoes_acao.append((str(a.pk), str(a)))
+            except Exception:
+                pass
+        self.fields['acao'].choices = opcoes_acao
+        if self.instance and self.instance.acao_id:
+            self.initial['acao'] = str(self.instance.acao_id)
 
     def clean(self):
         cleaned = super().clean()
@@ -278,6 +303,17 @@ class DoacaoForm(forms.ModelForm):
         if cleaned.get('data_recebimento') and cleaned['data_recebimento'] > timezone.localdate():
             self.add_error('data_recebimento', 'A data de recebimento não pode ser futura.')
         return cleaned
+
+
+
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        acao_val = self.cleaned_data.get('acao')
+        instance.acao_id = int(acao_val) if acao_val else None
+        if commit:
+            instance.save()
+            self.save_m2m()
+        return instance
 
 
 class DoacaoFinanceiraForm(forms.ModelForm):

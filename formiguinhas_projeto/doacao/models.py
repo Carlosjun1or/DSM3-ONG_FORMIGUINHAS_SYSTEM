@@ -64,6 +64,41 @@ class Doador(models.Model):
             ),
         ]
 
+
+    @property
+    def acao(self):
+        if not self.acao_id:
+            return None
+        from config.mongodb import MongoAcaoProxy
+        try:
+            from acao.mongo_services import obter_acao_mongo
+            doc = obter_acao_mongo(self.acao_id)
+            if doc:
+                return MongoAcaoProxy(doc)
+        except Exception:
+            pass
+        try:
+            from acao.models import Acao
+            return Acao.objects.filter(pk=self.acao_id).first()
+        except Exception:
+            return MongoAcaoProxy({'id_sql': self.acao_id, 'tipo': f'Ação #{self.acao_id}'})
+
+    @acao.setter
+    def acao(self, value):
+        if value is None:
+            self.acao_id = None
+        elif isinstance(value, int):
+            self.acao_id = value
+        elif hasattr(value, 'pk'):
+            self.acao_id = value.pk
+        elif isinstance(value, dict):
+            self.acao_id = value.get('id_sql') or value.get('id') or value.get('id_acao')
+        else:
+            try:
+                self.acao_id = int(value)
+            except (ValueError, TypeError):
+                self.acao_id = None
+
     def clean(self):
         self.nome = self.nome.strip()
         self.documento = ''.join(char for char in self.documento if char.isalnum())
@@ -95,7 +130,30 @@ class Doador(models.Model):
         return self.nome
 
 
+
+class DoacaoQuerySet(models.QuerySet):
+    def filter(self, *args, **kwargs):
+        if 'acao' in kwargs:
+            val = kwargs.pop('acao')
+            kwargs['acao_id'] = val.pk if hasattr(val, 'pk') else val
+        return super().filter(*args, **kwargs)
+
+    def get(self, *args, **kwargs):
+        if 'acao' in kwargs:
+            val = kwargs.pop('acao')
+            kwargs['acao_id'] = val.pk if hasattr(val, 'pk') else val
+        return super().get(*args, **kwargs)
+
+
 class Doacao(models.Model):
+    objects = DoacaoQuerySet.as_manager()
+
+    def __init__(self, *args, **kwargs):
+        acao_val = kwargs.pop('acao', None)
+        super().__init__(*args, **kwargs)
+        if acao_val is not None:
+            self.acao = acao_val
+
     FINANCEIRA = 'FINANCEIRA'
     MATERIAL = 'MATERIAL'
     TIPO_CHOICES = [
@@ -142,12 +200,11 @@ class Doacao(models.Model):
         blank=True,
         related_name='doacoes',
     )
-    acao = models.ForeignKey(
-        'acao.Acao',
-        on_delete=models.PROTECT,
+    acao_id = models.PositiveIntegerField(
         null=True,
         blank=True,
-        related_name='doacoes',
+        db_column='acao_id',
+        verbose_name='Ação (ID)',
     )
     observacoes = models.TextField(blank=True, default='')
     referencia_comprovante = models.CharField(max_length=255, blank=True, default='')
@@ -181,6 +238,41 @@ class Doacao(models.Model):
             models.Index(fields=('finalidade',)),
         ]
 
+
+    @property
+    def acao(self):
+        if not self.acao_id:
+            return None
+        from config.mongodb import MongoAcaoProxy
+        try:
+            from acao.mongo_services import obter_acao_mongo
+            doc = obter_acao_mongo(self.acao_id)
+            if doc:
+                return MongoAcaoProxy(doc)
+        except Exception:
+            pass
+        try:
+            from acao.models import Acao
+            return Acao.objects.filter(pk=self.acao_id).first()
+        except Exception:
+            return MongoAcaoProxy({'id_sql': self.acao_id, 'tipo': f'Ação #{self.acao_id}'})
+
+    @acao.setter
+    def acao(self, value):
+        if value is None:
+            self.acao_id = None
+        elif isinstance(value, int):
+            self.acao_id = value
+        elif hasattr(value, 'pk'):
+            self.acao_id = value.pk
+        elif isinstance(value, dict):
+            self.acao_id = value.get('id_sql') or value.get('id') or value.get('id_acao')
+        else:
+            try:
+                self.acao_id = int(value)
+            except (ValueError, TypeError):
+                self.acao_id = None
+
     def clean(self):
         errors = {}
         if self.anonima and self.doador_id:
@@ -191,8 +283,10 @@ class Doacao(models.Model):
             errors['data_recebimento'] = 'A data de recebimento não pode ser futura.'
         if self.finalidade == self.FINALIDADE_ESPECIFICA and not self.descricao_finalidade.strip():
             errors['descricao_finalidade'] = 'Descreva a finalidade específica da doação.'
-        if self.acao_id and self.praia_id and self.acao.praia_id != self.praia_id:
-            errors['praia'] = 'A praia deve ser a mesma praia da ação selecionada.'
+        if self.acao_id and self.praia_id:
+            acao_obj = self.acao
+            if acao_obj and getattr(acao_obj, 'praia_id', None) and acao_obj.praia_id != self.praia_id:
+                errors['praia'] = 'A praia deve ser a mesma praia da ação selecionada.'
         if errors:
             raise ValidationError(errors)
 

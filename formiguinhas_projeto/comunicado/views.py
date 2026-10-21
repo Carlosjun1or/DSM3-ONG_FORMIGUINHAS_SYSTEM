@@ -28,6 +28,61 @@ from .models import (
     Tema,
 )
 from .services import arquivar, desarquivar, despublicar, publicar
+from config.mongodb import test_mongo_connection
+from .mongo_services import (
+    salvar_comunicado_mongo,
+    remover_comunicado_mongo,
+    consultar_comunicados_mongo,
+    obter_comunicado_mongo,
+    obter_metricas_comunicados_mongo,
+    registrar_leitura_comunicado_mongo,
+)
+
+
+class MongoTemaAdapter:
+    def __init__(self, data):
+        self.data = data or {}
+        self.id = self.data.get('id')
+        self.pk = self.data.get('id')
+        self.nome = self.data.get('nome', '')
+
+
+class MongoComunicadoAdapter:
+    """Adapta documentos BSON do MongoDB Atlas para a interface esperada pelos templates."""
+    def __init__(self, doc):
+        self.doc = doc
+        self.id_comunicado = doc.get('id_sql')
+        self.pk = doc.get('id_sql')
+        self.id = doc.get('id_sql')
+        self.tipo = doc.get('tipo', '')
+        self._tipo_display = doc.get('tipo_display', '')
+        self.titulo = doc.get('titulo', '')
+        self.resumo = doc.get('resumo', '')
+        self.conteudo = doc.get('conteudo', '')
+        self.publico = doc.get('publico', '')
+        self._publico_display = doc.get('publico_display', '')
+        self.status = doc.get('status', '')
+        self._status_display = doc.get('status_display', '')
+        self.dt_publicacao = doc.get('dt_publicacao')
+        self.dt_expiracao = doc.get('dt_expiracao')
+        self.criado_em = doc.get('criado_em')
+        self.atualizado_em = doc.get('atualizado_em')
+        self.dt_ultima_edicao = doc.get('dt_ultima_edicao')
+        tema_data = doc.get('tema')
+        self.tema = MongoTemaAdapter(tema_data) if tema_data else None
+        autor_data = doc.get('autor') or {}
+        self.autor = type('Autor', (), {'id_voluntario': type('Vol', (), {'nome': autor_data.get('nome', '')})()})()
+        self.ultimo_editado_por_nome = doc.get('ultimo_editado_por_nome', '')
+        self.is_from_mongo = True
+
+    def get_tipo_display(self):
+        return self._tipo_display or self.tipo
+
+    def get_status_display(self):
+        return self._status_display or self.status
+
+    def get_publico_display(self):
+        return self._publico_display or self.publico
 
 
 def _admin(request):
@@ -40,61 +95,58 @@ def _admin(request):
 
 
 def _vigentes_publicos():
-    agora = timezone.now()
-    return Comunicado.objects.filter(
-        status=Comunicado.PUBLICADO, publico=Comunicado.TODOS,
-        dt_publicacao__isnull=False, dt_publicacao__lte=agora,
-    ).filter(Q(dt_expiracao__isnull=True) | Q(dt_expiracao__gt=agora)).select_related('tema').prefetch_related(
-        'praias__praia', 'equipes__equipe',
-        'acoes__acao', 'acoes__acao__residuos_coletados',
-        'doacoes__doacao__financeira', 'doacoes__doacao__itens_materiais',
-    )
+    try:
+        docs, _ = consultar_comunicados_mongo({'status': 'PUBLICADO', 'publico': 'TODOS'}, pagina=1, por_pagina=1000)
+        if docs:
+            return [MongoComunicadoAdapter(d) for d in docs]
+    except Exception:
+        pass
+    return []
 
 
 def _vigentes_internos(usuario):
-    comunicados = Comunicado.objects.filter(
-        status=Comunicado.PUBLICADO,
-        dt_publicacao__isnull=False,
-        dt_publicacao__lte=timezone.now(),
-    ).filter(
-        Q(dt_expiracao__isnull=True) | Q(dt_expiracao__gt=timezone.now())
-    )
-    if usuario.tipo != 'ADMIN':
-        comunicados = comunicados.filter(
-            Q(publico=Comunicado.TODOS) | Q(publico=Comunicado.COORDENADORES)
-        )
-    return comunicados.select_related('tema').prefetch_related(
-        'praias__praia', 'equipes__equipe',
-        'acoes__acao', 'acoes__acao__residuos_coletados',
-        'doacoes__doacao__financeira', 'doacoes__doacao__itens_materiais',
-    )
+    try:
+        filtros = {'status': 'PUBLICADO'}
+        if usuario.tipo != 'ADMIN':
+            filtros['publico'] = {'$in': ['TODOS', 'COORDENADORES']}
+        docs, _ = consultar_comunicados_mongo(filtros, pagina=1, por_pagina=1000)
+        if docs:
+            return [MongoComunicadoAdapter(d) for d in docs]
+    except Exception:
+        pass
+    return []
 
 
 def publicos(request):
     comunicados = _vigentes_publicos()
     tipo = request.GET.get('tipo')
     tema = request.GET.get('tema')
-    entidade = request.GET.get('entidade')
     if tipo in (Comunicado.AVISO, Comunicado.NOTICIA):
-        comunicados = comunicados.filter(tipo=tipo)
+        comunicados = [c for c in comunicados if c.tipo == tipo]
     if tema:
-        comunicados = comunicados.filter(tipo=Comunicado.NOTICIA, tema_id=tema)
-    if entidade:
-        comunicados = comunicados.filter(
-            Q(praias__praia_id=entidade) | Q(equipes__equipe_id=entidade) | Q(acoes__acao_id=entidade)
-        ).distinct()
-    page = Paginator(comunicados.order_by('-dt_publicacao'), 20).get_page(request.GET.get('page'))
+        comunicados = [
+            c for c in comunicados
+            if c.tipo == Comunicado.NOTICIA and getattr(c.tema, 'id', None) == int(tema)
+        ]
+    page = Paginator(comunicados, 20).get_page(request.GET.get('page'))
     filtros = request.GET.copy()
     filtros.pop('page', None)
     return render(request, 'site_institucional/comunicados.html', {
-        'comunicados': page, 'temas': Tema.objects.filter(ativo=True, noticias__in=_vigentes_publicos()).distinct(),
-        'filtro_tipo': tipo, 'filtro_tema': tema,
-        'pagina': page, 'filtros_query': filtros.urlencode(),
+        'comunicados': page,
+        'temas': Tema.objects.filter(ativo=True).distinct(),
+        'filtro_tipo': tipo,
+        'filtro_tema': tema,
+        'pagina': page,
+        'filtros_query': filtros.urlencode(),
     })
 
 
 def publico_detalhe(request, comunicado_id):
-    comunicado = get_object_or_404(_vigentes_publicos(), id_comunicado=comunicado_id)
+    doc = obter_comunicado_mongo(comunicado_id)
+    if not doc:
+        from django.http import Http404
+        raise Http404("Comunicado não encontrado.")
+    comunicado = MongoComunicadoAdapter(doc)
     return render(request, 'site_institucional/comunicado-detalhe.html', {'comunicado': comunicado})
 
 
@@ -104,36 +156,42 @@ def internos(request):
         return redirect('login')
     if usuario.tipo not in ('ADMIN', 'COORDENADOR'):
         return redirect('home')
-    base_comunicados = _vigentes_internos(usuario).annotate(
-        foi_lido=Exists(
-            ComunicadoLeitura.objects.filter(
-                comunicado_id=OuterRef('pk'),
-                usuario=usuario,
-            )
-        )
-    ).distinct().order_by('-dt_publicacao')
-    total_nao_lidos = base_comunicados.filter(foi_lido=False).count()
-    total_lidos = base_comunicados.filter(foi_lido=True).count()
 
-    comunicados = base_comunicados
-    busca = request.GET.get('busca', '').strip()
+    lista_base = _vigentes_internos(usuario)
+    total_nao_lidos = 0
+    total_lidos = 0
+    comunicados_com_status = []
+    for c in lista_base:
+        leituras = c.doc.get('leituras', []) if hasattr(c, 'doc') else []
+        c.foi_lido = any(l.get('usuario_id') == usuario.pk for l in leituras)
+        if c.foi_lido:
+            total_lidos += 1
+        else:
+            total_nao_lidos += 1
+        comunicados_com_status.append(c)
+
+    busca = request.GET.get('busca', '').strip().lower()
     tipo = request.GET.get('tipo', '').strip()
     leitura = request.GET.get('leitura', '').strip()
-    if busca:
-        comunicados = comunicados.filter(
-            Q(titulo__icontains=busca)
-            | Q(resumo__icontains=busca)
-            | Q(conteudo__icontains=busca)
-            | Q(tema__nome__icontains=busca)
-        ).distinct()
-    if tipo in dict(Comunicado.TIPO_CHOICES):
-        comunicados = comunicados.filter(tipo=tipo)
-    if leitura == 'nao_lidos':
-        comunicados = comunicados.filter(foi_lido=False)
-    elif leitura == 'lidos':
-        comunicados = comunicados.filter(foi_lido=True)
 
-    pagina, filtros_query = paginar_queryset(request, comunicados.order_by('-dt_publicacao'))
+    filtrados = []
+    for c in comunicados_com_status:
+        if busca:
+            tema_nome = getattr(c.tema, 'nome', '') if c.tema else ''
+            if (busca not in (c.titulo or '').lower() and
+                busca not in (c.resumo or '').lower() and
+                busca not in (c.conteudo or '').lower() and
+                busca not in tema_nome.lower()):
+                continue
+        if tipo and c.tipo != tipo:
+            continue
+        if leitura == 'nao_lidos' and c.foi_lido:
+            continue
+        if leitura == 'lidos' and not c.foi_lido:
+            continue
+        filtrados.append(c)
+
+    pagina, filtros_query = paginar_queryset(request, filtrados)
     return render(request, 'sistema/comunicados-central.html', {
         'comunicados': pagina.object_list,
         'pagina': pagina,
@@ -142,10 +200,10 @@ def internos(request):
         'filtro_tipo': tipo,
         'filtro_leitura': leitura,
         'tipos': Comunicado.TIPO_CHOICES,
-        'total_comunicados': base_comunicados.count(),
+        'total_comunicados': len(lista_base),
         'total_nao_lidos': total_nao_lidos,
         'total_lidos': total_lidos,
-        'total_filtrados': comunicados.count(),
+        'total_filtrados': len(filtrados),
     })
 
 
@@ -172,6 +230,8 @@ def interno_detalhe(request, comunicado_id):
             usuario=usuario,
             resumo=f'{usuario.id_voluntario.nome} leu o comunicado "{comunicado.titulo}".',
         )
+        # Sincroniza leitura no MongoDB Atlas
+        registrar_leitura_comunicado_mongo(comunicado.id_comunicado, usuario)
     return render(request, 'sistema/comunicado-detalhe.html', {'comunicado': comunicado})
 
 
@@ -179,30 +239,54 @@ def admin_lista(request):
     usuario, resposta = _admin(request)
     if resposta:
         return resposta
-    comunicados = Comunicado.objects.select_related(
-        'tema', 'autor__id_voluntario', 'ultimo_editado_por__id_voluntario'
-    ).order_by('-criado_em')
+
+    mongo_ok, mongo_msg, mongo_info = test_mongo_connection()
+    mongo_stats = obter_metricas_comunicados_mongo() if mongo_ok else {'total': 0}
+
+    fonte = 'mongo' if mongo_ok else 'sql'
+
     busca = request.GET.get('busca', '').strip()
     tipo = request.GET.get('tipo')
     status = request.GET.get('status')
-    if busca:
-        comunicados = comunicados.filter(
-            Q(titulo__icontains=busca)
-            | Q(resumo__icontains=busca)
-            | Q(conteudo__icontains=busca)
-        )
-    if tipo in dict(Comunicado.TIPO_CHOICES):
-        comunicados = comunicados.filter(tipo=tipo)
-    if status in dict(Comunicado.STATUS_CHOICES):
-        comunicados = comunicados.filter(status=status)
-    total_filtrados = comunicados.count()
-    pagina = Paginator(comunicados, 20).get_page(request.GET.get('page'))
+
+    if fonte == 'mongo' and mongo_ok:
+        filtros_mql = {'busca': busca, 'tipo': tipo, 'status': status}
+        docs, total_filtrados = consultar_comunicados_mongo(filtros_mql, pagina=1, por_pagina=1000)
+        lista_adaptada = [MongoComunicadoAdapter(d) for d in docs]
+        pagina = Paginator(lista_adaptada, 20).get_page(request.GET.get('page'))
+        total_comunicados = mongo_stats.get('total', 0)
+        total_publicados = mongo_stats.get('publicados', 0)
+        total_rascunhos = mongo_stats.get('rascunhos', 0)
+        total_arquivados = mongo_stats.get('arquivados', 0)
+    else:
+        fonte = 'sql'
+        comunicados = Comunicado.objects.select_related(
+            'tema', 'autor__id_voluntario', 'ultimo_editado_por__id_voluntario'
+        ).order_by('-criado_em')
+        if busca:
+            comunicados = comunicados.filter(
+                Q(titulo__icontains=busca)
+                | Q(resumo__icontains=busca)
+                | Q(conteudo__icontains=busca)
+            )
+        if tipo in dict(Comunicado.TIPO_CHOICES):
+            comunicados = comunicados.filter(tipo=tipo)
+        if status in dict(Comunicado.STATUS_CHOICES):
+            comunicados = comunicados.filter(status=status)
+        total_filtrados = comunicados.count()
+        pagina = Paginator(comunicados, 20).get_page(request.GET.get('page'))
+        total_comunicados = Comunicado.objects.count()
+        total_publicados = Comunicado.objects.filter(status=Comunicado.PUBLICADO).count()
+        total_rascunhos = Comunicado.objects.filter(status=Comunicado.RASCUNHO).count()
+        total_arquivados = Comunicado.objects.filter(status=Comunicado.ARQUIVADO).count()
+
     parametros_filtro = {
         chave: valor
         for chave, valor in (
             ('busca', busca),
             ('tipo', tipo),
             ('status', status),
+            ('fonte', fonte if fonte == 'mongo' else None),
         )
         if valor
     }
@@ -213,11 +297,16 @@ def admin_lista(request):
         'busca': busca,
         'filtro_tipo': tipo, 'filtro_status': status,
         'tipos': Comunicado.TIPO_CHOICES, 'status_choices': Comunicado.STATUS_CHOICES,
-        'total_comunicados': Comunicado.objects.count(),
-        'total_publicados': Comunicado.objects.filter(status=Comunicado.PUBLICADO).count(),
-        'total_rascunhos': Comunicado.objects.filter(status=Comunicado.RASCUNHO).count(),
+        'total_comunicados': total_comunicados,
+        'total_publicados': total_publicados,
+        'total_rascunhos': total_rascunhos,
         'total_filtrados': total_filtrados,
-        'total_arquivados': Comunicado.objects.filter(status=Comunicado.ARQUIVADO).count(),
+        'total_arquivados': total_arquivados,
+        # Metadados de persistência poliglota
+        'fonte_atual': fonte,
+        'mongo_conectado': mongo_ok,
+        'mongo_info': mongo_info,
+        'mongo_stats': mongo_stats,
     })
 
 
@@ -298,6 +387,8 @@ def admin_form(request, comunicado_id=None):
             valores_anteriores=anterior,
             valores_novos=_snapshot_comunicado_completo(item),
         )
+        # Persistência Poliglota: salvar no MongoDB Atlas
+        salvar_comunicado_mongo(item)
         return redirect('comunicados_admin')
     return render(request, 'sistema/comunicado-form.html', {'form': form, 'comunicado': comunicado})
 
@@ -337,7 +428,7 @@ def relacionamentos(request):
     )
     residuos = ResiduoColetado.objects.filter(
         acao_id__in=acao_relacionada_ids,
-    ).select_related('acao').order_by('acao__data', 'id_residuo')
+    ).order_by('dt_registro', 'id_residuo')
     doacoes = Doacao.objects.filter(id_doacao__in=doacao_ids).select_related(
         'doador',
     ).order_by('-data_recebimento', '-id_doacao')

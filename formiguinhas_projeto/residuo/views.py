@@ -4,7 +4,6 @@ from django.db.models import Q
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 
-from acao.models import Acao
 from auditoria.services import registrar_evento, snapshot
 from usuario.views import get_session_usuario, render_acesso_bloqueado
 from usuario.paginacao import paginar_queryset
@@ -41,19 +40,17 @@ def residuos_view(request):
     acao_id = request.GET.get('acao', '').strip()
 
     residuos = ResiduoColetado.objects.select_related(
-        'acao',
-        'acao__praia',
         'registrado_por__id_voluntario',
     ).prefetch_related(
         'destinacoes__registrado_por__id_voluntario',
     )
     if busca:
+        # acao vive no MongoDB (managed=False, sem tabela no SQLite)
+        # por isso os filtros acao__local e acao__descricao são omitidos aqui
         residuos = residuos.filter(
             Q(tipo__icontains=busca)
             | Q(categoria__icontains=busca)
             | Q(observacao__icontains=busca)
-            | Q(acao__local__icontains=busca)
-            | Q(acao__descricao__icontains=busca)
             | Q(registrado_por_nome__icontains=busca)
         )
     if tipo in dict(ResiduoColetado.TIPO_CHOICES):
@@ -67,12 +64,22 @@ def residuos_view(request):
 
     residuos = residuos.order_by('-id_residuo')
     pagina, filtros_query = paginar_queryset(request, residuos)
+
+    # Ações vêm do MongoDB (fonte primária); fallback para lista vazia se indisponível
+    try:
+        from acao.mongo_services import consultar_acoes_mongo
+        from config.mongodb import MongoAcaoProxy
+        docs, _ = consultar_acoes_mongo(pagina=1, por_pagina=1000)
+        acoes = [MongoAcaoProxy(d) for d in docs]
+    except Exception:
+        acoes = []
+
     return render(request, 'sistema/residuos.html', {
         'usuario': usuario,
         'residuos': pagina.object_list,
         'pagina': pagina,
         'filtros_query': filtros_query,
-        'acoes': Acao.objects.order_by('-data', '-id_acao'),
+        'acoes': acoes,
         'busca': busca,
         'tipo_selecionado': tipo,
         'categoria_selecionada': categoria,
@@ -84,9 +91,9 @@ def residuos_view(request):
         'total_residuos': ResiduoColetado.objects.count(),
         'total_destinacoes': DestinacaoResiduo.objects.count(),
         'total_acoes_com_residuos': ResiduoColetado.objects.values('acao_id').distinct().count(),
-        'coletas': ColetaResiduo.objects.select_related(
-            'acao', 'acao__praia', 'bag', 'bag__condominio',
-        ).prefetch_related('itens__destinacoes').order_by('-data_coleta', '-id_coleta'),
+        'coletas': ColetaResiduo.objects.prefetch_related(
+            'itens__destinacoes'
+        ).order_by('-data_coleta', '-id_coleta'),
         'total_coletas': ColetaResiduo.objects.count(),
     })
 
@@ -139,13 +146,7 @@ def detalhe_coleta_residuo_view(request, coleta_id):
     if not usuario:
         return redirect('login')
     coleta = get_object_or_404(
-        ColetaResiduo.objects.select_related(
-            'acao',
-            'acao__praia',
-            'bag',
-            'bag__condominio',
-        )
-        .prefetch_related('itens__destinacoes'),
+        ColetaResiduo.objects.prefetch_related('itens__destinacoes'),
         id_coleta=coleta_id,
     )
     return render(request, 'sistema/detalhe-coleta-residuo.html', {
@@ -188,7 +189,14 @@ def registrar_residuo_view(request, acao_id):
         messages.error(request, 'Somente administradores podem registrar resíduos.')
         return render_acesso_bloqueado(request)
 
-    acao = get_object_or_404(Acao, id_acao=acao_id)
+    # Ação vive no MongoDB; busca o proxy sem tocar no SQLite
+    from acao.mongo_services import obter_acao_mongo
+    from config.mongodb import MongoAcaoProxy
+    doc = obter_acao_mongo(acao_id)
+    if not doc:
+        from django.http import Http404
+        raise Http404('Ação não encontrada.')
+    acao = MongoAcaoProxy(doc)
     if request.method == 'POST':
         form = ResiduoColetadoForm(request.POST)
         if form.is_valid():

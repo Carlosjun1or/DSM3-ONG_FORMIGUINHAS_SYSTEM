@@ -5,7 +5,8 @@ from . import views
 
 
 urlpatterns = [
-    path('', views.materiais_view, name='materiais'),
+    path('materiais/', views.materiais_view, name='materiais'),
+    path('', views.materiais_view, name='materiais_root'),
     path('materiais/cadastrar/', views.cadastrar_material_view, name='cadastrar_material'),
     path('materiais/<int:material_id>/editar/', views.editar_material_view, name='editar_material'),
     path('movimentacoes/', views.movimentacoes_estoque_view, name='movimentacoes_estoque'),

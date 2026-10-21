@@ -98,7 +98,6 @@ def doacoes_view(request):
     doacoes = Doacao.objects.select_related(
         'doador',
         'praia',
-        'acao',
         'registrado_por__id_voluntario',
     ).prefetch_related('itens_materiais', 'financeira')
     if inicio:
@@ -391,7 +390,6 @@ def doacao_detalhe_view(request, doacao_id):
         Doacao.objects.select_related(
             'doador',
             'praia',
-            'acao',
             'registrado_por__id_voluntario',
             'ultimo_editado_por__id_voluntario',
         ).prefetch_related(

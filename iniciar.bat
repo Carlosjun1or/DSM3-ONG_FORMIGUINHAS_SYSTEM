@@ -35,11 +35,18 @@ if not exist "venv\Scripts\python.exe" (
     if errorlevel 1 goto :erro
 )
 
-echo Instalando dependencias...
+echo Instalando dependencias do sistema e do MongoDB Atlas...
 "%CD%\venv\Scripts\python.exe" -m pip install --disable-pip-version-check -r requirements.txt
 if errorlevel 1 goto :erro
 
-echo Atualizando banco de dados...
+if exist "testar_atlas.py" (
+    echo.
+    echo Verificando integracao com o MongoDB Atlas...
+    "%CD%\venv\Scripts\python.exe" testar_atlas.py
+    echo.
+)
+
+echo Atualizando banco de dados relacional (SQLite)...
 "%CD%\venv\Scripts\python.exe" manage.py migrate
 if errorlevel 1 goto :erro
 
@@ -60,7 +67,7 @@ if errorlevel 1 goto :erro
 endlocal
 exit /b 0
 
- :erro
+:erro
 echo.
 echo O sistema nao foi iniciado. Verifique a mensagem acima.
 pause

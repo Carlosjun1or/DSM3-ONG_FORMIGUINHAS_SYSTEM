@@ -30,6 +30,84 @@ from auditoria.services import registrar_evento, snapshot
 from estoque.models import MovimentacaoEstoque
 from estoque.services import registrar_movimentacao
 from .forms import MaterialUtilizadoForm
+from config.mongodb import test_mongo_connection
+from .mongo_services import (
+    salvar_acao_mongo,
+    remover_acao_mongo,
+    consultar_acoes_mongo,
+    obter_acao_mongo,
+    obter_metricas_acoes_mongo,
+)
+
+
+class MongoAcaoAdapter:
+    """Adapta documentos BSON de Ação do MongoDB Atlas para a interface esperada pelos templates Django."""
+    def __init__(self, doc):
+        self.doc = doc
+        self.id = doc.get('id_sql')
+        self.id_acao = doc.get('id_sql')
+        self.pk = doc.get('id_sql')
+        self.tipo = doc.get('tipo', '')
+        self._tipo_display = doc.get('tipo_display', '')
+        self.status = doc.get('status', '')
+        self._status_display = doc.get('status_display', '')
+        self.local = doc.get('local', '')
+        self.descricao = doc.get('descricao', '')
+        self.cadastrado_por_nome = doc.get('cadastrado_por_nome', '')
+        self.ultimo_editado_por_nome = doc.get('ultimo_editado_por_nome', '')
+        self.dt_cadastro = doc.get('dt_cadastro')
+        self.dt_ultima_edicao = doc.get('dt_ultima_edicao')
+        self.id_mongo = str(doc.get('_id', ''))
+        self.total_residuos_kg = doc.get('total_residuos_kg', 0)
+        self.total_participantes = doc.get('total_participantes', 0)
+
+        # Data
+        data_val = doc.get('data')
+        if isinstance(data_val, str):
+            from django.utils.dateparse import parse_date
+            self.data = parse_date(data_val)
+        else:
+            self.data = data_val
+
+        # Horário
+        hora_val = doc.get('horario')
+        if isinstance(hora_val, str):
+            from django.utils.dateparse import parse_time
+            self.horario = parse_time(hora_val)
+        else:
+            self.horario = hora_val
+
+        # Praia
+        praia_dict = doc.get('praia') or {}
+        class PraiaAdapter:
+            def __init__(self, p):
+                self.id_praia = p.get('id', p.get('id_praia'))
+                self.pk = self.id_praia
+                self.nome = p.get('nome', '')
+                self.cidade = p.get('cidade', '')
+                self.latitude = p.get('latitude')
+                self.longitude = p.get('longitude')
+                self.localizacao_geo = p.get('localizacao_geo', {})
+            def __str__(self):
+                return self.nome
+        self.praia = PraiaAdapter(praia_dict)
+
+        # Participantes
+        class ParticipantesManager(list):
+            def count(self):
+                return len(self)
+        self.participantes = ParticipantesManager(doc.get('participantes', []))
+        self.equipes_vinculadas = doc.get('equipes', [])
+        self.responsaveis = doc.get('responsaveis', [])
+        self.imagens_acao = doc.get('imagens', [])
+        self.residuos_coletados = doc.get('residuos_coletados', [])
+
+    def get_tipo_display(self):
+        return self._tipo_display or self.tipo
+
+    def get_status_display(self):
+        return self._status_display or self.status
+
 
 
 def preencher_auditoria(acao, usuario, criacao=False):
@@ -101,37 +179,47 @@ def acoes_view(request):
     if usuario.tipo not in ('ADMIN', 'COORDENADOR'):
         return redirect('home')
 
+    # Fonte primária exclusiva: MongoDB Atlas
+    mongo_ok, mongo_msg, mongo_info = test_mongo_connection()
+    mongo_metricas = obter_metricas_acoes_mongo() if mongo_ok else {'total': 0, 'planejadas': 0}
+
     busca = request.GET.get('busca', '').strip()
     tipo = request.GET.get('tipo', '').strip()
     status = request.GET.get('status', '').strip()
     praia_id = request.GET.get('praia', '').strip()
     participacao = request.GET.get('participacao', '').strip()
-    acoes = Acao.objects.select_related(
-        'praia',
-        'cadastrado_por__id_voluntario',
-        'ultimo_editado_por__id_voluntario',
-    )
-    if busca:
-        acoes = acoes.filter(
-            Q(local__icontains=busca)
-            | Q(descricao__icontains=busca)
-            | Q(praia__nome__icontains=busca)
-            | Q(praia__cidade__icontains=busca)
-        )
-    if tipo in dict(Acao.TIPO_CHOICES):
-        acoes = acoes.filter(tipo=tipo)
-    if status in dict(Acao.STATUS_CHOICES):
-        acoes = acoes.filter(status=status)
-    if praia_id.isdigit():
-        acoes = acoes.filter(praia_id=praia_id)
-    if participacao == 'MINHAS':
-        acoes = acoes.filter(
-            participantes__voluntario=usuario.id_voluntario,
-        ).distinct()
 
-    acoes = acoes.order_by('-data', '-id_acao')
-    pagina, filtros_query = paginar_queryset(request, acoes)
-    base_acoes = Acao.objects.all()
+    if mongo_ok:
+        filtros_mongo = {
+            'busca': busca,
+            'tipo': tipo,
+            'status': status,
+            'praia': praia_id,
+            'voluntario_id': usuario.id_voluntario_id if participacao == 'MINHAS' else None,
+        }
+        docs, total_docs = consultar_acoes_mongo(filtros_mongo, pagina=1, por_pagina=1000)
+        acoes_adaptadas = [MongoAcaoAdapter(d) for d in docs]
+        pagina, filtros_query = paginar_queryset(request, acoes_adaptadas)
+        total_acoes = mongo_metricas.get('total', len(docs))
+        total_planejadas = mongo_metricas.get('planejadas', 0)
+        fonte = 'mongo'
+    else:
+        fonte = 'sql'
+        acoes_qs = Acao.objects.select_related('praia').prefetch_related('participantes')
+        if busca:
+            acoes_qs = acoes_qs.filter(Q(local__icontains=busca) | Q(descricao__icontains=busca))
+        if tipo:
+            acoes_qs = acoes_qs.filter(tipo=tipo)
+        if status:
+            acoes_qs = acoes_qs.filter(status=status)
+        if praia_id.isdigit():
+            acoes_qs = acoes_qs.filter(praia_id=praia_id)
+        if participacao == 'MINHAS' and usuario.id_voluntario_id:
+            acoes_qs = acoes_qs.filter(participantes__voluntario_id=usuario.id_voluntario_id)
+        pagina, filtros_query = paginar_queryset(request, acoes_qs)
+        total_acoes = Acao.objects.count()
+        total_planejadas = Acao.objects.filter(status='PLANEJADA').count()
+
     return render(request, 'sistema/acoes.html', {
         'usuario': usuario,
         'acoes': pagina.object_list,
@@ -145,9 +233,14 @@ def acoes_view(request):
         'tipo_choices': Acao.TIPO_CHOICES,
         'status_choices': Acao.STATUS_CHOICES,
         'praias': Praia.objects.order_by('nome'),
-        'total_acoes': base_acoes.count(),
-        'total_planejadas': base_acoes.filter(status=Acao.STATUS_PLANEJADA).count(),
+        'total_acoes': total_acoes,
+        'total_planejadas': total_planejadas,
+        'fonte_atual': fonte,
+        'mongo_conectado': mongo_ok,
+        'mongo_info': mongo_info,
+        'mongo_metricas': mongo_metricas,
     })
+
 
 
 @transaction.atomic
@@ -170,6 +263,7 @@ def cadastro_acao_view(request):
             if acao.tipo == Acao.TIPO_MUTIRAO:
                 sincronizar_relacionamentos_mutirao(acao, usuario)
 
+            salvar_acao_mongo(acao)
             return redirect('acao_detalhe', acao_id=acao.id_acao)
     else:
         form = AcaoForm(initial={'status': Acao.STATUS_PLANEJADA})
@@ -201,6 +295,7 @@ def editar_acao_view(request, acao_id):
                              resumo=f'Ação #{acao.pk} editada.', valores_anteriores=valores_anteriores)
             if acao.tipo == Acao.TIPO_MUTIRAO:
                 sincronizar_relacionamentos_mutirao(acao, usuario)
+            salvar_acao_mongo(acao)
             return redirect('acao_detalhe', acao_id=acao.id_acao)
     else:
         form = AcaoForm(instance=acao)
@@ -225,7 +320,7 @@ def acao_detalhe_view(request, acao_id):
             'praia',
             'cadastrado_por__id_voluntario',
             'ultimo_editado_por__id_voluntario',
-        ).prefetch_related('imagens_acao', 'residuos_coletados__destinacoes'),
+        ).prefetch_related('imagens_acao'),
         id_acao=acao_id,
     )
     busca_participante = request.GET.get('busca_participante', '').strip()
@@ -289,9 +384,14 @@ def acao_detalhe_view(request, acao_id):
             | Q(voluntario__email__icontains=busca_responsavel)
         )
 
+    mongo_ok, _, _ = test_mongo_connection()
+    doc_mongo = obter_acao_mongo(acao_id) if mongo_ok else None
+
     return render(request, 'sistema/detalhe-acao.html', {
         'usuario': usuario,
         'acao': acao,
+        'id_mongo': str(doc_mongo.get('_id')) if doc_mongo else None,
+        'doc_mongo': doc_mongo,
         'participantes': participantes,
         'historico_participantes': historico_participantes,
         'equipes': equipes,
@@ -380,6 +480,7 @@ def adicionar_participante_view(request, acao_id):
                 usuario=usuario,
                 resumo=f'{participante.voluntario.nome} vinculado à ação #{acao.pk}.',
             )
+            salvar_acao_mongo(acao)
     return redirect('acao_detalhe', acao_id=acao.id_acao)
 
 
@@ -405,6 +506,7 @@ def adicionar_responsavel_view(request, acao_id):
                 usuario=usuario,
                 resumo=f'{responsavel.voluntario.nome} vinculado como responsável pela ação #{acao.pk}.',
             )
+            salvar_acao_mongo(acao)
     return redirect('acao_detalhe', acao_id=acao.id_acao)
 
 
@@ -435,6 +537,7 @@ def adicionar_imagens_acao_view(request, acao_id):
                     resumo=f'Imagem adicionada à ação #{acao.pk}.',
                 )
             messages.success(request, 'Imagens adicionadas à ação com sucesso.')
+            salvar_acao_mongo(acao)
         else:
             messages.error(request, 'Não foi possível adicionar as imagens. Verifique os arquivos selecionados.')
     return redirect('acao_detalhe', acao_id=acao.id_acao)
@@ -466,6 +569,9 @@ def excluir_imagem_acao_view(request, acao_id, imagem_id):
             resumo=f'Imagem removida da ação #{acao_id}.',
             valores_anteriores=valores_anteriores,
         )
+        acao = Acao.objects.filter(pk=acao_id).first()
+        if acao:
+            salvar_acao_mongo(acao)
         messages.success(request, 'Imagem excluída com sucesso.')
     return redirect('acao_detalhe', acao_id=acao_id)
 
@@ -501,6 +607,7 @@ def atualizar_status_acao_view(request, acao_id):
                 resumo=f'Status da ação #{acao.pk} alterado de {status_anterior} para {acao.get_status_display()}.',
                 valores_anteriores=valores_anteriores,
             )
+            salvar_acao_mongo(acao)
             messages.success(
                 request,
                 f'Status da ação atualizado de {status_anterior} para {acao.get_status_display()}.',
@@ -546,6 +653,7 @@ def confirmar_participacao_view(request, acao_id, participante_id):
                     resumo=f'Situação de {participante.voluntario.nome} atualizada na ação #{acao_id}.',
                     valores_anteriores=valores_anteriores,
                 )
+                salvar_acao_mongo(participante.acao)
     return redirect('acao_detalhe', acao_id=acao_id)
 
 
@@ -582,6 +690,7 @@ def registrar_comparecimento_view(request, acao_id, participante_id):
                 resumo=f'Comparecimento de {participante.voluntario.nome} registrado na ação #{acao_id}.',
                 valores_anteriores=valores_anteriores,
             )
+            salvar_acao_mongo(participante.acao)
         else:
             mover_participante_para_historico(participante, usuario, novo_status)
     return redirect('acao_detalhe', acao_id=acao_id)
@@ -638,6 +747,7 @@ def restaurar_participante_view(request, acao_id, historico_id):
             resumo=f'{participante.voluntario.nome} restaurado na ação #{acao_id}.',
             valores_anteriores=valores_anteriores,
         )
+        salvar_acao_mongo(participante.acao)
 
     return redirect('acao_detalhe', acao_id=acao_id)
 
@@ -645,8 +755,9 @@ def restaurar_participante_view(request, acao_id, historico_id):
 @transaction.atomic
 def mover_participante_para_historico(participante, usuario, status):
     valores_anteriores = snapshot(participante)
+    acao_alvo = participante.acao
     historico = AcaoParticipanteHistorico.objects.create(
-        acao=participante.acao,
+        acao=acao_alvo,
         voluntario=participante.voluntario,
         status=status,
         compareceu=participante.compareceu,
@@ -666,6 +777,7 @@ def mover_participante_para_historico(participante, usuario, status):
         valores_novos=snapshot(historico),
     )
     participante.delete()
+    salvar_acao_mongo(acao_alvo)
 
 
 @transaction.atomic
@@ -681,6 +793,7 @@ def excluir_acao_view(request, acao_id):
         valores_anteriores = snapshot(acao)
         acao_id_registro = acao.pk
         acao.delete()
+        remover_acao_mongo(acao_id_registro)
         registrar_evento(
             entidade='ACAO',
             id_registro=acao_id_registro,

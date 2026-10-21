@@ -8,7 +8,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('acao', '0005_acaoimagem'),
+        # ('acao', '0005_acaoimagem'),
         ('condominio', '0003_remover_auditoriacontrole'),
         ('residuo', '0004_destinacaoresiduo_dt_ultima_edicao_and_more'),
         ('usuario', '0002_audit_snapshots'),
@@ -32,7 +32,7 @@ class Migration(migrations.Migration):
                 ('dt_ultima_edicao', models.DateTimeField(blank=True, null=True)),
                 ('ultimo_editado_por_nome', models.CharField(blank=True, default='', max_length=150)),
                 ('ultimo_editado_por_tipo', models.CharField(blank=True, default='', max_length=20)),
-                ('acao', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='coletas_residuos', to='acao.acao')),
+                ('acao', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='coletas_residuos', to='acao.Acao')),
                 ('bag', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.PROTECT, related_name='coletas_residuos', to='condominio.bag')),
                 ('registrado_por', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='coletas_residuos_registradas', to='usuario.usuario')),
                 ('ultimo_editado_por', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='coletas_residuos_editadas', to='usuario.usuario')),

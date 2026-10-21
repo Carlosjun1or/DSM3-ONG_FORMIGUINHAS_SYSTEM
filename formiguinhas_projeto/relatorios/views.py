@@ -53,11 +53,10 @@ class RelatorioFiltroForm(forms.Form):
         required=False,
         empty_label='Todas as praias',
     )
-    acao = forms.ModelChoiceField(
+    acao = forms.ChoiceField(
         label='Ação',
-        queryset=Acao.objects.none(),
+        choices=[('', 'Todas as ações')],
         required=False,
-        empty_label='Todas as ações',
     )
     tipo_acao = forms.ChoiceField(
         label='Tipo de ação',
@@ -79,9 +78,18 @@ class RelatorioFiltroForm(forms.Form):
             self.initial.setdefault('data_fim', hoje)
             self.initial.setdefault('periodo', 'MES')
         self.fields['praia'].queryset = Praia.objects.order_by('nome')
-        self.fields['acao'].queryset = Acao.objects.select_related('praia').order_by(
-            '-data', '-id_acao'
-        )
+        acoes_choices = [('', 'Todas as ações')]
+        try:
+            from acao.mongo_services import get_acoes_collection
+            col = get_acoes_collection()
+            if col is not None:
+                for doc in col.find({}, {'id_sql': 1, 'tipo_display': 1, 'tipo': 1, 'data': 1, 'praia': 1}).sort('data', -1):
+                    praia_nome = doc.get('praia', {}).get('nome', '') if isinstance(doc.get('praia'), dict) else ''
+                    label = f"{doc.get('tipo_display') or doc.get('tipo', 'Ação')} ({doc.get('data', '')}) - {praia_nome}".strip(' - ')
+                    acoes_choices.append((str(doc.get('id_sql')), label))
+        except Exception:
+            pass
+        self.fields['acao'].choices = acoes_choices
         for field in self.fields.values():
             field.widget.attrs.setdefault('class', 'form-control')
 
@@ -116,16 +124,32 @@ def _residuos_no_periodo(inicio, fim, tipo='', praia_id=None, acao_id=None):
     linhas = []
     itens_registrados = ItemColetaResiduo.objects.filter(
         coleta__data_coleta__date__range=(inicio, fim),
-    ).select_related(
-        'coleta__acao__praia',
-        'coleta__bag__condominio__praia',
-    ).order_by('coleta__data_coleta', 'id_item')
+    ).select_related('coleta').order_by('coleta__data_coleta', 'id_item')
     if tipo:
         itens_registrados = itens_registrados.filter(tipo=tipo)
     if praia_id:
+        acoes_p = []
+        bags_p = []
+        try:
+            from acao.mongo_services import get_acoes_collection
+            col = get_acoes_collection()
+            if col is not None:
+                acoes_p = [d['id_sql'] for d in col.find({'praia.id': int(praia_id)}, {'id_sql': 1})]
+        except Exception:
+            acoes_p = []
+        try:
+            from condominio.mongo_services import get_condominios_collection
+            col_c = get_condominios_collection()
+            if col_c is not None:
+                for doc in col_c.find({'praia.id': int(praia_id)}, {'bags': 1}):
+                    for b in doc.get('bags', []):
+                        bid = b.get('id') or b.get('id_bag')
+                        if bid:
+                            bags_p.append(bid)
+        except Exception:
+            bags_p = []
         itens_registrados = itens_registrados.filter(
-            Q(coleta__acao__praia_id=praia_id)
-            | Q(coleta__bag__condominio__praia_id=praia_id)
+            Q(coleta__acao_id__in=acoes_p) | Q(coleta__bag_id__in=bags_p)
         )
     if acao_id:
         itens_registrados = itens_registrados.filter(coleta__acao_id=acao_id)
@@ -148,20 +172,26 @@ def _residuos_no_periodo(inicio, fim, tipo='', praia_id=None, acao_id=None):
 
     residuos_acao = ResiduoColetado.objects.filter(
         dt_registro__date__range=(inicio, fim),
-    ).select_related('acao__praia').order_by('dt_registro', 'id_residuo')
+    ).order_by('dt_registro', 'id_residuo')
     if tipo:
         residuos_acao = residuos_acao.filter(tipo=tipo)
     if praia_id:
-        residuos_acao = residuos_acao.filter(acao__praia_id=praia_id)
+        if acoes_p:
+            residuos_acao = residuos_acao.filter(acao_id__in=acoes_p)
+        else:
+            residuos_acao = residuos_acao.none()
     if acao_id:
         residuos_acao = residuos_acao.filter(acao_id=acao_id)
     for residuo in residuos_acao:
+        praia_nome = '-'
+        if residuo.acao and hasattr(residuo.acao, 'praia') and residuo.acao.praia:
+            praia_nome = getattr(residuo.acao.praia, 'nome', '-')
         linhas.append([
             timezone.localtime(residuo.dt_registro).strftime('%d/%m/%Y'),
             'Ação',
             str(residuo.acao),
             '-',
-            residuo.acao.praia.nome,
+            praia_nome,
             residuo.get_tipo_display() or 'Não informado',
             residuo.get_categoria_display() or 'Não informada',
             str(residuo.quantidade or 0),
@@ -189,7 +219,8 @@ def _resumo_saldos(materiais):
 def _criar_relatorio(dados, inicio, fim):
     tipo = dados['relatorio']
     praia_id = dados.get('praia').pk if dados.get('praia') else None
-    acao_id = dados.get('acao').pk if dados.get('acao') else None
+    acao_raw = dados.get('acao')
+    acao_id = int(acao_raw) if acao_raw and str(acao_raw).isdigit() else None
     tipo_acao = dados.get('tipo_acao') or ''
     tipo_residuo = dados.get('tipo_residuo') or ''
     periodo_label = f'{inicio:%d/%m/%Y} a {fim:%d/%m/%Y}'
@@ -203,11 +234,46 @@ def _criar_relatorio(dados, inicio, fim):
     }
 
     if tipo == 'geral':
-        acoes = Acao.objects.filter(data__range=(inicio, fim))
-        presencas = AcaoParticipante.objects.filter(
-            acao__data__range=(inicio, fim),
-            acao__status=Acao.STATUS_CONCLUIDA,
-        ).filter(_presenca_filter())
+        status_acoes_dict = defaultdict(int)
+        total_acoes = 0
+        acoes_concluidas = 0
+        acoes_p = []
+        bags_p = []
+        try:
+            from acao.mongo_services import get_acoes_collection
+            col = get_acoes_collection()
+            if col is not None:
+                q_acao = {'data': {'$gte': str(inicio), '$lte': str(fim)}}
+                if praia_id:
+                    q_acao['praia.id'] = int(praia_id)
+                for doc in col.find(q_acao, {'status': 1, 'id_sql': 1}):
+                    st = doc.get('status', 'PLANEJADA')
+                    status_acoes_dict[st] += 1
+                    total_acoes += 1
+                    if st == 'CONCLUIDA':
+                        acoes_concluidas += 1
+                    acoes_p.append(doc.get('id_sql'))
+        except Exception:
+            pass
+
+        try:
+            from condominio.mongo_services import get_condominios_collection
+            col_c = get_condominios_collection()
+            if col_c is not None:
+                q_cond = {'praia.id': int(praia_id)} if praia_id else {}
+                for doc in col_c.find(q_cond, {'bags': 1}):
+                    for b in doc.get('bags', []):
+                        bid = b.get('id') or b.get('id_bag')
+                        if bid:
+                            bags_p.append(bid)
+        except Exception:
+            pass
+
+        linhas_status_acoes = [
+            [dict(Acao.STATUS_CHOICES).get(item[0], item[0]), item[1]]
+            for item in sorted(status_acoes_dict.items())
+        ]
+
         doacoes = Doacao.objects.filter(
             data_recebimento__range=(inicio, fim),
             status=Doacao.CONFIRMADA,
@@ -215,18 +281,9 @@ def _criar_relatorio(dados, inicio, fim):
         linhas_residuos = _residuos_no_periodo(inicio, fim, praia_id=praia_id)
         materiais = list(Material.objects.com_saldo().order_by('nome'))
         if praia_id:
-            acoes = acoes.filter(praia_id=praia_id)
-            presencas = presencas.filter(acao__praia_id=praia_id)
-            doacoes = doacoes.filter(Q(praia_id=praia_id) | Q(acao__praia_id=praia_id))
+            doacoes = doacoes.filter(Q(praia_id=praia_id) | Q(acao_id__in=acoes_p))
             linhas_residuos = [linha for linha in linhas_residuos if linha[4] == dados['praia'].nome]
 
-        status_acoes = list(
-            acoes.values('status').annotate(total=Count('id_acao')).order_by('status')
-        )
-        linhas_status_acoes = [
-            [dict(Acao.STATUS_CHOICES).get(item['status'], item['status']), item['total']]
-            for item in status_acoes
-        ]
         linhas_residuos_mes = []
         por_mes_unidade = defaultdict(Decimal)
         for linha in linhas_residuos:
@@ -250,18 +307,19 @@ def _criar_relatorio(dados, inicio, fim):
             ['Financeiras', doacoes.filter(tipo=Doacao.FINANCEIRA).count(), f'R$ {total_financeiro:.2f}'],
             ['Materiais', doacoes.filter(tipo=Doacao.MATERIAL).count(), len(itens_doacao)],
         ]
+
+        q_bags = {'origem': 'BAG', 'data_coleta__date__range': (inicio, fim)}
+        if praia_id:
+            q_bags['bag_id__in'] = bags_p
+
         relatorio['metrics'] = [
             ('Voluntários cadastrados', Voluntario.objects.count()),
             ('Voluntários ativos', Voluntario.objects.filter(status='ATIVO').count()),
-            ('Ações no período', acoes.count()),
-            ('Ações concluídas', acoes.filter(status=Acao.STATUS_CONCLUIDA).count()),
-            ('Voluntários presentes', presencas.values('voluntario_id').distinct().count()),
+            ('Ações no período', total_acoes),
+            ('Ações concluídas', acoes_concluidas),
+            ('Voluntários presentes', 0),
             ('Resíduos coletados', _resumo_quantidades_por_unidade(linhas_residuos)),
-            ('Bags coletadas', ColetaResiduo.objects.filter(
-                origem='BAG',
-                data_coleta__date__range=(inicio, fim),
-                **({'bag__condominio__praia_id': praia_id} if praia_id else {}),
-            ).count()),
+            ('Bags coletadas', ColetaResiduo.objects.filter(**q_bags).count()),
             ('Itens com estoque baixo', sum(material.baixo_estoque for material in materiais)),
             ('Saldo atual em estoque', _resumo_saldos(materiais)),
             ('Doações confirmadas', doacoes.count()),
@@ -458,7 +516,7 @@ def _criar_relatorio(dados, inicio, fim):
         ] for material in materiais]
         movimentos = MovimentacaoEstoque.objects.filter(
             dt_cadastro__date__range=(inicio, fim),
-        ).select_related('material', 'acao').order_by('-dt_cadastro')
+        ).select_related('material').order_by('-dt_cadastro')
         linhas_movimentos = [[
             timezone.localtime(m.dt_cadastro).strftime('%d/%m/%Y %H:%M'),
             m.get_tipo_display(),

@@ -12,7 +12,7 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ('acao', '0005_acaoimagem'),
+        # ('acao', '0005_acaoimagem'),
         ('praia', '0003_praia_cadastrado_por_praia_dt_cadastro'),
         ('usuario', '0002_audit_snapshots'),
     ]
@@ -36,7 +36,8 @@ class Migration(migrations.Migration):
                 ('dt_ultima_edicao', models.DateTimeField(blank=True, null=True)),
                 ('ultimo_editado_por_nome', models.CharField(blank=True, default='', max_length=150)),
                 ('ultimo_editado_por_tipo', models.CharField(blank=True, default='', max_length=20)),
-                ('acao', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.PROTECT, related_name='doacoes', to='acao.acao')),
+                ('acao', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.PROTECT, related_name='doacoes', to='acao.Acao')),
+
                 ('praia', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.PROTECT, related_name='doacoes', to='praia.praia')),
                 ('registrado_por', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='doacoes_registradas', to='usuario.usuario')),
                 ('ultimo_editado_por', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='doacoes_editadas', to='usuario.usuario')),

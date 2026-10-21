@@ -12,7 +12,7 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ('acao', '0005_acaoimagem'),
+        # ('acao', '0005_acaoimagem'),
         ('usuario', '0002_audit_snapshots'),
     ]
 
@@ -29,7 +29,7 @@ class Migration(migrations.Migration):
                 ('dt_registro', models.DateTimeField(default=django.utils.timezone.now)),
                 ('registrado_por_nome', models.CharField(max_length=150)),
                 ('registrado_por_tipo', models.CharField(max_length=20)),
-                ('acao', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='residuos_coletados', to='acao.acao')),
+                ('acao', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='residuos_coletados', to='acao.Acao')),
                 ('registrado_por', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='residuos_registrados', to='usuario.usuario')),
             ],
             options={

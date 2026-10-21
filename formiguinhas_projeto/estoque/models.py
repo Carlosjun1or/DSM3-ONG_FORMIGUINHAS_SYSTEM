@@ -140,7 +140,30 @@ class Material(models.Model):
         return self.saldo <= 0 or self.saldo < self.estoque_minimo
 
 
+
+class MovimentacaoEstoqueQuerySet(models.QuerySet):
+    def filter(self, *args, **kwargs):
+        if 'acao' in kwargs:
+            val = kwargs.pop('acao')
+            kwargs['acao_id'] = val.pk if hasattr(val, 'pk') else val
+        return super().filter(*args, **kwargs)
+
+    def get(self, *args, **kwargs):
+        if 'acao' in kwargs:
+            val = kwargs.pop('acao')
+            kwargs['acao_id'] = val.pk if hasattr(val, 'pk') else val
+        return super().get(*args, **kwargs)
+
+
 class MovimentacaoEstoque(models.Model):
+    objects = MovimentacaoEstoqueQuerySet.as_manager()
+
+    def __init__(self, *args, **kwargs):
+        acao_val = kwargs.pop('acao', None)
+        super().__init__(*args, **kwargs)
+        if acao_val is not None:
+            self.acao = acao_val
+
     TIPO_CHOICES = [('ENTRADA', 'Entrada'), ('SAIDA', 'Saída')]
     ORIGEM_CHOICES = [('DOACAO', 'Doação'), ('COMPRA', 'Compra'), ('AJUSTE', 'Ajuste')]
 
@@ -148,12 +171,11 @@ class MovimentacaoEstoque(models.Model):
     material = models.ForeignKey(
         Material, on_delete=models.PROTECT, related_name='movimentacoes'
     )
-    acao = models.ForeignKey(
-        'acao.Acao',
-        on_delete=models.SET_NULL,
+    acao_id = models.PositiveIntegerField(
         null=True,
         blank=True,
-        related_name='movimentacoes_estoque',
+        db_column='acao_id',
+        verbose_name='Ação (ID)',
     )
     tipo = models.CharField(max_length=10, choices=TIPO_CHOICES)
     quantidade = models.PositiveIntegerField(validators=[MinValueValidator(1)])
@@ -198,6 +220,41 @@ class MovimentacaoEstoque(models.Model):
             doador = self.doacao.doador.nome if self.doacao.doador_id else 'Anônima'
             return f'Doação ({doador})'
         return self.get_origem_display() or '-'
+
+
+    @property
+    def acao(self):
+        if not self.acao_id:
+            return None
+        from config.mongodb import MongoAcaoProxy
+        try:
+            from acao.mongo_services import obter_acao_mongo
+            doc = obter_acao_mongo(self.acao_id)
+            if doc:
+                return MongoAcaoProxy(doc)
+        except Exception:
+            pass
+        try:
+            from acao.models import Acao
+            return Acao.objects.filter(pk=self.acao_id).first()
+        except Exception:
+            return MongoAcaoProxy({'id_sql': self.acao_id, 'tipo': f'Ação #{self.acao_id}'})
+
+    @acao.setter
+    def acao(self, value):
+        if value is None:
+            self.acao_id = None
+        elif isinstance(value, int):
+            self.acao_id = value
+        elif hasattr(value, 'pk'):
+            self.acao_id = value.pk
+        elif isinstance(value, dict):
+            self.acao_id = value.get('id_sql') or value.get('id') or value.get('id_acao')
+        else:
+            try:
+                self.acao_id = int(value)
+            except (ValueError, TypeError):
+                self.acao_id = None
 
     def _validar(self, material):
         if self.quantidade is None or self.quantidade < 1:

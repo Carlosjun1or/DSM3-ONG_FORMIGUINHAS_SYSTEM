@@ -35,7 +35,8 @@ class Condominio(models.Model):
     cep = models.CharField(max_length=9, blank=True)
     praia = models.ForeignKey(
         'praia.Praia',
-        on_delete=models.SET_NULL,
+        on_delete=models.DO_NOTHING,
+        db_constraint=False,
         null=True,
         blank=True,
         related_name='condominios',
@@ -51,7 +52,8 @@ class Condominio(models.Model):
     dt_cadastro = models.DateTimeField(auto_now_add=True)
     cadastrado_por = models.ForeignKey(
         'usuario.Usuario',
-        on_delete=models.SET_NULL,
+        on_delete=models.DO_NOTHING,
+        db_constraint=False,
         null=True,
         related_name='condominios_cadastrados',
     )
@@ -59,7 +61,8 @@ class Condominio(models.Model):
     dt_ultima_edicao = models.DateTimeField(null=True, blank=True)
     ultimo_editado_por = models.ForeignKey(
         'usuario.Usuario',
-        on_delete=models.SET_NULL,
+        on_delete=models.DO_NOTHING,
+        db_constraint=False,
         null=True,
         blank=True,
         related_name='condominios_editados',
@@ -67,6 +70,7 @@ class Condominio(models.Model):
     ultimo_editado_por_nome = models.CharField(max_length=150, blank=True)
 
     class Meta:
+        managed = False
         db_table = 'condominio'
         ordering = ['nome']
 
@@ -75,6 +79,11 @@ class Condominio(models.Model):
 
 
 class Bag(models.Model):
+    @property
+    def coletas_residuos(self):
+        from residuo.models import ColetaResiduo
+        return ColetaResiduo.objects.filter(bag_id=self.pk)
+
     STATUS_CHOICES = [
         ('DISPONIVEL', 'Disponível'),
         ('EM_USO', 'Em uso'),
