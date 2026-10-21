@@ -1,6 +1,7 @@
 from django.shortcuts import render
 from django.utils import timezone
 from django.db.models import Q
+from django.core.paginator import Paginator
 
 from acao.models import Acao
 from comunicado.models import Comunicado
@@ -52,8 +53,38 @@ def index(request):
 
 
 def multiroes(request):
+    mutiroes = mutiroes_concluidos()
+    busca = request.GET.get('busca', '').strip()
+    praia_id = request.GET.get('praia', '').strip()
+
+    if busca:
+        mutiroes = mutiroes.filter(
+            Q(praia__nome__icontains=busca)
+            | Q(praia__cidade__icontains=busca)
+            | Q(local__icontains=busca)
+            | Q(descricao__icontains=busca)
+        )
+
+    praias = Praia.objects.filter(
+        acoes__tipo=Acao.TIPO_MUTIRAO,
+        acoes__status=Acao.STATUS_CONCLUIDA,
+    ).distinct().order_by('nome', 'cidade')
+    if praia_id.isdigit() and praias.filter(pk=praia_id).exists():
+        mutiroes = mutiroes.filter(praia_id=praia_id)
+    else:
+        praia_id = ''
+
+    pagina = Paginator(mutiroes, 20).get_page(request.GET.get('page'))
+    filtros = request.GET.copy()
+    filtros.pop('page', None)
+
     return render(request, 'site_institucional/multiroes.html', {
-        'mutiroes': mutiroes_concluidos(),
+        'mutiroes': pagina,
+        'pagina': pagina,
+        'filtros_query': filtros.urlencode(),
+        'busca': busca,
+        'praias_filtro': praias,
+        'praia_selecionada': praia_id,
     })
 
 
