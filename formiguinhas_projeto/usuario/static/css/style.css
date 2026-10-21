@@ -2969,6 +2969,7 @@ select.select-control:disabled {
 
 .system-page .topbar {
     min-height: 56px;
+    width: auto;
     margin: 0 -32px 14px;
     padding: 8px 20px;
     justify-content: flex-end;
