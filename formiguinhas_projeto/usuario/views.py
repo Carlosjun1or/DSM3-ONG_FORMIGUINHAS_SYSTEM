@@ -1,4 +1,5 @@
 import logging
+from datetime import date, time as dt_time
 from decimal import Decimal
 from smtplib import SMTPException
 
@@ -91,6 +92,57 @@ def aplicar_restricoes_edicao(form, usuario_logado, voluntario):
 
     return email_bloqueado, status_bloqueado
 
+
+class _AcaoProxy:
+    """Proxy leve que expõe um documento MongoDB de ação com a mesma
+    interface que o template home.html espera de um objeto ORM Acao."""
+
+    class _PraiaProxy:
+        def __init__(self, d):
+            self.nome = d.get('nome', '') if d else ''
+
+    def __init__(self, doc):
+        self.status = doc.get('status', '')
+        self.local = doc.get('local', '')
+        self.praia = self._PraiaProxy(doc.get('praia'))
+
+        # data
+        raw = doc.get('data')
+        if isinstance(raw, str):
+            try:
+                self.data = date.fromisoformat(raw)
+            except ValueError:
+                self.data = None
+        elif isinstance(raw, date):
+            self.data = raw
+        else:
+            self.data = None
+
+        # horario
+        raw_h = doc.get('horario')
+        if isinstance(raw_h, str):
+            try:
+                parts = raw_h.split(':')
+                self.horario = dt_time(int(parts[0]), int(parts[1]))
+            except (ValueError, IndexError):
+                self.horario = None
+        elif isinstance(raw_h, dt_time):
+            self.horario = raw_h
+        else:
+            self.horario = None
+
+        self._tipo_display = doc.get('tipo_display', doc.get('tipo', ''))
+        self._status_display = doc.get('status_display', doc.get('status', ''))
+
+    @property
+    def get_tipo_display(self):
+        return self._tipo_display
+
+    @property
+    def get_status_display(self):
+        return self._status_display
+
+
 def home_view(request):
     usuario_id = request.session.get('usuario_id')
     if not usuario_id:
@@ -103,12 +155,29 @@ def home_view(request):
         return redirect('login')
 
     hoje = timezone.localdate()
-    acoes_hoje = Acao.objects.filter(data=hoje).exclude(
-        status=Acao.STATUS_CANCELADA,
-    )
     total_doacoes_confirmadas = DoacaoFinanceira.objects.filter(
         doacao__status=Doacao.CONFIRMADA,
     ).aggregate(total=Sum('valor'))['total'] or Decimal('0.00')
+
+    # --- Buscar ações do MongoDB (tabela acao é managed=False) ---
+    atividades_hoje = 0
+    acoes_proximas = []
+    try:
+        from acao.mongo_services import get_acoes_collection
+        col = get_acoes_collection()
+        if col is not None:
+            hoje_str = hoje.isoformat()
+            atividades_hoje = col.count_documents({
+                'data': hoje_str,
+                'status': {'$ne': 'CANCELADA'},
+            })
+            docs = list(col.find({
+                'data': {'$gte': hoje_str},
+                'status': {'$ne': 'CANCELADA'},
+            }).sort([('data', 1), ('horario', 1), ('id_sql', 1)]).limit(3))
+            acoes_proximas = [_AcaoProxy(d) for d in docs]
+    except Exception as e:
+        logger.warning('Erro ao buscar ações do MongoDB para home: %s', e)
 
     return render(request, 'sistema/home.html', {
         'usuario': usuario,
@@ -116,19 +185,9 @@ def home_view(request):
         'total_voluntarios_ativos': Voluntario.objects.filter(
             status='ATIVO',
         ).count(),
-        'atividades_hoje': acoes_hoje.count(),
+        'atividades_hoje': atividades_hoje,
         'total_doacoes_confirmadas': total_doacoes_confirmadas,
-        'acoes_proximas': Acao.objects.filter(
-            data__gte=hoje,
-        ).exclude(
-            status=Acao.STATUS_CANCELADA,
-        ).select_related(
-            'praia',
-        ).order_by(
-            'data',
-            'horario',
-            'id_acao',
-        )[:3],
+        'acoes_proximas': acoes_proximas,
     })
 
 

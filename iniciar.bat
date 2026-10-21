@@ -46,6 +46,10 @@ if exist "testar_atlas.py" (
     echo.
 )
 
+echo Gerando migracoes pendentes...
+"%CD%\venv\Scripts\python.exe" manage.py makemigrations
+if errorlevel 1 goto :erro
+
 echo Atualizando banco de dados relacional (SQLite)...
 "%CD%\venv\Scripts\python.exe" manage.py migrate
 if errorlevel 1 goto :erro

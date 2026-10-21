@@ -12,7 +12,7 @@ def mutiroes_concluidos():
     try:
         from acao.mongo_services import consultar_acoes_mongo
         from acao.views import MongoAcaoAdapter
-        docs, _ = consultar_acoes_mongo({'tipo': 'MUTIRAO', 'status': 'CONCLUIDA'})
+        docs, _ = consultar_acoes_mongo({'tipo': 'MUTIRAO', 'status': 'CONCLUIDA'}, por_pagina=1000)
         if docs:
             return [MongoAcaoAdapter(d) for d in docs]
     except Exception:
@@ -35,7 +35,7 @@ def mutiroes_futuros():
     try:
         from acao.mongo_services import consultar_acoes_mongo
         from acao.views import MongoAcaoAdapter
-        docs, _ = consultar_acoes_mongo({'tipo': 'MUTIRAO', 'status': 'PLANEJADA'})
+        docs, _ = consultar_acoes_mongo({'tipo': 'MUTIRAO', 'status': 'PLANEJADA'}, por_pagina=1000)
         if docs:
             return [MongoAcaoAdapter(d) for d in docs]
     except Exception:
@@ -100,19 +100,36 @@ def multiroes(request):
     praia_id = request.GET.get('praia', '').strip()
 
     if busca:
-        mutiroes = mutiroes.filter(
-            Q(praia__nome__icontains=busca)
-            | Q(praia__cidade__icontains=busca)
-            | Q(local__icontains=busca)
-            | Q(descricao__icontains=busca)
-        )
+        if hasattr(mutiroes, 'filter'):
+            mutiroes = mutiroes.filter(
+                Q(praia__nome__icontains=busca)
+                | Q(praia__cidade__icontains=busca)
+                | Q(local__icontains=busca)
+                | Q(descricao__icontains=busca)
+            )
+        else:
+            b = busca.casefold()
+            mutiroes = [
+                m for m in mutiroes
+                if (b in (m.praia.nome if m.praia else '').casefold()
+                    or b in (m.praia.cidade if m.praia else '').casefold()
+                    or b in (m.local or '').casefold()
+                    or b in (m.descricao or '').casefold())
+            ]
 
-    praias = Praia.objects.filter(
-        acoes__tipo=Acao.TIPO_MUTIRAO,
-        acoes__status=Acao.STATUS_CONCLUIDA,
-    ).distinct().order_by('nome', 'cidade')
+    # Obter praias de atuação sem join relacional com a tabela acao
+    praias = praias_de_atuacao()
     if praia_id.isdigit() and praias.filter(pk=praia_id).exists():
-        mutiroes = mutiroes.filter(praia_id=praia_id)
+        pid = int(praia_id)
+        if hasattr(mutiroes, 'filter'):
+            mutiroes = mutiroes.filter(praia_id=pid)
+        else:
+            mutiroes = [
+                m for m in mutiroes
+                if getattr(m, 'praia_id', None) == pid
+                or (m.praia and getattr(m.praia, 'id_praia', None) == pid)
+                or (m.praia and getattr(m.praia, 'pk', None) == pid)
+            ]
     else:
         praia_id = ''
 
