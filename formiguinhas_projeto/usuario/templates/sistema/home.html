@@ -1,39 +1,52 @@
 {% extends 'sistema/template-sistema.html' %}
+{% load l10n static %}
 
 {% block titulo %}Home | Sistema{% endblock %}
-{% block page_title %}Home{% endblock %}
+{% block body_class %}dashboard-page{% endblock %}
+{% block estilos %}<link rel="stylesheet" href="{% static 'css/template.css' %}?v=6">{% endblock %}
+{% block page_title %}Bem-vindo, {{ usuario.id_voluntario.nome }}!{% endblock %}
 
 {% block conteudo %}
-<section class="card-grid">
-    <article class="card">
-        <h3>Voluntários ativos</h3>
-        <div class="metric">24</div>
+<section class="alerta alerta--sucesso dashboard-welcome" role="status">
+    Bem-vindo ao sistema das FORMIGUINHAS! Hoje temos {{ atividades_hoje }} atividade{{ atividades_hoje|pluralize }} programada{{ atividades_hoje|pluralize }}.
+</section>
+
+<section class="card-grid dashboard-metrics" aria-label="Resumo do sistema">
+    <article class="card dashboard-metric-card">
+        <h2>Voluntários ativos</h2>
+        <p class="metric">{{ total_voluntarios_ativos }}</p>
     </article>
-    <article class="card">
-        <h3>Atividades hoje</h3>
-        <div class="metric">08</div>
+    <article class="card dashboard-metric-card">
+        <h2>Atividades hoje</h2>
+        <p class="metric">{{ atividades_hoje|stringformat:"02d" }}</p>
     </article>
-    <article class="card">
-        <h3>Doações</h3>
-        <div class="metric">R$ 3.2k</div>
+    <article class="card dashboard-metric-card">
+        <h2>Doações confirmadas</h2>
+        <p class="metric">R$ {{ total_doacoes_confirmadas|floatformat:2|localize }}</p>
     </article>
 </section>
 
-<section class="card">
-    <h3>Próximas ações</h3>
-    <ul class="card-list">
+<section class="dashboard-upcoming" aria-labelledby="dashboard-upcoming-title">
+    <h2 class="dashboard-section-title" id="dashboard-upcoming-title">Próximas ações</h2>
+    <ul class="card-list dashboard-action-list">
+        {% for acao in acoes_proximas %}
         <li>
-            <span>Reunião de equipe</span>
-            <strong>09:00</strong>
+            <time class="dashboard-action-time" datetime="{{ acao.data|date:'Y-m-d' }}{% if acao.horario %}T{{ acao.horario|time:'H:i' }}{% endif %}">
+                {% if acao.data == hoje %}Hoje{% else %}{{ acao.data|date:"d/m" }}{% endif %}
+                {% if acao.horario %} · {{ acao.horario|time:"H:i" }}{% else %} · Horário a definir{% endif %}
+            </time>
+            <div class="dashboard-action-details">
+                <strong>{{ acao.get_tipo_display }}</strong>
+                <span>
+                    {% if acao.local %}{{ acao.local }}{% else %}{{ acao.praia.nome }}{% endif %}
+                    {% if acao.local %} · {{ acao.praia.nome }}{% endif %}
+                </span>
+            </div>
+            <span class="dashboard-action-status dashboard-action-status--{{ acao.status|lower }}">{{ acao.get_status_display }}</span>
         </li>
-        <li>
-            <span>Visita ao projeto</span>
-            <strong>14:30</strong>
-        </li>
-        <li>
-            <span>Distribuição de mantimentos</span>
-            <strong>17:00</strong>
-        </li>
+        {% empty %}
+        <li class="dashboard-action-empty">Não há ações programadas para hoje ou para os próximos dias.</li>
+        {% endfor %}
     </ul>
 </section>
 {% endblock %}

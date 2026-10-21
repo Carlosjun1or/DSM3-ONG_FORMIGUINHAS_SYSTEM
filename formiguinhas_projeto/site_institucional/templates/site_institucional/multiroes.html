@@ -15,18 +15,26 @@
 
         <div class="multiroes-lista">
             <h2>Mutirões que já aconteceram</h2>
-            {% for mutirao in mutiroes %}
-            <article class="multirao-card">
-                <div class="multirao-card-imagens">
-                    {% for imagem in mutirao.imagens_acao.all %}
-                        <figure>
-                            <img src="{{ imagem.imagem.url }}" alt="{{ imagem.descricao|default:mutirao.descricao|default:'Foto do mutirão' }}" loading="lazy">
-                            {% if imagem.descricao %}<figcaption>{{ imagem.descricao }}</figcaption>{% endif %}
-                        </figure>
-                    {% empty %}
-                        <div class="multirao-sem-imagem">Ainda não há fotos cadastradas para este mutirão.</div>
-                    {% endfor %}
-                </div>
+            <form class="multiroes-filtros" method="get" action="{% url 'multiroes' %}">
+                <label>
+                    Buscar
+                    <input type="search" name="busca" value="{{ busca }}" placeholder="Praia, local ou descrição">
+                </label>
+                <label>
+                    Praia
+                    <select name="praia">
+                        <option value="">Todas as praias</option>
+                        {% for praia in praias_filtro %}
+                        <option value="{{ praia.pk }}" {% if praia_selecionada == praia.pk|stringformat:'s' %}selected{% endif %}>{{ praia.nome }}{% if praia.cidade %} · {{ praia.cidade }}{% endif %}</option>
+                        {% endfor %}
+                    </select>
+                </label>
+                <button class="btn btn--azul" type="submit">Filtrar</button>
+                <a href="{% url 'multiroes' %}">Limpar filtros</a>
+            </form>
+            {% for mutirao in pagina %}
+            {% with imagens=mutirao.imagens_acao.all %}
+            <article class="multirao-card{% if imagens|length == 1 %} multirao-card--uma-foto{% endif %}">
                 <div class="multirao-card-conteudo">
                     <h3>{{ mutirao.get_tipo_display }} em {{ mutirao.praia.nome }}</h3>
                     <p class="multirao-data">{{ mutirao.data|date:'d/m/Y' }}{% if mutirao.horario %} às {{ mutirao.horario|time:'H:i' }}{% endif %}</p>
@@ -37,15 +45,183 @@
                         <p>Uma ação coletiva de cuidado com a praia e com o nosso litoral.</p>
                     {% endif %}
                 </div>
+                <div class="multirao-galeria">
+                    <div class="multirao-galeria-cabecalho">
+                        <span>Fotos</span>
+                        <span>{% if imagens %}{{ imagens|length }} {% if imagens|length == 1 %}foto{% else %}fotos{% endif %}{% else %}Sem fotos{% endif %}</span>
+                    </div>
+                    {% if imagens %}
+                    <div class="multirao-card-imagens" role="group" aria-label="Colagem de fotos do mutirão em {{ mutirao.praia.nome }}">
+                        {% for imagem in imagens %}
+                            <figure{% if forloop.counter > 4 %} hidden{% endif %}>
+                                <button
+                                    class="multirao-foto-abrir"
+                                    type="button"
+                                    data-foto-mutirao
+                                    data-src="{{ imagem.imagem.url }}"
+                                    data-alt="{{ imagem.descricao|default:mutirao.descricao|default:'Foto do mutirão' }}"
+                                    data-caption="{{ imagem.descricao|default:mutirao.get_tipo_display }}"
+                                    data-contexto="{{ mutirao.get_tipo_display }} em {{ mutirao.praia.nome }}"
+                                    aria-label="Ampliar foto {{ forloop.counter }} de {{ imagens|length }} do mutirão em {{ mutirao.praia.nome }}"
+                                >
+                                    <img src="{{ imagem.imagem.url }}" alt="" loading="lazy">
+                                    {% if forloop.counter == 4 and imagens|length > 4 %}
+                                    <span class="multirao-foto-mais" aria-hidden="true">+{{ imagens|length|add:"-4" }}</span>
+                                    {% else %}
+                                    <span class="multirao-foto-ampliar" aria-hidden="true">Ampliar</span>
+                                    {% endif %}
+                                </button>
+                            </figure>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="multirao-card-imagens multirao-card-imagens--vazia" role="note">
+                        <div class="multirao-sem-imagem">
+                            <svg aria-hidden="true" viewBox="0 0 48 48" focusable="false">
+                                <rect x="5" y="11" width="38" height="28" rx="5"></rect>
+                                <circle cx="24" cy="25" r="8"></circle>
+                                <path d="m15 11 3-5h12l3 5"></path>
+                            </svg>
+                            <strong>Sem imagens</strong>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
             </article>
+            {% endwith %}
             {% empty %}
                 <div class="mutiroes-vazio">
+                    {% if busca or praia_selecionada %}
+                    <h3>Nenhum mutirão encontrado</h3>
+                    <p>Tente alterar os filtros ou limpar a busca para ver todos os mutirões concluídos.</p>
+                    <a href="{% url 'multiroes' %}">Limpar filtros</a>
+                    {% else %}
                     <h3>Em breve, novos registros</h3>
                     <p>Os próximos mutirões concluídos aparecerão aqui. Enquanto isso, cadastre-se para participar das nossas ações.</p>
                     <a class="botao-participar" href="https://wa.me/5513997284132?text=Ol%C3%A1%21%20Quero%20ser%20volunt%C3%A1rio%28a%29%20da%20Formiguinhas%20da%20Praia.%20Gostaria%20de%20saber%20como%20posso%20participar." target="_blank" rel="noopener noreferrer">Quero ser voluntário</a>
+                    {% endif %}
                 </div>
             {% endfor %}
+            {% if pagina.paginator.count %}
+            <nav class="public-pagination multiroes-paginacao" aria-label="Paginação dos mutirões">
+                <span class="public-pagination-resumo">
+                    Exibindo {{ pagina.start_index }}–{{ pagina.end_index }} de {{ pagina.paginator.count }} mutirões
+                    ·
+                    Até {{ pagina.paginator.per_page }} por página
+                    · Página {{ pagina.number }} de {{ pagina.paginator.num_pages }}
+                </span>
+                <div class="public-pagination-controles">
+                    {% if pagina.has_previous %}
+                    <a href="?{% if filtros_query %}{{ filtros_query }}&amp;{% endif %}page={{ pagina.previous_page_number }}" rel="prev">Anterior</a>
+                    {% else %}
+                    <span aria-disabled="true">Anterior</span>
+                    {% endif %}
+                    {% if pagina.has_next %}
+                    <a href="?{% if filtros_query %}{{ filtros_query }}&amp;{% endif %}page={{ pagina.next_page_number }}" rel="next">Próxima</a>
+                    {% else %}
+                    <span aria-disabled="true">Próxima</span>
+                    {% endif %}
+                </div>
+            </nav>
+            {% endif %}
         </div>
     </div>
 </section>
+
+<dialog class="multirao-foto-modal" data-foto-modal aria-label="Fotos do mutirão">
+    <header class="multirao-foto-cabecalho">
+        <div>
+            <span>Visualização da foto</span>
+            <h2 data-foto-contexto>Galeria do mutirão</h2>
+        </div>
+        <button class="multirao-foto-fechar" type="button" data-fechar-foto aria-label="Fechar foto">×</button>
+    </header>
+    <div class="multirao-foto-palco">
+        <button class="multirao-foto-navegar multirao-foto-anterior" type="button" data-foto-anterior aria-label="Foto anterior">‹</button>
+        <figure class="multirao-foto-modal-conteudo">
+            <img data-foto-ampliada alt="">
+            <figcaption data-foto-legenda></figcaption>
+        </figure>
+        <button class="multirao-foto-navegar multirao-foto-proxima" type="button" data-foto-proxima aria-label="Próxima foto">›</button>
+    </div>
+    <footer class="multirao-foto-rodape">
+        <span>Use as setas para navegar</span>
+        <p class="multirao-foto-contador" data-foto-contador aria-live="polite"></p>
+    </footer>
+</dialog>
+
+<script>
+    (() => {
+        const modal = document.querySelector('[data-foto-modal]');
+        const imagemAmpliada = modal?.querySelector('[data-foto-ampliada]');
+        const legenda = modal?.querySelector('[data-foto-legenda]');
+        const contexto = modal?.querySelector('[data-foto-contexto]');
+        const contador = modal?.querySelector('[data-foto-contador]');
+        const anterior = modal?.querySelector('[data-foto-anterior]');
+        const proxima = modal?.querySelector('[data-foto-proxima]');
+        const fechar = modal?.querySelector('[data-fechar-foto]');
+
+        if (!modal || !imagemAmpliada || !legenda || !contexto || !contador || !anterior || !proxima || !fechar) {
+            return;
+        }
+
+        let fotos = [];
+        let indiceAtual = 0;
+        let botaoOrigem = null;
+
+        const mostrarFoto = () => {
+            const foto = fotos[indiceAtual];
+            imagemAmpliada.src = foto.dataset.src;
+            imagemAmpliada.alt = foto.dataset.alt;
+            legenda.textContent = foto.dataset.caption;
+            contexto.textContent = foto.dataset.contexto;
+            contador.textContent = `${indiceAtual + 1} de ${fotos.length}`;
+            const temVariasFotos = fotos.length > 1;
+            anterior.hidden = !temVariasFotos;
+            proxima.hidden = !temVariasFotos;
+        };
+
+        document.querySelectorAll('[data-foto-mutirao]').forEach((botao) => {
+            botao.addEventListener('click', () => {
+                const artigo = botao.closest('.multirao-card');
+                fotos = Array.from(artigo.querySelectorAll('[data-foto-mutirao]'));
+                indiceAtual = fotos.indexOf(botao);
+                botaoOrigem = botao;
+                mostrarFoto();
+                modal.showModal();
+                fechar.focus();
+            });
+        });
+
+        anterior.addEventListener('click', () => {
+            indiceAtual = (indiceAtual - 1 + fotos.length) % fotos.length;
+            mostrarFoto();
+        });
+
+        proxima.addEventListener('click', () => {
+            indiceAtual = (indiceAtual + 1) % fotos.length;
+            mostrarFoto();
+        });
+
+        fechar.addEventListener('click', () => modal.close());
+        modal.addEventListener('keydown', (evento) => {
+            if (evento.key === 'Escape') {
+                evento.preventDefault();
+                modal.close();
+            } else if (evento.key === 'ArrowLeft' && fotos.length > 1) {
+                evento.preventDefault();
+                anterior.click();
+            } else if (evento.key === 'ArrowRight' && fotos.length > 1) {
+                evento.preventDefault();
+                proxima.click();
+            }
+        });
+        modal.addEventListener('close', () => botaoOrigem?.focus());
+        modal.addEventListener('click', (evento) => {
+            if (evento.target === modal) {
+                modal.close();
+            }
+        });
+    })();
+</script>
 {% endblock %}

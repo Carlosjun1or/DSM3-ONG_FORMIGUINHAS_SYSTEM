@@ -18,7 +18,7 @@
                 {% endfor %}
             </select>
         </label>
-        <button type="submit">Filtrar</button>
+        <button class="btn btn--azul" type="submit">Filtrar</button>
         <a href="{% url 'comunicados_publicos' %}">Limpar filtros</a>
     </form>
     {% for comunicado in comunicados %}
@@ -32,12 +32,12 @@
     {% endfor %}
     {% if pagina.paginator.count %}
     <nav class="public-pagination" aria-label="Paginação de notícias e avisos">
-        <span>
+        <span class="public-pagination-resumo">
             Exibindo {{ pagina.start_index }}–{{ pagina.end_index }} de {{ pagina.paginator.count }}
             · Até {{ pagina.paginator.per_page }} por página
             · Página {{ pagina.number }} de {{ pagina.paginator.num_pages }}
         </span>
-        <div>
+        <div class="public-pagination-controles">
             {% if pagina.has_previous %}
             <a href="?{% if filtros_query %}{{ filtros_query }}&amp;{% endif %}page={{ pagina.previous_page_number }}" rel="prev">Anterior</a>
             {% else %}

@@ -1,4 +1,5 @@
 {% extends "site_institucional/base.html" %}
+{% load l10n %}
 
 {% block conteudo %}
 
@@ -32,7 +33,7 @@
                 <time datetime="{{ ultimo_comunicado.dt_publicacao|date:'c' }}">{{ ultimo_comunicado.dt_publicacao|date:'d/m/Y · H:i' }}</time>
             </p>
             <div class="comunicado-modal-acoes">
-                <a class="btn btn--azul" href="{% url 'comunicado_publico_detalhe' ultimo_comunicado.id_comunicado %}">Ler comunicado</a>
+                <a class="btn" href="{% url 'comunicado_publico_detalhe' ultimo_comunicado.id_comunicado %}">Ler comunicado</a>
                 <button type="button" class="comunicado-modal-mais-tarde" data-fechar-comunicado>Ver mais tarde</button>
             </div>
         </div>
@@ -89,12 +90,22 @@
     <div class="container">
         <div class="impacto-cabecalho">
             <span>Nosso impacto positivo</span>
-            <h2 id="impacto-titulo">Formiguinhas da Praia na reciclagem em 2025</h2>
-            <p>Pequenas atitudes, somadas, geram resultados que fazem diferença.</p>
+            <h2 id="impacto-titulo">Resultados que fazem a diferença</h2>
+            <p>
+                Em 2025, nossos mutirões limparam praias e encaminharam resíduos
+                para reciclagem. Veja o impacto dessas ações.
+            </p>
         </div>
 
         <ul class="impacto-indicadores">
-            <li class="impacto-indicador impacto-indicador--reciclaveis">
+            <li class="impacto-indicador impacto-indicador--reciclaveis" aria-describedby="impacto-ajuda-arrastar">
+                <button class="impacto-arraste" type="button" aria-label="Arraste para mover o indicador de recicláveis" data-arrastar-impacto>
+                    <svg viewBox="0 0 16 16" aria-hidden="true">
+                        <circle cx="5" cy="4" r="1.2"/><circle cx="11" cy="4" r="1.2"/>
+                        <circle cx="5" cy="8" r="1.2"/><circle cx="11" cy="8" r="1.2"/>
+                        <circle cx="5" cy="12" r="1.2"/><circle cx="11" cy="12" r="1.2"/>
+                    </svg>
+                </button>
                 <svg viewBox="0 0 48 48" fill="none" aria-hidden="true">
                     <path d="m19 7 4-4 4 7h-5l-3-3Zm13 4 6 1 1 6-4-2-3-5ZM9 21l-2 6 6 1-1-4 4-4-7 1Z" fill="currentColor"/>
                     <path d="m17 15 5-3 5 1 4 7-4 2-3-5-5 3-2-5Zm13 11 5 2 1 5-3 5-8 1v-5l5-1 1-7Zm-13 1 1 6 5 2-2 5-7-3-2-5 5-5Z" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
@@ -102,7 +113,14 @@
                 <strong>1.512 kg</strong>
                 <span>de recicláveis coletados</span>
             </li>
-            <li class="impacto-indicador impacto-indicador--agua">
+            <li class="impacto-indicador impacto-indicador--agua" aria-describedby="impacto-ajuda-arrastar">
+                <button class="impacto-arraste" type="button" aria-label="Arraste para mover o indicador de água" data-arrastar-impacto>
+                    <svg viewBox="0 0 16 16" aria-hidden="true">
+                        <circle cx="5" cy="4" r="1.2"/><circle cx="11" cy="4" r="1.2"/>
+                        <circle cx="5" cy="8" r="1.2"/><circle cx="11" cy="8" r="1.2"/>
+                        <circle cx="5" cy="12" r="1.2"/><circle cx="11" cy="12" r="1.2"/>
+                    </svg>
+                </button>
                 <svg viewBox="0 0 48 48" fill="none" aria-hidden="true">
                     <path d="M24 4S11 20 11 29a13 13 0 0 0 26 0C37 20 24 4 24 4Z" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/>
                     <path d="M17 30a7 7 0 0 0 7 7" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
@@ -110,7 +128,14 @@
                 <strong>132 mil L</strong>
                 <span>de água economizados</span>
             </li>
-            <li class="impacto-indicador impacto-indicador--co2">
+            <li class="impacto-indicador impacto-indicador--co2" aria-describedby="impacto-ajuda-arrastar">
+                <button class="impacto-arraste" type="button" aria-label="Arraste para mover o indicador de CO₂" data-arrastar-impacto>
+                    <svg viewBox="0 0 16 16" aria-hidden="true">
+                        <circle cx="5" cy="4" r="1.2"/><circle cx="11" cy="4" r="1.2"/>
+                        <circle cx="5" cy="8" r="1.2"/><circle cx="11" cy="8" r="1.2"/>
+                        <circle cx="5" cy="12" r="1.2"/><circle cx="11" cy="12" r="1.2"/>
+                    </svg>
+                </button>
                 <svg viewBox="0 0 48 48" fill="none" aria-hidden="true">
                     <path d="M39 8C24 7 12 11 9 23c-2 9 5 16 13 14 12-3 17-15 17-29Z" stroke="currentColor" stroke-width="2.8" stroke-linejoin="round"/>
                     <path d="M8 42c6-12 14-19 25-26" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"/>
@@ -118,7 +143,14 @@
                 <strong>8.500 kg</strong>
                 <span>de CO₂ evitados</span>
             </li>
-            <li class="impacto-indicador impacto-indicador--garrafas">
+            <li class="impacto-indicador impacto-indicador--garrafas" aria-describedby="impacto-ajuda-arrastar">
+                <button class="impacto-arraste" type="button" aria-label="Arraste para mover o indicador de garrafas recicladas" data-arrastar-impacto>
+                    <svg viewBox="0 0 16 16" aria-hidden="true">
+                        <circle cx="5" cy="4" r="1.2"/><circle cx="11" cy="4" r="1.2"/>
+                        <circle cx="5" cy="8" r="1.2"/><circle cx="11" cy="8" r="1.2"/>
+                        <circle cx="5" cy="12" r="1.2"/><circle cx="11" cy="12" r="1.2"/>
+                    </svg>
+                </button>
                 <svg viewBox="0 0 48 48" fill="none" aria-hidden="true">
                     <path d="M19 5h10v5l3 4v27H16V14l3-4V5Zm0 5h10m-13 9h16m-16 14h16" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
@@ -126,53 +158,23 @@
                 <span>garrafas plásticas recicladas</span>
             </li>
         </ul>
+        <p id="impacto-ajuda-arrastar" class="visualmente-oculto">
+            Arraste os indicadores para trocar suas posições. Com o teclado, use Alt e as setas.
+        </p>
+        <p class="visualmente-oculto" data-impacto-status aria-live="polite"></p>
 
-        <p class="impacto-apoiador">
+        <a
+            class="impacto-apoiador"
+            href="https://espacourbano.org.br/"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Conheça a ONG Espaço Urbano (abre em nova aba)"
+        >
             <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
                 <path d="m12 3 2.6 5.3 5.9.9-4.2 4.1 1 5.8-5.3-2.8-5.3 2.8 1-5.8-4.2-4.1 5.9-.9L12 3Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
             </svg>
             Com apoio de <strong>Espaço Urbano</strong>
-        </p>
-    </div>
-</section>
-
-<section id="apoie" class="secao-apoie">
-    <div class="container">
-        <div class="apoie-cabecalho">
-            <span>Ajude a transformar</span>
-            <h2>Apoie as Formiguinhas da Praia</h2>
-            <p>
-                Sua contribuição ajuda a manter nossas praias limpas e a levar
-                nossas ações de cuidado e conscientização ainda mais longe.
-            </p>
-        </div>
-
-        <article class="apoie-pix-card">
-            <span class="apoie-pix-icone" aria-hidden="true">
-                <svg viewBox="0 0 24 24" fill="none">
-                    <path d="M7.05 7.05 4.7 4.7a2.4 2.4 0 0 0-3.4 3.4l3.1 3.1-3.1 3.1a2.4 2.4 0 0 0 3.4 3.4l2.35-2.35M16.95 7.05 19.3 4.7a2.4 2.4 0 0 1 3.4 3.4l-3.1 3.1 3.1 3.1a2.4 2.4 0 0 1-3.4 3.4l-2.35-2.35M7.05 16.95 4.7 19.3a2.4 2.4 0 0 1-3.4-3.4l3.1-3.1M16.95 16.95l2.35 2.35a2.4 2.4 0 0 0 3.4-3.4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="m8.5 8.5 7 7m0-7-7 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-                </svg>
-            </span>
-            <div class="apoie-pix-conteudo">
-                <span class="apoie-pix-etiqueta">Doe via PIX</span>
-                <h3>Contribua com qualquer valor</h3>
-                <p>Use o CNPJ da ONG como chave PIX:</p>
-                <div class="apoie-chave-linha">
-                    <label class="visualmente-oculto" for="chave-pix-ong">Chave PIX CNPJ das Formiguinhas da Praia</label>
-                    <input id="chave-pix-ong" type="text" value="61.036.099/0001-76" readonly aria-describedby="pix-copiar-status">
-                    <button class="btn btn--azul" type="button" data-copiar-pix>
-                        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                            <rect x="8" y="8" width="12" height="13" rx="2" stroke="currentColor" stroke-width="1.8"/>
-                            <path d="M16 8V5a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h2" stroke="currentColor" stroke-width="1.8"/>
-                        </svg>
-                        Copiar chave
-                    </button>
-                </div>
-                <p id="pix-copiar-status" class="pix-copiar-status" role="status" aria-live="polite"></p>
-                <p class="apoie-pix-agradecimento">Juntos, cuidamos do litoral e fortalecemos essa transformação.</p>
-            </div>
-        </article>
+        </a>
     </div>
 </section>
 
@@ -278,44 +280,80 @@
         </strong>
 
 
-        <div class="multiroes-cards">
-            {% for mutirao in mutiroes %}
-            <article class="card multirao-card">
-                <div class="multirao-descricao">
-                    <h3>{{ mutirao.get_tipo_display }} em {{ mutirao.praia.nome }}</h3>
+        <div class="multiroes-destaques">
+            <div class="multiroes-cards">
+                {% for mutirao in mutiroes %}
+                {% with imagens=mutirao.imagens_acao.all %}
+                <article class="card multirao-card">
+                    {% with imagem=imagens|first %}
+                    {% if imagem %}
+                    <div class="multirao-imagem">
+                        <img
+                            class="mutirao-destaque-imagem"
+                            src="{{ imagem.imagem.url }}"
+                            alt="{{ imagem.descricao|default:'Registro do mutirão realizado' }}"
+                            loading="lazy"
+                        >
+                    </div>
+                    {% else %}
+                    <div class="multirao-imagem multirao-imagem--vazia" aria-hidden="true">
+                        <svg viewBox="0 0 48 48" focusable="false">
+                            <rect x="6" y="9" width="36" height="30" rx="5"></rect>
+                            <circle cx="17" cy="19" r="3"></circle>
+                            <path d="m10 34 10-10 7 7 5-5 6 8"></path>
+                        </svg>
+                    </div>
+                    {% endif %}
+                    {% endwith %}
+                    <div class="multirao-descricao">
+                        <span class="mutirao-status">Mutirão realizado</span>
+                        <h3>{{ mutirao.get_tipo_display }} em {{ mutirao.praia.nome }}</h3>
+                        <div class="mutirao-informacoes">
+                            <p><span>Data</span><strong>{{ mutirao.data|date:'d/m/Y' }}</strong></p>
+                            <p><span>Local</span><strong>{{ mutirao.local|default:mutirao.praia.cidade }}</strong></p>
+                        </div>
+                        {% if mutirao.descricao %}<p class="mutirao-resumo">{{ mutirao.descricao }}</p>{% endif %}
+                    </div>
+                </article>
+                {% endwith %}
+                {% empty %}
+                    <p class="mutiroes-vazio">Em breve, novos registros dos nossos mutirões.</p>
+                {% endfor %}
+            </div>
 
-                    <p>Data: {{ mutirao.data|date:'d/m/Y' }}</p>
-
-                    <p>Local: {{ mutirao.local|default:mutirao.praia.cidade }}</p>
-
-                    {% if mutirao.descricao %}<p>{{ mutirao.descricao }}</p>{% endif %}
+            {% if proximo_mutirao %}
+            <article class="proximo-mutirao">
+                <div class="proximo-mutirao-data">
+                    <span>Próximo</span>
+                    <strong>{{ proximo_mutirao.data|date:'d' }}</strong>
+                    <span>{{ proximo_mutirao.data|date:'M' }}</span>
+                </div>
+                <div class="proximo-mutirao-conteudo">
+                    <span class="mutirao-status">Mutirão agendado</span>
+                    <h3>{{ proximo_mutirao.praia.nome }}</h3>
+                    <div class="mutirao-informacoes">
+                        <p>
+                            <span>Data</span>
+                            <strong>{{ proximo_mutirao.data|date:'d/m/Y' }}{% if proximo_mutirao.horario %} · {{ proximo_mutirao.horario|time:'H:i' }}{% endif %}</strong>
+                        </p>
+                        <p>
+                            <span>Local</span>
+                            <strong>{{ proximo_mutirao.local|default:proximo_mutirao.praia.cidade }}</strong>
+                        </p>
+                    </div>
+                    {% if proximo_mutirao.descricao %}<p class="mutirao-resumo">{{ proximo_mutirao.descricao }}</p>{% endif %}
+                    <a
+                        class="btn proximo-mutirao-participar"
+                        href="https://wa.me/5513997284132?text=Olá!%20Quero%20participar%20do%20próximo%20mutirão%20em%20{{ proximo_mutirao.praia.nome|urlencode }}%20no%20dia%20{{ proximo_mutirao.data|date:'d/m/Y'|urlencode }}"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                    >
+                        Quero participar
+                    </a>
                 </div>
             </article>
-            {% empty %}
-                <p class="mutiroes-vazio">Em breve, novos registros dos nossos mutirões.</p>
-            {% endfor %}
-
+            {% endif %}
         </div>
-
-        {% if proximo_mutirao %}
-        <article class="proximo-mutirao">
-            <h3>Próximo encontro: {{ proximo_mutirao.praia.nome }}</h3>
-            <p>
-                {{ proximo_mutirao.data|date:'d/m/Y' }}
-                {% if proximo_mutirao.horario %} · {{ proximo_mutirao.horario|time:'H:i' }}{% endif %}
-                · {{ proximo_mutirao.local|default:proximo_mutirao.praia.cidade }}
-            </p>
-            {% if proximo_mutirao.descricao %}<p>{{ proximo_mutirao.descricao }}</p>{% endif %}
-            <a
-                class="btn proximo-mutirao-participar"
-                href="https://wa.me/5513997284132?text=Olá!%20Quero%20participar%20do%20próximo%20mutirão%20em%20{{ proximo_mutirao.praia.nome|urlencode }}%20no%20dia%20{{ proximo_mutirao.data|date:'d/m/Y'|urlencode }}"
-                target="_blank"
-                rel="noopener noreferrer"
-            >
-                Quero participar
-            </a>
-        </article>
-        {% endif %}
 
         <div class="button-multiroes">
             <a class="btn btn--azul" href="{% url 'multiroes' %}">Conheça nossos mutirões</a>
@@ -326,6 +364,46 @@
 </div>
 
 
+</section>
+
+<section id="apoie" class="secao-apoie">
+    <div class="container">
+        <div class="apoie-cabecalho">
+            <span>Ajude a transformar</span>
+            <h2>Apoie as Formiguinhas da Praia</h2>
+            <p>
+                Sua contribuição ajuda a manter nossas praias limpas e a levar
+                nossas ações de cuidado e conscientização ainda mais longe.
+            </p>
+        </div>
+
+        <article class="apoie-pix-card">
+            <span class="apoie-pix-icone" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none">
+                    <path d="M7.05 7.05 4.7 4.7a2.4 2.4 0 0 0-3.4 3.4l3.1 3.1-3.1 3.1a2.4 2.4 0 0 0 3.4 3.4l2.35-2.35M16.95 7.05 19.3 4.7a2.4 2.4 0 0 1 3.4 3.4l-3.1 3.1 3.1 3.1a2.4 2.4 0 0 1-3.4 3.4l-2.35-2.35M7.05 16.95 4.7 19.3a2.4 2.4 0 0 1-3.4-3.4l3.1-3.1M16.95 16.95l2.35 2.35a2.4 2.4 0 0 0 3.4-3.4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="m8.5 8.5 7 7m0-7-7 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                </svg>
+            </span>
+            <div class="apoie-pix-conteudo">
+                <span class="apoie-pix-etiqueta">Doe via PIX</span>
+                <h3>Contribua com qualquer valor</h3>
+                <p>Use o CNPJ da ONG como chave PIX:</p>
+                <div class="apoie-chave-linha">
+                    <label class="visualmente-oculto" for="chave-pix-ong">Chave PIX CNPJ das Formiguinhas da Praia</label>
+                    <input id="chave-pix-ong" type="text" value="61.036.099/0001-76" readonly aria-describedby="pix-copiar-status">
+                    <button class="btn" type="button" data-copiar-pix>
+                        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                            <rect x="8" y="8" width="12" height="13" rx="2" stroke="currentColor" stroke-width="1.8"/>
+                            <path d="M16 8V5a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h2" stroke="currentColor" stroke-width="1.8"/>
+                        </svg>
+                        Copiar chave
+                    </button>
+                </div>
+                <p id="pix-copiar-status" class="pix-copiar-status" role="status" aria-live="polite"></p>
+                <p class="apoie-pix-agradecimento">Juntos, cuidamos do litoral e fortalecemos essa transformação.</p>
+            </div>
+        </article>
+    </div>
 </section>
 
 <!-- PRAIAS -->
@@ -363,11 +441,17 @@
                 {% for praia in praias %}
                 <article
                     class="praia-resumo-card"
-                    data-latitude="{{ praia.latitude }}"
-                    data-longitude="{{ praia.longitude }}"
+                    data-latitude="{{ praia.latitude|unlocalize }}"
+                    data-longitude="{{ praia.longitude|unlocalize }}"
                 >
                     <h3>{{ praia.nome }}</h3>
-                    <p>{{ praia.cidade }}</p>
+                    <p class="praia-resumo-cidade">
+                        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                            <path d="M19 10.2c0 5.1-7 11-7 11s-7-5.9-7-11a7 7 0 1 1 14 0Z" stroke="currentColor" stroke-width="1.8"/>
+                            <circle cx="12" cy="10" r="2.3" stroke="currentColor" stroke-width="1.8"/>
+                        </svg>
+                        {{ praia.cidade }}
+                    </p>
                     <span class="praia-distancia" aria-live="polite"></span>
                 </article>
                 {% empty %}

@@ -1,18 +1,17 @@
 {% extends 'sistema/template-sistema.html' %}
 
-{% block page_title %}Doações{% endblock %}
+{% block page_title %}Controle de Doações{% endblock %}
 
 {% block conteudo %}
 <section class="page-section donation-dashboard">
     <div class="section-heading">
         <div>
-            <p class="eyebrow">Controle financeiro e de materiais</p>
-            <h2>Doações recebidas</h2>
+            <h2>Doações</h2>
             <p class="form-subtitle donation-page-guidance">Acompanhe valores, materiais e situação das doações recebidas.</p>
         </div>
         {% if usuario.tipo == 'ADMIN' %}
             <div class="button-group">
-                <a class="btn btn-outline" href="{% url 'doadores' %}">Doadores</a>
+                <a class="btn btn-outline" href="{% url 'cadastro_doador' %}">Novo doador</a>
                 <a class="btn btn-primary" href="{% url 'cadastro_doacao' %}">Nova doação</a>
             </div>
         {% endif %}

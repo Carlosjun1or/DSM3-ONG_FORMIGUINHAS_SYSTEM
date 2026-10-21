@@ -12,6 +12,8 @@
             <p class="auth-subtitle">Acesse o painel da ONG Formiguinhas.</p>
         </header>
 
+        {% include 'sistema/includes/mensagens-autenticacao.html' %}
+
         <form method="post">
             {% csrf_token %}
             {% if form.non_field_errors %}

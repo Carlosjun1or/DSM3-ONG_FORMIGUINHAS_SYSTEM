@@ -1,4 +1,5 @@
 {% extends "site_institucional/base.html" %}
+{% load l10n %}
 
 {% block conteudo %}
 <section id="praias-pagina">
@@ -28,8 +29,8 @@
             <article
                 class="praia-card"
                 id="praia-{{ praia.id_praia }}"
-                data-latitude="{{ praia.latitude }}"
-                data-longitude="{{ praia.longitude }}"
+                data-latitude="{{ praia.latitude|unlocalize }}"
+                data-longitude="{{ praia.longitude|unlocalize }}"
             >
                 <div class="praia-card-cabecalho">
                     <h2>{{ praia.nome }}</h2>
@@ -49,6 +50,10 @@
                     target="_blank"
                     rel="noopener noreferrer"
                 >
+                    <svg class="icone-inline" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3V6Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+                        <path d="M9 3v15m6-12v15" stroke="currentColor" stroke-width="1.8"/>
+                    </svg>
                     Ver localização no mapa
                 </a>
             </article>

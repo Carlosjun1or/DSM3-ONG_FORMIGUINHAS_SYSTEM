@@ -1,39 +1,26 @@
 {% extends 'sistema/template-sistema.html' %}
 
 {% block titulo %}{{ doador.nome }} | Sistema{% endblock %}
-{% block page_title %}Detalhes do doador{% endblock %}
+{% block page_title %}Detalhes do Doador{% endblock %}
 
 {% block conteudo %}
 <section class="card donation-detail donation-detail-hero donor-detail-hero">
     <div class="section-heading donation-detail-heading">
         <div>
-            <p class="eyebrow">Cadastro de doador #{{ doador.id_doador }}</p>
             <h2>{{ doador.nome }}</h2>
-            <p class="donation-detail-subtitle">{{ doador.get_tipo_display }}{% if doador.voluntario %} · Voluntário relacionado{% endif %}</p>
+            <p class="donation-detail-subtitle">Doador #{{ doador.id_doador }} · {{ doador.get_tipo_display }}{% if doador.voluntario %} · Voluntário relacionado{% endif %}</p>
         </div>
         <div class="button-group donation-detail-actions">
-            <a class="btn btn-outline" href="{% url 'doadores' %}">Voltar aos doadores</a>
-            {% if usuario.tipo == 'ADMIN' %}<a class="btn btn-primary" href="{% url 'editar_doador' doador.id_doador %}">Editar doador</a>{% endif %}
+            <a class="btn btn-outline" href="{% url 'doadores' %}">Voltar</a>
+            {% if usuario.tipo == 'ADMIN' %}<a class="btn btn-primary" href="{% url 'editar_doador' doador.id_doador %}">Editar</a>{% endif %}
         </div>
-    </div>
-
-    <div class="donation-detail-status-row">
-        <span class="detail-status-label">Situação atual</span>
-        {% if usuario.tipo == 'ADMIN' %}
-        <form method="post" action="{% url 'atualizar_status_doador' doador.id_doador %}" class="inline-status-form donation-status-control">
-            {% csrf_token %}
-            <input type="hidden" name="retorno" value="detalhe">
-            <select name="status" class="status-select {% if doador.ativo %}status-ativo{% else %}status-inativo{% endif %}" aria-label="Situação do doador {{ doador.nome }}" onchange="this.form.submit()">
-                <option value="ATIVO" {% if doador.ativo %}selected{% endif %}>Ativo</option>
-                <option value="INATIVO" {% if not doador.ativo %}selected{% endif %}>Inativo</option>
-            </select>
-        </form>
-        {% else %}
-        <span class="status-badge {% if doador.ativo %}status-ativo{% else %}status-inativo{% endif %}">{% if doador.ativo %}Ativo{% else %}Inativo{% endif %}</span>
-        {% endif %}
     </div>
 
     <div class="detail-grid donation-summary donor-profile-summary">
+        <div>
+            <span>Tipo</span>
+            <p>{{ doador.get_tipo_display }}</p>
+        </div>
         <div>
             <span>Documento</span>
             <p>{{ doador.documento|default:'Não informado' }}</p>
@@ -49,6 +36,21 @@
         <div>
             <span>Voluntário relacionado</span>
             <p>{% if doador.voluntario %}<a class="table-link" href="{% url 'voluntarios' %}?voluntario={{ doador.voluntario.id_voluntario }}">{{ doador.voluntario.nome }}</a>{% else %}Não vinculado{% endif %}</p>
+        </div>
+        <div>
+            <span>Situação</span>
+            {% if usuario.tipo == 'ADMIN' %}
+            <form method="post" action="{% url 'atualizar_status_doador' doador.id_doador %}" class="inline-status-form donation-status-control">
+                {% csrf_token %}
+                <input type="hidden" name="retorno" value="detalhe">
+                <select name="status" class="status-select {% if doador.ativo %}status-ativo{% else %}status-inativo{% endif %}" aria-label="Situação do doador {{ doador.nome }}" onchange="this.form.submit()">
+                    <option value="ATIVO" {% if doador.ativo %}selected{% endif %}>Ativo</option>
+                    <option value="INATIVO" {% if not doador.ativo %}selected{% endif %}>Inativo</option>
+                </select>
+            </form>
+            {% else %}
+            <p><span class="status-badge {% if doador.ativo %}status-ativo{% else %}status-inativo{% endif %}">{% if doador.ativo %}Ativo{% else %}Inativo{% endif %}</span></p>
+            {% endif %}
         </div>
         <div>
             <span>Cadastrado por</span>

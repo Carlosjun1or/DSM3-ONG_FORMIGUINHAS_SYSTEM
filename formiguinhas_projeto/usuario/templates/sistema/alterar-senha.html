@@ -1,13 +1,26 @@
 {% extends 'sistema/template-sistema.html' %}
 
 {% block titulo %}Alterar senha | Sistema{% endblock %}
+{% block body_class %}password-page-body{% endblock %}
 {% block page_title %}Alterar senha{% endblock %}
 
 {% block conteudo %}
-<section class="form-shell">
-    <div class="form-card">
-        <h2>Nova senha</h2>
-        <p class="form-subtitle">Crie uma senha segura para sua conta.</p>
+<section class="password-page">
+    <div class="form-card password-card">
+        <header class="password-heading">
+            <div class="password-avatar" aria-hidden="true">
+                <svg viewBox="0 0 48 48" focusable="false">
+                    <path d="M15 21v-5a9 9 0 0 1 18 0v5M12 21h24v20H12z" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    <circle cx="24" cy="30" r="2.5" fill="currentColor"/>
+                    <path d="M24 32.5V36" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"/>
+                </svg>
+            </div>
+            <div>
+                <span class="password-eyebrow">Segurança da conta</span>
+                <h2>Alterar senha</h2>
+                <p class="form-subtitle">Escolha uma nova senha para proteger sua conta.</p>
+            </div>
+        </header>
 
         <form method="post">
             {% csrf_token %}
@@ -36,12 +49,12 @@
             </div>
 
             {% if mensagem %}
-                <div class="error-box">{{ mensagem }}</div>
+                <div class="alert-box alert-error" role="alert">{{ mensagem }}</div>
             {% endif %}
 
             <div class="form-actions">
-                <button type="submit" class="btn btn-primary">Salvar nova senha</button>
-                <a href="{% url 'perfil' %}" class="btn btn-outline">Cancelar</a>
+                <button type="submit" class="btn profile-button profile-button--save">Salvar nova senha</button>
+                <a href="{% url 'perfil' %}" class="btn profile-button profile-button--cancel">Cancelar</a>
             </div>
         </form>
     </div>

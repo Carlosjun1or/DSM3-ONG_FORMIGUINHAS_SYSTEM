@@ -16,6 +16,8 @@
             {% endif %}
         </header>
 
+        {% include 'sistema/includes/mensagens-autenticacao.html' %}
+
         {% if token_valido %}
             <form method="post">
                 {% csrf_token %}
@@ -25,17 +27,32 @@
 
                 <div class="form-group">
                     {{ form.senha.label_tag }}
-                    {{ form.senha }}
+                    <div class="password-field">
+                        {{ form.senha }}
+                        <button type="button" class="password-toggle" aria-label="Mostrar senha" aria-pressed="false">Mostrar</button>
+                    </div>
+                    <small class="password-hint">Use pelo menos 8 caracteres. Senhas comuns ou formadas apenas por números não são aceitas; uma frase longa e exclusiva costuma funcionar bem.</small>
                     {% if form.senha.errors %}
-                        <small class="error-msg">{{ form.senha.errors|join:', ' }}</small>
+                        <div class="auth-password-error" role="alert">
+                            {% for error in form.senha.errors %}
+                                <p>{{ error }}</p>
+                            {% endfor %}
+                        </div>
                     {% endif %}
                 </div>
 
                 <div class="form-group">
                     {{ form.confirmar_senha.label_tag }}
-                    {{ form.confirmar_senha }}
+                    <div class="password-field">
+                        {{ form.confirmar_senha }}
+                        <button type="button" class="password-toggle" aria-label="Mostrar senha" aria-pressed="false">Mostrar</button>
+                    </div>
                     {% if form.confirmar_senha.errors %}
-                        <small class="error-msg">{{ form.confirmar_senha.errors|join:', ' }}</small>
+                        <div class="auth-password-error" role="alert">
+                            {% for error in form.confirmar_senha.errors %}
+                                <p>{{ error }}</p>
+                            {% endfor %}
+                        </div>
                     {% endif %}
                 </div>
 
