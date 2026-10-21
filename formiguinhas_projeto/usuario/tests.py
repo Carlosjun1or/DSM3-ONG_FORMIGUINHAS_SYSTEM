@@ -266,9 +266,86 @@ class PermissoesStatusVoluntarioTests(TestCase):
             resposta,
             'href="/static/usuario/icons/sidebar-icons.svg#volunteers"',
         )
+        self.assertContains(resposta, 'aria-label="Navegação estrutural"')
+        self.assertContains(resposta, 'class="sidebar-toggle"')
+        self.assertContains(resposta, 'aria-controls="system-sidebar"')
+        self.assertContains(resposta, 'class="sidebar-backdrop"')
+        self.assertContains(resposta, 'class="sidebar-link logout-link"')
+        self.assertContains(resposta, 'sidebar-icons.svg?v=6#logout')
+        self.assertContains(resposta, 'href="/usuario/home/">Início</a>')
+        self.assertContains(
+            resposta,
+            '<span aria-current="page">Controle de Voluntários</span>',
+        )
+        self.assertContains(resposta, 'href="/comunicado/central/" class="notification-link"'        )
+        self.assertContains(resposta, 'sidebar-icons.svg?v=4#topbar-bell')
+        self.assertContains(resposta, 'class="topbar-user" href="/usuario/perfil/"')
+        self.assertContains(resposta, '<span class="topbar-user-initial" aria-hidden="true">V</span>')
+        self.assertLess(
+            resposta.content.index(b'<aside class="sidebar" id="system-sidebar">'),
+            resposta.content.index(b'<header class="topbar">'),
+        )
         self.assertContains(resposta, '<span>Resíduos</span>')
         self.assertNotContains(resposta, 'href="/usuario/usuarios/"')
         self.assertNotContains(resposta, 'href="/auditoria/"')
+
+    def test_perfil_usa_identidade_visual_e_preserva_acoes(self):
+        resposta = self.client.get(reverse('perfil'))
+
+        self.assertContains(resposta, '<body class="system-page profile-page-body">')
+        self.assertContains(resposta, '<section class="profile-page">')
+        self.assertContains(resposta, '<h2>Meu Perfil</h2>')
+        self.assertContains(resposta, 'profile-button profile-button--save')
+        self.assertContains(resposta, 'href="/usuario/alterar-senha/" class="btn profile-button profile-button--password"')
+        self.assertContains(resposta, 'href="/usuario/home/" class="btn profile-button profile-button--cancel"')
+        self.assertContains(resposta, '<span aria-current="page">Perfil</span>')
+        self.assertContains(resposta, 'href="/usuario/home/">Início</a>')
+        self.assertContains(resposta, 'class="breadcrumb-separator"')
+
+    def test_alteracao_senha_usa_identidade_visual_e_preserva_controles(self):
+        resposta = self.client.get(reverse('alterar_senha'))
+
+        self.assertContains(resposta, 'class="system-page password-page-body"')
+        self.assertContains(resposta, '<section class="password-page">')
+        self.assertContains(resposta, 'class="password-eyebrow">Segurança da conta</span>')
+        self.assertContains(resposta, 'name="senha_atual"')
+        self.assertContains(resposta, 'name="nova_senha"')
+        self.assertContains(resposta, 'name="confirmar_nova_senha"')
+        self.assertContains(resposta, 'class="btn profile-button profile-button--save"')
+        self.assertContains(resposta, 'href="/usuario/perfil/" class="btn profile-button profile-button--cancel"')
+        self.assertContains(resposta, 'href="/usuario/home/">Início</a>')
+        self.assertContains(resposta, 'href="/usuario/perfil/">Perfil</a>')
+        self.assertContains(resposta, '<span aria-current="page">Alterar senha</span>')
+
+    def test_alteracao_senha_exibe_erro_com_estilo_de_alerta(self):
+        self.coordenador.set_password('SenhaAtualSegura2026!')
+        self.coordenador.save()
+
+        resposta = self.client.post(reverse('alterar_senha'), {
+            'senha_atual': 'SenhaErrada2026!',
+            'nova_senha': 'NovaSenhaSegura2026!',
+            'confirmar_nova_senha': 'NovaSenhaSegura2026!',
+        })
+
+        self.assertEqual(resposta.status_code, 200)
+        self.assertContains(resposta, 'class="alert-box alert-error" role="alert"')
+        self.assertContains(resposta, 'A senha atual está incorreta.')
+
+    def test_alteracao_senha_exibe_sucesso_na_mesma_tela(self):
+        self.coordenador.set_password('SenhaAtualSegura2026!')
+        self.coordenador.save()
+
+        resposta = self.client.post(reverse('alterar_senha'), {
+            'senha_atual': 'SenhaAtualSegura2026!',
+            'nova_senha': 'NovaSenhaSegura2026!',
+            'confirmar_nova_senha': 'NovaSenhaSegura2026!',
+        }, follow=True)
+
+        self.coordenador.refresh_from_db()
+        self.assertTrue(self.coordenador.check_password('NovaSenhaSegura2026!'))
+        self.assertEqual(resposta.redirect_chain, [(reverse('alterar_senha'), 302)])
+        self.assertContains(resposta, 'class="alert-box alert-success"')
+        self.assertContains(resposta, 'Senha alterada com sucesso!')
 
 
 @override_settings(EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend')

@@ -1,28 +1,29 @@
 {% extends 'sistema/template-sistema.html' %}
 
 {% block titulo %}Perfil | Sistema{% endblock %}
+{% block body_class %}profile-page-body{% endblock %}
 {% block page_title %}Perfil{% endblock %}
 
 {% block conteudo %}
-<section class="form-shell">
-    <div class="form-card profile-card">
-        <div class="profile-heading">
-            <div class="profile-avatar" aria-hidden="true">{{ usuario.id_voluntario.nome|slice:':1'|upper }}</div>
-            <div>
-                <span class="profile-eyebrow">Conta pessoal</span>
-                <h2>Meu perfil</h2>
-                <p class="form-subtitle">Atualize suas informações de contato.</p>
-            </div>
+<section class="profile-page">
+    <div class="profile-heading">
+        <div class="profile-avatar" aria-hidden="true">{{ usuario.id_voluntario.nome|slice:':1'|upper }}</div>
+        <div class="profile-heading-copy">
+            <span class="profile-eyebrow">Conta Pessoal</span>
+            <h2>Meu Perfil</h2>
+            <p class="form-subtitle">Atualize suas informações de contato.</p>
         </div>
+    </div>
 
+    <div class="form-card profile-card">
         {% if mensagem %}
-            <div class="alert-box">{{ mensagem }}</div>
+            <div class="alert-box alert-success" role="status">{{ mensagem }}</div>
         {% endif %}
 
         <form method="post">
             {% csrf_token %}
             {% if form.non_field_errors %}
-                <div class="error-box">{{ form.non_field_errors|join:', ' }}</div>
+                <div class="error-box" role="alert">{{ form.non_field_errors|join:', ' }}</div>
             {% endif %}
             <div class="profile-section-title">Dados pessoais</div>
             <div class="form-grid profile-fields">
@@ -64,9 +65,9 @@
             <div class="profile-actions">
                 <span class="profile-note">O tipo de acesso só pode ser alterado pela administração.</span>
                 <div class="form-actions">
-                <button type="submit" class="btn btn-primary">Salvar alterações</button>
-                <a href="{% url 'alterar_senha' %}" class="btn btn-outline">Alterar senha</a>
-                <a href="{% url 'home' %}" class="btn btn-outline">Cancelar</a>
+                    <button type="submit" class="btn profile-button profile-button--save">Salvar alterações</button>
+                    <a href="{% url 'alterar_senha' %}" class="btn profile-button profile-button--password">Alterar senha</a>
+                    <a href="{% url 'home' %}" class="btn profile-button profile-button--cancel">Cancelar</a>
                 </div>
             </div>
         </form>

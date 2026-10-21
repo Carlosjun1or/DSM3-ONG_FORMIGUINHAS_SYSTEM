@@ -7,7 +7,7 @@
     <title>{% block titulo %}Formiguinhas | Sistema{% endblock %}</title>
     <link rel="icon" type="image/svg+xml" href="{% static 'site_institucional/img/mascote-formiguinha.svg' %}?v=1">
     <link rel="shortcut icon" href="{% static 'site_institucional/img/mascote-formiguinha.svg' %}?v=1">
-    <link rel="stylesheet" href="{% static 'css/style.css' %}?v=87">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}?v=98">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700&family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -16,7 +16,7 @@
 <body class="system-page {% block body_class %}{% endblock %}">
     <div class="app-shell">
         {% if request.session.usuario_id and request.resolver_match.url_name != 'recuperar_senha' and request.resolver_match.url_name != 'redefinir_senha' %}
-        <aside class="sidebar">
+        <aside class="sidebar" id="system-sidebar">
             <div class="sidebar-brand">
                 <img class="brand-mark" src="{% static 'site_institucional/img/mascote-formiguinha.svg' %}" alt="">
                 <div class="sidebar-brand-copy">
@@ -36,10 +36,10 @@
                     <a href="{% url 'voluntarios' %}" class="sidebar-link {% if '/usuario/voluntarios' in request.path %}active{% endif %}"><svg class="sidebar-link-icon" aria-hidden="true"><use href="{% static 'usuario/icons/sidebar-icons.svg' %}#volunteers"></use></svg><span>Voluntários</span></a>
                     {% endif %}
                     {% if request.session.usuario_tipo == 'ADMIN' %}
-                    <a href="{% url 'usuarios' %}" class="sidebar-link {% if request.resolver_match.url_name == 'usuarios' or '/usuario/usuarios/' in request.path %}active{% endif %}"><svg class="sidebar-link-icon" aria-hidden="true"><use href="{% static 'usuario/icons/sidebar-icons.svg' %}#users"></use></svg><span>Usuários</span></a>
+                    <a href="{% url 'usuarios' %}" class="sidebar-link {% if request.resolver_match.url_name == 'usuarios' or '/usuario/usuarios/' in request.path %}active{% endif %}"><svg class="sidebar-link-icon" aria-hidden="true"><use href="{% static 'usuario/icons/sidebar-icons.svg' %}?v=2#users"></use></svg><span>Usuários</span></a>
                     {% endif %}
                     {% if request.session.usuario_tipo == 'ADMIN' or request.session.usuario_tipo == 'COORDENADOR' %}
-                    <a href="{% url 'equipes' %}" class="sidebar-link {% if '/equipe/' in request.path %}active{% endif %}"><svg class="sidebar-link-icon" aria-hidden="true"><use href="{% static 'usuario/icons/sidebar-icons.svg' %}#teams"></use></svg><span>Equipes</span></a>
+                    <a href="{% url 'equipes' %}" class="sidebar-link {% if '/equipe/' in request.path %}active{% endif %}"><svg class="sidebar-link-icon" aria-hidden="true"><use href="{% static 'usuario/icons/sidebar-icons.svg' %}?v=2#teams"></use></svg><span>Equipes</span></a>
                     {% endif %}
                     {% if request.session.usuario_tipo == 'ADMIN' %}
                     <a href="{% url 'doadores' %}" class="sidebar-link {% if '/doacao/doadores/' in request.path %}active{% endif %}"><svg class="sidebar-link-icon" aria-hidden="true"><use href="{% static 'usuario/icons/sidebar-icons.svg' %}#donors"></use></svg><span>Doadores</span></a>
@@ -71,51 +71,65 @@
                     {% endif %}
                 </div>
                 <div class="sidebar-group sidebar-group--footer">
-                    <a href="{% url 'logout' %}" class="sidebar-link logout-link"><svg class="sidebar-link-icon" aria-hidden="true"><use href="{% static 'usuario/icons/sidebar-icons.svg' %}#logout"></use></svg><span>Sair</span></a>
+                    <a href="{% url 'logout' %}" class="sidebar-link logout-link"><svg class="sidebar-link-icon" aria-hidden="true"><use href="{% static 'usuario/icons/sidebar-icons.svg' %}?v=6#logout"></use></svg><span>Sair</span></a>
                 </div>
             </nav>
         </aside>
+        <button class="sidebar-backdrop" type="button" aria-label="Fechar menu" tabindex="-1"></button>
         {% endif %}
 
         <main class="main-panel">
             {% if request.session.usuario_id and request.resolver_match.url_name != 'recuperar_senha' and request.resolver_match.url_name != 'redefinir_senha' %}
             <header class="topbar">
+                <button class="sidebar-toggle" type="button" aria-label="Abrir menu" aria-controls="system-sidebar" aria-expanded="false">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+                <nav class="topbar-breadcrumb" aria-label="Navegação estrutural">
+                    <a href="{% url 'home' %}">Início</a>
+                    <svg class="breadcrumb-separator" viewBox="0 0 7 8" aria-hidden="true"><path d="M1 1l5 3-5 3" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+                    {% if request.resolver_match.url_name == 'alterar_senha' %}
+                    <a href="{% url 'perfil' %}">Perfil</a>
+                    <svg class="breadcrumb-separator" viewBox="0 0 7 8" aria-hidden="true"><path d="M1 1l5 3-5 3" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+                    {% endif %}
+                    <span aria-current="page">{% block page_title %}Dashboard{% endblock %}</span>
+                </nav>
+
                 <div class="topbar-actions">
-                    <span class="user-pill">{{ request.session.usuario_nome|default:'Voluntário' }}</span>
-                    <a href="{% url 'central_comunicados' %}" class="notification-link" aria-label="Comunicados{% if comunicados_nao_lidos_count %}, {{ comunicados_nao_lidos_count }} não lidos{% endif %}" title="Comunicados">
-                        <span class="notification-icon" aria-hidden="true">🔔</span>
+                    <a href="{% url 'central_comunicados' %}" class="notification-link" aria-label="Central de comunicados{% if comunicados_nao_lidos_count %}, {{ comunicados_nao_lidos_count }} não lidos{% endif %}" title="Central de comunicados">
+                        <svg class="notification-icon notification-icon--bell" viewBox="0 0 44 44" aria-hidden="true"><use href="{% static 'usuario/icons/sidebar-icons.svg' %}?v=4#topbar-bell" x="12.5" y="11.5" width="19" height="21"></use></svg>
                         {% if comunicados_nao_lidos_count %}<span class="notification-badge">{{ comunicados_nao_lidos_count }}</span>{% endif %}
                     </a>
                     {% if request.session.usuario_tipo == 'ADMIN' %}
                     <a href="{% url 'auditoria_global' %}" class="notification-link" aria-label="Auditoria global{% if auditoria_nao_lida_count %}, {{ auditoria_nao_lida_count }} alterações novas{% endif %}" title="Auditoria global">
-                        <span class="notification-icon" aria-hidden="true">📋</span>
+                        <svg class="notification-icon notification-icon--control" viewBox="0 0 44 44" aria-hidden="true"><use href="{% static 'usuario/icons/sidebar-icons.svg' %}?v=4#topbar-control" x="10.5" y="8.5" width="23" height="27"></use></svg>
                         {% if auditoria_nao_lida_count %}<span class="notification-badge" aria-hidden="true">!</span>{% endif %}
                     </a>
                     {% endif %}
-                    <a class="btn btn-outline" href="{% url 'perfil' %}">Perfil</a>
+                    <a class="topbar-user" href="{% url 'perfil' %}" aria-label="Perfil de {{ request.session.usuario_nome|default:'Voluntário' }}">
+                        <span class="topbar-user-initial" aria-hidden="true">{{ request.session.usuario_nome|default:'Voluntário'|slice:":1"|upper }}</span>
+                        <span class="topbar-user-name">{{ request.session.usuario_nome|default:'Voluntário' }}</span>
+                    </a>
                 </div>
             </header>
             {% endif %}
-            {% if request.session.usuario_id and request.resolver_match.url_name != 'recuperar_senha' and request.resolver_match.url_name != 'redefinir_senha' %}
-                <div class="page-heading">
-                    <p class="topbar-kicker">Painel administrativo</p>
-                    <h1>{% block page_title %} Dashboard {% endblock %}</h1>
-                </div>
-            {% endif %}
-            {% if mensagem %}
-                <div class="alert-box">{{ mensagem }}</div>
+            <div class="main-content">
+            {% if mensagem and request.resolver_match.url_name != 'login' and request.resolver_match.url_name != 'recuperar_senha' and request.resolver_match.url_name != 'redefinir_senha' %}
+                <div class="alert-box alert-info" role="status">{{ mensagem }}</div>
             {% endif %}
             {% if messages and request.resolver_match.url_name != 'login' and request.resolver_match.url_name != 'recuperar_senha' and request.resolver_match.url_name != 'redefinir_senha' %}
                 {% for message in messages %}
-                    <div class="alert-box{% if message.tags %} alert-{{ message.tags }}{% endif %}" role="status" data-toast>{{ message }}</div>
+                    <div class="alert-box{% if message.tags %} alert-{{ message.tags }}{% endif %}" role="{% if message.tags == 'error' %}alert{% else %}status{% endif %}" data-toast>{{ message }}</div>
                 {% endfor %}
             {% endif %}
             {% block conteudo %}
 
             {% endblock %}
+            </div>
         </main>
     </div>
-    <script src="{% static 'js/masks.js' %}?v=17"></script>
+    <script src="{% static 'js/masks.js' %}?v=19"></script>
     {% block scripts %}{% endblock %}
     <div vw class="enabled">
         <div vw-access-button class="active"></div>
