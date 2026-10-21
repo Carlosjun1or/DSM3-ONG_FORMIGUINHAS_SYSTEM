@@ -98,7 +98,14 @@
         </div>
 
         <ul class="impacto-indicadores">
-            <li class="impacto-indicador impacto-indicador--reciclaveis">
+            <li class="impacto-indicador impacto-indicador--reciclaveis" aria-describedby="impacto-ajuda-arrastar">
+                <button class="impacto-arraste" type="button" aria-label="Arraste para mover o indicador de recicláveis" data-arrastar-impacto>
+                    <svg viewBox="0 0 16 16" aria-hidden="true">
+                        <circle cx="5" cy="4" r="1.2"/><circle cx="11" cy="4" r="1.2"/>
+                        <circle cx="5" cy="8" r="1.2"/><circle cx="11" cy="8" r="1.2"/>
+                        <circle cx="5" cy="12" r="1.2"/><circle cx="11" cy="12" r="1.2"/>
+                    </svg>
+                </button>
                 <svg viewBox="0 0 48 48" fill="none" aria-hidden="true">
                     <path d="m19 7 4-4 4 7h-5l-3-3Zm13 4 6 1 1 6-4-2-3-5ZM9 21l-2 6 6 1-1-4 4-4-7 1Z" fill="currentColor"/>
                     <path d="m17 15 5-3 5 1 4 7-4 2-3-5-5 3-2-5Zm13 11 5 2 1 5-3 5-8 1v-5l5-1 1-7Zm-13 1 1 6 5 2-2 5-7-3-2-5 5-5Z" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
@@ -106,7 +113,14 @@
                 <strong>1.512 kg</strong>
                 <span>de recicláveis coletados</span>
             </li>
-            <li class="impacto-indicador impacto-indicador--agua">
+            <li class="impacto-indicador impacto-indicador--agua" aria-describedby="impacto-ajuda-arrastar">
+                <button class="impacto-arraste" type="button" aria-label="Arraste para mover o indicador de água" data-arrastar-impacto>
+                    <svg viewBox="0 0 16 16" aria-hidden="true">
+                        <circle cx="5" cy="4" r="1.2"/><circle cx="11" cy="4" r="1.2"/>
+                        <circle cx="5" cy="8" r="1.2"/><circle cx="11" cy="8" r="1.2"/>
+                        <circle cx="5" cy="12" r="1.2"/><circle cx="11" cy="12" r="1.2"/>
+                    </svg>
+                </button>
                 <svg viewBox="0 0 48 48" fill="none" aria-hidden="true">
                     <path d="M24 4S11 20 11 29a13 13 0 0 0 26 0C37 20 24 4 24 4Z" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/>
                     <path d="M17 30a7 7 0 0 0 7 7" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
@@ -114,7 +128,14 @@
                 <strong>132 mil L</strong>
                 <span>de água economizados</span>
             </li>
-            <li class="impacto-indicador impacto-indicador--co2">
+            <li class="impacto-indicador impacto-indicador--co2" aria-describedby="impacto-ajuda-arrastar">
+                <button class="impacto-arraste" type="button" aria-label="Arraste para mover o indicador de CO₂" data-arrastar-impacto>
+                    <svg viewBox="0 0 16 16" aria-hidden="true">
+                        <circle cx="5" cy="4" r="1.2"/><circle cx="11" cy="4" r="1.2"/>
+                        <circle cx="5" cy="8" r="1.2"/><circle cx="11" cy="8" r="1.2"/>
+                        <circle cx="5" cy="12" r="1.2"/><circle cx="11" cy="12" r="1.2"/>
+                    </svg>
+                </button>
                 <svg viewBox="0 0 48 48" fill="none" aria-hidden="true">
                     <path d="M39 8C24 7 12 11 9 23c-2 9 5 16 13 14 12-3 17-15 17-29Z" stroke="currentColor" stroke-width="2.8" stroke-linejoin="round"/>
                     <path d="M8 42c6-12 14-19 25-26" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"/>
@@ -122,7 +143,14 @@
                 <strong>8.500 kg</strong>
                 <span>de CO₂ evitados</span>
             </li>
-            <li class="impacto-indicador impacto-indicador--garrafas">
+            <li class="impacto-indicador impacto-indicador--garrafas" aria-describedby="impacto-ajuda-arrastar">
+                <button class="impacto-arraste" type="button" aria-label="Arraste para mover o indicador de garrafas recicladas" data-arrastar-impacto>
+                    <svg viewBox="0 0 16 16" aria-hidden="true">
+                        <circle cx="5" cy="4" r="1.2"/><circle cx="11" cy="4" r="1.2"/>
+                        <circle cx="5" cy="8" r="1.2"/><circle cx="11" cy="8" r="1.2"/>
+                        <circle cx="5" cy="12" r="1.2"/><circle cx="11" cy="12" r="1.2"/>
+                    </svg>
+                </button>
                 <svg viewBox="0 0 48 48" fill="none" aria-hidden="true">
                     <path d="M19 5h10v5l3 4v27H16V14l3-4V5Zm0 5h10m-13 9h16m-16 14h16" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
@@ -130,13 +158,23 @@
                 <span>garrafas plásticas recicladas</span>
             </li>
         </ul>
+        <p id="impacto-ajuda-arrastar" class="visualmente-oculto">
+            Arraste os indicadores para trocar suas posições. Com o teclado, use Alt e as setas.
+        </p>
+        <p class="visualmente-oculto" data-impacto-status aria-live="polite"></p>
 
-        <p class="impacto-apoiador">
+        <a
+            class="impacto-apoiador"
+            href="https://espacourbano.org.br/"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Conheça a ONG Espaço Urbano (abre em nova aba)"
+        >
             <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
                 <path d="m12 3 2.6 5.3 5.9.9-4.2 4.1 1 5.8-5.3-2.8-5.3 2.8 1-5.8-4.2-4.1 5.9-.9L12 3Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
             </svg>
             Com apoio de <strong>Espaço Urbano</strong>
-        </p>
+        </a>
     </div>
 </section>
 
@@ -353,7 +391,7 @@
                 <div class="apoie-chave-linha">
                     <label class="visualmente-oculto" for="chave-pix-ong">Chave PIX CNPJ das Formiguinhas da Praia</label>
                     <input id="chave-pix-ong" type="text" value="61.036.099/0001-76" readonly aria-describedby="pix-copiar-status">
-                    <button class="btn btn--azul" type="button" data-copiar-pix>
+                    <button class="btn" type="button" data-copiar-pix>
                         <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
                             <rect x="8" y="8" width="12" height="13" rx="2" stroke="currentColor" stroke-width="1.8"/>
                             <path d="M16 8V5a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h2" stroke="currentColor" stroke-width="1.8"/>
@@ -407,7 +445,13 @@
                     data-longitude="{{ praia.longitude|unlocalize }}"
                 >
                     <h3>{{ praia.nome }}</h3>
-                    <p>{{ praia.cidade }}</p>
+                    <p class="praia-resumo-cidade">
+                        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                            <path d="M19 10.2c0 5.1-7 11-7 11s-7-5.9-7-11a7 7 0 1 1 14 0Z" stroke="currentColor" stroke-width="1.8"/>
+                            <circle cx="12" cy="10" r="2.3" stroke="currentColor" stroke-width="1.8"/>
+                        </svg>
+                        {{ praia.cidade }}
+                    </p>
                     <span class="praia-distancia" aria-live="polite"></span>
                 </article>
                 {% empty %}
