@@ -1,12 +1,48 @@
-from datetime import date
+from datetime import date, time, timedelta
+from decimal import Decimal
+import os
+from pathlib import Path
+from tempfile import TemporaryDirectory
+from unittest.mock import patch
 
 from django.core import mail
+from django.db.models import Sum
 from django.test import RequestFactory, SimpleTestCase, TestCase, override_settings
 from django.urls import reverse
+from django.utils import timezone
 
+from acao.models import Acao
+from config.settings import load_local_environment
+from doacao.models import Doacao, DoacaoFinanceira
+from praia.models import Praia
 from .paginacao import paginar_queryset
 from .models import Usuario, Voluntario
 from .tokens import password_reset_token
+
+
+class LocalEnvironmentSettingsTests(SimpleTestCase):
+    def test_carrega_variaveis_do_arquivo_env_sem_substituir_ambiente(self):
+        with TemporaryDirectory() as temporary_directory:
+            env_path = Path(temporary_directory) / '.env'
+            env_path.write_text(
+                '# Configuracao local\nEMAIL_HOST=smtp.gmail.com\n'
+                'EMAIL_PORT="587"\nEMAIL_HOST_USER=arquivo@gmail.com\n',
+                encoding='utf-8',
+            )
+            with patch.dict(os.environ, {'EMAIL_HOST_USER': 'ambiente@gmail.com'}):
+                load_local_environment(env_path)
+
+                self.assertEqual(os.environ['EMAIL_HOST'], 'smtp.gmail.com')
+                self.assertEqual(os.environ['EMAIL_PORT'], '587')
+                self.assertEqual(os.environ['EMAIL_HOST_USER'], 'ambiente@gmail.com')
+
+    def test_arquivo_env_com_linha_invalida_gera_erro_explicito(self):
+        with TemporaryDirectory() as temporary_directory:
+            env_path = Path(temporary_directory) / '.env'
+            env_path.write_text('CONFIGURACAO_INVALIDA\n', encoding='utf-8')
+
+            with self.assertRaisesRegex(ValueError, 'linha 1'):
+                load_local_environment(env_path)
 
 
 class PaginacaoTests(SimpleTestCase):
@@ -29,6 +65,130 @@ class PaginacaoTests(SimpleTestCase):
 
         self.assertEqual(pagina.number, 2)
         self.assertEqual(pagina.object_list, [20, 21])
+
+
+class HomeDashboardTests(TestCase):
+    def test_home_exibe_metricas_reais_e_proximas_acoes(self):
+        hoje = timezone.localdate()
+        voluntarios_ativos_antes = Voluntario.objects.filter(status='ATIVO').count()
+        atividades_hoje_antes = Acao.objects.filter(
+            data=hoje,
+        ).exclude(
+            status=Acao.STATUS_CANCELADA,
+        ).count()
+        doacoes_confirmadas_antes = DoacaoFinanceira.objects.filter(
+            doacao__status=Doacao.CONFIRMADA,
+        ).aggregate(total=Sum('valor'))['total'] or Decimal('0.00')
+        voluntario = Voluntario.objects.create(
+            nome='Administradora',
+            dt_nascimento=date(1990, 1, 1),
+            endereco='Rua A',
+            telefone='11999999999',
+            email='administradora@teste.org',
+        )
+        usuario = Usuario.objects.create(
+            id_voluntario=voluntario,
+            tipo='ADMIN',
+            senha='senha',
+        )
+        inativo = Voluntario.objects.create(
+            nome='Voluntário inativo',
+            dt_nascimento=date(1992, 1, 1),
+            endereco='Rua B',
+            telefone='11988888888',
+            email='inativo@teste.org',
+            status='INATIVO',
+        )
+        praia = Praia.objects.create(
+            nome='Praia Central',
+            cidade='Santos',
+            latitude='-23.9600',
+            longitude='-46.3300',
+        )
+        acao_de_hoje = Acao.objects.create(
+            tipo=Acao.TIPO_MUTIRAO,
+            data=hoje,
+            horario=time(9, 0),
+            local='Ponto de encontro',
+            praia=praia,
+        )
+        acao_futura = Acao.objects.create(
+            tipo=Acao.TIPO_COLETA_VOLUNTARIA,
+            data=hoje + timedelta(days=1),
+            horario=time(14, 30),
+            praia=praia,
+        )
+        Acao.objects.create(
+            tipo=Acao.TIPO_MUTIRAO,
+            data=hoje,
+            horario=time(8, 0),
+            praia=praia,
+            status=Acao.STATUS_CANCELADA,
+        )
+        doacao_confirmada = Doacao.objects.create(
+            tipo=Doacao.FINANCEIRA,
+            status=Doacao.CONFIRMADA,
+            registrado_por_nome='Administradora',
+            registrado_por_tipo='ADMIN',
+        )
+        DoacaoFinanceira.objects.create(
+            doacao=doacao_confirmada,
+            valor=Decimal('125.50'),
+            forma_recebimento=DoacaoFinanceira.PIX,
+        )
+        doacao_pendente = Doacao.objects.create(
+            tipo=Doacao.FINANCEIRA,
+            registrado_por_nome='Administradora',
+            registrado_por_tipo='ADMIN',
+        )
+        DoacaoFinanceira.objects.create(
+            doacao=doacao_pendente,
+            valor=Decimal('200.00'),
+            forma_recebimento=DoacaoFinanceira.PIX,
+        )
+
+        session = self.client.session
+        session['usuario_id'] = usuario.id_usuario
+        session['usuario_tipo'] = usuario.tipo
+        session.save()
+
+        resposta = self.client.get(reverse('home'))
+
+        self.assertEqual(resposta.status_code, 200)
+        self.assertEqual(
+            resposta.context['total_voluntarios_ativos'],
+            voluntarios_ativos_antes + 1,
+        )
+        self.assertEqual(
+            resposta.context['atividades_hoje'],
+            atividades_hoje_antes + 1,
+        )
+        self.assertEqual(
+            resposta.context['total_doacoes_confirmadas'],
+            doacoes_confirmadas_antes + Decimal('125.50'),
+        )
+        acoes_proximas_ids = [
+            acao.id_acao for acao in resposta.context['acoes_proximas']
+        ]
+        self.assertIn(acao_de_hoje.id_acao, acoes_proximas_ids)
+        self.assertIn(acao_futura.id_acao, acoes_proximas_ids)
+        self.assertLess(
+            acoes_proximas_ids.index(acao_de_hoje.id_acao),
+            acoes_proximas_ids.index(acao_futura.id_acao),
+        )
+        self.assertContains(resposta, 'Bem-vindo, Administradora!')
+        self.assertContains(resposta, 'css/template.css')
+        self.assertNotContains(resposta, inativo.nome)
+
+
+class LoginPageTests(TestCase):
+    def test_login_nao_exibe_cabecalho_do_dashboard(self):
+        resposta = self.client.get(reverse('login'))
+
+        self.assertEqual(resposta.status_code, 200)
+        self.assertContains(resposta, 'Entrar no sistema')
+        self.assertNotContains(resposta, 'Painel administrativo')
+        self.assertNotContains(resposta, '> Dashboard <')
 
 
 class PermissoesStatusVoluntarioTests(TestCase):
@@ -97,6 +257,96 @@ class PermissoesStatusVoluntarioTests(TestCase):
             f'/voluntarios/{self.voluntario.id_voluntario}/status/',
         )
 
+    def test_menu_lateral_usa_identidade_visual_e_preserva_permissoes(self):
+        resposta = self.client.get(reverse('voluntarios'))
+
+        self.assertContains(resposta, 'DA PRAIA')
+        self.assertContains(resposta, 'href="/usuario/voluntarios/" class="sidebar-link active"')
+        self.assertContains(
+            resposta,
+            'href="/static/usuario/icons/sidebar-icons.svg#volunteers"',
+        )
+        self.assertContains(resposta, 'aria-label="Navegação estrutural"')
+        self.assertContains(resposta, 'class="sidebar-toggle"')
+        self.assertContains(resposta, 'aria-controls="system-sidebar"')
+        self.assertContains(resposta, 'class="sidebar-backdrop"')
+        self.assertContains(resposta, 'class="sidebar-link logout-link"')
+        self.assertContains(resposta, 'sidebar-icons.svg?v=6#logout')
+        self.assertContains(resposta, 'href="/usuario/home/">Início</a>')
+        self.assertContains(
+            resposta,
+            '<span aria-current="page">Controle de Voluntários</span>',
+        )
+        self.assertContains(resposta, 'href="/comunicado/central/" class="notification-link"'        )
+        self.assertContains(resposta, 'sidebar-icons.svg?v=4#topbar-bell')
+        self.assertContains(resposta, 'class="topbar-user" href="/usuario/perfil/"')
+        self.assertContains(resposta, '<span class="topbar-user-initial" aria-hidden="true">V</span>')
+        self.assertLess(
+            resposta.content.index(b'<aside class="sidebar" id="system-sidebar">'),
+            resposta.content.index(b'<header class="topbar">'),
+        )
+        self.assertContains(resposta, '<span>Resíduos</span>')
+        self.assertNotContains(resposta, 'href="/usuario/usuarios/"')
+        self.assertNotContains(resposta, 'href="/auditoria/"')
+
+    def test_perfil_usa_identidade_visual_e_preserva_acoes(self):
+        resposta = self.client.get(reverse('perfil'))
+
+        self.assertContains(resposta, '<body class="system-page profile-page-body">')
+        self.assertContains(resposta, '<section class="profile-page">')
+        self.assertContains(resposta, '<h2>Meu Perfil</h2>')
+        self.assertContains(resposta, 'profile-button profile-button--save')
+        self.assertContains(resposta, 'href="/usuario/alterar-senha/" class="btn profile-button profile-button--password"')
+        self.assertContains(resposta, 'href="/usuario/home/" class="btn profile-button profile-button--cancel"')
+        self.assertContains(resposta, '<span aria-current="page">Perfil</span>')
+        self.assertContains(resposta, 'href="/usuario/home/">Início</a>')
+        self.assertContains(resposta, 'class="breadcrumb-separator"')
+
+    def test_alteracao_senha_usa_identidade_visual_e_preserva_controles(self):
+        resposta = self.client.get(reverse('alterar_senha'))
+
+        self.assertContains(resposta, 'class="system-page password-page-body"')
+        self.assertContains(resposta, '<section class="password-page">')
+        self.assertContains(resposta, 'class="password-eyebrow">Segurança da conta</span>')
+        self.assertContains(resposta, 'name="senha_atual"')
+        self.assertContains(resposta, 'name="nova_senha"')
+        self.assertContains(resposta, 'name="confirmar_nova_senha"')
+        self.assertContains(resposta, 'class="btn profile-button profile-button--save"')
+        self.assertContains(resposta, 'href="/usuario/perfil/" class="btn profile-button profile-button--cancel"')
+        self.assertContains(resposta, 'href="/usuario/home/">Início</a>')
+        self.assertContains(resposta, 'href="/usuario/perfil/">Perfil</a>')
+        self.assertContains(resposta, '<span aria-current="page">Alterar senha</span>')
+
+    def test_alteracao_senha_exibe_erro_com_estilo_de_alerta(self):
+        self.coordenador.set_password('SenhaAtualSegura2026!')
+        self.coordenador.save()
+
+        resposta = self.client.post(reverse('alterar_senha'), {
+            'senha_atual': 'SenhaErrada2026!',
+            'nova_senha': 'NovaSenhaSegura2026!',
+            'confirmar_nova_senha': 'NovaSenhaSegura2026!',
+        })
+
+        self.assertEqual(resposta.status_code, 200)
+        self.assertContains(resposta, 'class="alert-box alert-error" role="alert"')
+        self.assertContains(resposta, 'A senha atual está incorreta.')
+
+    def test_alteracao_senha_exibe_sucesso_na_mesma_tela(self):
+        self.coordenador.set_password('SenhaAtualSegura2026!')
+        self.coordenador.save()
+
+        resposta = self.client.post(reverse('alterar_senha'), {
+            'senha_atual': 'SenhaAtualSegura2026!',
+            'nova_senha': 'NovaSenhaSegura2026!',
+            'confirmar_nova_senha': 'NovaSenhaSegura2026!',
+        }, follow=True)
+
+        self.coordenador.refresh_from_db()
+        self.assertTrue(self.coordenador.check_password('NovaSenhaSegura2026!'))
+        self.assertEqual(resposta.redirect_chain, [(reverse('alterar_senha'), 302)])
+        self.assertContains(resposta, 'class="alert-box alert-success"')
+        self.assertContains(resposta, 'Senha alterada com sucesso!')
+
 
 @override_settings(EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend')
 class RecuperacaoSenhaTests(TestCase):
@@ -144,6 +394,21 @@ class RecuperacaoSenhaTests(TestCase):
         self.assertContains(resposta, 'Se o e-mail estiver cadastrado')
         self.assertEqual(len(mail.outbox), 0)
 
+    @override_settings(
+        DEBUG=True,
+        EMAIL_BACKEND='django.core.mail.backends.console.EmailBackend',
+    )
+    def test_modo_console_indica_onde_encontrar_link(self):
+        resposta = self.client.post(
+            reverse('recuperar_senha'),
+            {'email': self.voluntario.email},
+        )
+
+        self.assertContains(
+            resposta,
+            'o link aparecerá no terminal onde o servidor Django está rodando',
+        )
+
     def test_link_redefine_senha_e_fica_invalido_apos_uso(self):
         token = password_reset_token.make_token(self.usuario)
         url = reverse('redefinir_senha', args=[self.usuario.id_usuario, token])
@@ -151,12 +416,47 @@ class RecuperacaoSenhaTests(TestCase):
         resposta = self.client.post(url, {
             'senha': 'NovaSenhaSegura2026!',
             'confirmar_senha': 'NovaSenhaSegura2026!',
-        })
+        }, follow=True)
 
         self.assertRedirects(resposta, reverse('login'))
         self.usuario.refresh_from_db()
         self.assertTrue(self.usuario.check_password('NovaSenhaSegura2026!'))
         self.assertFalse(password_reset_token.check_token(self.usuario, token))
+        self.assertContains(resposta, 'auth-feedback auth-feedback--success')
+        self.assertContains(resposta, 'Sua senha foi redefinida.')
+        self.assertNotContains(resposta, 'data-toast')
+
+    def test_tela_de_redefinicao_permite_mostrar_senhas_e_explica_regras(self):
+        token = password_reset_token.make_token(self.usuario)
+        resposta = self.client.get(
+            reverse('redefinir_senha', args=[self.usuario.id_usuario, token]),
+        )
+
+        self.assertContains(resposta, 'class="password-toggle"')
+        self.assertContains(resposta, 'class="password-hint"')
+        self.assertContains(resposta, 'Senhas comuns ou formadas apenas por números')
+
+    def test_erro_de_senha_usa_alerta_com_identidade_visual(self):
+        token = password_reset_token.make_token(self.usuario)
+        resposta = self.client.post(
+            reverse('redefinir_senha', args=[self.usuario.id_usuario, token]),
+            {'senha': 'password', 'confirmar_senha': 'password'},
+        )
+
+        self.assertContains(resposta, 'class="auth-password-error" role="alert"')
+        self.assertContains(resposta, 'muito comum')
+
+    def test_redefinicao_rejeita_senha_comum_com_mensagem_de_validacao(self):
+        token = password_reset_token.make_token(self.usuario)
+        resposta = self.client.post(
+            reverse('redefinir_senha', args=[self.usuario.id_usuario, token]),
+            {'senha': 'password', 'confirmar_senha': 'password'},
+        )
+
+        self.assertEqual(resposta.status_code, 200)
+        self.assertContains(resposta, 'muito comum')
+        self.usuario.refresh_from_db()
+        self.assertTrue(self.usuario.check_password('SenhaAntigaSegura2026!'))
 
 
 class LogoutTests(TestCase):

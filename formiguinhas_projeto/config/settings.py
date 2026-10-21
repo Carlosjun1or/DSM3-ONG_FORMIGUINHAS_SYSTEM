@@ -20,6 +20,28 @@ from dotenv import load_dotenv
 load_dotenv(BASE_DIR / '.env')
 
 
+def load_local_environment(path):
+    if not path.is_file():
+        return
+
+    for line_number, line in enumerate(path.read_text(encoding='utf-8').splitlines(), 1):
+        line = line.strip()
+        if not line or line.startswith('#'):
+            continue
+
+        key, separator, value = line.partition('=')
+        if not separator or not key.strip():
+            raise ValueError(f'Configuracao invalida em {path}, linha {line_number}.')
+
+        value = value.strip()
+        if len(value) >= 2 and value[0] == value[-1] and value[0] in {'"', "'"}:
+            value = value[1:-1]
+        os.environ.setdefault(key.strip(), value)
+
+
+load_local_environment(BASE_DIR / '.env')
+
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.1/howto/deployment/checklist/
 
@@ -138,18 +160,25 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
 
-# E-mail de recuperação de senha. O console facilita o desenvolvimento local;
-# em produção, configure as variáveis SMTP no ambiente.
+# E-mail de recuperação de senha. Um arquivo .env local pode manter a
+# configuracao SMTP entre execucoes sem incluir credenciais no repositorio.
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
 EMAIL_BACKEND = os.getenv(
     'EMAIL_BACKEND',
-    'django.core.mail.backends.console.EmailBackend',
+    (
+        'django.core.mail.backends.smtp.EmailBackend'
+        if EMAIL_HOST_USER and EMAIL_HOST_PASSWORD
+        else 'django.core.mail.backends.console.EmailBackend'
+    ),
 )
 EMAIL_HOST = os.getenv('EMAIL_HOST', '')
 EMAIL_PORT = int(os.getenv('EMAIL_PORT', '587'))
-EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '')
-EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
 EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'true').lower() == 'true'
-DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'noreply@formiguinhas.org')
+DEFAULT_FROM_EMAIL = os.getenv(
+    'DEFAULT_FROM_EMAIL',
+    EMAIL_HOST_USER or 'noreply@formiguinhas.org',
+)
 PASSWORD_RESET_TIMEOUT = 60 * 60
 
 

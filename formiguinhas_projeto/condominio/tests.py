@@ -194,13 +194,19 @@ class ControleCondominioPermissoesTests(TestCase):
             self.assertEqual(resposta.status_code, 200)
             self.assertContains(
                 resposta,
-                '<a href="/condominio/bags/" class="sidebar-link active">Controle de Bags</a>',
-                html=True,
+                'href="/condominio/bags/" class="sidebar-link active"',
             )
             self.assertContains(
                 resposta,
-                '<a href="/condominio/" class="sidebar-link ">Controle de Condomínios</a>',
-                html=True,
+                '<span>Bags</span>',
+            )
+            self.assertContains(
+                resposta,
+                'href="/condominio/" class="sidebar-link "',
+            )
+            self.assertContains(
+                resposta,
+                '<span>Condomínios</span>',
             )
 
     def test_admin_altera_status_direto_na_lista_com_movimentacao_e_auditoria(self):

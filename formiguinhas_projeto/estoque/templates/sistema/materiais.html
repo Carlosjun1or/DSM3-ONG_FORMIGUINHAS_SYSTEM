@@ -3,23 +3,20 @@
 
 {% block titulo %}Controle de Estoque | Sistema{% endblock %}
 {% block page_title %}Controle de Estoque{% endblock %}
-{% block estilos %}<link rel="stylesheet" href="{% static 'estoque/estoque.css' %}?v=2">
+{% block estilos %}<link rel="stylesheet" href="{% static 'estoque/estoque.css' %}?v=5">
 <script src="{% static 'estoque/estoque.js' %}" defer></script>{% endblock %}
 
 {% block conteudo %}
 <section class="card-grid volunteer-metrics estoque-metricas" data-live="metricas">
     <article class="card estoque-metrica-card">
-        <span class="section-kicker">Catálogo</span>
         <h3>Materiais cadastrados</h3>
         <div class="metric">{{ total_materiais }}</div>
     </article>
     <article class="card estoque-metrica-card">
-        <span class="section-kicker">Atenção</span>
         <h3>Estoque baixo ou zerado</h3>
         <div class="metric">{{ total_baixo_estoque }}</div>
     </article>
     <article class="card estoque-metrica-card">
-        <span class="section-kicker">Doações</span>
         <h3>Doado no período</h3>
         <div class="metric">{{ doado_total }}</div>
         <small class="form-help">{{ doado_registros }} registro(s) · {{ data_inicio }} a {{ data_fim }}</small>

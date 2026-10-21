@@ -1,4 +1,56 @@
 document.addEventListener('DOMContentLoaded', function () {
+    var sidebar = document.querySelector('.sidebar');
+    var sidebarToggle = document.querySelector('.sidebar-toggle');
+    var sidebarBackdrop = document.querySelector('.sidebar-backdrop');
+    var sidebarMedia = window.matchMedia('(max-width: 900px)');
+
+    function setSidebarOpen(isOpen, returnFocus) {
+        if (!sidebar || !sidebarToggle || !sidebarBackdrop) return;
+
+        document.body.classList.toggle('sidebar-open', isOpen);
+        sidebarToggle.setAttribute('aria-expanded', String(isOpen));
+        sidebarToggle.setAttribute('aria-label', isOpen ? 'Fechar menu' : 'Abrir menu');
+        sidebar.setAttribute('aria-hidden', String(sidebarMedia.matches && !isOpen));
+        sidebar.inert = sidebarMedia.matches && !isOpen;
+        sidebarBackdrop.setAttribute('aria-hidden', String(!isOpen));
+        sidebarBackdrop.inert = !isOpen;
+
+        if (isOpen) {
+            var firstLink = sidebar.querySelector('a[href]');
+            if (firstLink) firstLink.focus();
+        } else if (returnFocus) {
+            sidebarToggle.focus();
+        }
+    }
+
+    if (sidebar && sidebarToggle && sidebarBackdrop) {
+        setSidebarOpen(false, false);
+
+        sidebarToggle.addEventListener('click', function () {
+            setSidebarOpen(sidebarToggle.getAttribute('aria-expanded') !== 'true', false);
+        });
+
+        sidebarBackdrop.addEventListener('click', function () {
+            setSidebarOpen(false, true);
+        });
+
+        sidebar.addEventListener('click', function (event) {
+            if (event.target.closest('a[href]')) setSidebarOpen(false, false);
+        });
+
+        document.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape' && sidebarToggle.getAttribute('aria-expanded') === 'true') {
+                setSidebarOpen(false, true);
+            }
+        });
+
+        sidebarMedia.addEventListener('change', function (event) {
+            setSidebarOpen(false, false);
+            sidebar.setAttribute('aria-hidden', String(event.matches));
+            sidebar.inert = event.matches;
+        });
+    }
+
     var scrollStorageKey = 'system-scroll-position';
 
     function salvarPosicaoDaPagina() {

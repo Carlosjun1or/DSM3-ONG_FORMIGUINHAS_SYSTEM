@@ -9,7 +9,7 @@
 .condominio-metricas .metric-caption {
     display: block;
     margin-top: 4px;
-    color: #71827b;
+    color: #6f7075;
     font-size: .82rem;
 }
 
@@ -22,7 +22,69 @@
     flex: 1.5;
 }
 
-.condominio-tabela .data-table,
+.condominio-tabela .data-table {
+    width: 100%;
+    min-width: 1220px;
+    table-layout: fixed;
+}
+
+.condominio-tabela .data-table th:nth-child(1),
+.condominio-tabela .data-table td:nth-child(1) {
+    width: 155px;
+}
+
+.condominio-tabela .data-table th:nth-child(2),
+.condominio-tabela .data-table td:nth-child(2) {
+    width: 205px;
+}
+
+.condominio-tabela .data-table th:nth-child(3),
+.condominio-tabela .data-table td:nth-child(3) {
+    width: 125px;
+}
+
+.condominio-tabela .data-table th:nth-child(4),
+.condominio-tabela .data-table td:nth-child(4) {
+    width: 90px;
+}
+
+.condominio-tabela .data-table th:nth-child(5),
+.condominio-tabela .data-table td:nth-child(5) {
+    width: 135px;
+}
+
+.condominio-tabela .data-table th:nth-child(6),
+.condominio-tabela .data-table td:nth-child(6) {
+    width: 160px;
+}
+
+.condominio-tabela .data-table th:nth-child(7),
+.condominio-tabela .data-table td:nth-child(7) {
+    width: 100px;
+}
+
+.condominio-tabela .data-table th:nth-child(8),
+.condominio-tabela .data-table td:nth-child(8) {
+    width: 250px;
+}
+
+.condominio-tabela .data-table td {
+    overflow-wrap: anywhere;
+    white-space: normal;
+}
+
+.condominio-tabela .condominio-identificacao a {
+    display: block;
+    overflow-wrap: anywhere;
+}
+
+.condominio-tabela .table-secondary,
+.condominio-tabela .condominio-identificacao small,
+.bags-tabela .table-secondary,
+.bags-tabela .bag-identificacao small {
+    color: #6f7075;
+}
+
 .bags-tabela .data-table {
     min-width: 1000px;
 }
@@ -35,12 +97,12 @@
 
 .condominio-identificacao strong,
 .bag-identificacao strong {
-    color: #173d31;
+    color: #00306b;
 }
 
 .condominio-identificacao small,
 .bag-identificacao small {
-    color: #71827b;
+    color: #6f7075;
 }
 
 .condominio-bags {
@@ -51,6 +113,11 @@
 
 .condominio-bags .bag-summary {
     margin: 0;
+}
+
+.condominio-bags .table-link {
+    overflow-wrap: anywhere;
+    white-space: normal;
 }
 
 .situacao-badge,
@@ -68,8 +135,8 @@
 .situacao-ativo,
 .bag-status-disponivel,
 .bag-status-entregue {
-    background: #e6f5eb;
-    color: #17643d;
+    background: #e8eef8;
+    color: #0058b9;
 }
 
 .situacao-inativo,
@@ -96,6 +163,11 @@
     color: #245b91;
 }
 
+.bag-status-em_uso {
+    background: #e8eef8;
+    color: #0058b9;
+}
+
 .ocupacao-celula {
     min-width: 125px;
 }
@@ -116,7 +188,7 @@
     display: block;
     height: 100%;
     border-radius: inherit;
-    background: #2f8f61;
+    background: #0058b9;
 }
 
 .ocupacao-barra.alta span {
