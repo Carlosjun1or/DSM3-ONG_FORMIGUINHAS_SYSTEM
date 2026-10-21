@@ -8,9 +8,29 @@
     min-width: 0;
 }
 
+.estoque-metrica-card > .section-kicker {
+    display: none;
+}
+
+.estoque-metrica-card h3 {
+    margin: 0 0 8px;
+    color: var(--layout-navy, #00306b);
+    font-size: 1rem;
+    line-height: 1.35;
+    text-transform: none;
+}
+
+.estoque-metrica-card .metric {
+    margin-top: auto;
+    color: var(--layout-navy, #00306b);
+    font-size: 2rem;
+}
+
 .estoque-metrica-card .form-help {
     display: block;
     margin-top: 8px;
+    color: var(--layout-blue, #0058b9);
+    font-size: 0.875rem;
     line-height: 1.5;
 }
 
@@ -34,28 +54,33 @@
 }
 
 .volunteer-filters.estoque-filtros {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    align-items: end;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
     gap: 14px;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
 }
 
 .estoque-filtros .form-group:first-child {
-    grid-column: span 2;
+    flex: 1.5 1 220px;
 }
 
 .estoque-filtros .filter-actions {
-    grid-column: 1 / -1;
-    justify-content: flex-end;
+    flex: 0 0 auto;
+    justify-content: flex-start;
     flex-wrap: wrap;
 }
 
 .volunteer-filters.estoque-filtros.movimentacoes-filtros {
-    grid-template-columns: minmax(220px, 1.5fr) repeat(4, minmax(130px, 1fr));
+    display: flex;
 }
 
 .movimentacoes-filtros .filter-actions {
-    grid-column: 1 / -1;
-    justify-content: flex-end;
+    flex: 0 0 auto;
+    justify-content: flex-start;
 }
 
 .estoque-tabela {
@@ -274,13 +299,21 @@
     white-space: nowrap;
 }
 
-@media (max-width: 1000px) {
+@media (max-width: 1100px) {
+    .card-grid.volunteer-metrics.estoque-metricas {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
     .volunteer-filters.estoque-filtros {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 12px;
     }
 
     .volunteer-filters.estoque-filtros.movimentacoes-filtros {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 12px;
+    }
+
+    .estoque-dica-tabela {
+        display: block;
     }
 }
 
@@ -290,28 +323,22 @@
     }
 
     .volunteer-filters.estoque-filtros {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
     }
 
     .volunteer-filters.estoque-filtros.movimentacoes-filtros {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
-    .estoque-dica-tabela {
-        display: block;
+        gap: 12px;
     }
 }
 
 @media (max-width: 480px) {
-    .card-grid.volunteer-metrics.estoque-metricas,
-    .volunteer-filters.estoque-filtros,
-    .volunteer-filters.estoque-filtros.movimentacoes-filtros {
+    .card-grid.volunteer-metrics.estoque-metricas {
         grid-template-columns: minmax(0, 1fr);
     }
 
-    .estoque-filtros .form-group:first-child,
+    .estoque-filtros .form-group,
     .estoque-filtros .filter-actions {
-        grid-column: auto;
+        flex-basis: 100%;
     }
 
     .estoque-painel {
@@ -343,7 +370,7 @@
 }
 
 .estoque-donativo td:first-child {
-    box-shadow: inset 3px 0 0 #1d7048;
+    box-shadow: inset 3px 0 0 var(--layout-blue, #0058b9);
 }
 
 .estoque-resumo {

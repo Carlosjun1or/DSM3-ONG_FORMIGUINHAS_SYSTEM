@@ -3,23 +3,20 @@
 
 {% block titulo %}Histórico de Estoque | Sistema{% endblock %}
 {% block page_title %}Histórico de movimentações de estoque{% endblock %}
-{% block estilos %}<link rel="stylesheet" href="{% static 'estoque/estoque.css' %}?v=2">
+{% block estilos %}<link rel="stylesheet" href="{% static 'estoque/estoque.css' %}?v=5">
 <script src="{% static 'estoque/estoque.js' %}" defer></script>{% endblock %}
 
 {% block conteudo %}
 <section class="card-grid volunteer-metrics estoque-metricas estoque-metricas-movimentacoes" data-live="metricas" aria-label="Resumo das movimentações">
     <article class="card estoque-metrica-card">
-        <span class="section-kicker">Histórico</span>
         <h3>Movimentações encontradas</h3>
         <div class="metric">{{ total_movimentacoes }}</div>
     </article>
     <article class="card estoque-metrica-card">
-        <span class="section-kicker">Entradas</span>
         <h3>Entradas registradas</h3>
         <div class="metric">{{ total_entradas }}</div>
     </article>
     <article class="card estoque-metrica-card">
-        <span class="section-kicker">Saídas</span>
         <h3>Saídas registradas</h3>
         <div class="metric">{{ total_saidas }}</div>
     </article>

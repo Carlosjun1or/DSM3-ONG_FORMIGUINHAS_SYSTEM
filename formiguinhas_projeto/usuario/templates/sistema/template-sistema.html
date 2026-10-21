@@ -7,7 +7,7 @@
     <title>{% block titulo %}Formiguinhas | Sistema{% endblock %}</title>
     <link rel="icon" type="image/svg+xml" href="{% static 'site_institucional/img/mascote-formiguinha.svg' %}?v=1">
     <link rel="shortcut icon" href="{% static 'site_institucional/img/mascote-formiguinha.svg' %}?v=1">
-    <link rel="stylesheet" href="{% static 'css/style.css' %}?v=69">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}?v=86">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700&family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -73,14 +73,9 @@
         <main class="main-panel">
             {% if request.session.usuario_id and request.resolver_match.url_name != 'recuperar_senha' and request.resolver_match.url_name != 'redefinir_senha' %}
             <header class="topbar">
-                <div>
-                    <p class="topbar-kicker">Painel administrativo</p>
-                    <h1>{% block page_title %}Dashboard{% endblock %}</h1>
-                </div>
-
                 <div class="topbar-actions">
                     <span class="user-pill">{{ request.session.usuario_nome|default:'Voluntário' }}</span>
-                    <a href="{% url 'central_comunicados' %}" class="notification-link" aria-label="Central de comunicados{% if comunicados_nao_lidos_count %}, {{ comunicados_nao_lidos_count }} não lidos{% endif %}" title="Central de comunicados">
+                    <a href="{% url 'central_comunicados' %}" class="notification-link" aria-label="Comunicados{% if comunicados_nao_lidos_count %}, {{ comunicados_nao_lidos_count }} não lidos{% endif %}" title="Comunicados">
                         <span class="notification-icon" aria-hidden="true">🔔</span>
                         {% if comunicados_nao_lidos_count %}<span class="notification-badge">{{ comunicados_nao_lidos_count }}</span>{% endif %}
                     </a>
@@ -94,7 +89,12 @@
                 </div>
             </header>
             {% endif %}
-
+            {% if request.session.usuario_id and request.resolver_match.url_name != 'recuperar_senha' and request.resolver_match.url_name != 'redefinir_senha' %}
+                <div class="page-heading">
+                    <p class="topbar-kicker">Painel administrativo</p>
+                    <h1>{% block page_title %} Dashboard {% endblock %}</h1>
+                </div>
+            {% endif %}
             {% if mensagem %}
                 <div class="alert-box">{{ mensagem }}</div>
             {% endif %}
@@ -103,8 +103,9 @@
                     <div class="alert-box{% if message.tags %} alert-{{ message.tags }}{% endif %}" role="status" data-toast>{{ message }}</div>
                 {% endfor %}
             {% endif %}
+            {% block conteudo %}
 
-            {% block conteudo %}{% endblock %}
+            {% endblock %}
         </main>
     </div>
     <script src="{% static 'js/masks.js' %}?v=16"></script>

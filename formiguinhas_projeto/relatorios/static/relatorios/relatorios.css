@@ -33,9 +33,9 @@
 }
 
 .reports-switch-link.is-active {
-    border-color: #155e4b;
-    background: #e9f4ef;
-    color: #155e4b;
+    border-color: var(--layout-blue, #0058b9);
+    background: #e8eef8;
+    color: var(--layout-blue, #0058b9);
 }
 
 .reports-filters {
@@ -92,7 +92,7 @@
     min-height: 7.5rem;
     padding: 1.25rem;
     border: 1px solid #e1ebe5;
-    border-top: 3px solid #278065;
+    border-top: 3px solid var(--layout-blue, #0058b9);
     border-radius: 1rem;
     background: linear-gradient(145deg, #fff 55%, #f2f8f4);
     box-shadow: 0 0.5rem 1.25rem rgb(21 61 49 / 7%);
@@ -107,8 +107,8 @@
 .report-metric-card--detail .metric {
     padding: 0.7rem 0.8rem;
     border-radius: 0.7rem;
-    background: #edf5f0;
-    color: #245b49;
+    background: #e8eef8;
+    color: var(--layout-navy, #00306b);
     font-size: clamp(0.95rem, 1.1vw, 1.08rem);
     line-height: 1.55;
     font-weight: 700;
