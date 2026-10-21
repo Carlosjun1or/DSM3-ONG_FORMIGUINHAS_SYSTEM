@@ -2969,7 +2969,7 @@ select.select-control:disabled {
 
 .system-page .topbar {
     min-height: 56px;
-    margin: -28px -32px 14px;
+    margin: 0 -32px 14px;
     padding: 8px 20px;
     justify-content: flex-end;
     background: #fff;
@@ -3336,13 +3336,17 @@ select.select-control:disabled {
     }
 
     .system-page .topbar {
-        margin: -22px -18px 14px;
+        margin: 0 -18px 14px;
+    }
+
+    .system-page.dashboard-page .topbar {
+        margin: -12px -24px 14px;
     }
 }
 
 @media (max-width: 600px) {
     .system-page .topbar {
-        margin: -22px -18px 14px;
+        margin: 0 -18px 14px;
         padding-inline: 18px;
     }
 
