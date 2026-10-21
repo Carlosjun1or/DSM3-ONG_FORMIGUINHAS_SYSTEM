@@ -934,6 +934,7 @@ def alterar_senha_view(request):
             resumo='Senha do usuário alterada; credenciais não são armazenadas na auditoria.',
             valores_novos={'senha_alterada': True},
         )
-        return render(request, 'sistema/perfil.html', {'usuario': usuario, 'mensagem': 'Senha alterada com sucesso!'})
+        messages.success(request, 'Senha alterada com sucesso!')
+        return redirect('alterar_senha')
 
     return render(request, 'sistema/alterar-senha.html')
