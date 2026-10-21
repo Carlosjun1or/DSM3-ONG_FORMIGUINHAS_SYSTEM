@@ -5574,6 +5574,7 @@ select.select-control:disabled {
     justify-content: center;
     min-height: 100vh;
     padding: 32px;
+    background: transparent;
 }
 
 .auth-login-shell {
