@@ -1,23 +1,38 @@
 {% extends 'site_institucional/base.html' %}
 {% block conteudo %}
-<article class="public-announcement-detail">
-    <small>{{ comunicado.get_tipo_display }}{% if comunicado.tema %} · {{ comunicado.tema.nome }}{% endif %}</small>
-    <h1>{{ comunicado.titulo }}</h1>
-    <p class="public-announcement-date">{{ comunicado.dt_publicacao|date:'d/m/Y H:i' }}</p>
-    <div>{{ comunicado.conteudo|linebreaks }}</div>
+<article class="public-announcement-detail" aria-labelledby="public-announcement-title">
+    <a class="public-announcement-back" href="{% url 'comunicados_publicos' %}">← Todas as notícias e avisos</a>
+    <section class="public-announcement-header" aria-labelledby="public-announcement-title">
+        <div class="public-announcement-meta">
+            <span class="public-announcement-type public-announcement-type-{{ comunicado.tipo|lower }}">{{ comunicado.get_tipo_display }}</span>
+            {% if comunicado.tema %}<span class="public-announcement-topic">{{ comunicado.tema.nome }}</span>{% endif %}
+        </div>
+        <h1 id="public-announcement-title">{{ comunicado.titulo }}</h1>
+        <p class="public-announcement-date">
+            Publicado em
+            <time datetime="{{ comunicado.dt_publicacao|date:'c' }}">{{ comunicado.dt_publicacao|date:'d/m/Y' }} às {{ comunicado.dt_publicacao|date:'H:i' }}</time>
+        </p>
+        {% if comunicado.resumo %}<p class="public-announcement-summary">{{ comunicado.resumo }}</p>{% endif %}
+    </section>
+    <div class="public-announcement-content">{{ comunicado.conteudo|linebreaks }}</div>
     {% if comunicado.praias.all or comunicado.equipes.all or comunicado.acoes.all %}
-    <h2>Relacionado a</h2>
-    <ul>
-        {% for item in comunicado.praias.all %}
-        <li><a href="{% url 'praias_atuacao' %}#praia-{{ item.praia.id_praia }}">{{ item.praia.nome }}</a></li>
-        {% endfor %}
-        {% for item in comunicado.equipes.all %}
-        <li>{{ item.equipe.nome }}</li>
-        {% endfor %}
-        {% for item in comunicado.acoes.all %}
-        <li><a href="{% url 'multiroes' %}">{{ item.acao }}</a></li>
-        {% endfor %}
-    </ul>
+    <section class="public-announcement-relations" aria-labelledby="public-announcement-relations-title">
+        <h2 id="public-announcement-relations-title">Relacionado a</h2>
+        <ul>
+            {% for item in comunicado.praias.all %}
+            <li><a href="{% url 'praias_atuacao' %}#praia-{{ item.praia.id_praia }}">{{ item.praia.nome }}</a></li>
+            {% endfor %}
+            {% for item in comunicado.equipes.all %}
+            <li>{{ item.equipe.nome }}</li>
+            {% endfor %}
+            {% for item in comunicado.acoes.all %}
+            <li><a href="{% url 'multiroes' %}">{{ item.acao }}</a></li>
+            {% endfor %}
+        </ul>
+    </section>
     {% endif %}
+    <div class="public-announcement-footer">
+        <a class="btn public-announcement-return" href="{% url 'comunicados_publicos' %}">Voltar para notícias e avisos</a>
+    </div>
 </article>
 {% endblock %}
