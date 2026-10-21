@@ -1,16 +1,19 @@
 import logging
+from decimal import Decimal
 from smtplib import SMTPException
 
 from django.conf import settings
 from django.contrib import messages
 from django.core.mail import send_mail
 from django.db import transaction
-from django.db.models import Prefetch, Q
+from django.db.models import Prefetch, Q, Sum
 from django.shortcuts import render, redirect
 from django.urls import reverse
 from django.utils import timezone
 
+from acao.models import Acao
 from acao.services import calcular_frequencias_voluntarios
+from doacao.models import Doacao, DoacaoFinanceira
 from equipe.models import EquipeMembro
 
 from .forms import (
@@ -99,9 +102,33 @@ def home_view(request):
         request.session.flush()
         return redirect('login')
 
+    hoje = timezone.localdate()
+    acoes_hoje = Acao.objects.filter(data=hoje).exclude(
+        status=Acao.STATUS_CANCELADA,
+    )
+    total_doacoes_confirmadas = DoacaoFinanceira.objects.filter(
+        doacao__status=Doacao.CONFIRMADA,
+    ).aggregate(total=Sum('valor'))['total'] or Decimal('0.00')
+
     return render(request, 'sistema/home.html', {
         'usuario': usuario,
-        'mensagem': 'Bem-vindo ao sistema da ONG Formiguinhas.'
+        'hoje': hoje,
+        'total_voluntarios_ativos': Voluntario.objects.filter(
+            status='ATIVO',
+        ).count(),
+        'atividades_hoje': acoes_hoje.count(),
+        'total_doacoes_confirmadas': total_doacoes_confirmadas,
+        'acoes_proximas': Acao.objects.filter(
+            data__gte=hoje,
+        ).exclude(
+            status=Acao.STATUS_CANCELADA,
+        ).select_related(
+            'praia',
+        ).order_by(
+            'data',
+            'horario',
+            'id_acao',
+        )[:3],
     })
 
 

@@ -1,9 +1,15 @@
-from datetime import date
+from datetime import date, time, timedelta
+from decimal import Decimal
 
 from django.core import mail
+from django.db.models import Sum
 from django.test import RequestFactory, SimpleTestCase, TestCase, override_settings
 from django.urls import reverse
+from django.utils import timezone
 
+from acao.models import Acao
+from doacao.models import Doacao, DoacaoFinanceira
+from praia.models import Praia
 from .paginacao import paginar_queryset
 from .models import Usuario, Voluntario
 from .tokens import password_reset_token
@@ -29,6 +35,130 @@ class PaginacaoTests(SimpleTestCase):
 
         self.assertEqual(pagina.number, 2)
         self.assertEqual(pagina.object_list, [20, 21])
+
+
+class HomeDashboardTests(TestCase):
+    def test_home_exibe_metricas_reais_e_proximas_acoes(self):
+        hoje = timezone.localdate()
+        voluntarios_ativos_antes = Voluntario.objects.filter(status='ATIVO').count()
+        atividades_hoje_antes = Acao.objects.filter(
+            data=hoje,
+        ).exclude(
+            status=Acao.STATUS_CANCELADA,
+        ).count()
+        doacoes_confirmadas_antes = DoacaoFinanceira.objects.filter(
+            doacao__status=Doacao.CONFIRMADA,
+        ).aggregate(total=Sum('valor'))['total'] or Decimal('0.00')
+        voluntario = Voluntario.objects.create(
+            nome='Administradora',
+            dt_nascimento=date(1990, 1, 1),
+            endereco='Rua A',
+            telefone='11999999999',
+            email='administradora@teste.org',
+        )
+        usuario = Usuario.objects.create(
+            id_voluntario=voluntario,
+            tipo='ADMIN',
+            senha='senha',
+        )
+        inativo = Voluntario.objects.create(
+            nome='Voluntário inativo',
+            dt_nascimento=date(1992, 1, 1),
+            endereco='Rua B',
+            telefone='11988888888',
+            email='inativo@teste.org',
+            status='INATIVO',
+        )
+        praia = Praia.objects.create(
+            nome='Praia Central',
+            cidade='Santos',
+            latitude='-23.9600',
+            longitude='-46.3300',
+        )
+        acao_de_hoje = Acao.objects.create(
+            tipo=Acao.TIPO_MUTIRAO,
+            data=hoje,
+            horario=time(9, 0),
+            local='Ponto de encontro',
+            praia=praia,
+        )
+        acao_futura = Acao.objects.create(
+            tipo=Acao.TIPO_COLETA_VOLUNTARIA,
+            data=hoje + timedelta(days=1),
+            horario=time(14, 30),
+            praia=praia,
+        )
+        Acao.objects.create(
+            tipo=Acao.TIPO_MUTIRAO,
+            data=hoje,
+            horario=time(8, 0),
+            praia=praia,
+            status=Acao.STATUS_CANCELADA,
+        )
+        doacao_confirmada = Doacao.objects.create(
+            tipo=Doacao.FINANCEIRA,
+            status=Doacao.CONFIRMADA,
+            registrado_por_nome='Administradora',
+            registrado_por_tipo='ADMIN',
+        )
+        DoacaoFinanceira.objects.create(
+            doacao=doacao_confirmada,
+            valor=Decimal('125.50'),
+            forma_recebimento=DoacaoFinanceira.PIX,
+        )
+        doacao_pendente = Doacao.objects.create(
+            tipo=Doacao.FINANCEIRA,
+            registrado_por_nome='Administradora',
+            registrado_por_tipo='ADMIN',
+        )
+        DoacaoFinanceira.objects.create(
+            doacao=doacao_pendente,
+            valor=Decimal('200.00'),
+            forma_recebimento=DoacaoFinanceira.PIX,
+        )
+
+        session = self.client.session
+        session['usuario_id'] = usuario.id_usuario
+        session['usuario_tipo'] = usuario.tipo
+        session.save()
+
+        resposta = self.client.get(reverse('home'))
+
+        self.assertEqual(resposta.status_code, 200)
+        self.assertEqual(
+            resposta.context['total_voluntarios_ativos'],
+            voluntarios_ativos_antes + 1,
+        )
+        self.assertEqual(
+            resposta.context['atividades_hoje'],
+            atividades_hoje_antes + 1,
+        )
+        self.assertEqual(
+            resposta.context['total_doacoes_confirmadas'],
+            doacoes_confirmadas_antes + Decimal('125.50'),
+        )
+        acoes_proximas_ids = [
+            acao.id_acao for acao in resposta.context['acoes_proximas']
+        ]
+        self.assertIn(acao_de_hoje.id_acao, acoes_proximas_ids)
+        self.assertIn(acao_futura.id_acao, acoes_proximas_ids)
+        self.assertLess(
+            acoes_proximas_ids.index(acao_de_hoje.id_acao),
+            acoes_proximas_ids.index(acao_futura.id_acao),
+        )
+        self.assertContains(resposta, 'Bem-vindo, Administradora!')
+        self.assertContains(resposta, 'css/template.css')
+        self.assertNotContains(resposta, inativo.nome)
+
+
+class LoginPageTests(TestCase):
+    def test_login_nao_exibe_cabecalho_do_dashboard(self):
+        resposta = self.client.get(reverse('login'))
+
+        self.assertEqual(resposta.status_code, 200)
+        self.assertContains(resposta, 'Entrar no sistema')
+        self.assertNotContains(resposta, 'Painel administrativo')
+        self.assertNotContains(resposta, '> Dashboard <')
 
 
 class PermissoesStatusVoluntarioTests(TestCase):
