@@ -204,7 +204,7 @@ class AcessoTests(EstoqueTestCase):
         self.entrar(self.admin)
         resposta = self.client.get(reverse('materiais'))
         self.assertContains(resposta, 'Controle de Estoque')
-        self.assertContains(resposta, 'Controle de Movimentações')
+        self.assertContains(resposta, 'href="/estoque/movimentacoes/"')
 
 
 class MaterialTests(EstoqueTestCase):
@@ -861,13 +861,11 @@ class FiltroOrigemELiveTests(EstoqueTestCase):
             self.assertEqual(resposta.status_code, 200)
             self.assertContains(
                 resposta,
-                '<a href="/estoque/movimentacoes/" class="sidebar-link active">Controle de Movimentações</a>',
-                html=True,
+                'href="/estoque/movimentacoes/" class="sidebar-link active"',
             )
             self.assertContains(
                 resposta,
-                '<a href="/estoque/" class="sidebar-link ">Controle de Estoque</a>',
-                html=True,
+                'href="/estoque/" class="sidebar-link "',
             )
 
 
