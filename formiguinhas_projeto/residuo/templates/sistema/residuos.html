@@ -95,8 +95,12 @@
                     <td><strong>{{ residuo.get_tipo_display }}</strong><small class="table-secondary">{{ residuo.get_categoria_display }}</small></td>
                     <td><strong>{{ residuo.quantidade }}</strong><small class="table-secondary">{{ residuo.get_unidade_display }}</small></td>
                     <td>
+                        {% if residuo.acao and residuo.acao.id_acao %}
                         <a class="table-link" href="{% url 'acao_detalhe' residuo.acao.id_acao %}">{{ residuo.acao.get_tipo_display }}</a>
-                        <small class="table-secondary">{{ residuo.acao.praia.nome }} · {{ residuo.acao.data|date:'d/m/Y' }}{% if residuo.acao.local %} · {{ residuo.acao.local }}{% endif %}</small>
+                        <small class="table-secondary">{% if residuo.acao.praia %}{{ residuo.acao.praia.nome }} · {% endif %}{{ residuo.acao.data|date:'d/m/Y' }}{% if residuo.acao.local %} · {{ residuo.acao.local }}{% endif %}</small>
+                        {% else %}
+                        <span class="muted">{% if residuo.acao_id %}Ação #{{ residuo.acao_id }}{% else %}Não vinculada{% endif %}</span>
+                        {% endif %}
                     </td>
                     <td>
                         {% for destinacao in residuo.destinacoes.all %}
