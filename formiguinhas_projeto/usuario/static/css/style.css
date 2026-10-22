@@ -1149,16 +1149,6 @@ details summary {
     background: #8f1c13;
 }
 
-.btn-action-edit {
-    background: #eef2f1;
-    border-color: #cbd8d3;
-    color: #315b4c;
-}
-
-.btn-action-edit:hover {
-    background: #dfe9e4;
-}
-
 .btn-action-publish {
     background: #1d785d;
     color: #fff;
@@ -2970,7 +2960,7 @@ select.select-control:disabled {
 .system-page .topbar {
     min-height: 56px;
     width: auto;
-    margin: 0 -32px 14px;
+    margin: 0 0 14px;
     padding: 8px 20px;
     justify-content: flex-end;
     background: #fff;
@@ -3337,7 +3327,7 @@ select.select-control:disabled {
     }
 
     .system-page .topbar {
-        margin: 0 -18px 14px;
+        margin: 0 0 14px;
     }
 
     .system-page.dashboard-page .topbar {
@@ -3347,7 +3337,7 @@ select.select-control:disabled {
 
 @media (max-width: 600px) {
     .system-page .topbar {
-        margin: 0 -18px 14px;
+        margin: 0 0 14px;
         padding-inline: 18px;
     }
 
@@ -3581,15 +3571,25 @@ select.select-control:disabled {
     }
 }
 
-@media (max-width: 480px) {
+@media (max-width: 720px) {
+    .system-page .topbar {
+        display: grid;
+        grid-template-columns: 44px minmax(0, 1fr);
+        column-gap: 12px;
+        row-gap: 10px;
+        padding-inline: 14px;
+    }
+
     .topbar-breadcrumb {
+        min-width: 0;
         white-space: nowrap;
     }
 
     .topbar-actions {
         min-width: 0;
+        grid-column: 1 / -1;
         flex-wrap: nowrap;
-        justify-content: center;
+        justify-content: flex-end;
     }
 
     .notification-link {
@@ -6938,7 +6938,223 @@ select.select-control:disabled {
     padding-inline: 22px;
 }
 
-.system-page .system-list > .table-wrap {
+.system-page .volunteer-card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 290px), 1fr));
+    align-items: stretch;
+    gap: 16px;
+}
+
+.system-page .volunteer-card {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    padding: 18px;
+    border: 1px solid var(--layout-border);
+    border-top: 4px solid var(--layout-blue);
+    border-radius: 12px;
+    background: #fffdf7;
+    box-shadow: 0 5px 16px rgb(11 30 61 / 7%);
+    transition: border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
+}
+
+.system-page .volunteer-card:hover,
+.system-page .volunteer-card:focus-within {
+    border-color: var(--layout-blue);
+    box-shadow: 0 10px 24px rgb(11 30 61 / 12%);
+    transform: translateY(-2px);
+}
+
+.system-page .volunteer-card.voluntario-destacado {
+    border-color: var(--layout-purple);
+    box-shadow: 0 0 0 3px rgb(118 87 203 / 16%);
+}
+
+.system-page .volunteer-card-heading {
+    display: flex;
+    min-width: 0;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid #e7e2d8;
+}
+
+.system-page .volunteer-card-identity {
+    min-width: 0;
+}
+
+.system-page .volunteer-card-label,
+.system-page .volunteer-card-details dt,
+.system-page .volunteer-card-frequency-heading > span {
+    color: var(--layout-purple);
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.045em;
+    text-transform: uppercase;
+}
+
+.system-page .volunteer-card-identity h3 {
+    margin: 3px 0 0;
+    overflow-wrap: anywhere;
+    color: var(--layout-navy);
+    font-family: "Fredoka", system-ui, sans-serif;
+    font-size: 1.25rem;
+    line-height: 1.2;
+}
+
+.system-page .volunteer-card-identity h3 a {
+    color: inherit;
+    text-decoration: none;
+}
+
+.system-page .volunteer-card-identity h3 a:hover {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+.system-page .volunteer-card-status {
+    flex: 0 0 auto;
+}
+
+.system-page .volunteer-card-status .inline-status-form {
+    display: flex;
+}
+
+.system-page .volunteer-card-status .status-select {
+    max-width: 120px;
+    min-width: 0;
+}
+
+.system-page .volunteer-card-details {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px 16px;
+    margin: 16px 0;
+}
+
+.system-page .volunteer-card-details > div {
+    min-width: 0;
+}
+
+.system-page .volunteer-card-details .volunteer-card-detail-wide {
+    grid-column: 1 / -1;
+}
+
+.system-page .volunteer-card-details dt {
+    margin-bottom: 3px;
+}
+
+.system-page .volunteer-card-details dd {
+    margin: 0;
+    overflow-wrap: anywhere;
+    color: var(--layout-navy);
+    font-size: 0.875rem;
+    line-height: 1.4;
+}
+
+.system-page .volunteer-card-details dd a {
+    color: inherit;
+    text-decoration-color: #b5afa4;
+    text-underline-offset: 2px;
+}
+
+.system-page .volunteer-card-frequency {
+    display: grid;
+    gap: 7px;
+    margin-top: auto;
+    padding: 12px 0;
+    border-top: 1px solid #e7e2d8;
+}
+
+.system-page .volunteer-card-frequency-heading {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.system-page .volunteer-card-frequency-heading strong {
+    color: var(--layout-navy);
+    font-size: 0.85rem;
+}
+
+.system-page .volunteer-card-frequency-track {
+    display: block;
+    width: 100%;
+    height: 8px;
+    overflow: hidden;
+    border: 0;
+    border-radius: 999px;
+    background: #e8e5df;
+    accent-color: var(--layout-blue);
+}
+
+.system-page .volunteer-card-frequency-track::-webkit-progress-bar {
+    border-radius: 999px;
+    background: #e8e5df;
+}
+
+.system-page .volunteer-card-frequency-track::-webkit-progress-value {
+    border-radius: 999px;
+    background: var(--layout-blue);
+}
+
+.system-page .volunteer-card-frequency-track::-moz-progress-bar {
+    border-radius: 999px;
+    background: var(--layout-blue);
+}
+
+.system-page .volunteer-card-frequency > small {
+    color: #6f7075;
+    font-size: 0.75rem;
+}
+
+.system-page .volunteer-card-audit {
+    padding: 10px 0;
+    border-top: 1px solid #e7e2d8;
+}
+
+.system-page .volunteer-card-audit summary {
+    color: var(--layout-blue);
+    font-size: 0.8rem;
+}
+
+.system-page .volunteer-card-audit > div {
+    display: grid;
+    gap: 4px;
+    padding-top: 9px;
+}
+
+.system-page .volunteer-card-audit p {
+    margin: 0;
+    overflow-wrap: anywhere;
+    color: #6f7075;
+    font-size: 0.75rem;
+    line-height: 1.4;
+}
+
+.system-page .volunteer-card-audit p strong {
+    color: var(--layout-navy);
+}
+
+.system-page .volunteer-card-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding-top: 12px;
+    border-top: 1px solid #e7e2d8;
+}
+
+.system-page .volunteer-card-actions form {
+    margin: 0;
+}
+
+.system-page .volunteer-card-actions .btn {
+    min-height: 40px;
+}
+
+.system-page .table-wrap {
     overflow: auto;
     border: 1px solid var(--layout-border);
     border-radius: 10px;
@@ -6947,12 +7163,12 @@ select.select-control:disabled {
     scrollbar-width: thin;
 }
 
-.system-page .system-list .data-table {
+.system-page .data-table {
     border-collapse: separate;
     border-spacing: 0;
 }
 
-.system-page .system-list .data-table th {
+.system-page .data-table th {
     padding: 12px 14px;
     border-bottom: 1px solid var(--layout-border);
     background: #f4f8f7;
@@ -6963,7 +7179,7 @@ select.select-control:disabled {
     vertical-align: middle;
 }
 
-.system-page .system-list .data-table td {
+.system-page .data-table td {
     padding: 13px 14px;
     border-bottom: 1px solid #e7e2d8;
     background: var(--layout-paper);
@@ -6972,55 +7188,55 @@ select.select-control:disabled {
     vertical-align: middle;
 }
 
-.system-page .system-list .data-table tbody tr:last-child td {
+.system-page .data-table tbody tr:last-child td {
     border-bottom: 0;
 }
 
-.system-page .system-list .data-table tbody tr:hover td {
+.system-page .data-table tbody tr:hover td {
     background: #f1eef9;
 }
 
-.system-page .system-list .data-table td > small,
-.system-page .system-list .data-table .table-secondary {
+.system-page .data-table td > small,
+.system-page .data-table .table-secondary {
     color: #6f7075;
     line-height: 1.45;
 }
 
-.system-page .system-list .data-table .table-link {
+.system-page .data-table .table-link {
     color: var(--layout-navy);
     font-weight: 700;
     text-decoration-color: transparent;
     text-underline-offset: 3px;
 }
 
-.system-page .system-list .data-table .table-link:hover {
+.system-page .data-table .table-link:hover {
     color: var(--layout-blue);
     text-decoration-color: currentColor;
 }
 
-.system-page .system-list .data-table .audit-cell {
+.system-page .data-table .audit-cell {
     min-width: 200px;
     white-space: normal;
 }
 
-.system-page .system-list .data-table .audit-cell strong {
+.system-page .data-table .audit-cell strong {
     color: var(--layout-navy);
     font-size: 0.875rem;
 }
 
-.system-page .system-list .data-table .audit-cell small {
+.system-page .data-table .audit-cell small {
     display: block;
     margin-top: 4px;
     color: #6f7075;
     font-size: 0.8125rem;
 }
 
-.system-page .system-list .data-table .table-actions {
+.system-page .data-table .table-actions {
     min-width: 145px;
 }
 
-.system-page .system-list .data-table .table-actions .btn,
-.system-page .system-list .data-table .btn-small {
+.system-page .data-table .table-actions .btn,
+.system-page .data-table .btn-small {
     min-height: 40px;
     padding-inline: 14px;
     font-size: 0.875rem;
@@ -7042,6 +7258,661 @@ select.select-control:disabled {
 
 .system-page .system-list .record-pagination a:focus-visible {
     outline-color: var(--layout-blue);
+}
+
+.system-page .record-card-grid {
+    display: grid;
+    align-items: stretch;
+    gap: 14px;
+}
+
+.system-page .record-card-grid--line {
+    grid-template-columns: minmax(0, 1fr);
+}
+
+.system-page .record-card-grid--block {
+    grid-template-columns: minmax(0, 1fr);
+}
+
+.system-page .record-card {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    padding: 16px;
+    border: 1px solid var(--layout-border);
+    border-top: 3px solid var(--layout-blue);
+    border-radius: 12px;
+    background: #fff;
+    box-shadow: 0 5px 16px rgb(11 30 61 / 7%);
+}
+
+.system-page .record-card--line {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px 20px;
+    padding: 12px 16px;
+    border-top-width: 1px;
+    border-left: 4px solid var(--layout-blue);
+}
+
+.system-page .record-card--line .record-card-heading {
+    display: grid;
+    flex: 0 0 220px;
+    align-items: start;
+    padding: 0;
+    border: 0;
+}
+
+.system-page .record-card--line .record-card-fields {
+    flex: 1 1 420px;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 120px), 1fr));
+    margin: 0;
+}
+
+.system-page .record-card--line .record-card-audit,
+.system-page .record-card--line .record-card-summary {
+    flex: 1 0 100%;
+}
+
+.system-page .record-card--line .record-card-audit {
+    margin: 0;
+}
+
+.system-page .record-card--line .record-card-actions {
+    flex: 0 0 auto;
+    margin-left: auto;
+    padding: 0;
+    border: 0;
+}
+
+.system-page .record-card--line .record-card-heading {
+    order: 0;
+}
+
+.system-page .record-card--line .record-card-fields {
+    order: 1;
+}
+
+.system-page .record-card--line .record-card-actions {
+    order: 2;
+}
+
+.system-page .record-card--line .record-card-summary {
+    order: 3;
+    margin: 0;
+}
+
+.system-page .record-card--line .record-card-audit {
+    order: 4;
+}
+
+.system-page .record-table-cards {
+    display: grid;
+    gap: 10px;
+    width: 100%;
+}
+
+.system-page .record-table-card {
+    display: grid;
+    grid-template-columns: minmax(150px, 0.9fr) minmax(0, 3.5fr) auto;
+    align-items: center;
+    gap: 12px 20px;
+    min-width: 0;
+    padding: 12px 16px;
+    border: 1px solid var(--layout-border);
+    border-left: 4px solid var(--layout-blue);
+    border-radius: 10px;
+    background: #fff;
+    box-shadow: 0 3px 12px rgb(11 30 61 / 5%);
+}
+
+.system-page .record-table-cards--expandable .record-table-card {
+    grid-template-columns: minmax(130px, 0.8fr) minmax(0, 4fr) auto;
+    align-items: center;
+    max-height: 92px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: max-height 180ms ease, box-shadow 180ms ease;
+}
+
+.system-page .record-table-cards--expandable .record-table-card-fields {
+    align-items: center;
+}
+
+.system-page .record-table-cards--expandable .record-table-card-value {
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+}
+
+.system-page .record-table-cards--expandable .record-table-card.is-expanded {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-auto-rows: min-content;
+    align-content: start;
+    align-items: start;
+    max-height: 2000px;
+    overflow: visible;
+    cursor: default;
+}
+
+.system-page .record-table-cards--expandable .record-table-card.is-expanded .record-table-card-identity,
+.system-page .record-table-cards--expandable .record-table-card.is-expanded .record-table-card-fields {
+    grid-column: 1 / -1;
+}
+
+.system-page .record-table-cards--expandable .record-table-card.is-expanded .record-table-card-identity {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 4px 10px;
+}
+
+.system-page .record-table-cards--expandable .record-table-card.is-expanded .record-table-card-fields {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    align-items: start;
+    gap: 10px 16px;
+}
+
+.system-page .record-table-cards--expandable .record-table-card.is-expanded .record-table-card-value {
+    display: block;
+    overflow: visible;
+}
+
+.system-page .record-table-card-toggle {
+    grid-column: 3;
+    grid-row: 1;
+    align-self: center;
+    min-height: 36px;
+    padding: 0 12px;
+    border: 2px solid var(--layout-blue);
+    border-radius: 999px;
+    background: #fff;
+    color: var(--layout-blue);
+    font: inherit;
+    font-size: 0.78rem;
+    font-weight: 700;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.system-page .record-table-cards--expandable .record-table-card.is-expanded .record-table-card-toggle {
+    grid-column: 2;
+    grid-row: auto;
+    justify-self: end;
+}
+
+.system-page .record-table-card-toggle:hover,
+.system-page .record-table-card-toggle:focus-visible {
+    background: #f4f8fb;
+}
+
+.system-page .record-table-card-toggle:focus-visible {
+    outline: 3px solid rgb(0 88 185 / 24%);
+    outline-offset: 2px;
+}
+
+.system-page .record-table-card-identity {
+    display: grid;
+    align-content: center;
+    justify-items: start;
+    gap: 4px;
+    min-width: 0;
+}
+
+.system-page .record-table-card-label {
+    display: block;
+    color: var(--layout-purple);
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.045em;
+    line-height: 1.3;
+    text-transform: uppercase;
+    overflow-wrap: anywhere;
+}
+
+.system-page .record-table-card-value {
+    min-width: 0;
+    color: var(--layout-navy);
+    font-size: 0.875rem;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
+}
+
+.system-page .record-table-card-title {
+    font-size: 0.98rem;
+    font-weight: 700;
+}
+
+.system-page .record-table-card-title > a,
+.system-page .record-table-card-title .table-link {
+    color: var(--layout-navy);
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.system-page .record-table-card-title > a:hover,
+.system-page .record-table-card-title .table-link:hover {
+    color: var(--layout-blue);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+.system-page .record-table-card-title small,
+.system-page .record-table-card-value small,
+.system-page .record-table-card-value .table-secondary {
+    display: block;
+    color: #6f7075;
+    font-size: 0.76rem;
+    line-height: 1.4;
+}
+
+.system-page .record-table-card-fields {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 100px), 1fr));
+    align-items: start;
+    gap: 10px 16px;
+    min-width: 0;
+}
+
+.system-page .record-table-card-field {
+    display: grid;
+    align-content: center;
+    gap: 4px;
+    min-width: 0;
+}
+
+.system-page .record-table-card-status {
+    display: grid;
+    grid-template-columns: auto;
+    gap: 0;
+}
+
+.system-page .record-table-card-status > .record-table-card-label {
+    display: none;
+}
+
+.system-page .record-table-card-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 6px;
+    min-width: 0;
+}
+
+.system-page .record-table-card-actions form {
+    margin: 0;
+}
+
+.system-page .record-table-card-actions .btn,
+.system-page .record-table-card .btn-small {
+    min-height: 40px;
+    padding-inline: 12px;
+}
+
+.system-page .table-wrap.has-record-table-cards {
+    height: auto;
+    max-height: none;
+    overflow: visible;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+}
+
+.system-page table.data-table[hidden] {
+    display: none;
+}
+
+.system-page .record-table-cards--limited {
+    grid-auto-rows: 66px;
+    max-height: 218px;
+    overflow-y: auto;
+    padding-right: 6px;
+    scrollbar-color: #b5afa4 var(--layout-paper);
+    scrollbar-width: thin;
+}
+
+.system-page .record-table-cards--limited .record-table-card {
+    height: 66px;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.system-page .record-table-cards--limited .record-table-card-actions {
+    align-self: center;
+}
+
+.system-page .record-table-card-event {
+    align-self: start;
+}
+
+.system-page .record-table-card-event .audit-action {
+    margin: 0;
+}
+
+.system-page .record-card:focus-within {
+    border-color: var(--layout-blue);
+    box-shadow: 0 0 0 3px rgb(11 79 108 / 12%);
+}
+
+.system-page .record-card-heading {
+    display: flex;
+    min-width: 0;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #e7e2d8;
+}
+
+.system-page .record-card-heading > div:first-child {
+    min-width: 0;
+}
+
+.system-page .record-card-eyebrow {
+    display: block;
+    color: var(--layout-purple);
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.045em;
+    line-height: 1.4;
+    text-transform: uppercase;
+    overflow-wrap: anywhere;
+}
+
+.system-page .record-card-heading h3 {
+    margin: 3px 0 0;
+    color: var(--layout-navy);
+    font-family: "Fredoka", system-ui, sans-serif;
+    font-size: 1.2rem;
+    line-height: 1.25;
+    overflow-wrap: anywhere;
+}
+
+.system-page .record-card-heading h3 a {
+    color: inherit;
+    text-decoration: none;
+}
+
+.system-page .record-card-heading h3 a:hover {
+    color: var(--layout-blue);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+.system-page .record-card-control {
+    flex: 0 0 auto;
+}
+
+.system-page .record-card-control .inline-status-form {
+    display: flex;
+    margin: 0;
+}
+
+.system-page .record-card-control .status-select {
+    max-width: 145px;
+    min-width: 0;
+}
+
+.system-page .record-card-fields {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px 16px;
+    margin: 14px 0;
+}
+
+.system-page .record-card-fields > div {
+    min-width: 0;
+}
+
+.system-page .record-card-fields .record-card-field-wide {
+    grid-column: 1 / -1;
+}
+
+.system-page .record-card-fields dt {
+    margin-bottom: 3px;
+    color: var(--layout-purple);
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.045em;
+    text-transform: uppercase;
+}
+
+.system-page .record-card-fields dd {
+    margin: 0;
+    color: var(--layout-navy);
+    font-size: 0.875rem;
+    line-height: 1.45;
+    overflow-wrap: anywhere;
+}
+
+.system-page .record-card-fields dd a {
+    color: inherit;
+    text-decoration-color: #b5afa4;
+    text-underline-offset: 2px;
+}
+
+.system-page .record-card-fields dd a:hover {
+    color: var(--layout-blue);
+}
+
+.system-page .record-card-audit {
+    margin-top: auto;
+    padding: 10px 0;
+    border-top: 1px solid #e7e2d8;
+}
+
+.system-page .record-card-audit summary {
+    color: var(--layout-blue);
+    font-size: 0.8rem;
+    cursor: pointer;
+}
+
+.system-page .record-card-audit > div {
+    display: grid;
+    gap: 4px;
+    padding-top: 9px;
+}
+
+.system-page .record-card-audit p {
+    margin: 0;
+    color: #6f7075;
+    font-size: 0.75rem;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
+}
+
+.system-page .record-card-audit p strong {
+    color: var(--layout-navy);
+}
+
+.system-page .record-card-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding-top: 12px;
+    border-top: 1px solid #e7e2d8;
+}
+
+.system-page .record-card-actions form {
+    margin: 0;
+}
+
+.system-page .record-card-actions .btn {
+    min-height: 40px;
+}
+
+.system-page .record-card-summary {
+    margin: 12px 0 0;
+    color: #4c5663;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+}
+
+.system-page .record-card-progress {
+    display: block;
+    width: 100%;
+    height: 8px;
+    margin-top: 6px;
+    overflow: hidden;
+    border: 0;
+    border-radius: 999px;
+    background: #e8e5df;
+    accent-color: var(--layout-blue);
+}
+
+.system-page .record-card-progress::-webkit-progress-bar {
+    border-radius: 999px;
+    background: #e8e5df;
+}
+
+.system-page .record-card-progress::-webkit-progress-value {
+    border-radius: 999px;
+    background: var(--layout-blue);
+}
+
+.system-page .record-card-progress::-moz-progress-bar {
+    border-radius: 999px;
+    background: var(--layout-blue);
+}
+
+.system-page .volunteer-card {
+    background: #fff;
+}
+
+.system-page .unified-collections .record-table-card,
+.system-page .system-list .record-table-card {
+    background: #fff;
+}
+
+.system-page .main-panel input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]):not([type="reset"]),
+.system-page .main-panel select:not(.status-select),
+.system-page .main-panel textarea,
+.system-page .main-panel .form-control {
+    background-color: #fff;
+}
+
+.system-page .system-list .volunteer-filters select.form-control {
+    background-color: #fff;
+}
+
+.system-page .residue-records > .section-heading {
+    align-items: flex-start;
+    flex-direction: column;
+}
+
+.system-page .residue-records > .section-heading .section-heading-actions {
+    display: flex;
+    width: 100%;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 10px;
+}
+
+.system-page .residue-records > .section-heading .section-heading-actions .btn {
+    flex: 0 0 auto;
+}
+
+.system-page .record-card .communication-type {
+    display: inline-flex;
+    margin-bottom: 6px;
+}
+
+@media (max-width: 600px) {
+    .system-page .record-card {
+        padding: 14px;
+    }
+
+    .system-page .record-card-grid--line,
+    .system-page .record-card-grid--block {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .system-page .record-card--line,
+    .system-page .record-table-card {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 12px;
+    }
+
+    .system-page .record-card--line {
+        align-items: stretch;
+    }
+
+    .system-page .record-card--line .record-card-heading,
+    .system-page .record-card--line .record-card-fields,
+    .system-page .record-card--line .record-card-actions,
+    .system-page .record-card--line .record-card-summary,
+    .system-page .record-card--line .record-card-audit {
+        flex-basis: 100%;
+        margin-left: 0;
+    }
+
+    .system-page .record-card--line .record-card-fields {
+        grid-column: 1;
+        grid-row: auto;
+    }
+
+    .system-page .record-card--line .record-card-actions {
+        grid-column: 1;
+        grid-row: auto;
+    }
+
+    .system-page .record-table-card-fields {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .system-page .record-table-cards--expandable .record-table-card,
+    .system-page .record-table-cards--expandable .record-table-card.is-expanded {
+        grid-template-columns: minmax(0, 1fr) auto;
+        max-height: 120px;
+    }
+
+    .system-page .record-table-cards--expandable .record-table-card-fields,
+    .system-page .record-table-cards--expandable .record-table-card.is-expanded .record-table-card-fields {
+        grid-column: 1 / -1;
+        grid-row: 2;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .system-page .record-table-cards--expandable .record-table-card.is-expanded .record-table-card-identity {
+        grid-column: 1;
+        grid-row: 1;
+    }
+
+    .system-page .record-table-cards--expandable .record-table-card-toggle,
+    .system-page .record-table-cards--expandable .record-table-card.is-expanded .record-table-card-toggle {
+        grid-column: 2;
+        grid-row: 1;
+    }
+
+    .system-page .record-table-cards--expandable .record-table-card.is-expanded {
+        max-height: 1000px;
+    }
+
+    .system-page .record-table-card-actions {
+        justify-content: flex-start;
+    }
+
+    .system-page .record-card-heading {
+        flex-wrap: wrap;
+    }
+
+    .system-page .record-card-control {
+        max-width: 100%;
+    }
+
+    .system-page .record-card-fields {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .system-page .record-card-fields .record-card-field-wide {
+        grid-column: auto;
+    }
 }
 
 @media (max-width: 600px) {
@@ -7375,19 +8246,6 @@ select.select-control:disabled {
     box-shadow: none;
 }
 
-.system-page .main-panel .btn-action-edit {
-    border: 2px solid var(--layout-blue);
-    background: #e8eef8;
-    color: var(--layout-blue);
-}
-
-.system-page .main-panel .btn-action-edit:hover,
-.system-page .main-panel .btn-action-edit:focus-visible {
-    border-color: var(--layout-navy);
-    background: #dce7f5;
-    color: var(--layout-navy);
-}
-
 .system-page .form-shell {
     display: block;
     min-height: 0;
@@ -7445,12 +8303,11 @@ select.select-control:disabled {
     font-size: 1.05rem;
 }
 
-.system-page .form-shell .form-grid,
-.system-page .system-form .form-grid,
-.system-page .donation-form .form-grid,
-.system-page .communication-form .form-grid,
-.system-page .communication-topic-form .form-grid {
-    gap: 16px 18px;
+.system-page .main-panel form .form-grid,
+.system-page .main-panel form .donor-form-grid {
+    align-items: start;
+    column-gap: 24px;
+    row-gap: 18px;
 }
 
 .system-page .form-shell .form-group,
@@ -7721,5 +8578,308 @@ select.select-control:disabled {
     .auth-submit-button:focus-visible,
     .auth-submit-button:active {
         transform: none;
+    }
+}
+
+.system-page .record-table-card-event {
+    align-self: start;
+}
+
+.system-page input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]):not([type="reset"]):not([type="color"]),
+.system-page select:not(.status-select),
+.system-page textarea,
+.system-page .form-control:not(.status-select) {
+    background-color: #fff !important;
+}
+
+.system-page .main-panel form .form-grid > .form-group,
+.system-page .main-panel form .donor-form-grid > .form-group {
+    min-width: 0;
+    margin-bottom: 0;
+}
+
+.system-page .communication-form-heading,
+.system-page .communication-topic-form-heading {
+    padding-bottom: 0;
+    border-bottom: 0;
+    margin-bottom: 4px;
+}
+
+.system-page .donor-form-heading {
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--layout-border);
+}
+
+.system-page .main-content > .form-card,
+.system-page .main-content > .card.form-card,
+.system-page .main-content > .form-shell > .form-card,
+.system-page .main-content > .donation-page > .donation-form,
+.system-page .main-content > .communication-form-card,
+.system-page .main-content > .communication-topic-form-card {
+    box-sizing: border-box;
+    width: 100%;
+    max-width: none;
+    padding: 24px;
+    border: 1px solid var(--layout-border);
+    border-radius: 16px;
+    margin: 0;
+    background: #fff;
+    box-shadow: none;
+}
+
+.system-page .main-content > .form-card > .section-heading,
+.system-page .main-content > .form-shell > .form-card > .section-heading,
+.system-page .main-content > .donation-page > .donation-form > .section-heading,
+.system-page .main-content > .communication-form-card > .section-heading,
+.system-page .main-content > .communication-topic-form-card > .section-heading {
+    align-items: flex-start;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--layout-border);
+    margin: 0 0 18px;
+}
+
+.system-page .main-content > .form-card > .section-heading h2,
+.system-page .main-content > .form-shell > .form-card > h2,
+.system-page .main-content > .donation-page > .donation-form > .section-heading h2,
+.system-page .main-content > .communication-form-card > .section-heading h2,
+.system-page .main-content > .communication-topic-form-card > .section-heading h2 {
+    margin: 0 0 6px;
+    color: var(--layout-purple);
+    font-family: "Fredoka", system-ui, sans-serif;
+    font-size: 1.35rem;
+}
+
+.system-page .main-content > .form-shell > .form-card > .form-subtitle {
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--layout-border);
+    margin: 0 0 18px;
+    color: #6f7075;
+    line-height: 1.5;
+}
+
+.system-page .main-content > .communication-form-card > .communication-form-heading,
+.system-page .main-content > .communication-topic-form-card > .communication-topic-form-heading {
+    padding-bottom: 0;
+    border-bottom: 0;
+    margin-bottom: 4px;
+}
+
+.system-page .main-content .form-shell form .form-grid,
+.system-page .main-content .form-shell form .donor-form-grid,
+.system-page .main-content .form-card:not(.profile-card):not(.password-card) form .form-grid,
+.system-page .main-content .form-card:not(.profile-card):not(.password-card) form .donor-form-grid,
+.system-page .main-content form.form-card .form-grid,
+.system-page .main-content form.form-card .donor-form-grid,
+.system-page .main-content .communication-form-card form .form-grid,
+.system-page .main-content .communication-form-card form .donor-form-grid,
+.system-page .main-content .communication-topic-form-card form .form-grid,
+.system-page .main-content .communication-topic-form-card form .donor-form-grid,
+.system-page .main-content .member-form-panel form .form-grid,
+.system-page .main-content .member-form-panel form .donor-form-grid {
+    align-items: start;
+    column-gap: 24px;
+    row-gap: 18px;
+}
+
+.system-page .main-content .form-shell form .form-group,
+.system-page .main-content .form-shell form .form-field,
+.system-page .main-content .form-card:not(.profile-card):not(.password-card) form .form-group,
+.system-page .main-content .form-card:not(.profile-card):not(.password-card) form .form-field,
+.system-page .main-content form.form-card .form-group,
+.system-page .main-content form.form-card .form-field,
+.system-page .main-content .communication-form-card form .form-group,
+.system-page .main-content .communication-form-card form .form-field,
+.system-page .main-content .communication-topic-form-card form .form-group,
+.system-page .main-content .communication-topic-form-card form .form-field,
+.system-page .main-content .member-form-panel form .form-group,
+.system-page .main-content .member-form-panel form .form-field {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 8px;
+    margin: 0;
+}
+
+.system-page .main-content .form-shell form .form-group > label,
+.system-page .main-content .form-shell form .form-field > label:not(.checkbox-label),
+.system-page .main-content .form-card:not(.profile-card):not(.password-card) form .form-group > label,
+.system-page .main-content .form-card:not(.profile-card):not(.password-card) form .form-field > label:not(.checkbox-label),
+.system-page .main-content form.form-card .form-group > label,
+.system-page .main-content form.form-card .form-field > label:not(.checkbox-label),
+.system-page .main-content .communication-form-card form .form-group > label,
+.system-page .main-content .communication-form-card form .form-field > label:not(.checkbox-label),
+.system-page .main-content .communication-topic-form-card form .form-group > label,
+.system-page .main-content .communication-topic-form-card form .form-field > label:not(.checkbox-label),
+.system-page .main-content .member-form-panel form .form-group > label,
+.system-page .main-content .member-form-panel form .form-field > label:not(.checkbox-label) {
+    margin: 0;
+    color: var(--layout-navy);
+    font-size: 0.9rem;
+    font-weight: 700;
+}
+
+.system-page .main-content form .form-section,
+.system-page .main-content form .donor-form-section,
+.system-page .main-content form .communication-form-section,
+.system-page .main-content form .estoque-form-section,
+.system-page .main-content form .collection-form-section {
+    padding: 20px;
+    border: 1px solid var(--layout-border);
+    border-radius: 12px;
+    background: #fffdf7;
+}
+
+.system-page .main-content form .form-section-title {
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--layout-border);
+    margin: 4px 0 0;
+    color: var(--layout-purple);
+    font-family: "Fredoka", system-ui, sans-serif;
+    font-size: 1.05rem;
+}
+
+.system-page .main-content .form-shell form .form-help,
+.system-page .main-content .form-shell form .field-hint,
+.system-page .main-content .form-card:not(.profile-card):not(.password-card) form .form-help,
+.system-page .main-content .form-card:not(.profile-card):not(.password-card) form .field-hint,
+.system-page .main-content form.form-card .form-help,
+.system-page .main-content form.form-card .field-hint,
+.system-page .main-content .communication-form-card form .form-help,
+.system-page .main-content .communication-form-card form .field-hint,
+.system-page .main-content .communication-topic-form-card form .form-help,
+.system-page .main-content .communication-topic-form-card form .field-hint,
+.system-page .main-content .member-form-panel form .form-help,
+.system-page .main-content .member-form-panel form .field-hint {
+    color: #6f7075;
+    line-height: 1.45;
+}
+
+.system-page .main-content .form-shell form .form-actions,
+.system-page .main-content .form-card:not(.profile-card):not(.password-card) form .form-actions,
+.system-page .main-content form.form-card .form-actions,
+.system-page .main-content .communication-form-card form .form-actions,
+.system-page .main-content .communication-topic-form-card form .form-actions,
+.system-page .main-content .member-form-panel form .form-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex-flow: row wrap;
+    gap: 12px;
+    padding-top: 16px;
+    border-top: 1px solid var(--layout-border);
+    margin: 4px 0 0;
+}
+
+.system-page .main-content .form-shell form .form-actions > .btn,
+.system-page .main-content .form-card:not(.profile-card):not(.password-card) form .form-actions > .btn,
+.system-page .main-content form.form-card .form-actions > .btn,
+.system-page .main-content .communication-form-card form .form-actions > .btn,
+.system-page .main-content .communication-topic-form-card form .form-actions > .btn,
+.system-page .main-content .member-form-panel form .form-actions > .btn {
+    order: 1;
+}
+
+.system-page .main-content .form-shell form .form-actions > .btn-primary,
+.system-page .main-content .form-shell form .form-actions > button[type="submit"],
+.system-page .main-content .form-card:not(.profile-card):not(.password-card) form .form-actions > .btn-primary,
+.system-page .main-content .form-card:not(.profile-card):not(.password-card) form .form-actions > button[type="submit"],
+.system-page .main-content form.form-card .form-actions > .btn-primary,
+.system-page .main-content form.form-card .form-actions > button[type="submit"],
+.system-page .main-content .communication-form-card form .form-actions > .btn-primary,
+.system-page .main-content .communication-form-card form .form-actions > button[type="submit"],
+.system-page .main-content .communication-topic-form-card form .form-actions > .btn-primary,
+.system-page .main-content .communication-topic-form-card form .form-actions > button[type="submit"],
+.system-page .main-content .member-form-panel form .form-actions > .btn-primary,
+.system-page .main-content .member-form-panel form .form-actions > button[type="submit"] {
+    order: 2;
+}
+
+.system-page .main-content .form-shell form .form-actions > .btn-primary,
+.system-page .main-content .form-shell form .form-actions > button[type="submit"],
+.system-page .main-content .form-card:not(.profile-card):not(.password-card) form .form-actions > .btn-primary,
+.system-page .main-content .form-card:not(.profile-card):not(.password-card) form .form-actions > button[type="submit"],
+.system-page .main-content form.form-card .form-actions > .btn-primary,
+.system-page .main-content form.form-card .form-actions > button[type="submit"],
+.system-page .main-content .communication-form-card form .form-actions > .btn-primary,
+.system-page .main-content .communication-form-card form .form-actions > button[type="submit"],
+.system-page .main-content .communication-topic-form-card form .form-actions > .btn-primary,
+.system-page .main-content .communication-topic-form-card form .form-actions > button[type="submit"],
+.system-page .main-content .member-form-panel form .form-actions > .btn-primary,
+.system-page .main-content .member-form-panel form .form-actions > button[type="submit"] {
+    border: 0;
+    background: #ffdf00;
+    box-shadow: 0 6px 0 #e9a51a;
+    color: var(--layout-navy);
+}
+
+.system-page .main-content .form-shell form .form-actions > .btn-primary:hover,
+.system-page .main-content .form-shell form .form-actions > button[type="submit"]:hover,
+.system-page .main-content .form-card:not(.profile-card):not(.password-card) form .form-actions > .btn-primary:hover,
+.system-page .main-content .form-card:not(.profile-card):not(.password-card) form .form-actions > button[type="submit"]:hover,
+.system-page .main-content form.form-card .form-actions > .btn-primary:hover,
+.system-page .main-content form.form-card .form-actions > button[type="submit"]:hover,
+.system-page .main-content .communication-form-card form .form-actions > .btn-primary:hover,
+.system-page .main-content .communication-form-card form .form-actions > button[type="submit"]:hover,
+.system-page .main-content .communication-topic-form-card form .form-actions > .btn-primary:hover,
+.system-page .main-content .communication-topic-form-card form .form-actions > button[type="submit"]:hover,
+.system-page .main-content .member-form-panel form .form-actions > .btn-primary:hover,
+.system-page .main-content .member-form-panel form .form-actions > button[type="submit"]:hover {
+    background: #f4cf00;
+}
+
+.system-page .main-content .form-shell form .form-actions > .btn-primary:active,
+.system-page .main-content .form-shell form .form-actions > button[type="submit"]:active,
+.system-page .main-content .form-card:not(.profile-card):not(.password-card) form .form-actions > .btn-primary:active,
+.system-page .main-content .form-card:not(.profile-card):not(.password-card) form .form-actions > button[type="submit"]:active,
+.system-page .main-content form.form-card .form-actions > .btn-primary:active,
+.system-page .main-content form.form-card .form-actions > button[type="submit"]:active,
+.system-page .main-content .communication-form-card form .form-actions > .btn-primary:active,
+.system-page .main-content .communication-form-card form .form-actions > button[type="submit"]:active,
+.system-page .main-content .communication-topic-form-card form .form-actions > .btn-primary:active,
+.system-page .main-content .communication-topic-form-card form .form-actions > button[type="submit"]:active,
+.system-page .main-content .member-form-panel form .form-actions > .btn-primary:active,
+.system-page .main-content .member-form-panel form .form-actions > button[type="submit"]:active {
+    box-shadow: 0 2px 0 #e9a51a;
+}
+
+@media (max-width: 700px) {
+    .system-page .main-content > .form-card,
+    .system-page .main-content > .card.form-card,
+    .system-page .main-content > .form-shell > .form-card,
+    .system-page .main-content > .donation-page > .donation-form,
+    .system-page .main-content > .communication-form-card,
+    .system-page .main-content > .communication-topic-form-card {
+        padding: 18px;
+    }
+}
+
+@media (max-width: 480px) {
+    .system-page .main-content > .form-card,
+    .system-page .main-content > .card.form-card,
+    .system-page .main-content > .form-shell > .form-card,
+    .system-page .main-content > .donation-page > .donation-form,
+    .system-page .main-content > .communication-form-card,
+    .system-page .main-content > .communication-topic-form-card {
+        padding: 16px 14px;
+        border-radius: 12px;
+    }
+
+    .system-page .main-content .form-shell form .form-actions,
+    .system-page .main-content .form-card:not(.profile-card):not(.password-card) form .form-actions,
+    .system-page .main-content form.form-card .form-actions,
+    .system-page .main-content .communication-form-card form .form-actions,
+    .system-page .main-content .communication-topic-form-card form .form-actions,
+    .system-page .main-content .member-form-panel form .form-actions {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .system-page .main-content .form-shell form .form-actions > .btn,
+    .system-page .main-content .form-card:not(.profile-card):not(.password-card) form .form-actions > .btn,
+    .system-page .main-content form.form-card .form-actions > .btn,
+    .system-page .main-content .communication-form-card form .form-actions > .btn,
+    .system-page .main-content .communication-topic-form-card form .form-actions > .btn,
+    .system-page .main-content .member-form-panel form .form-actions > .btn {
+        width: 100%;
     }
 }

@@ -65,29 +65,15 @@
     </form>
 
     {% if equipes %}
-    <div class="table-wrap">
-        <table class="data-table">
-            <thead>
-                <tr>
-                    <th>Nome</th>
-                    <th>Praia</th>
-                    <th>Cidade</th>
-                    <th>Descrição</th>
-                    <th>Membros ativos</th>
-                    <th>Status</th>
-                    <th>Auditoria</th>
-                    <th>Ações</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for equipe in equipes %}
-                <tr>
-                    <td><a class="table-link" href="{% url 'equipe_detalhe' equipe.id_equipe %}"><strong>{{ equipe.nome }}</strong></a></td>
-                    <td>{% if equipe.praia %}<a class="table-link" href="{% url 'praias' %}?praia={{ equipe.praia.id_praia }}">{{ equipe.praia.nome }}</a>{% else %}<span class="field-hint">Sem praia</span>{% endif %}</td>
-                    <td>{% if equipe.praia %}{{ equipe.praia.cidade }}{% else %}<span class="field-hint">-</span>{% endif %}</td>
-                    <td>{{ equipe.descricao|default:'-'|truncatechars:80 }}</td>
-                    <td>{{ equipe.total_membros }}</td>
-                    <td>
+    <div class="record-card-grid record-card-grid--line">
+        {% for equipe in equipes %}
+        <article class="record-card record-card--line">
+            <div class="record-card-heading">
+                <div>
+                    <span class="record-card-eyebrow">Equipe · {{ equipe.total_membros }} membros ativos</span>
+                    <h3><a href="{% url 'equipe_detalhe' equipe.id_equipe %}">{{ equipe.nome }}</a></h3>
+                </div>
+                <div class="record-card-control">
                         {% if usuario.tipo == 'ADMIN' %}
                         <form method="post" action="{% url 'atualizar_status_equipe' equipe.id_equipe %}" class="inline-status-form">
                             {% csrf_token %}
@@ -100,26 +86,42 @@
                         {% else %}
                             <span class="status-select status-{{ equipe.status|lower }}">{{ equipe.get_status_display }}</span>
                         {% endif %}
-                    </td>
-                    <td class="audit-cell">
-                        <strong>{% if equipe.cadastrado_por_nome %}Cadastrado por {{ equipe.cadastrado_por_nome }}{% elif equipe.cadastrado_por %}Cadastrado por {{ equipe.cadastrado_por.id_voluntario.nome }}{% else %}Cadastro anterior{% endif %}</strong>
-                        <small>{{ equipe.dt_cadastro|date:'d/m/Y H:i' }}</small>
-                        {% if equipe.ultimo_editado_por_nome %}<small>Editado por {{ equipe.ultimo_editado_por_nome }} em {{ equipe.dt_ultima_edicao|date:'d/m/Y H:i' }}</small>{% elif equipe.ultimo_editado_por %}<small>Editado por {{ equipe.ultimo_editado_por.id_voluntario.nome }} em {{ equipe.dt_ultima_edicao|date:'d/m/Y H:i' }}</small>{% else %}<small>Sem edições</small>{% endif %}
-                    </td>
-                    <td class="table-actions">
-                        <a class="btn btn-outline btn-small" href="{% url 'equipe_detalhe' equipe.id_equipe %}">Membros</a>
-                        {% if usuario.tipo == 'ADMIN' %}
-                        <a class="btn btn-outline btn-small" href="{% url 'editar_equipe' equipe.id_equipe %}">Editar</a>
-                        <form method="post" action="{% url 'excluir_equipe' equipe.id_equipe %}" onsubmit="return confirm('Excluir esta equipe?');">
-                            {% csrf_token %}
-                            <button type="submit" class="btn btn-danger btn-small">Excluir</button>
-                        </form>
-                        {% endif %}
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+                </div>
+            </div>
+            <dl class="record-card-fields">
+                <div>
+                    <dt>Praia</dt>
+                    <dd>{% if equipe.praia %}<a href="{% url 'praias' %}?praia={{ equipe.praia.id_praia }}">{{ equipe.praia.nome }}</a>{% else %}<span class="field-hint">Sem praia</span>{% endif %}</dd>
+                </div>
+                <div>
+                    <dt>Cidade</dt>
+                    <dd>{% if equipe.praia %}{{ equipe.praia.cidade }}{% else %}<span class="field-hint">-</span>{% endif %}</dd>
+                </div>
+                <div class="record-card-field-wide">
+                    <dt>Descrição</dt>
+                    <dd>{{ equipe.descricao|default:'-'|truncatechars:120 }}</dd>
+                </div>
+            </dl>
+            <details class="record-card-audit">
+                <summary>Histórico do cadastro</summary>
+                <div>
+                    <p><strong>{% if equipe.cadastrado_por_nome %}Cadastrado por {{ equipe.cadastrado_por_nome }}{% elif equipe.cadastrado_por %}Cadastrado por {{ equipe.cadastrado_por.id_voluntario.nome }}{% else %}Cadastro anterior{% endif %}</strong></p>
+                    <p>{{ equipe.dt_cadastro|date:'d/m/Y H:i' }}</p>
+                    {% if equipe.ultimo_editado_por_nome %}<p>Editado por {{ equipe.ultimo_editado_por_nome }} em {{ equipe.dt_ultima_edicao|date:'d/m/Y H:i' }}</p>{% elif equipe.ultimo_editado_por %}<p>Editado por {{ equipe.ultimo_editado_por.id_voluntario.nome }} em {{ equipe.dt_ultima_edicao|date:'d/m/Y H:i' }}</p>{% else %}<p>Sem edições</p>{% endif %}
+                </div>
+            </details>
+            <div class="record-card-actions">
+                <a class="btn btn-outline btn-small" href="{% url 'equipe_detalhe' equipe.id_equipe %}">Membros</a>
+                {% if usuario.tipo == 'ADMIN' %}
+                <a class="btn btn-outline btn-small" href="{% url 'editar_equipe' equipe.id_equipe %}">Editar</a>
+                <form method="post" action="{% url 'excluir_equipe' equipe.id_equipe %}" onsubmit="return confirm('Excluir esta equipe?');">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger btn-small">Excluir</button>
+                </form>
+                {% endif %}
+            </div>
+        </article>
+        {% endfor %}
     </div>
     {% include 'sistema/includes/paginacao.html' %}
     {% else %}
