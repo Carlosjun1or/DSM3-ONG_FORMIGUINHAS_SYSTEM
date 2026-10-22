@@ -64,41 +64,6 @@ class Doador(models.Model):
             ),
         ]
 
-
-    @property
-    def acao(self):
-        if not self.acao_id:
-            return None
-        from config.mongodb import MongoAcaoProxy
-        try:
-            from acao.mongo_services import obter_acao_mongo
-            doc = obter_acao_mongo(self.acao_id)
-            if doc:
-                return MongoAcaoProxy(doc)
-        except Exception:
-            pass
-        try:
-            from acao.models import Acao
-            return Acao.objects.filter(pk=self.acao_id).first()
-        except Exception:
-            return MongoAcaoProxy({'id_sql': self.acao_id, 'tipo': f'Ação #{self.acao_id}'})
-
-    @acao.setter
-    def acao(self, value):
-        if value is None:
-            self.acao_id = None
-        elif isinstance(value, int):
-            self.acao_id = value
-        elif hasattr(value, 'pk'):
-            self.acao_id = value.pk
-        elif isinstance(value, dict):
-            self.acao_id = value.get('id_sql') or value.get('id') or value.get('id_acao')
-        else:
-            try:
-                self.acao_id = int(value)
-            except (ValueError, TypeError):
-                self.acao_id = None
-
     def clean(self):
         self.nome = self.nome.strip()
         self.documento = ''.join(char for char in self.documento if char.isalnum())

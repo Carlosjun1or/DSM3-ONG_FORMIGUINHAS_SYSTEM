@@ -1,0 +1,71 @@
+=== TESTE DE CONEXAO === 
+Conexão com o MongoDB Atlas funcionando!
+Banco selecionado: formiguinhas_db
+Collections existentes: ['acoes', 'comunicados', 'condominios', 'auditoria_eventos']
+ 
+=== RESTAURAR SQLITE DO MONGO === 
+c:\Users\carol\OneDrive\Documentos\GitHub\DSM3-ONG_FORMIGUINHAS_SYSTEM\formiguinhas_projeto\venv\Lib\site-packages\django\db\models\fields\__init__.py:1665: RuntimeWarning: DateTimeField Acao.dt_ultima_edicao received a naive datetime (2026-10-12 01:52:23.980000) while time zone support is active.
+  warnings.warn(
+c:\Users\carol\OneDrive\Documentos\GitHub\DSM3-ONG_FORMIGUINHAS_SYSTEM\formiguinhas_projeto\venv\Lib\site-packages\django\db\models\fields\__init__.py:1665: RuntimeWarning: DateTimeField AcaoParticipanteHistorico.dt_cadastro received a naive datetime (2026-10-22 07:43:49.203236) while time zone support is active.
+  warnings.warn(
+c:\Users\carol\OneDrive\Documentos\GitHub\DSM3-ONG_FORMIGUINHAS_SYSTEM\formiguinhas_projeto\venv\Lib\site-packages\django\db\models\fields\__init__.py:1665: RuntimeWarning: DateTimeField AcaoParticipanteHistorico.dt_cadastro received a naive datetime (2026-10-22 07:43:49.290791) while time zone support is active.
+  warnings.warn(
+c:\Users\carol\OneDrive\Documentos\GitHub\DSM3-ONG_FORMIGUINHAS_SYSTEM\formiguinhas_projeto\venv\Lib\site-packages\django\db\models\fields\__init__.py:1665: RuntimeWarning: DateTimeField AcaoParticipanteHistorico.dt_cadastro received a naive datetime (2026-10-22 07:43:49.328351) while time zone support is active.
+  warnings.warn(
+c:\Users\carol\OneDrive\Documentos\GitHub\DSM3-ONG_FORMIGUINHAS_SYSTEM\formiguinhas_projeto\venv\Lib\site-packages\django\db\models\fields\__init__.py:1665: RuntimeWarning: DateTimeField AcaoParticipanteHistorico.dt_cadastro received a naive datetime (2026-10-22 07:43:49.331955) while time zone support is active.
+  warnings.warn(
+c:\Users\carol\OneDrive\Documentos\GitHub\DSM3-ONG_FORMIGUINHAS_SYSTEM\formiguinhas_projeto\venv\Lib\site-packages\django\db\models\fields\__init__.py:1665: RuntimeWarning: DateTimeField Acao.dt_ultima_edicao received a naive datetime (2026-09-22 01:24:39.138000) while time zone support is active.
+  warnings.warn(
+c:\Users\carol\OneDrive\Documentos\GitHub\DSM3-ONG_FORMIGUINHAS_SYSTEM\formiguinhas_projeto\venv\Lib\site-packages\django\db\models\fields\__init__.py:1665: RuntimeWarning: DateTimeField Comunicado.dt_publicacao received a naive datetime (2026-10-05 00:53:32.358000) while time zone support is active.
+  warnings.warn(
+c:\Users\carol\OneDrive\Documentos\GitHub\DSM3-ONG_FORMIGUINHAS_SYSTEM\formiguinhas_projeto\venv\Lib\site-packages\django\db\models\fields\__init__.py:1665: RuntimeWarning: DateTimeField Comunicado.dt_ultima_edicao received a naive datetime (2026-10-05 01:09:42.283000) while time zone support is active.
+  warnings.warn(
+c:\Users\carol\OneDrive\Documentos\GitHub\DSM3-ONG_FORMIGUINHAS_SYSTEM\formiguinhas_projeto\venv\Lib\site-packages\django\db\models\fields\__init__.py:1665: RuntimeWarning: DateTimeField Comunicado.dt_publicacao received a naive datetime (2026-10-05 00:58:32.957000) while time zone support is active.
+  warnings.warn(
+c:\Users\carol\OneDrive\Documentos\GitHub\DSM3-ONG_FORMIGUINHAS_SYSTEM\formiguinhas_projeto\venv\Lib\site-packages\django\db\models\fields\__init__.py:1665: RuntimeWarning: DateTimeField Comunicado.dt_ultima_edicao received a naive datetime (2026-10-05 01:12:00.862000) while time zone support is active.
+  warnings.warn(
+c:\Users\carol\OneDrive\Documentos\GitHub\DSM3-ONG_FORMIGUINHAS_SYSTEM\formiguinhas_projeto\venv\Lib\site-packages\django\db\models\fields\__init__.py:1665: RuntimeWarning: DateTimeField Comunicado.dt_publicacao received a naive datetime (2026-10-05 01:04:17.090000) while time zone support is active.
+  warnings.warn(
+c:\Users\carol\OneDrive\Documentos\GitHub\DSM3-ONG_FORMIGUINHAS_SYSTEM\formiguinhas_projeto\venv\Lib\site-packages\django\db\models\fields\__init__.py:1665: RuntimeWarning: DateTimeField Comunicado.dt_publicacao received a naive datetime (2026-10-12 03:52:24.081000) while time zone support is active.
+  warnings.warn(
+c:\Users\carol\OneDrive\Documentos\GitHub\DSM3-ONG_FORMIGUINHAS_SYSTEM\formiguinhas_projeto\venv\Lib\site-packages\django\db\models\fields\__init__.py:1665: RuntimeWarning: DateTimeField Comunicado.dt_ultima_edicao received a naive datetime (2026-10-12 03:52:24.081000) while time zone support is active.
+  warnings.warn(
+=== Restauração do SQLite a partir do MongoDB Atlas ===
+Conectado! Banco: formiguinhas_db
+
+[Ações] 13 documentos encontrados no MongoDB.
+  [Criada] Ação #1: MUTIRAO - Praia Guilhermina
+  [Criada] Ação #2: COLETA_VOLUNTARIA - Praia Guilhermina
+  [Criada] Ação #3: MUTIRAO - Praia Guilhermina
+  [Criada] Ação #4: COLETA_VOLUNTARIA - Praia Guilhermina
+  [Criada] Ação #5: MUTIRAO - Praia do Gonzaga
+  [Criada] Ação #6: COLETA_VOLUNTARIA - Praia do Itararé
+  [Criada] Ação #7: MUTIRAO - Praia de Copacabana
+  [Criada] Ação #8: COLETA_VOLUNTARIA - Meia Praia
+  [Criada] Ação #9: MUTIRAO - Praia Guilhermina
+  [Criada] Ação #10: MUTIRAO - Praia Guilhermina
+  [Criada] Ação #11: COLETA_VOLUNTARIA - Praia Guilhermina
+  [Criada] Ação #12: MUTIRAO - Praia Demonstração da Auditoria
+  [Criada] Ação #13: MUTIRAO - Praia Guilhermina
+[Ações] 13 restauradas, 0 erros.
+
+[Comunicados] 7 documentos encontrados no MongoDB.
+  [Criado] Comunicado #1: "TESTE - Aviso geral com relações"
+  [Criado] Comunicado #2: "TESTE - Aviso para coordenadores"
+  [Criado] Comunicado #3: "TESTE - Notícia de mutirão"
+  [Criado] Comunicado #4: "TESTE - Notícia institucional"
+  [Criado] Comunicado #5: "TESTE - Nova notificação não lida"
+  [Criado] Comunicado #6: "TESTE POPUP - Aviso mais recente"
+  [Criado] Comunicado #7: "aa"
+[Comunicados] 7 restaurados, 0 erros.
+
+[Condomínios] 4 documentos encontrados no MongoDB.
+  [ERRO] Condomínio #1: no such table: bag
+  [ERRO] Condomínio #2: no such table: bag
+  [ERRO] Condomínio #3: no such table: bag
+  [ERRO] Condomínio #4: no such table: bag
+[Condomínios] 0 restaurados, 4 erros.
+
+Restauração concluída.
+ 
+Concluido. 

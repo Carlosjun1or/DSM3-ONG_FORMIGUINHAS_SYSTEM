@@ -1,0 +1,52 @@
+[OK] Django setup ok
+
+=== TABELAS NO SQLITE ===
+  auditoria_estadoleituraauditoria
+  auth_group
+  auth_group_permissions
+  auth_permission
+  auth_user
+  auth_user_groups
+  auth_user_user_permissions
+  coleta_residuo
+  destinacao_residuo
+  django_admin_log
+  django_content_type
+  django_migrations
+  django_session
+  doacao
+  doacao_financeira
+  doador
+  equipe
+  equipe_membro
+  item_coleta_residuo
+  item_doacao_material
+  material
+  movimentacao_estoque
+  praia
+  residuo_coletado
+  sqlite_sequence
+  usuario
+  voluntario
+
+=== TABELAS CRITICAS ===
+  [FALTA] acao
+  [FALTA] acao_equipe
+  [FALTA] acao_participante
+  [FALTA] acao_imagem
+  [FALTA] acao_responsavel
+  [FALTA] acao_participante_historico
+  [FALTA] comunicado
+  [FALTA] comunicado_tema
+  [FALTA] condominio
+  [FALTA] auditoria_eventoauditoria
+
+=== MONGODB ===
+  Conectado: False
+  Mensagem: Não foi possível comunicar com o cluster MongoDB Atlas: bad auth : authentication failed, full error: {'ok': 0, 'errmsg': 'bad auth : authentication failed', 'code': 8000, 'codeName': 'AtlasError'}
+
+=== DJANGO CHECK ===
+System check identified no issues (0 silenced).
+
+Fim do diagnostico.
+Concluido. 
