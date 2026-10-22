@@ -131,12 +131,31 @@ def obter_condominio_mongo(id_sql):
 
 
 def consultar_condominios_mongo(filtros=None, pagina=1, por_pagina=100):
-    """Busca condomínios com paginação."""
+    """Busca condomínios com paginação e filtros opcionais."""
     try:
         col = get_condominios_collection()
         if col is None:
             return [], 0
-        query = filtros or {}
+
+        filtros = filtros or {}
+        query = {}
+
+        busca = filtros.get('busca')
+        if busca:
+            query['$or'] = [
+                {'nome': {'$regex': busca, '$options': 'i'}},
+                {'endereco.logradouro': {'$regex': busca, '$options': 'i'}},
+                {'endereco.bairro': {'$regex': busca, '$options': 'i'}},
+                {'endereco.cidade': {'$regex': busca, '$options': 'i'}},
+                {'responsavel.nome': {'$regex': busca, '$options': 'i'}},
+            ]
+
+        status = filtros.get('status')
+        if status:
+            query['status'] = status
+
+        pagina = max(1, int(pagina or 1))
+        por_pagina = max(1, int(por_pagina or 100))
         cursor = col.find(query).sort('nome', 1).skip((pagina - 1) * por_pagina).limit(por_pagina)
         total = col.count_documents(query)
         return list(cursor), total

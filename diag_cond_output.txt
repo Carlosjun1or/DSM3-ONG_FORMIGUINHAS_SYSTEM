@@ -1,0 +1,45 @@
+=== SQLITE ===
+Condominios no SQLite: 4
+  #4 - Condomínio Demonstração da Auditoria - ATIVO
+  #2 - Condomínio Jardim das Palmeiras - Simulado - ATIVO
+  #1 - Residencial Mar Azul - Simulado - ATIVO
+  #3 - Residencial Praia Verde - Simulado - ATIVO
+
+=== MONGODB ===
+Conectado: True
+Mensagem: Conexão com MongoDB Atlas estabelecida com sucesso.
+Documentos na colecao (raw): 4
+
+--- Documentos raw ---
+  id_sql=1 nome=Residencial Mar Azul - Simulado status=ATIVO
+  id_sql=2 nome=Condomínio Jardim das Palmeiras - Simulado status=ATIVO
+  id_sql=3 nome=Residencial Praia Verde - Simulado status=ATIVO
+  id_sql=4 nome=Condomínio Demonstração da Auditoria status=ATIVO
+
+--- consultar_condominios_mongo() ---
+Retornou: 4 docs, total=4
+
+--- obter_metricas_condominios_mongo() ---
+Stats: {'_id': None, 'total': 4, 'ativos': 4, 'em_avaliacao': 2}
+
+--- Primeiro documento (chaves) ---
+  _id: 6ad8029e75ef01e6e3aae1f7
+  id_sql: 4
+  nome: Condomínio Demonstração da Auditoria
+  responsavel: dict (len=3)
+  endereco: dict (len=7)
+  porte: MEDIO
+  porte_display: Médio
+  confiabilidade: EM_AVALIACAO
+  confiabilidade_display: Em avaliação
+  status: ATIVO
+  status_display: Ativo
+  observacoes: 
+  dt_cadastro: 2026-09-22 01:24:39.139000
+  dt_ultima_edicao: None
+  cadastrado_por_nome: carolina
+  ultimo_editado_por_nome: 
+  praia: dict (len=3)
+  bags: list (len=1)
+
+Fim.
