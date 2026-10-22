@@ -207,6 +207,7 @@ def formatar_acao_documento(acao):
 def salvar_acao_mongo(acao):
     """
     Persiste ou atualiza (upsert) o documento completo da ação no MongoDB Atlas.
+    Usado para atualizações de ações já existentes (com id_sql definido).
     """
     col = get_acoes_collection()
     if col is None:
