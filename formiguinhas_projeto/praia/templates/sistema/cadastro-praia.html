@@ -141,10 +141,36 @@
         const map = L.map('praia-map').setView(initialCenter, hasInitialLocation ? 15 : 11);
         let marker = null;
 
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        // Garante caminhos absolutos para os ícones do marcador (evita erro 403/404 em CDN)
+        delete L.Icon.Default.prototype._getIconUrl;
+        L.Icon.Default.mergeOptions({
+            iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+            iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+            shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+        });
+
+        // Camada 1: OpenStreetMap público (OSM France) - 100% livre e sem exigência de API Key
+        const osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png', {
+            maxZoom: 20,
+            subdomains: 'abc',
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors'
+        });
+
+        // Camada 2 (Fallback): Esri World Street Map - 100% gratuita, estável e sem necessidade de API Key
+        const esriLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
             maxZoom: 19,
-            attribution: '&copy; OpenStreetMap contributors'
-        }).addTo(map);
+            attribution: 'Tiles &copy; Esri &mdash; OpenStreetMap contributors'
+        });
+
+        osmLayer.addTo(map);
+
+        // Se houver qualquer falha com os tiles OSM, alterna automaticamente para Esri
+        osmLayer.on('tileerror', function() {
+            if (!map.hasLayer(esriLayer)) {
+                map.removeLayer(osmLayer);
+                esriLayer.addTo(map);
+            }
+        });
 
         const updateLocation = (latitude, longitude) => {
             latitudeInput.value = latitude.toFixed(6);
@@ -196,7 +222,8 @@
 
                 placeMarker(dados.latitude, dados.longitude);
                 map.setView([dados.latitude, dados.longitude], 15);
-                locateStatus.textContent = 'Localização encontrada. Ajuste o marcador se necessário.';
+                locateStatus.textContent = dados.aviso || 'Localização encontrada. Ajuste o marcador se necessário.';
+                locateStatus.className = 'map-search-status';
             } catch (error) {
                 locateStatus.textContent = error.message || 'Localização não encontrada.';
                 locateStatus.className = 'map-search-status map-error';

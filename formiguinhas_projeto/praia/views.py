@@ -1,13 +1,14 @@
 import json
+import re
+from urllib.error import HTTPError, URLError
+from urllib.parse import urlencode
+from urllib.request import Request, urlopen
 
 from django.contrib import messages
 from django.db import transaction
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
-from urllib.error import HTTPError, URLError
-from urllib.parse import urlencode
-from urllib.request import Request, urlopen
 
 from usuario.models import Usuario
 from usuario.views import render_acesso_bloqueado
@@ -18,9 +19,58 @@ from .models import Praia
 from auditoria.services import registrar_evento, snapshot
 
 
+def _consultar_nominatim(termo, timeout=7):
+    """Consulta o serviço Nominatim (OpenStreetMap) com cabeçalhos adequados."""
+    parametros = urlencode({
+        'q': termo,
+        'format': 'jsonv2',
+        'limit': 1,
+        'addressdetails': 0,
+    })
+    requisicao = Request(
+        f'https://nominatim.openstreetmap.org/search?{parametros}',
+        headers={
+            'User-Agent': 'Formiguinhas-ONG/1.0',
+            'Accept-Language': 'pt-BR,pt;q=0.9,en;q=0.8',
+        },
+    )
+    with urlopen(requisicao, timeout=timeout) as resposta:
+        corpo = resposta.read().decode('utf-8')
+        dados = json.loads(corpo)
+        if isinstance(dados, list) and len(dados) > 0:
+            item = dados[0]
+            return float(item['lat']), float(item['lon'])
+    return None
+
+
+def _consultar_photon(termo, timeout=5):
+    """Provedor secundário baseado em OpenStreetMap (Photon / Komoot)."""
+    parametros = urlencode({
+        'q': termo,
+        'limit': 1,
+    })
+    requisicao = Request(
+        f'https://photon.komoot.io/api/?{parametros}',
+        headers={
+            'User-Agent': 'Formiguinhas-ONG/1.0',
+            'Accept-Language': 'pt-BR',
+        },
+    )
+    with urlopen(requisicao, timeout=timeout) as resposta:
+        corpo = resposta.read().decode('utf-8')
+        dados = json.loads(corpo)
+        features = dados.get('features', [])
+        if features:
+            coords = features[0].get('geometry', {}).get('coordinates', [])
+            if len(coords) >= 2:
+                # GeoJSON padrão: [longitude, latitude]
+                return float(coords[1]), float(coords[0])
+    return None
+
+
 def localizar_praia_view(request):
     usuario = get_session_usuario(request)
-    if not usuario or usuario.tipo != 'ADMIN':
+    if not usuario or usuario.tipo not in ('ADMIN', 'COORDENADOR'):
         return JsonResponse({'erro': 'Não autorizado.'}, status=403)
     if request.method != 'GET':
         return JsonResponse({'erro': 'Método não permitido.'}, status=405)
@@ -33,41 +83,81 @@ def localizar_praia_view(request):
             status=400,
         )
 
-    parametros = urlencode({
-        'q': f'{nome}, {cidade}, Brasil',
-        'format': 'jsonv2',
-        'limit': 1,
-        'addressdetails': 0,
-    })
-    requisicao = Request(
-        f'https://nominatim.openstreetmap.org/search?{parametros}',
-        headers={
-            'User-Agent': 'Formiguinhas-ONG/1.0',
-            'Accept-Language': 'pt-BR',
-        },
-    )
+    # 1. Gerar variações do nome para cobrir diferentes convenções do mapa
+    nome_sem_prefixo = re.sub(
+        r'^(praia\s+(da|do|de|das|dos)?\s*)',
+        '',
+        nome,
+        flags=re.IGNORECASE,
+    ).strip()
 
+    candidatos = [f'{nome}, {cidade}, Brasil']
+    if nome_sem_prefixo and nome_sem_prefixo.casefold() != nome.casefold():
+        candidatos.append(f'{nome_sem_prefixo}, {cidade}, Brasil')
+        candidatos.append(f'Praia {nome_sem_prefixo}, {cidade}, Brasil')
+        candidatos.append(f'Praia do {nome_sem_prefixo}, {cidade}, Brasil')
+        candidatos.append(f'Praia de {nome_sem_prefixo}, {cidade}, Brasil')
+        candidatos.append(f'Praia da {nome_sem_prefixo}, {cidade}, Brasil')
+    else:
+        candidatos.append(f'Praia {nome}, {cidade}, Brasil')
+        candidatos.append(f'Praia do {nome}, {cidade}, Brasil')
+        candidatos.append(f'Praia de {nome}, {cidade}, Brasil')
+        candidatos.append(f'Praia da {nome}, {cidade}, Brasil')
+
+    # Deduplicar preservando a ordem de busca
+    termos_busca = []
+    vistos = set()
+    for c in candidatos:
+        c_norm = c.casefold()
+        if c_norm not in vistos:
+            vistos.add(c_norm)
+            termos_busca.append(c)
+
+    teve_erro_conexao = False
+
+    # 2. Tentar provedor primário: Nominatim (OpenStreetMap)
+    for termo in termos_busca:
+        try:
+            coords = _consultar_nominatim(termo)
+            if coords:
+                return JsonResponse({'latitude': coords[0], 'longitude': coords[1]})
+        except (HTTPError, URLError, TimeoutError):
+            teve_erro_conexao = True
+            break
+        except (ValueError, KeyError, IndexError, json.JSONDecodeError):
+            continue
+
+    # 3. Fallback: Provedor secundário Photon (Komoot / OSM)
+    for termo in termos_busca:
+        try:
+            coords = _consultar_photon(termo)
+            if coords:
+                return JsonResponse({'latitude': coords[0], 'longitude': coords[1]})
+        except Exception:
+            continue
+
+    # 4. Fallback de cidade: centralizar na cidade para o usuário posicionar o pino
     try:
-        with urlopen(requisicao, timeout=10) as resposta:
-            resultados = resposta.read().decode('utf-8')
-    except (HTTPError, URLError, TimeoutError):
+        coords_cidade = _consultar_photon(f'{cidade}, Brasil') or _consultar_nominatim(f'{cidade}, Brasil')
+        if coords_cidade:
+            return JsonResponse({
+                'latitude': coords_cidade[0],
+                'longitude': coords_cidade[1],
+                'aviso': f'Praia específica não encontrada; mapa centralizado em {cidade}. Posicione o marcador no ponto desejado.',
+            })
+    except Exception:
+        pass
+
+    if teve_erro_conexao:
         return JsonResponse(
             {'erro': 'Não foi possível consultar o serviço de localização agora.'},
             status=502,
         )
 
-    try:
-        resultado = json.loads(resultados)
-        localizacao = resultado[0]
-        latitude = float(localizacao['lat'])
-        longitude = float(localizacao['lon'])
-    except (ValueError, KeyError, IndexError, TypeError, json.JSONDecodeError):
-        return JsonResponse(
-            {'erro': 'Localização não encontrada para essa praia e cidade.'},
-            status=404,
-        )
-
-    return JsonResponse({'latitude': latitude, 'longitude': longitude})
+    return JsonResponse(
+        {'erro': 'Localização não encontrada para essa praia e cidade.'},
+        status=404,
+    )
 
 
 def get_session_usuario(request):
@@ -254,7 +344,7 @@ def excluir_praia_view(request, praia_id):
         anterior = snapshot(praia)
         praia.delete()
         registrar_evento(entidade='PRAIA', id_registro=praia_id, acao='EXCLUSAO', usuario=usuario,
-                         resumo=f'Praia "{anterior.get("nome", praia_id)}" excluída.',
-                         valores_anteriores=anterior)
+                          resumo=f'Praia "{anterior.get("nome", praia_id)}" excluída.',
+                          valores_anteriores=anterior)
 
     return redirect('praias')
