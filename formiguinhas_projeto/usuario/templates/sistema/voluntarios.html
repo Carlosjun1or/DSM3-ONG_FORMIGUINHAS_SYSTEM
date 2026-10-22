@@ -45,33 +45,15 @@
     </form>
 
     {% if voluntarios %}
-    <div class="table-wrap">
-        <table class="data-table">
-            <thead>
-                <tr>
-                    <th>Nome</th>
-                    <th>Nascimento</th>
-                    <th>Idade</th>
-                    <th>Endereço</th>
-                    <th>Telefone</th>
-                    <th>E-mail</th>
-                    <th>Status</th>
-                    <th>Frequência</th>
-                    <th>Possui usuário?</th>
-                    <th>Auditoria</th>
-                    <th>Ações</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for voluntario in voluntarios %}
-                <tr id="voluntario-{{ voluntario.id_voluntario }}" {% if voluntario.id_voluntario == voluntario_destacado %}class="voluntario-destacado"{% endif %}>
-                    <td><a class="table-link" href="{% url 'editar_voluntario' voluntario.id_voluntario %}"><strong>{{ voluntario.nome }}</strong></a></td>
-                    <td class="date-cell">{{ voluntario.dt_nascimento|date:'d/m/Y' }}</td>
-                    <td>{{ voluntario.idade }} anos</td>
-                    <td>{{ voluntario.endereco }}</td>
-                    <td class="phone-cell">{{ voluntario.telefone }}</td>
-                    <td>{{ voluntario.email }}</td>
-                    <td>
+    <div class="volunteer-card-grid">
+        {% for voluntario in voluntarios %}
+        <article id="voluntario-{{ voluntario.id_voluntario }}" class="volunteer-card{% if voluntario.id_voluntario == voluntario_destacado %} voluntario-destacado{% endif %}">
+            <div class="volunteer-card-heading">
+                <div class="volunteer-card-identity">
+                    <span class="volunteer-card-label">Voluntário</span>
+                    <h3><a href="{% url 'editar_voluntario' voluntario.id_voluntario %}">{{ voluntario.nome }}</a></h3>
+                </div>
+                <div class="volunteer-card-status">
                         {% if usuario.tipo != 'ADMIN' %}
                         <span class="status-select status-{{ voluntario.status|lower }}">{{ voluntario.get_status_display }}</span>
                         {% else %}
@@ -84,34 +66,65 @@
                             </select>
                         </form>
                         {% endif %}
-                    </td>
-                    <td>
-                        <strong>{{ voluntario.frequencia_nivel }}</strong>
-                        {% if voluntario.frequencia_percentual is not None %}
-                        <small>{{ voluntario.frequencia_percentual|floatformat:1 }}% ({{ voluntario.frequencia_presencas }}/{{ voluntario.frequencia_total }})</small>
-                        {% else %}
-                        <small>Sem ações consideradas</small>
-                        {% endif %}
-                    </td>
-                    <td>{% if voluntario.usuario %}Sim{% else %}Não{% endif %}</td>
-                    <td class="audit-cell">
-                        <strong>{% if voluntario.cadastrado_por_nome %}Cadastrado por {{ voluntario.cadastrado_por_nome }}{% elif voluntario.cadastrado_por %}Cadastrado por {{ voluntario.cadastrado_por.id_voluntario.nome }}{% else %}Cadastro anterior{% endif %}</strong>
-                        {% if voluntario.cadastrado_por_nome or voluntario.cadastrado_por %}<small>{{ voluntario.dt_cadastro|date:'d/m/Y H:i' }}</small>{% endif %}
-                        {% if voluntario.ultimo_editado_por_nome %}<small>Editado por {{ voluntario.ultimo_editado_por_nome }} em {{ voluntario.dt_ultima_edicao|date:'d/m/Y H:i' }}</small>{% elif voluntario.ultimo_editado_por %}<small>Editado por {{ voluntario.ultimo_editado_por.id_voluntario.nome }} em {{ voluntario.dt_ultima_edicao|date:'d/m/Y H:i' }}</small>{% else %}<small>Sem edições</small>{% endif %}
-                    </td>
-                    <td class="table-actions">
-                        <a class="btn btn-outline btn-small" href="{% url 'editar_voluntario' voluntario.id_voluntario %}">Editar</a>
-                        {% if usuario.tipo == 'ADMIN' %}
-                        <form method="post" action="{% url 'excluir_voluntario' voluntario.id_voluntario %}" onsubmit="return confirm('Excluir este voluntário?');">
-                            {% csrf_token %}
-                            <button type="submit" class="btn btn-danger btn-small">Excluir</button>
-                        </form>
-                        {% endif %}
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+                </div>
+            </div>
+
+            <dl class="volunteer-card-details">
+                <div>
+                    <dt>Nascimento</dt>
+                    <dd>{{ voluntario.dt_nascimento|date:'d/m/Y' }} · {{ voluntario.idade }} anos</dd>
+                </div>
+                <div>
+                    <dt>Telefone</dt>
+                    <dd><a href="tel:{{ voluntario.telefone }}">{{ voluntario.telefone }}</a></dd>
+                </div>
+                <div class="volunteer-card-detail-wide">
+                    <dt>E-mail</dt>
+                    <dd><a href="mailto:{{ voluntario.email }}">{{ voluntario.email }}</a></dd>
+                </div>
+                <div class="volunteer-card-detail-wide">
+                    <dt>Endereço</dt>
+                    <dd>{{ voluntario.endereco }}</dd>
+                </div>
+                <div>
+                    <dt>Acesso ao sistema</dt>
+                    <dd>{% if voluntario.usuario %}Possui usuário{% else %}Sem usuário{% endif %}</dd>
+                </div>
+            </dl>
+
+            <section class="volunteer-card-frequency" aria-label="Frequência em ações">
+                <div class="volunteer-card-frequency-heading">
+                    <span>Frequência</span>
+                    <strong>{{ voluntario.frequencia_nivel }}</strong>
+                </div>
+                {% if voluntario.frequencia_percentual is not None %}
+                <progress class="volunteer-card-frequency-track" max="100" value="{{ voluntario.frequencia_percentual|floatformat:0 }}" aria-label="Frequência de {{ voluntario.nome }}"></progress>
+                <small>{{ voluntario.frequencia_percentual|floatformat:1 }}% · {{ voluntario.frequencia_presencas }}/{{ voluntario.frequencia_total }} ações</small>
+                {% else %}
+                <small>Sem ações consideradas</small>
+                {% endif %}
+            </section>
+
+            <details class="volunteer-card-audit">
+                <summary>Histórico do cadastro</summary>
+                <div>
+                    <p><strong>{% if voluntario.cadastrado_por_nome %}Cadastrado por {{ voluntario.cadastrado_por_nome }}{% elif voluntario.cadastrado_por %}Cadastrado por {{ voluntario.cadastrado_por.id_voluntario.nome }}{% else %}Cadastro anterior{% endif %}</strong></p>
+                    {% if voluntario.cadastrado_por_nome or voluntario.cadastrado_por %}<p>{{ voluntario.dt_cadastro|date:'d/m/Y H:i' }}</p>{% endif %}
+                    {% if voluntario.ultimo_editado_por_nome %}<p>Editado por {{ voluntario.ultimo_editado_por_nome }} em {{ voluntario.dt_ultima_edicao|date:'d/m/Y H:i' }}</p>{% elif voluntario.ultimo_editado_por %}<p>Editado por {{ voluntario.ultimo_editado_por.id_voluntario.nome }} em {{ voluntario.dt_ultima_edicao|date:'d/m/Y H:i' }}</p>{% else %}<p>Sem edições</p>{% endif %}
+                </div>
+            </details>
+
+            <div class="volunteer-card-actions">
+                <a class="btn btn-outline btn-small" href="{% url 'editar_voluntario' voluntario.id_voluntario %}">Editar</a>
+                {% if usuario.tipo == 'ADMIN' %}
+                <form method="post" action="{% url 'excluir_voluntario' voluntario.id_voluntario %}" onsubmit="return confirm('Excluir este voluntário?');">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger btn-small">Excluir</button>
+                </form>
+                {% endif %}
+            </div>
+        </article>
+        {% endfor %}
     </div>
     {% include 'sistema/includes/paginacao.html' %}
     {% else %}

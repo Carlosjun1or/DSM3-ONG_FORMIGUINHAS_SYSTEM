@@ -77,32 +77,15 @@
     </form>
 
     {% if acoes %}
-    <div class="table-wrap">
-        <table class="data-table">
-            <thead>
-                <tr>
-                    <th>Tipo</th>
-                    <th>Praia</th>
-                    <th>Data / horário</th>
-                    <th>Local</th>
-                    <th>Status</th>
-                    <th>Participantes</th>
-                    <th>Auditoria</th>
-                    <th>Ações</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for acao in acoes %}
-                <tr>
-                    <td>
-                        <a class="table-link" href="{% url 'acao_detalhe' acao.id_acao %}">
-                            <strong>{{ acao.get_tipo_display }}</strong>
-                        </a>
-                    </td>
-                    <td><a class="table-link" href="{% url 'praias' %}?praia={{ acao.praia.id_praia }}#praia-{{ acao.praia.id_praia }}"><strong>{{ acao.praia.nome }}</strong></a></td>
-                    <td>{{ acao.data|date:'d/m/Y' }}{% if acao.horario %}<br><small>{{ acao.horario|time:'H:i' }}</small>{% endif %}</td>
-                    <td>{{ acao.local|default:'-' }}</td>
-                    <td>
+    <div class="record-card-grid record-card-grid--line">
+        {% for acao in acoes %}
+        <article class="record-card record-card--line">
+            <div class="record-card-heading">
+                <div>
+                    <span class="record-card-eyebrow">{{ acao.get_tipo_display }} · {{ acao.praia.cidade }}</span>
+                    <h3><a href="{% url 'acao_detalhe' acao.id_acao %}">Ação em {{ acao.praia.nome }}</a></h3>
+                </div>
+                <div class="record-card-control">
                         {% if usuario.tipo == 'ADMIN' %}
                         <form method="post" action="{% url 'atualizar_status_acao' acao.id_acao %}" class="inline-status-form">
                             {% csrf_token %}
@@ -115,27 +98,46 @@
                         {% else %}
                         <span class="status-select status-{{ acao.status|lower }}">{{ acao.get_status_display }}</span>
                         {% endif %}
-                    </td>
-                    <td>{{ acao.participantes.count }}</td>
-                    <td class="audit-cell">
-                        <strong>{% if acao.cadastrado_por_nome %}Cadastrado por {{ acao.cadastrado_por_nome }}{% elif acao.cadastrado_por %}Cadastrado por {{ acao.cadastrado_por.id_voluntario.nome }}{% else %}Cadastro anterior{% endif %}</strong>
-                        {% if acao.cadastrado_por_nome or acao.cadastrado_por %}<small>{{ acao.dt_cadastro|date:'d/m/Y H:i' }}</small>{% endif %}
-                        {% if acao.ultimo_editado_por_nome %}<small>Editado por {{ acao.ultimo_editado_por_nome }} em {{ acao.dt_ultima_edicao|date:'d/m/Y H:i' }}</small>{% elif acao.ultimo_editado_por %}<small>Editado por {{ acao.ultimo_editado_por.id_voluntario.nome }} em {{ acao.dt_ultima_edicao|date:'d/m/Y H:i' }}</small>{% else %}<small>Sem edições</small>{% endif %}
-                    </td>
-                    <td class="table-actions">
-                        <a class="btn btn-outline btn-small" href="{% url 'acao_detalhe' acao.id_acao %}">Detalhes</a>
-                        {% if usuario.tipo == 'ADMIN' %}
-                        <a class="btn btn-outline btn-small" href="{% url 'editar_acao' acao.id_acao %}">Editar</a>
-                        <form method="post" action="{% url 'excluir_acao' acao.id_acao %}" onsubmit="return confirm('Excluir esta ação e todos os seus vínculos?');">
-                            {% csrf_token %}
-                            <button type="submit" class="btn btn-danger btn-small">Excluir</button>
-                        </form>
-                        {% endif %}
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+                </div>
+            </div>
+            <dl class="record-card-fields">
+                <div>
+                    <dt>Praia</dt>
+                    <dd><a href="{% url 'praias' %}?praia={{ acao.praia.id_praia }}#praia-{{ acao.praia.id_praia }}">{{ acao.praia.nome }}</a></dd>
+                </div>
+                <div>
+                    <dt>Data e horário</dt>
+                    <dd>{{ acao.data|date:'d/m/Y' }}{% if acao.horario %} · {{ acao.horario|time:'H:i' }}{% endif %}</dd>
+                </div>
+                <div>
+                    <dt>Participantes</dt>
+                    <dd>{{ acao.participantes.count }}</dd>
+                </div>
+                <div class="record-card-field-wide">
+                    <dt>Local</dt>
+                    <dd>{{ acao.local|default:'-' }}</dd>
+                </div>
+            </dl>
+            <details class="record-card-audit">
+                <summary>Histórico do cadastro</summary>
+                <div>
+                    <p><strong>{% if acao.cadastrado_por_nome %}Cadastrado por {{ acao.cadastrado_por_nome }}{% elif acao.cadastrado_por %}Cadastrado por {{ acao.cadastrado_por.id_voluntario.nome }}{% else %}Cadastro anterior{% endif %}</strong></p>
+                    {% if acao.cadastrado_por_nome or acao.cadastrado_por %}<p>{{ acao.dt_cadastro|date:'d/m/Y H:i' }}</p>{% endif %}
+                    {% if acao.ultimo_editado_por_nome %}<p>Editado por {{ acao.ultimo_editado_por_nome }} em {{ acao.dt_ultima_edicao|date:'d/m/Y H:i' }}</p>{% elif acao.ultimo_editado_por %}<p>Editado por {{ acao.ultimo_editado_por.id_voluntario.nome }} em {{ acao.dt_ultima_edicao|date:'d/m/Y H:i' }}</p>{% else %}<p>Sem edições</p>{% endif %}
+                </div>
+            </details>
+            <div class="record-card-actions">
+                <a class="btn btn-outline btn-small" href="{% url 'acao_detalhe' acao.id_acao %}">Detalhes</a>
+                {% if usuario.tipo == 'ADMIN' %}
+                <a class="btn btn-outline btn-small" href="{% url 'editar_acao' acao.id_acao %}">Editar</a>
+                <form method="post" action="{% url 'excluir_acao' acao.id_acao %}" onsubmit="return confirm('Excluir esta ação e todos os seus vínculos?');">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger btn-small">Excluir</button>
+                </form>
+                {% endif %}
+            </div>
+        </article>
+        {% endfor %}
     </div>
     {% include 'sistema/includes/paginacao.html' %}
     {% else %}

@@ -52,22 +52,16 @@
         <span>{% if busca or filtro_tipo or filtro_status %}Resultados filtrados{% else %}Todos os comunicados{% endif %}</span>
     </div>
     {% if comunicados %}
-    <div class="table-wrap communication-admin-table">
-        <table class="data-table">
-            <thead>
-                <tr><th>Comunicado</th><th>Público</th><th>Status</th><th>Publicação</th><th>Auditoria</th><th>Ações</th></tr>
-            </thead>
-            <tbody>
+    <div class="record-card-grid record-card-grid--line communication-admin-table">
             {% for comunicado in comunicados %}
-                <tr>
-                    <td class="communication-admin-title">
+            <article class="record-card record-card--line">
+                <div class="record-card-heading">
+                    <div class="communication-admin-title">
                         <span class="communication-type communication-type-{{ comunicado.tipo|lower }}">{{ comunicado.get_tipo_display }}</span>
-                        <a class="table-link" href="{% url 'comunicado_editar' comunicado.id_comunicado %}">{{ comunicado.titulo }}</a>
-                        {% if comunicado.tema %}<small class="table-secondary">{{ comunicado.tema.nome }}</small>{% endif %}
-                        <small class="communication-admin-summary">{{ comunicado.resumo|default:comunicado.conteudo|striptags|truncatechars:110 }}</small>
-                    </td>
-                    <td>{{ comunicado.get_publico_display }}</td>
-                    <td>
+                        <h3><a href="{% url 'comunicado_editar' comunicado.id_comunicado %}">{{ comunicado.titulo }}</a></h3>
+                        {% if comunicado.tema %}<span class="record-card-eyebrow">{{ comunicado.tema.nome }}</span>{% endif %}
+                    </div>
+                    <div class="record-card-control">
                         <form method="post" action="{% url 'comunicado_status' comunicado.id_comunicado 'alterar_status' %}" class="inline-status-form">
                             {% csrf_token %}
                             <input type="hidden" name="busca" value="{{ busca }}">
@@ -80,20 +74,32 @@
                                 {% endfor %}
                             </select>
                         </form>
-                    </td>
-                    <td>{% if comunicado.dt_publicacao %}{{ comunicado.dt_publicacao|date:'d/m/Y H:i' }}{% else %}<span class="muted">Ainda não publicado</span>{% endif %}</td>
-                    <td class="audit-cell">
-                        <strong>{% if comunicado.autor %}{{ comunicado.autor.id_voluntario.nome }}{% else %}Cadastro anterior{% endif %}</strong>
-                        {% if comunicado.autor %}<small>Cadastrado em {{ comunicado.criado_em|date:'d/m/Y H:i' }}</small>{% endif %}
-                        {% if comunicado.ultimo_editado_por %}<small>Editado por {{ comunicado.ultimo_editado_por.id_voluntario.nome }} em {{ comunicado.dt_ultima_edicao|date:'d/m/Y H:i' }}</small>{% else %}<small>Sem edições</small>{% endif %}
-                    </td>
-                    <td class="table-actions communication-admin-actions">
-                        <a class="btn btn-action-edit btn-small" href="{% url 'comunicado_editar' comunicado.id_comunicado %}">Editar</a>
-                    </td>
-                </tr>
+                    </div>
+                </div>
+                <p class="record-card-summary">{{ comunicado.resumo|default:comunicado.conteudo|striptags|truncatechars:180 }}</p>
+                <dl class="record-card-fields">
+                    <div>
+                        <dt>Público</dt>
+                        <dd>{{ comunicado.get_publico_display }}</dd>
+                    </div>
+                    <div>
+                        <dt>Publicação</dt>
+                        <dd>{% if comunicado.dt_publicacao %}{{ comunicado.dt_publicacao|date:'d/m/Y H:i' }}{% else %}<span class="muted">Ainda não publicado</span>{% endif %}</dd>
+                    </div>
+                </dl>
+                <details class="record-card-audit">
+                    <summary>Histórico do cadastro</summary>
+                    <div>
+                        <p><strong>{% if comunicado.autor %}{{ comunicado.autor.id_voluntario.nome }}{% else %}Cadastro anterior{% endif %}</strong></p>
+                        {% if comunicado.autor %}<p>Cadastrado em {{ comunicado.criado_em|date:'d/m/Y H:i' }}</p>{% endif %}
+                        {% if comunicado.ultimo_editado_por %}<p>Editado por {{ comunicado.ultimo_editado_por.id_voluntario.nome }} em {{ comunicado.dt_ultima_edicao|date:'d/m/Y H:i' }}</p>{% else %}<p>Sem edições</p>{% endif %}
+                    </div>
+                </details>
+                <div class="record-card-actions communication-admin-actions">
+                        <a class="btn btn-outline btn-small" href="{% url 'comunicado_editar' comunicado.id_comunicado %}">Editar</a>
+                </div>
+            </article>
             {% endfor %}
-            </tbody>
-        </table>
     </div>
     {% include 'sistema/includes/paginacao.html' %}
     {% else %}

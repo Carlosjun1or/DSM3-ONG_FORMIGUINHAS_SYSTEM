@@ -606,9 +606,10 @@ main .btn {
 
 #inicio .indicadores {
     display: grid;
+    width: min(100%, 700px);
     grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 1rem;
-    margin: 1rem 0 0;
+    margin: 1rem auto 0;
     padding: 0.5rem 0.75rem;
     border: 1px solid #00a3e0;
     border-radius: 12px;
@@ -646,7 +647,7 @@ main .btn {
 }
 
 #historia {
-    padding: clamp(2rem, 4vw, 3rem) 0;
+    padding: clamp(2.5rem, 5vw, 3.5rem) 0;
     background: var(--site-papel);
 }
 
@@ -721,7 +722,7 @@ main .btn {
 }
 
 #multiroes {
-    padding: clamp(2rem, 4vw, 3rem) 0;
+    padding: clamp(2.5rem, 5vw, 3.5rem) 0;
     background: var(--site-papel);
 }
 
@@ -773,9 +774,9 @@ main .btn {
 #multiroes .container .multiroes-conteudo .multiroes-destaques .multiroes-cards .multirao-card,
 #multiroes .proximo-mutirao {
     display: flex;
-    width: min(100%, 400px);
+    width: min(100%, 720px);
     min-width: 0;
-    min-height: 130px;
+    min-height: 280px;
     flex-direction: row;
     align-items: stretch;
     gap: 0;
@@ -812,7 +813,6 @@ main .btn {
 }
 
 #multiroes .proximo-mutirao {
-    width: min(100%, 400px);
     border-top: 4px solid var(--site-amarelo);
     background: linear-gradient(145deg, #fffdf7 0%, #fff9d9 100%);
     transition: border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
@@ -969,7 +969,7 @@ main .btn {
 
 #multiroes .proximo-mutirao-data {
     display: flex;
-    flex: 0 0 32%;
+    flex: 0 0 40%;
     flex-direction: column;
     align-items: center;
     justify-content: center;
@@ -1006,7 +1006,7 @@ main .btn {
     flex-direction: column;
     align-items: flex-start;
     gap: 0.3rem;
-    padding: 0.6rem 0.7rem;
+    padding: 1.15rem 1.35rem;
 }
 
 #multiroes .proximo-mutirao h3 {
@@ -1305,6 +1305,7 @@ main .btn {
     }
 
     #multiroes .container .multiroes-conteudo .multiroes-destaques .multiroes-cards .multirao-card,
+    #multiroes .proximo-mutirao,
     #multiroes .container .multiroes-conteudo .multiroes-cards .multirao-card .multirao-imagem {
         min-height: 180px;
     }
@@ -2986,17 +2987,17 @@ main .btn {
 }
 
 .secao-apoie {
-    padding: clamp(2.5rem, 6vw, 5rem) 0;
+    padding: clamp(2.5rem, 5vw, 3.5rem) 0;
     background: #f2eee3;
 }
 
 .secao-impacto {
-    padding: clamp(2.5rem, 6vw, 4.5rem) 0;
-    background: linear-gradient(135deg, #eaf1f8 0%, var(--papel) 58%, #f4efe1 100%);
+    padding: clamp(2.5rem, 5vw, 3.5rem) 0;
+    background: #f2eee3;
 }
 
 .secao-impacto > .container {
-    width: min(100% - 2rem, 1180px);
+    width: min(100% - 2rem, 1100px);
 }
 
 .impacto-cabecalho {

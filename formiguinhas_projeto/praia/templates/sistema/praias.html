@@ -56,29 +56,15 @@
     </form>
 
     {% if praias %}
-    <div class="table-wrap">
-        <table class="data-table">
-            <thead>
-                <tr>
-                    <th>Praia</th>
-                    <th>Cidade</th>
-                    <th>Coordenadas</th>
-                    <th>Descrição</th>
-                    <th>Status</th>
-                    <th>Auditoria</th>
-                    {% if usuario.tipo == 'ADMIN' %}
-                        <th>Ações</th>
-                    {% endif %}
-                </tr>
-            </thead>
-            <tbody>
+    <div class="record-card-grid record-card-grid--line">
                 {% for praia in praias %}
-                <tr id="praia-{{ praia.id_praia }}" {% if praia.id_praia == praia_destacada %}class="praia-destacada"{% endif %}>
-                    <td><a class="table-link" href="{% url 'editar_praia' praia.id_praia %}"><strong>{{ praia.nome }}</strong></a></td>
-                    <td>{{ praia.cidade }}</td>
-                    <td>{{ praia.latitude }}, {{ praia.longitude }}</td>
-                    <td>{{ praia.descricao|default:'-'|truncatechars:80 }}</td>
-                    <td>
+                <article id="praia-{{ praia.id_praia }}" class="record-card record-card--line{% if praia.id_praia == praia_destacada %} praia-destacada{% endif %}">
+                    <div class="record-card-heading">
+                        <div>
+                            <span class="record-card-eyebrow">Praia · {{ praia.cidade }}</span>
+                            <h3><a href="{% url 'editar_praia' praia.id_praia %}">{{ praia.nome }}</a></h3>
+                        </div>
+                        <div class="record-card-control">
                         {% if usuario.tipo == 'ADMIN' %}
                         <form method="post" action="{% url 'atualizar_status_praia' praia.id_praia %}" class="inline-status-form">
                             {% csrf_token %}
@@ -91,25 +77,37 @@
                         {% else %}
                         <span class="status-select {% if praia.praia_ativa == 'ATIVA' %}status-ativo{% else %}status-inativo{% endif %}">{{ praia.get_praia_ativa_display }}</span>
                         {% endif %}
-                    </td>
-                    <td class="audit-cell">
-                        <strong>{% if praia.cadastrado_por_nome %}Cadastrado por {{ praia.cadastrado_por_nome }}{% elif praia.cadastrado_por %}Cadastrado por {{ praia.cadastrado_por.id_voluntario.nome }}{% else %}Cadastro anterior{% endif %}</strong>
-                        {% if praia.cadastrado_por_nome or praia.cadastrado_por %}<small>{{ praia.dt_cadastro|date:'d/m/Y H:i' }}</small>{% endif %}
-                        {% if praia.ultimo_editado_por_nome %}<small>Editado por {{ praia.ultimo_editado_por_nome }} em {{ praia.dt_ultima_edicao|date:'d/m/Y H:i' }}</small>{% elif praia.ultimo_editado_por %}<small>Editado por {{ praia.ultimo_editado_por.id_voluntario.nome }} em {{ praia.dt_ultima_edicao|date:'d/m/Y H:i' }}</small>{% else %}<small>Sem edições</small>{% endif %}
-                    </td>
-                    <td class="table-actions">
-                        {% if usuario.tipo == 'ADMIN' %}
+                        </div>
+                    </div>
+                    <dl class="record-card-fields">
+                        <div>
+                            <dt>Coordenadas</dt>
+                            <dd>{{ praia.latitude }}, {{ praia.longitude }}</dd>
+                        </div>
+                        <div class="record-card-field-wide">
+                            <dt>Descrição</dt>
+                            <dd>{{ praia.descricao|default:'-'|truncatechars:120 }}</dd>
+                        </div>
+                    </dl>
+                    <details class="record-card-audit">
+                        <summary>Histórico do cadastro</summary>
+                        <div>
+                            <p><strong>{% if praia.cadastrado_por_nome %}Cadastrado por {{ praia.cadastrado_por_nome }}{% elif praia.cadastrado_por %}Cadastrado por {{ praia.cadastrado_por.id_voluntario.nome }}{% else %}Cadastro anterior{% endif %}</strong></p>
+                            {% if praia.cadastrado_por_nome or praia.cadastrado_por %}<p>{{ praia.dt_cadastro|date:'d/m/Y H:i' }}</p>{% endif %}
+                            {% if praia.ultimo_editado_por_nome %}<p>Editado por {{ praia.ultimo_editado_por_nome }} em {{ praia.dt_ultima_edicao|date:'d/m/Y H:i' }}</p>{% elif praia.ultimo_editado_por %}<p>Editado por {{ praia.ultimo_editado_por.id_voluntario.nome }} em {{ praia.dt_ultima_edicao|date:'d/m/Y H:i' }}</p>{% else %}<p>Sem edições</p>{% endif %}
+                        </div>
+                    </details>
+                    {% if usuario.tipo == 'ADMIN' %}
+                    <div class="record-card-actions">
                         <a class="btn btn-outline btn-small" href="{% url 'editar_praia' praia.id_praia %}">Editar</a>
                         <form method="post" action="{% url 'excluir_praia' praia.id_praia %}" onsubmit="return confirm('Excluir esta praia?');">
                             {% csrf_token %}
                             <button type="submit" class="btn btn-danger btn-small">Excluir</button>
                         </form>
-                        {% endif %}
-                    </td>
-                </tr>
+                    </div>
+                    {% endif %}
+                </article>
                 {% endfor %}
-            </tbody>
-        </table>
     </div>
     {% include 'sistema/includes/paginacao.html' %}
     {% else %}

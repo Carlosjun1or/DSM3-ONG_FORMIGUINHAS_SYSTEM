@@ -41,33 +41,15 @@
     </form>
 
     {% if bags %}
-    <div class="table-wrap bags-tabela">
-        <table class="data-table bags-table">
-            <thead>
-                <tr>
-                    <th>Bag</th>
-                    <th>Condomínio</th>
-                    <th>Praia</th>
-                    <th>Status</th>
-                    <th>Ocupação</th>
-                    <th>Peso atual</th>
-                    <th>Última movimentação</th>
-                    <th>Auditoria</th>
-                    {% if usuario.tipo == 'ADMIN' %}<th>Ações</th>{% endif %}
-                </tr>
-            </thead>
-            <tbody>
+    <div class="record-card-grid record-card-grid--line bags-tabela">
             {% for bag in bags %}
-                <tr>
-                    <td>
-                        <div class="bag-identificacao"><a class="table-link" href="{% url 'detalhe_bag' bag.id_bag %}"><strong>{{ bag.codigo }}</strong></a><small>Bag grande</small></div>
-                    </td>
-                    <td>
-                        <a class="table-link" href="{% url 'detalhe_condominio' bag.condominio.id_condominio %}">{{ bag.condominio.nome }}</a>
-                        <small class="table-secondary">{{ bag.condominio.cidade }}/{{ bag.condominio.estado }}</small>
-                    </td>
-                    <td>{% if bag.condominio.praia %}{{ bag.condominio.praia.nome }}{% else %}<span class="muted">Não vinculada</span>{% endif %}</td>
-                    <td>
+            <article class="record-card record-card--line">
+                <div class="record-card-heading">
+                    <div>
+                        <span class="record-card-eyebrow">Bag grande · {{ bag.codigo }}</span>
+                        <h3><a href="{% url 'detalhe_bag' bag.id_bag %}">{{ bag.condominio.nome }}</a></h3>
+                    </div>
+                    <div class="record-card-control">
                         {% if usuario.tipo == 'ADMIN' %}
                         <form method="post" action="{% url 'atualizar_status_bag' bag.id_bag %}" class="inline-status-form">
                             {% csrf_token %}
@@ -82,27 +64,43 @@
                         {% else %}
                         <span class="bag-status bag-status-{{ bag.status|lower }}">{{ bag.get_status_display }}</span>
                         {% endif %}
-                    </td>
-                    <td class="ocupacao-celula"><strong>{{ bag.percentual_ocupacao }}%</strong><div class="ocupacao-barra {% if bag.percentual_ocupacao >= 100 %}cheia{% elif bag.percentual_ocupacao >= 80 %}alta{% endif %}" role="progressbar" aria-valuenow="{{ bag.percentual_ocupacao }}" aria-valuemin="0" aria-valuemax="100" aria-label="Ocupação da bag {{ bag.codigo }}"><span style="width: {{ bag.percentual_ocupacao }}%"></span></div></td>
-                    <td>{{ bag.peso_atual_kg|floatformat:2 }} kg</td>
-                    <td>
+                    </div>
+                </div>
+                <dl class="record-card-fields">
+                    <div>
+                        <dt>Praia</dt>
+                        <dd>{% if bag.condominio.praia %}{{ bag.condominio.praia.nome }}{% else %}<span class="muted">Não vinculada</span>{% endif %}</dd>
+                    </div>
+                    <div>
+                        <dt>Peso atual</dt>
+                        <dd>{{ bag.peso_atual_kg|floatformat:2 }} kg</dd>
+                    </div>
+                    <div class="record-card-field-wide">
+                        <dt>Ocupação · {{ bag.percentual_ocupacao }}%</dt>
+                        <dd><progress class="record-card-progress" value="{{ bag.percentual_ocupacao }}" max="100" aria-label="Ocupação da bag {{ bag.codigo }}">{{ bag.percentual_ocupacao }}%</progress></dd>
+                    </div>
+                    <div class="record-card-field-wide">
+                        <dt>Última movimentação</dt>
+                        <dd>
                         {% with ultima=bag.movimentacoes.all|first %}
                             {% if ultima %}
-                                <span>{{ ultima.get_tipo_display }}</span>
-                                <small class="table-secondary">{{ ultima.data_movimentacao|date:'d/m/Y H:i' }} · {{ ultima.get_status_novo_display }}</small>
+                                {{ ultima.get_tipo_display }} · {{ ultima.data_movimentacao|date:'d/m/Y H:i' }} · {{ ultima.get_status_novo_display }}
                             {% else %}<span class="muted">Sem movimentações</span>{% endif %}
                         {% endwith %}
-                    </td>
-                    <td class="audit-cell">
-                        <strong>{% if bag.cadastrado_por_nome %}Cadastrada por {{ bag.cadastrado_por_nome }}{% elif bag.cadastrado_por %}Cadastrada por {{ bag.cadastrado_por.id_voluntario.nome }}{% else %}Cadastro anterior{% endif %}</strong>
-                        <small>{{ bag.dt_cadastro|date:'d/m/Y H:i' }}</small>
-                        {% if bag.ultimo_editado_por_nome %}<small>Editada por {{ bag.ultimo_editado_por_nome }} em {{ bag.dt_ultima_edicao|date:'d/m/Y H:i' }}</small>{% elif bag.ultimo_editado_por %}<small>Editada por {{ bag.ultimo_editado_por.id_voluntario.nome }} em {{ bag.dt_ultima_edicao|date:'d/m/Y H:i' }}</small>{% else %}<small>Sem edições</small>{% endif %}
-                    </td>
-                    {% if usuario.tipo == 'ADMIN' %}<td><a class="btn btn-outline btn-small" href="{% url 'cadastrar_movimentacao_bag' bag.id_bag %}">Movimentar</a></td>{% endif %}
-                </tr>
+                        </dd>
+                    </div>
+                </dl>
+                <details class="record-card-audit">
+                    <summary>Histórico do cadastro</summary>
+                    <div>
+                        <p><strong>{% if bag.cadastrado_por_nome %}Cadastrada por {{ bag.cadastrado_por_nome }}{% elif bag.cadastrado_por %}Cadastrada por {{ bag.cadastrado_por.id_voluntario.nome }}{% else %}Cadastro anterior{% endif %}</strong></p>
+                        <p>{{ bag.dt_cadastro|date:'d/m/Y H:i' }}</p>
+                        {% if bag.ultimo_editado_por_nome %}<p>Editada por {{ bag.ultimo_editado_por_nome }} em {{ bag.dt_ultima_edicao|date:'d/m/Y H:i' }}</p>{% elif bag.ultimo_editado_por %}<p>Editada por {{ bag.ultimo_editado_por.id_voluntario.nome }} em {{ bag.dt_ultima_edicao|date:'d/m/Y H:i' }}</p>{% else %}<p>Sem edições</p>{% endif %}
+                    </div>
+                </details>
+                {% if usuario.tipo == 'ADMIN' %}<div class="record-card-actions"><a class="btn btn-outline btn-small" href="{% url 'cadastrar_movimentacao_bag' bag.id_bag %}">Movimentar</a></div>{% endif %}
+            </article>
             {% endfor %}
-            </tbody>
-        </table>
     </div>
     {% include 'sistema/includes/paginacao.html' %}
     {% else %}

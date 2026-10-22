@@ -35,32 +35,15 @@
         </form>
 
         {% if doadores %}
-        <div class="table-wrap donor-records-table">
-            <table class="data-table">
-                <thead>
-                    <tr>
-                        <th>Doador</th>
-                        <th>Tipo</th>
-                        <th>Contato</th>
-                        <th>Situação</th>
-                        <th>Auditoria</th>
-                        <th>Ações</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for doador in doadores %}
-                    <tr>
-                        <td>
-                            <a class="table-link" href="{% url 'doador_detalhe' doador.id_doador %}"><strong>{{ doador.nome }}</strong></a>
-                            {% if doador.documento %}<small class="table-secondary">{{ doador.documento }}</small>{% endif %}
-                        </td>
-                        <td>{{ doador.get_tipo_display }}</td>
-                        <td class="donor-contact-cell">
-                            {% if doador.email %}<span>{{ doador.email }}</span>{% endif %}
-                            {% if doador.telefone %}<small>{{ doador.telefone }}</small>{% endif %}
-                            {% if not doador.email and not doador.telefone %}<span class="muted">Não informado</span>{% endif %}
-                        </td>
-                        <td>
+        <div class="record-card-grid record-card-grid--line">
+            {% for doador in doadores %}
+            <article class="record-card record-card--line">
+                <div class="record-card-heading">
+                    <div>
+                        <span class="record-card-eyebrow">{{ doador.get_tipo_display }}{% if doador.documento %} · {{ doador.documento }}{% endif %}</span>
+                        <h3><a href="{% url 'doador_detalhe' doador.id_doador %}">{{ doador.nome }}</a></h3>
+                    </div>
+                    <div class="record-card-control">
                             {% if usuario.tipo == 'ADMIN' %}
                             <form method="post" action="{% url 'atualizar_status_doador' doador.id_doador %}" class="inline-status-form">
                                 {% csrf_token %}
@@ -72,26 +55,32 @@
                             {% else %}
                             <span class="status-badge {% if doador.ativo %}status-ativo{% else %}status-inativo{% endif %}">{% if doador.ativo %}Ativo{% else %}Inativo{% endif %}</span>
                             {% endif %}
-                        </td>
-                        <td class="audit-cell">
-                            <strong>Cadastrado por {{ doador.cadastrado_por_nome|default:'Sistema' }}</strong>
-                            <small>{{ doador.dt_cadastro|date:"d/m/Y H:i" }}</small>
-                            {% if doador.dt_ultima_edicao %}
-                            <small>Editado por {{ doador.ultimo_editado_por_nome|default:'Usuário do sistema' }} · {{ doador.dt_ultima_edicao|date:"d/m/Y H:i" }}</small>
-                            {% else %}
-                            <small>Sem edições</small>
-                            {% endif %}
-                        </td>
-                        <td>
-                            <div class="donor-record-actions">
-                                <a class="btn btn-outline btn-small" href="{% url 'doador_detalhe' doador.id_doador %}">Detalhes</a>
-                                {% if usuario.tipo == 'ADMIN' %}<a class="btn btn-outline btn-small" href="{% url 'editar_doador' doador.id_doador %}">Editar</a>{% endif %}
-                            </div>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+                    </div>
+                </div>
+                <dl class="record-card-fields">
+                    <div>
+                        <dt>E-mail</dt>
+                        <dd>{% if doador.email %}<a href="mailto:{{ doador.email }}">{{ doador.email }}</a>{% else %}<span class="muted">Não informado</span>{% endif %}</dd>
+                    </div>
+                    <div>
+                        <dt>Telefone</dt>
+                        <dd>{% if doador.telefone %}<a href="tel:{{ doador.telefone }}">{{ doador.telefone }}</a>{% else %}<span class="muted">Não informado</span>{% endif %}</dd>
+                    </div>
+                </dl>
+                <details class="record-card-audit">
+                    <summary>Histórico do cadastro</summary>
+                    <div>
+                        <p><strong>Cadastrado por {{ doador.cadastrado_por_nome|default:'Sistema' }}</strong></p>
+                        <p>{{ doador.dt_cadastro|date:"d/m/Y H:i" }}</p>
+                        {% if doador.dt_ultima_edicao %}<p>Editado por {{ doador.ultimo_editado_por_nome|default:'Usuário do sistema' }} · {{ doador.dt_ultima_edicao|date:"d/m/Y H:i" }}</p>{% else %}<p>Sem edições</p>{% endif %}
+                    </div>
+                </details>
+                <div class="record-card-actions">
+                    <a class="btn btn-outline btn-small" href="{% url 'doador_detalhe' doador.id_doador %}">Detalhes</a>
+                    {% if usuario.tipo == 'ADMIN' %}<a class="btn btn-outline btn-small" href="{% url 'editar_doador' doador.id_doador %}">Editar</a>{% endif %}
+                </div>
+            </article>
+            {% endfor %}
         </div>
         {% include 'sistema/includes/paginacao.html' %}
         {% else %}

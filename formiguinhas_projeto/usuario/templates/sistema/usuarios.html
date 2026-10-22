@@ -44,31 +44,15 @@
     </form>
 
     {% if usuarios %}
-    <div class="table-wrap">
-        <table class="data-table user-table">
-            <thead>
-                <tr>
-                    <th>Nome</th>
-                    <th>E-mail</th>
-                    <th>Telefone</th>
-                    <th>Tipo</th>
-                    <th>Praia do coordenador</th>
-                    <th>Último acesso</th>
-                    <th>Auditoria</th>
-                    <th>Ações</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for usuario_item in usuarios %}
-                <tr>
-                    <td>
-                        <a class="table-link" href="{% url 'voluntarios' %}?voluntario={{ usuario_item.id_voluntario.id_voluntario }}">
-                            <strong>{{ usuario_item.id_voluntario.nome }}</strong>
-                        </a>
-                    </td>
-                    <td>{{ usuario_item.id_voluntario.email }}</td>
-                    <td class="phone-cell">{{ usuario_item.id_voluntario.telefone }}</td>
-                    <td>
+    <div class="record-card-grid record-card-grid--line">
+        {% for usuario_item in usuarios %}
+        <article class="record-card record-card--line">
+            <div class="record-card-heading">
+                <div>
+                    <span class="record-card-eyebrow">Usuário</span>
+                    <h3><a href="{% url 'voluntarios' %}?voluntario={{ usuario_item.id_voluntario.id_voluntario }}">{{ usuario_item.id_voluntario.nome }}</a></h3>
+                </div>
+                <div class="record-card-control">
                         <form method="post" action="{% url 'atualizar_tipo_usuario' usuario_item.id_usuario %}" class="inline-status-form">
                             {% csrf_token %}
                             <select name="tipo" class="status-select type-select type-{{ usuario_item.tipo|lower }}" aria-label="Tipo de {{ usuario_item.id_voluntario.nome }}" onchange="this.form.submit()">
@@ -77,8 +61,20 @@
                                 {% endfor %}
                             </select>
                         </form>
-                    </td>
-                    <td>
+                </div>
+            </div>
+            <dl class="record-card-fields">
+                <div>
+                    <dt>E-mail</dt>
+                    <dd><a href="mailto:{{ usuario_item.id_voluntario.email }}">{{ usuario_item.id_voluntario.email }}</a></dd>
+                </div>
+                <div>
+                    <dt>Telefone</dt>
+                    <dd><a href="tel:{{ usuario_item.id_voluntario.telefone }}">{{ usuario_item.id_voluntario.telefone }}</a></dd>
+                </div>
+                <div>
+                    <dt>Praia do coordenador</dt>
+                    <dd>
                         {% if usuario_item.tipo == 'COORDENADOR' %}
                             {% if usuario_item.praias_coordenador %}
                                 {% for praia in usuario_item.praias_coordenador %}
@@ -90,26 +86,32 @@
                         {% else %}
                             <span class="field-hint">Não se aplica</span>
                         {% endif %}
-                    </td>
-                    <td>{% if usuario_item.data_ultimo_acesso %}{{ usuario_item.data_ultimo_acesso|date:'d/m/Y H:i' }}{% else %}Nunca acessou{% endif %}</td>
-                    <td class="audit-cell">
-                        <strong>{% if usuario_item.cadastrado_por_nome %}Cadastrado por {{ usuario_item.cadastrado_por_nome }}{% elif usuario_item.cadastrado_por %}Cadastrado por {{ usuario_item.cadastrado_por.id_voluntario.nome }}{% else %}Cadastro anterior{% endif %}</strong>
-                        {% if usuario_item.cadastrado_por_nome or usuario_item.cadastrado_por %}<small>{{ usuario_item.dt_cadastro|date:'d/m/Y H:i' }}</small>{% endif %}
-                        {% if usuario_item.ultimo_editado_por_nome %}<small>Editado por {{ usuario_item.ultimo_editado_por_nome }} em {{ usuario_item.dt_ultima_edicao|date:'d/m/Y H:i' }}</small>{% elif usuario_item.ultimo_editado_por %}<small>Editado por {{ usuario_item.ultimo_editado_por.id_voluntario.nome }} em {{ usuario_item.dt_ultima_edicao|date:'d/m/Y H:i' }}</small>{% else %}<small>Sem edições</small>{% endif %}
-                    </td>
-                    <td class="table-actions">
-                        <a class="btn btn-outline btn-small" href="{% url 'editar_usuario' usuario_item.id_usuario %}">Editar</a>
-                        {% if usuario_item.id_usuario != usuario.id_usuario %}
-                        <form method="post" action="{% url 'excluir_usuario' usuario_item.id_usuario %}" onsubmit="return confirm('Excluir este usuário? O voluntário continuará cadastrado.');">
-                            {% csrf_token %}
-                            <button type="submit" class="btn btn-danger btn-small">Excluir</button>
-                        </form>
-                        {% endif %}
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+                    </dd>
+                </div>
+                <div>
+                    <dt>Último acesso</dt>
+                    <dd>{% if usuario_item.data_ultimo_acesso %}{{ usuario_item.data_ultimo_acesso|date:'d/m/Y H:i' }}{% else %}Nunca acessou{% endif %}</dd>
+                </div>
+            </dl>
+            <details class="record-card-audit">
+                <summary>Histórico do cadastro</summary>
+                <div>
+                    <p><strong>{% if usuario_item.cadastrado_por_nome %}Cadastrado por {{ usuario_item.cadastrado_por_nome }}{% elif usuario_item.cadastrado_por %}Cadastrado por {{ usuario_item.cadastrado_por.id_voluntario.nome }}{% else %}Cadastro anterior{% endif %}</strong></p>
+                    {% if usuario_item.cadastrado_por_nome or usuario_item.cadastrado_por %}<p>{{ usuario_item.dt_cadastro|date:'d/m/Y H:i' }}</p>{% endif %}
+                    {% if usuario_item.ultimo_editado_por_nome %}<p>Editado por {{ usuario_item.ultimo_editado_por_nome }} em {{ usuario_item.dt_ultima_edicao|date:'d/m/Y H:i' }}</p>{% elif usuario_item.ultimo_editado_por %}<p>Editado por {{ usuario_item.ultimo_editado_por.id_voluntario.nome }} em {{ usuario_item.dt_ultima_edicao|date:'d/m/Y H:i' }}</p>{% else %}<p>Sem edições</p>{% endif %}
+                </div>
+            </details>
+            <div class="record-card-actions">
+                <a class="btn btn-outline btn-small" href="{% url 'editar_usuario' usuario_item.id_usuario %}">Editar</a>
+                {% if usuario_item.id_usuario != usuario.id_usuario %}
+                <form method="post" action="{% url 'excluir_usuario' usuario_item.id_usuario %}" onsubmit="return confirm('Excluir este usuário? O voluntário continuará cadastrado.');">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger btn-small">Excluir</button>
+                </form>
+                {% endif %}
+            </div>
+        </article>
+        {% endfor %}
     </div>
     {% include 'sistema/includes/paginacao.html' %}
     {% else %}

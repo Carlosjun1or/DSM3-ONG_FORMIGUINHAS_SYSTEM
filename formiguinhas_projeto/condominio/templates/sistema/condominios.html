@@ -29,23 +29,45 @@
         <div class="filter-actions"><button type="submit" class="btn btn-primary">Aplicar filtros</button>{% if busca or status_selecionado %}<a href="{% url 'condominios' %}" class="form-link">Limpar filtros</a>{% endif %}</div>
     </form>
     {% if condominios %}
-    <div class="table-wrap condominio-tabela"><table class="data-table"><thead><tr><th>Condomínio</th><th>Localização</th><th>Praia</th><th>Porte</th><th>Confiabilidade</th><th>Bags</th><th>Status</th><th>Auditoria</th></tr></thead><tbody>
+    <div class="record-card-grid record-card-grid--line condominio-tabela">
     {% for condominio in condominios %}
-    <tr>
-        <td><div class="condominio-identificacao"><a class="table-link" href="{% url 'detalhe_condominio' condominio.id_condominio %}"><strong>{{ condominio.nome }}</strong></a><small>{{ condominio.responsavel_nome }}</small></div></td>
-        <td><span>{{ condominio.endereco }}, {{ condominio.numero }}</span><small class="table-secondary">{{ condominio.bairro }} - {{ condominio.cidade }}/{{ condominio.estado }}</small></td>
-        <td>{% if condominio.praia %}{{ condominio.praia.nome }}{% else %}<span class="muted">Não vinculada</span>{% endif %}</td>
-        <td>{{ condominio.get_porte_display }}</td><td>{{ condominio.get_confiabilidade_display }}</td>
-        <td><div class="condominio-bags">{% for bag in condominio.bags.all %}<span class="bag-summary"><a class="table-link" href="{% url 'detalhe_bag' bag.id_bag %}">{{ bag.codigo }}</a><small class="table-secondary">{{ bag.get_status_display }}</small></span>{% empty %}<span class="muted">Nenhuma cadastrada</span>{% endfor %}</div></td>
-        <td><span class="situacao-badge situacao-{{ condominio.status|lower }}">{{ condominio.get_status_display }}</span></td>
-        <td class="audit-cell">
-            <strong>{% if condominio.cadastrado_por_nome %}Cadastrado por {{ condominio.cadastrado_por_nome }}{% elif condominio.cadastrado_por %}Cadastrado por {{ condominio.cadastrado_por.id_voluntario.nome }}{% else %}Cadastro anterior{% endif %}</strong>
-            <small>{{ condominio.dt_cadastro|date:'d/m/Y H:i' }}</small>
-            {% if condominio.ultimo_editado_por_nome %}<small>Editado por {{ condominio.ultimo_editado_por_nome }} em {{ condominio.dt_ultima_edicao|date:'d/m/Y H:i' }}</small>{% elif condominio.ultimo_editado_por %}<small>Editado por {{ condominio.ultimo_editado_por.id_voluntario.nome }} em {{ condominio.dt_ultima_edicao|date:'d/m/Y H:i' }}</small>{% else %}<small>Sem edições</small>{% endif %}
-        </td>
-    </tr>
+    <article class="record-card record-card--line">
+        <div class="record-card-heading">
+            <div>
+                <span class="record-card-eyebrow">{{ condominio.responsavel_nome }} · {{ condominio.cidade }}/{{ condominio.estado }}</span>
+                <h3><a href="{% url 'detalhe_condominio' condominio.id_condominio %}">{{ condominio.nome }}</a></h3>
+            </div>
+            <span class="situacao-badge situacao-{{ condominio.status|lower }}">{{ condominio.get_status_display }}</span>
+        </div>
+        <dl class="record-card-fields">
+            <div class="record-card-field-wide">
+                <dt>Endereço</dt>
+                <dd>{{ condominio.endereco }}, {{ condominio.numero }} · {{ condominio.bairro }}</dd>
+            </div>
+            <div>
+                <dt>Praia</dt>
+                <dd>{% if condominio.praia %}{{ condominio.praia.nome }}{% else %}<span class="muted">Não vinculada</span>{% endif %}</dd>
+            </div>
+            <div>
+                <dt>Porte / confiabilidade</dt>
+                <dd>{{ condominio.get_porte_display }} · {{ condominio.get_confiabilidade_display }}</dd>
+            </div>
+            <div class="record-card-field-wide">
+                <dt>Bags</dt>
+                <dd class="condominio-bags">{% for bag in condominio.bags.all %}<span class="bag-summary"><a class="table-link" href="{% url 'detalhe_bag' bag.id_bag %}">{{ bag.codigo }}</a><small class="table-secondary">{{ bag.get_status_display }}</small></span>{% empty %}<span class="muted">Nenhuma cadastrada</span>{% endfor %}</dd>
+            </div>
+        </dl>
+        <details class="record-card-audit">
+            <summary>Histórico do cadastro</summary>
+            <div>
+                <p><strong>{% if condominio.cadastrado_por_nome %}Cadastrado por {{ condominio.cadastrado_por_nome }}{% elif condominio.cadastrado_por %}Cadastrado por {{ condominio.cadastrado_por.id_voluntario.nome }}{% else %}Cadastro anterior{% endif %}</strong></p>
+                <p>{{ condominio.dt_cadastro|date:'d/m/Y H:i' }}</p>
+                {% if condominio.ultimo_editado_por_nome %}<p>Editado por {{ condominio.ultimo_editado_por_nome }} em {{ condominio.dt_ultima_edicao|date:'d/m/Y H:i' }}</p>{% elif condominio.ultimo_editado_por %}<p>Editado por {{ condominio.ultimo_editado_por.id_voluntario.nome }} em {{ condominio.dt_ultima_edicao|date:'d/m/Y H:i' }}</p>{% else %}<p>Sem edições</p>{% endif %}
+            </div>
+        </details>
+    </article>
     {% endfor %}
-    </tbody></table></div>
+    </div>
     {% include 'sistema/includes/paginacao.html' %}
     {% else %}<div class="empty-state table-empty condominio-vazio"><h3>Nenhum condomínio encontrado</h3><p class="form-subtitle">Tente limpar os filtros ou cadastre um novo condomínio parceiro.</p><a href="{% url 'cadastrar_condominio' %}" class="btn btn-primary">Cadastrar condomínio</a></div>{% endif %}
 </section>
