@@ -2383,6 +2383,7 @@ details summary {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 18px;
+    margin-bottom: 18px;
 }
 
 .form-group {
@@ -3792,7 +3793,7 @@ select.select-control:disabled {
 }
 
 .donation-primary-grid {
-    margin-bottom: 0;
+    margin-bottom: 18px;
 }
 
 .full-width {
