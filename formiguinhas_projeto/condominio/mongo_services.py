@@ -1,5 +1,11 @@
 """
-Serviços de persistência documental e consultas no MongoDB Atlas para o módulo de Condomínios (Persistência Poliglota).
+Serviços de persistência documental e consultas no MongoDB Atlas para o módulo de Condomínios.
+
+Fluxo de escrita (dual-write): a view salva no SQLite via Django ORM (gera id_condominio),
+depois chama salvar_condominio_mongo(condominio) que faz upsert no MongoDB usando id_sql = id_condominio.
+
+Fluxo de leitura: consultar_condominios_mongo() é a fonte primária das telas.
+Se o MongoDB estiver offline, a view faz fallback para Condominio.objects (SQLite).
 """
 import logging
 from django.conf import settings
@@ -31,7 +37,14 @@ def get_condominios_collection():
 
 
 def formatar_condominio_documento(condominio_obj):
-    """Estrutura um documento BSON rico de Condomínio com suas Bags."""
+    """
+    Estrutura um documento BSON rico de Condomínio com suas Bags.
+    
+    O MongoDB recebe um documento 'desnormalizado': além dos campos do condomínio,
+    embute a praia vinculada e todas as bags associadas. Isso permite que a tela
+    de listagem faça uma única query no MongoDB em vez de joins.
+    O campo id_sql guarda o ID do SQLite para sincronização (upsert por id_sql).
+    """
     doc = {
         'id_sql': condominio_obj.id_condominio,
         'nome': condominio_obj.nome,
@@ -89,10 +102,11 @@ def formatar_condominio_documento(condominio_obj):
 
 
 def salvar_condominio_mongo(condominio_obj):
-    """Cria ou atualiza um documento de condomínio no MongoDB."""
+    """Cria ou atualiza um documento de condomínio no MongoDB (upsert por id_sql)."""
     try:
         col = get_condominios_collection()
         if col is None:
+            # MongoDB offline: falha silenciosa, o dado já está salvo no SQLite
             return None
         doc = formatar_condominio_documento(condominio_obj)
         col.replace_one({'id_sql': condominio_obj.id_condominio}, doc, upsert=True)
@@ -103,7 +117,12 @@ def salvar_condominio_mongo(condominio_obj):
 
 
 def salvar_condominio_por_bag(bag_obj):
-    """Atualiza o condomínio correspondente no MongoDB quando uma Bag é alterada."""
+    """Atualiza o condomínio correspondente no MongoDB quando uma Bag é alterada.
+    
+    Como as bags estão embutidas no documento do condomínio no MongoDB,
+    qualquer alteração de bag exige re-escrever o documento inteiro do condomínio
+    para que os dados da bag fiquem atualizados na leitura.
+    """
     if bag_obj and getattr(bag_obj, 'condominio', None):
         return salvar_condominio_mongo(bag_obj.condominio)
     return None

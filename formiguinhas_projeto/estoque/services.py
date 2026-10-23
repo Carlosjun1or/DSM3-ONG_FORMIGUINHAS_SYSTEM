@@ -1,3 +1,4 @@
+"""Serviços de movimentação de estoque com validação de saldo e auditoria."""
 from django.db import transaction
 from django.core.exceptions import ValidationError
 
@@ -32,7 +33,11 @@ def registrar_movimentacao(movimentacao, usuario):
 
 @transaction.atomic
 def registrar_entradas_doacao(doacao, usuario):
-    """Cria uma entrada auditada para cada item válido de uma doação confirmada."""
+    """Cria uma entrada de estoque para cada item válido de uma doação confirmada.
+    
+    Idempotente: itens que já têm movimentação vinculada (item_doacao__isnull=False)
+    são ignorados — pode ser chamada novamente sem duplicar entradas.
+    """
     if doacao.tipo != Doacao.MATERIAL or doacao.status != Doacao.CONFIRMADA:
         raise ValidationError('Somente doações de materiais confirmadas movimentam o estoque.')
 

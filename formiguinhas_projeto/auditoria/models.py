@@ -2,6 +2,13 @@ from django.db import models
 
 
 class EventoAuditoria(models.Model):
+    """
+    Registro imutável de eventos do sistema (quem fez o quê e quando).
+    
+    managed=False: a auditoria é persistida PRIMARIAMENTE no MongoDB Atlas.
+    A tabela no SQLite existe apenas como fallback para testes locais.
+    O campo valores_anteriores/novos guarda um snapshot JSON do antes e depois.
+    """
     ENTIDADE_LABELS = {
         'USUARIO': 'Usuário', 'VOLUNTARIO': 'Voluntário', 'PRAIA': 'Praia',
         'EQUIPE': 'Equipe', 'EQUIPE_MEMBRO': 'Membro de equipe', 'ACAO': 'Ação',
@@ -59,6 +66,7 @@ class EventoAuditoria(models.Model):
 
 
 class EstadoLeituraAuditoria(models.Model):
+    """Rastreia até qual evento de auditoria o usuário já visualizou (para badge de notificações)."""
     usuario = models.OneToOneField(
         'usuario.Usuario',
         on_delete=models.CASCADE,

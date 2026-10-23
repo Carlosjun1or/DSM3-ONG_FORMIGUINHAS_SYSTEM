@@ -1,3 +1,11 @@
+"""
+App de relatórios: gera tabelas e permite exportação em CSV, Excel e XML.
+
+Todos os dados de ações são lidos do MongoDB (via mongo_services). Os dados de
+estoque, doações e voluntários vêm do SQLite. A função _criar_relatorio() é o
+núcleo — recebe os filtros do formulário e monta a estrutura {metrics, sections}
+que o template usa tanto para exibição em tela quanto para exportação.
+"""
 import csv
 import io
 from collections import defaultdict
@@ -121,6 +129,14 @@ def _presenca_filter():
 
 
 def _residuos_no_periodo(inicio, fim, tipo='', praia_id=None, acao_id=None):
+    """Consolida registros de resíduos de duas fontes:
+    1. ItemColetaResiduo (tabela SQLite, ligado a ColetaResiduo que pode vir de bag ou ação)
+    2. ResiduoColetado (tabela SQLite, ligado diretamente a uma ação)
+    
+    Quando filtra por praia, busca os IDs de ações/bags da praia no MongoDB para
+    usar como filtro no SQLite (join cross-database via lista de IDs).
+    Retorna lista de linhas já ordenadas por data para exibição/exportação.
+    """
     linhas = []
     itens_registrados = ItemColetaResiduo.objects.filter(
         coleta__data_coleta__date__range=(inicio, fim),

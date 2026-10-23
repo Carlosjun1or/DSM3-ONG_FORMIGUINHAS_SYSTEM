@@ -3,6 +3,11 @@ from config.mongodb import test_mongo_connection
 
 
 def notificacoes_comunicados(request):
+    """Context processor: conta comunicados não lidos pelo usuário logado.
+    
+    Fonte primária: MongoDB (campo 'leituras' embutido no documento do comunicado).
+    Fallback: SQLite via ComunicadoLeitura. Injetado em todos os templates.
+    """
     usuario_id = request.session.get('usuario_id')
     usuario_tipo = request.session.get('usuario_tipo')
     if not usuario_id or usuario_tipo not in ('ADMIN', 'COORDENADOR'):

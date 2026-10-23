@@ -41,7 +41,12 @@ from .mongo_services import (
 
 
 class MongoAcaoAdapter:
-    """Adapta documentos BSON de Ação do MongoDB Atlas para a interface esperada pelos templates Django."""
+    """Adapta documento BSON de Ação do MongoDB para a interface dos templates Django.
+    
+    O MongoDB retorna um documento rico (ação + praia + participantes + equipes + imagens).
+    Este adapter 'achata' os campos aninhados e simula os métodos get_*_display() e
+    as relations (.participantes, .praia) que os templates esperam de um Model Django.
+    """
     def __init__(self, doc):
         self.doc = doc
         self.id = doc.get('id_sql')
@@ -173,6 +178,12 @@ def sincronizar_relacionamentos_mutirao(acao, usuario):
 
 
 def acoes_view(request):
+    """
+    Lista ações com filtros e métricas.
+    
+    Fonte primária: MongoDB Atlas (documentos ricos com participantes, equipes, etc.).
+    Fallback: SQLite (Acao.objects com select_related/prefetch_related) quando MongoDB offline.
+    """
     usuario = get_session_usuario(request)
     if not usuario:
         return redirect('login')

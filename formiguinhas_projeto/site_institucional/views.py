@@ -1,3 +1,9 @@
+"""
+Site institucional público da ONG (sem autenticação).
+
+As funções helper (mutiroes_concluidos, mutiroes_futuros) seguem o mesmo
+padrão das views internas: MongoDB como fonte primária, SQLite como fallback.
+"""
 from django.shortcuts import render
 from django.utils import timezone
 from django.db.models import Q
@@ -9,6 +15,7 @@ from praia.models import Praia
 
 
 def mutiroes_concluidos():
+    """Retorna mutirões concluídos: MongoDB primeiro, SQLite como fallback."""
     try:
         from acao.mongo_services import consultar_acoes_mongo
         from acao.views import MongoAcaoAdapter
@@ -32,6 +39,7 @@ def mutiroes_concluidos():
 
 
 def mutiroes_futuros():
+    """Retorna mutirões planejados (futuros): MongoDB primeiro, SQLite como fallback."""
     try:
         from acao.mongo_services import consultar_acoes_mongo
         from acao.views import MongoAcaoAdapter

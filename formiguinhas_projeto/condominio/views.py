@@ -28,6 +28,12 @@ from .mongo_services import (
 
 
 class MongoBagAdapter:
+    """
+    Adapta um documento de Bag vindo do MongoDB (dict) para a interface
+    que o template espera (objeto com atributos). O MongoDB armazena bags
+    embutidas dentro do documento do condomínio, então o adapter recebe
+    o dict da bag já 'desembalado' e constrói um proxy do condomínio pai.
+    """
     def __init__(self, item):
         self.item = item
         self.id_bag = item.get('id') or item.get('id_bag')
@@ -55,6 +61,8 @@ class MongoBagAdapter:
 
 
 class MongoBagsRelAdapter:
+    """Simula o related_manager 'bags' de um Condominio do Django ORM.
+    Permite que templates chamem condominio.bags.all() tanto no caminho MongoDB quanto SQLite."""
     def __init__(self, bags_list):
         self._bags = [MongoBagAdapter(b) for b in bags_list]
 
@@ -66,6 +74,7 @@ class MongoBagsRelAdapter:
 
 
 class MongoPraiaAdapter:
+    """Proxy leve de Praia para documentos do MongoDB (apenas os campos usados pelos templates)."""
     def __init__(self, praia_dict):
         self.praia = praia_dict or {}
         self.id = self.praia.get('id')
@@ -74,7 +83,13 @@ class MongoPraiaAdapter:
 
 
 class MongoCondominioAdapter:
-    """Adapta documento de Condomínio do MongoDB para a interface esperada pelos templates."""
+    """Adapta documento de Condomínio do MongoDB para a interface esperada pelos templates.
+    
+    O MongoDB retorna um dict com campos aninhados (responsavel.nome, endereco.cidade).
+    O template Django acessa por atributo (condominio.responsavel_nome, condominio.cidade).
+    Este adapter 'achata' os campos aninhados e fornece os métodos get_*_display()
+    que os templates chamam para renderizar choices (porte, status, confiabilidade).
+    """
     def __init__(self, doc):
         self.doc = doc
         self.id_condominio = doc.get('id_sql')
@@ -148,6 +163,14 @@ def exigir_admin(request):
 
 
 def condominios_view(request):
+    """
+    Lista condomínios com métricas e filtros.
+    
+    Fonte de leitura: MongoDB Atlas (primária) com fallback para SQLite.
+    O MongoDB armazena documentos ricos (condomínio + bags embutidas + praia).
+    Se o MongoDB estiver offline, consulta o SQLite (tables nativas do Django ORM)
+    para não deixar o usuário sem dados.
+    """
     usuario = exigir_admin(request)
     if usuario is None:
         return redirect('login')
@@ -222,6 +245,13 @@ def condominios_view(request):
 
 
 def bags_view(request):
+    """
+    Lista todas as bags com filtros e métricas.
+    
+    No MongoDB as bags estão embutidas nos documentos de condomínio (sub-documentos).
+    No SQLite fallback, bags são uma tabela separada com FK para condominio.
+    O adapter MongoBagAdapter uniformiza os dois caminhos para o template.
+    """
     usuario = exigir_admin(request)
     if usuario is None:
         return redirect('login')

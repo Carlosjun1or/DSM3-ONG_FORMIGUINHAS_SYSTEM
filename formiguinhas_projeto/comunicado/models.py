@@ -24,6 +24,17 @@ class Tema(models.Model):
 
 
 class Comunicado(models.Model):
+    """
+    Aviso ou notícia criada pelos admins para os coordenadores/voluntários.
+    
+    Regras de negócio (validadas em clean()):
+    - NOTICIA: sempre pública (TODOS) e obrigatoriamente tem Tema.
+    - AVISO: nunca tem Tema; pode ser TODOS ou só COORDENADORES.
+    - dt_expiracao deve ser posterior à dt_publicacao.
+    - duracao_expiracao e unidade_duracao_expiracao são dependentes (ambos ou nenhum).
+    
+    O ciclo de vida (RASCUNHO → PUBLICADO → ARQUIVADO) é gerenciado pelo services.py.
+    """
     AVISO = 'AVISO'
     NOTICIA = 'NOTICIA'
     TIPO_CHOICES = [(AVISO, 'Aviso'), (NOTICIA, 'Notícia')]
@@ -152,6 +163,12 @@ class ComunicadoDoacao(models.Model):
 
 
 class ComunicadoLeitura(models.Model):
+    """Registro de que um usuário leu um comunicado (controle de não-lidos).
+    
+    A constraint UniqueConstraint impede duplicar a leitura do mesmo comunicado.
+    O context_processors.py consulta essa tabela (ou o MongoDB) para contar
+    quantos comunicados vigentes o usuário ainda não leu.
+    """
     comunicado = models.ForeignKey(
         Comunicado,
         on_delete=models.CASCADE,

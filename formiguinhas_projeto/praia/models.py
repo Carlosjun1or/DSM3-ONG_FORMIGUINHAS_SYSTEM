@@ -3,6 +3,12 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 
 
 class Praia(models.Model):
+    """Praia onde a ONG realiza ações de limpeza.
+    
+    Armazena coordenadas geográficas (latitude/longitude) que são usadas pelo
+    MongoDB para criar o índice 2dsphere em acao.mongo_services, permitindo
+    buscas de ações por proximidade geográfica via $near.
+    """
     STATUS_CHOICES = [
         ('ATIVA', 'Ativa'),
         ('INATIVA', 'Inativa'),

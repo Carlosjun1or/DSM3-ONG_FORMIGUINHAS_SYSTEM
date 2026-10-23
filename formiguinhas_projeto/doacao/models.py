@@ -8,6 +8,14 @@ from django.utils import timezone
 
 
 class Doador(models.Model):
+    """
+    Pessoa física ou jurídica que realizou uma doação.
+    
+    As constraints UniqueConstraint condicionais (~Q(documento='') e ~Q(email=''))
+    garantem unicidade apenas quando o campo está preenchido — permitindo
+    múltiplos doadores sem documento/email cadastrado, mas proibindo duplicatas
+    quando o valor está presente. Isso evita erros de unique_violation para campos opcionais.
+    """
     PESSOA_FISICA = 'PF'
     PESSOA_JURIDICA = 'PJ'
     TIPO_CHOICES = [
@@ -111,6 +119,13 @@ class DoacaoQuerySet(models.QuerySet):
 
 
 class Doacao(models.Model):
+    """
+    Registro de doação financeira ou de material recebida pela ONG.
+    
+    Usa o mesmo padrão de soft-reference para acao_id (sem FK real) que os
+    outros modelos. A doação pode ser anônima (anonima=True, doador=None) ou
+    identificada. A finalidade ESPECIFICA exige descricao_finalidade preenchida.
+    """
     objects = DoacaoQuerySet.as_manager()
 
     def __init__(self, *args, **kwargs):

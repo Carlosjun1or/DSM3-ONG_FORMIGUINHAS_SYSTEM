@@ -7,7 +7,11 @@ from django.db.models.functions import Coalesce, Lower, Trim
 
 class MaterialQuerySet(models.QuerySet):
     def com_saldo(self):
-        """Anota `saldo_db` em uma única consulta (evita N+1)."""
+        """Anota saldo_db, eh_donativo_db e doador_origem_db em uma única query (evita N+1).
+        
+        Use Material.objects.com_saldo() em vez de calcular saldo em Python por item
+        quando for exibir uma lista de materiais — evita uma query extra por material.
+        """
         movimentacoes_doacao = MovimentacaoEstoque.objects.filter(
             material_id=OuterRef('pk'),
             doacao__isnull=False,
@@ -293,6 +297,8 @@ class MovimentacaoEstoque(models.Model):
         self._validar(self.material)
 
     def save(self, *args, **kwargs):
+        """select_for_update garante que o saldo seja recalculado com lock de linha,
+        evitando race condition quando duas saídas ocorrem simultâneas."""
         with transaction.atomic():
             material = Material.objects.select_for_update().get(pk=self.material_id)
             self._validar(material)

@@ -1,15 +1,21 @@
+"""
+Funções de apoio do módulo Condomínio: snapshot para auditoria e delegação de eventos.
+"""
 from django.forms.models import model_to_dict
 
 from .models import Bag, Condominio, MovimentacaoBag
 
 
 def _label(instance, field_name, value):
+    """Resolve o display label de um campo com choices (ex: 'ATIVO' -> 'Ativo')."""
     field = instance._meta.get_field(field_name)
     choices = dict(field.choices or [])
     return choices.get(value, value)
 
 
 def snapshot(instance):
+    """Captura os valores atuais da instância como dict para registro de auditoria.
+    Usa display labels (get_*_display) em vez de valores crus para o histórico ficar legível."""
     if isinstance(instance, Condominio):
         return {
             'nome': instance.nome,

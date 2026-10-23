@@ -8,6 +8,8 @@ from usuario.models import Usuario, Voluntario
 
 
 def caminho_imagem_acao(instance, filename):
+    """Define o path de upload de imagens organizado por ano/mês da ação.
+    Ex: acoes/2025/03/acao-42/a1b2c3d4.jpg"""
     extensao = Path(filename).suffix.lower()
     nome_unico = f'{uuid4().hex}{extensao}'
     return (
@@ -18,6 +20,14 @@ def caminho_imagem_acao(instance, filename):
 
 
 class Acao(models.Model):
+    """
+    Ação de limpeza de praia (mutirão ou coleta voluntária).
+    
+    managed=False: tabela criada manualmente no SQLite (não via migrations).
+    O MongoDB é a fonte de leitura das telas, mas o SQLite gera o ID auto-increment.
+    Properties com import tardio (coletas_residuos, movimentacoes_estoque) evitam
+    import circular entre os apps acao <-> residuo <-> estoque.
+    """
     @property
     def movimentacoes_estoque(self):
         from estoque.models import MovimentacaoEstoque
@@ -167,6 +177,13 @@ class AcaoParticipante(models.Model):
 
 
 class AcaoParticipanteHistorico(models.Model):
+    """
+    Histórico de participantes removidos de uma ação (soft delete).
+    
+    Quando um participante é recusado ou não comparece, em vez de deletar o registro,
+    ele é movido para este histórico. Isso preserva o rastro de quem participou/ não
+    participou para cálculo de frequência. O campo 'restaurado' permite reverter.
+    """
     id_historico = models.AutoField(primary_key=True)
     acao = models.ForeignKey(
         Acao,
@@ -240,6 +257,8 @@ class AcaoResponsavel(models.Model):
 
 
 def adicionar_coordenadores_automaticos_para_mutirao(acao):
+    """Vincula automaticamente os coordenadores das equipes da praia como responsáveis da ação.
+    Só executa para ações do tipo MUTIRAO (que são as que envolvem equipes)."""
     if acao.tipo != Acao.TIPO_MUTIRAO:
         return []
 
@@ -270,6 +289,8 @@ def adicionar_coordenadores_automaticos_para_mutirao(acao):
 
 
 def adicionar_participantes_automaticos_para_mutirao(acao):
+    """Inscreve automaticamente todos os membros ativos das equipes vinculadas à praia.
+    Evita cadastro manual de dezenas de voluntários quando o mutirão já tem equipes definidas."""
     if acao.tipo != Acao.TIPO_MUTIRAO:
         return []
 
