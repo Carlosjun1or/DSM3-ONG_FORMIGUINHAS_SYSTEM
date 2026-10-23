@@ -5,9 +5,9 @@
 {% block estilos %}<link rel="stylesheet" href="{% static 'condominio/condominio.css' %}?v=4">{% endblock %}
 {% block conteudo %}
 {% if not mongo_conectado %}
-<div class="message-banner message-banner--error" style="margin-bottom: 1.5rem;">
-    <strong>⚠️ MongoDB Atlas offline</strong>
-    <p style="margin: 0.5rem 0 0;">Os dados de bags não podem ser carregados no momento. {{ mongo_msg }}</p>
+<div class="message-banner message-banner--warning" style="margin-bottom: 1.5rem;">
+    <strong>⚠️ MongoDB Atlas offline — modo de contingência</strong>
+    <p style="margin: 0.5rem 0 0;">Exibindo dados do SQLite (banco local). Algumas informações podem estar desatualizadas em relação ao MongoDB Atlas. {{ mongo_msg }}</p>
 </div>
 {% endif %}
 <section class="card-grid volunteer-metrics condominio-metricas" aria-label="Resumo das bags">
