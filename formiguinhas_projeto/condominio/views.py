@@ -2,7 +2,7 @@ from urllib.parse import urlencode
 
 from django.contrib import messages
 from django.db import models, transaction
-from django.db.models import Avg
+from django.db.models import Avg, Q
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
@@ -154,49 +154,49 @@ def condominios_view(request):
     if usuario is False:
         return render_acesso_bloqueado(request)
 
-    # Fonte primária exclusiva: MongoDB Atlas
-    mongo_ok, mongo_msg, mongo_info = test_mongo_connection()
-    
-    # Se MongoDB estiver offline, retornar erro imediatamente (sem chamadas adicionais)
-    if not mongo_ok:
-        return render(request, 'sistema/condominios.html', {
-            'usuario': usuario,
-            'condominios': [],
-            'pagina': type('Page', (), {'object_list': [], 'has_other_pages': lambda: False})(),
-            'filtros_query': '',
-            'busca': '',
-            'status_selecionado': '',
-            'status_choices': Condominio.STATUS_CHOICES,
-            'total_condominios': 0,
-            'condominios_ativos': 0,
-            'condominios_em_avaliacao': 0,
-            'total_bags': 0,
-            'bags_cheias': 0,
-            'bags_disponiveis': 0,
-            'fonte_atual': 'mongo',
-            'mongo_conectado': False,
-            'mongo_info': mongo_info,
-            'mongo_msg': mongo_msg,
-            'mongo_stats': {'total': 0},
-        })
-
-    # MongoDB conectado - fazer consultas normalmente
-    mongo_stats = obter_metricas_condominios_mongo()
     busca = request.GET.get('busca', '').strip()
     status = request.GET.get('status', '').strip()
 
-    filtros_mql = {'busca': busca, 'status': status}
-    docs, total_docs = consultar_condominios_mongo(filtros_mql, pagina=1, por_pagina=1000)
-    lista_adaptada = [MongoCondominioAdapter(d) for d in docs]
-    pagina, filtros_query = paginar_queryset(request, lista_adaptada)
+    # Fonte primária: MongoDB Atlas | Fallback: SQLite
+    mongo_ok, mongo_msg, mongo_info = test_mongo_connection()
 
-    total_condominios = mongo_stats.get('total', 0)
-    condominios_ativos = mongo_stats.get('ativos', 0)
-    condominios_em_avaliacao = mongo_stats.get('em_avaliacao', 0)
-    total_bags = mongo_stats.get('total_bags', 0)
-    bags_cheias = mongo_stats.get('bags_cheias', 0)
-    bags_disponiveis = mongo_stats.get('bags_disponiveis', 0)
-    fonte = 'mongo'
+    if mongo_ok:
+        # --- Fonte MongoDB ---
+        mongo_stats = obter_metricas_condominios_mongo()
+        filtros_mql = {'busca': busca, 'status': status}
+        docs, total_docs = consultar_condominios_mongo(filtros_mql, pagina=1, por_pagina=1000)
+        lista_adaptada = [MongoCondominioAdapter(d) for d in docs]
+        pagina, filtros_query = paginar_queryset(request, lista_adaptada)
+
+        total_condominios = mongo_stats.get('total', 0)
+        condominios_ativos = mongo_stats.get('ativos', 0)
+        condominios_em_avaliacao = mongo_stats.get('em_avaliacao', 0)
+        total_bags = mongo_stats.get('total_bags', 0)
+        bags_cheias = mongo_stats.get('bags_cheias', 0)
+        bags_disponiveis = mongo_stats.get('bags_disponiveis', 0)
+        fonte = 'mongo'
+    else:
+        # --- Fallback SQLite ---
+        fonte = 'sql'
+        condominios_qs = Condominio.objects.select_related('praia').prefetch_related('bags')
+        if busca:
+            condominios_qs = condominios_qs.filter(
+                Q(nome__icontains=busca)
+                | Q(endereco__icontains=busca)
+                | Q(bairro__icontains=busca)
+                | Q(cidade__icontains=busca)
+                | Q(responsavel_nome__icontains=busca)
+            )
+        if status:
+            condominios_qs = condominios_qs.filter(status=status)
+        pagina, filtros_query = paginar_queryset(request, condominios_qs)
+
+        total_condominios = Condominio.objects.count()
+        condominios_ativos = Condominio.objects.filter(status='ATIVO').count()
+        condominios_em_avaliacao = Condominio.objects.filter(confiabilidade='EM_AVALIACAO').count()
+        total_bags = Bag.objects.count()
+        bags_cheias = Bag.objects.filter(status='CHEIA').count()
+        bags_disponiveis = Bag.objects.filter(status='DISPONIVEL').count()
 
     return render(request, 'sistema/condominios.html', {
         'usuario': usuario,
@@ -216,7 +216,8 @@ def condominios_view(request):
         'fonte_atual': fonte,
         'mongo_conectado': mongo_ok,
         'mongo_info': mongo_info,
-        'mongo_stats': mongo_stats,
+        'mongo_msg': mongo_msg,
+        'mongo_stats': mongo_stats if mongo_ok else {'total': 0},
     })
 
 
@@ -230,16 +231,11 @@ def bags_view(request):
     busca = request.GET.get('busca', '').strip()
     status = request.GET.get('status', '').strip()
 
-    # Bags estão embutidas nos documentos de Condomínio no MongoDB
+    # Fonte primária: MongoDB Atlas | Fallback: SQLite
     mongo_ok, mongo_msg, mongo_info = test_mongo_connection()
-    
-    # Se MongoDB offline, retornar vazio imediatamente
-    if not mongo_ok:
-        pagina, filtros_query = paginar_queryset(request, [])
-        total_bags = bags_cheias = bags_em_uso = bags_disponiveis = bags_danificadas = 0
-        ocupacao_media = 0
-    else:
-        # MongoDB conectado - fazer consultas
+
+    if mongo_ok:
+        # --- Fonte MongoDB ---
         filtros_mql = {}
         docs, _ = consultar_condominios_mongo(filtros_mql, pagina=1, por_pagina=1000)
         # Desembala as bags de todos os condomínios
@@ -284,6 +280,26 @@ def bags_view(request):
         ocupacao_media = (
             sum(b.get('percentual_ocupacao', 0) for b in bags_raw) / len(bags_raw)
             if bags_raw else 0
+        )
+    else:
+        # --- Fallback SQLite ---
+        bags_qs = Bag.objects.select_related('condominio', 'condominio__praia')
+        if busca:
+            bags_qs = bags_qs.filter(
+                Q(codigo__icontains=busca)
+                | Q(condominio__nome__icontains=busca)
+            )
+        if status:
+            bags_qs = bags_qs.filter(status=status)
+        pagina, filtros_query = paginar_queryset(request, bags_qs)
+
+        total_bags = Bag.objects.count()
+        bags_cheias = Bag.objects.filter(status='CHEIA').count()
+        bags_em_uso = Bag.objects.filter(status='EM_USO').count()
+        bags_disponiveis = Bag.objects.filter(status='DISPONIVEL').count()
+        bags_danificadas = Bag.objects.filter(status='DANIFICADA').count()
+        ocupacao_media = (
+            Bag.objects.aggregate(media=Avg('percentual_ocupacao'))['media'] or 0
         )
 
     return render(request, 'sistema/bags.html', {
