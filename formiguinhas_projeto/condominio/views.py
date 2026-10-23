@@ -156,30 +156,47 @@ def condominios_view(request):
 
     # Fonte primária exclusiva: MongoDB Atlas
     mongo_ok, mongo_msg, mongo_info = test_mongo_connection()
-    mongo_stats = obter_metricas_condominios_mongo() if mongo_ok else {'total': 0}
+    
+    # Se MongoDB estiver offline, retornar erro imediatamente (sem chamadas adicionais)
+    if not mongo_ok:
+        return render(request, 'sistema/condominios.html', {
+            'usuario': usuario,
+            'condominios': [],
+            'pagina': type('Page', (), {'object_list': [], 'has_other_pages': lambda: False})(),
+            'filtros_query': '',
+            'busca': '',
+            'status_selecionado': '',
+            'status_choices': Condominio.STATUS_CHOICES,
+            'total_condominios': 0,
+            'condominios_ativos': 0,
+            'condominios_em_avaliacao': 0,
+            'total_bags': 0,
+            'bags_cheias': 0,
+            'bags_disponiveis': 0,
+            'fonte_atual': 'mongo',
+            'mongo_conectado': False,
+            'mongo_info': mongo_info,
+            'mongo_msg': mongo_msg,
+            'mongo_stats': {'total': 0},
+        })
 
+    # MongoDB conectado - fazer consultas normalmente
+    mongo_stats = obter_metricas_condominios_mongo()
     busca = request.GET.get('busca', '').strip()
     status = request.GET.get('status', '').strip()
 
-    if mongo_ok:
-        filtros_mql = {'busca': busca, 'status': status}
-        docs, total_docs = consultar_condominios_mongo(filtros_mql, pagina=1, por_pagina=1000)
-        lista_adaptada = [MongoCondominioAdapter(d) for d in docs]
-        pagina, filtros_query = paginar_queryset(request, lista_adaptada)
+    filtros_mql = {'busca': busca, 'status': status}
+    docs, total_docs = consultar_condominios_mongo(filtros_mql, pagina=1, por_pagina=1000)
+    lista_adaptada = [MongoCondominioAdapter(d) for d in docs]
+    pagina, filtros_query = paginar_queryset(request, lista_adaptada)
 
-        total_condominios = mongo_stats.get('total', 0)
-        condominios_ativos = mongo_stats.get('ativos', 0)
-        condominios_em_avaliacao = mongo_stats.get('em_avaliacao', 0)
-        total_bags = mongo_stats.get('total_bags', 0)
-        bags_cheias = mongo_stats.get('bags_cheias', 0)
-        bags_disponiveis = mongo_stats.get('bags_disponiveis', 0)
-        fonte = 'mongo'
-    # Fallback to SQL removed; MongoDB is the sole source.
-    # If MongoDB connection fails, render an error page.
-    if not mongo_ok:
-        # Simple error handling; could render a custom template.
-        from django.http import HttpResponseServerError
-        return HttpResponseServerError('Conexão com MongoDB falhou.')
+    total_condominios = mongo_stats.get('total', 0)
+    condominios_ativos = mongo_stats.get('ativos', 0)
+    condominios_em_avaliacao = mongo_stats.get('em_avaliacao', 0)
+    total_bags = mongo_stats.get('total_bags', 0)
+    bags_cheias = mongo_stats.get('bags_cheias', 0)
+    bags_disponiveis = mongo_stats.get('bags_disponiveis', 0)
+    fonte = 'mongo'
 
     return render(request, 'sistema/condominios.html', {
         'usuario': usuario,
@@ -214,8 +231,15 @@ def bags_view(request):
     status = request.GET.get('status', '').strip()
 
     # Bags estão embutidas nos documentos de Condomínio no MongoDB
-    mongo_ok, _, _ = test_mongo_connection()
-    if mongo_ok:
+    mongo_ok, mongo_msg, mongo_info = test_mongo_connection()
+    
+    # Se MongoDB offline, retornar vazio imediatamente
+    if not mongo_ok:
+        pagina, filtros_query = paginar_queryset(request, [])
+        total_bags = bags_cheias = bags_em_uso = bags_disponiveis = bags_danificadas = 0
+        ocupacao_media = 0
+    else:
+        # MongoDB conectado - fazer consultas
         filtros_mql = {}
         docs, _ = consultar_condominios_mongo(filtros_mql, pagina=1, por_pagina=1000)
         # Desembala as bags de todos os condomínios
@@ -261,10 +285,6 @@ def bags_view(request):
             sum(b.get('percentual_ocupacao', 0) for b in bags_raw) / len(bags_raw)
             if bags_raw else 0
         )
-    else:
-        pagina, filtros_query = paginar_queryset(request, [])
-        total_bags = bags_cheias = bags_em_uso = bags_disponiveis = bags_danificadas = 0
-        ocupacao_media = 0
 
     return render(request, 'sistema/bags.html', {
         'usuario': usuario,
@@ -280,6 +300,9 @@ def bags_view(request):
         'bags_disponiveis': bags_disponiveis,
         'bags_danificadas': bags_danificadas,
         'ocupacao_media': ocupacao_media,
+        'mongo_conectado': mongo_ok,
+        'mongo_msg': mongo_msg,
+        'mongo_info': mongo_info,
     })
 
 
