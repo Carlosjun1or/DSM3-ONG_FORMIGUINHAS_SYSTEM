@@ -9,9 +9,9 @@
     <link rel="icon" type="image/svg+xml" href="{% static 'site_institucional/img/mascote-formiguinha.svg' %}?v=1">
     <link rel="shortcut icon" href="{% static 'site_institucional/img/mascote-formiguinha.svg' %}?v=1">
     <link rel="stylesheet" href="{% static 'css/template.css' %}?v=6">
-    {% block style %}    <link rel="stylesheet" href="{% static 'css/site-layout.css' %}?v=76">{% endblock %}
+    {% block style %}    <link rel="stylesheet" href="{% static 'css/site-layout.css' %}?v=81">{% endblock %}
 </head>
-<body>
+<body id="topo">
     <header>
         <div class="logo">
             <a class="marca" href="{% url 'index' %}" aria-label="Formiguinhas da Praia — página inicial">
@@ -36,8 +36,73 @@
         {% block conteudo %}
         {% endblock %}
     </main>
-    <footer>
-        <p>&copy; {% now "Y" %} Formiguinhas da Praia</p>
+    <footer class="site-footer">
+        <div class="footer-container">
+            <div class="footer-identidade">
+                <a class="footer-marca" href="{% url 'index' %}" aria-label="Formiguinhas da Praia — voltar ao início">
+                    <img src="{% static 'site_institucional/img/mascote-formiguinha.svg' %}" alt="">
+                    <span>Formiguinhas<br><span>DA PRAIA</span></span>
+                </a>
+                <p class="footer-descricao">
+                    Uma organização comunitária que mobiliza pessoas para cuidar das praias,
+                    incentivar a reciclagem e fortalecer a consciência ambiental.
+                </p>
+            </div>
+
+            <nav class="footer-coluna" aria-label="Links institucionais">
+                <h2>Explore</h2>
+                <ul class="footer-links">
+                    <li><a href="{% url 'index' %}#historia">Nossa história</a></li>
+                    <li><a href="{% url 'praias_atuacao' %}">Praias atendidas</a></li>
+                    <li><a href="{% url 'multiroes' %}">Mutirões</a></li>
+                    <li><a href="{% url 'calendario' %}">Calendário</a></li>
+                    <li><a href="{% url 'comunicados_publicos' %}">Notícias</a></li>
+                </ul>
+            </nav>
+
+            <div class="footer-coluna">
+                <h2>Faça parte</h2>
+                <ul class="footer-links">
+                    <li><a href="{% url 'index' %}#proxima-acao">Participe de um mutirão</a></li>
+                    <li><a href="{% url 'index' %}#apoie">Formas de apoiar</a></li>
+                    <li><a href="{% url 'index' %}#apoie">Doe via PIX</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-coluna footer-contato">
+                <h2>Converse com a gente</h2>
+                <a
+                    class="footer-social-link"
+                    href="https://wa.me/5513997284132?text=Ol%C3%A1%21%20Quero%20saber%20mais%20sobre%20a%20Formiguinhas%20da%20Praia."
+                    target="_blank"
+                    rel="noopener noreferrer"
+                >
+                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <path d="M20 11.7a8 8 0 0 1-11.8 7L4 20l1.3-4A8 8 0 1 1 20 11.7Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
+                        <path d="M9 8.5c.4 2.3 2.2 4.1 4.5 4.5l1.1-1.1 2 .8c-.2 1.2-1.1 2-2.4 2-3.7-.2-6.7-3.2-6.9-6.9 0-1.3.8-2.2 2-2.4l.8 2L9 8.5Z" fill="currentColor"/>
+                    </svg>
+                    Fale pelo WhatsApp
+                </a>
+                <a
+                    class="footer-social-link"
+                    href="https://www.instagram.com/formiguinhasdapraia/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label="Acompanhe a Formiguinhas da Praia no Instagram (abre em nova aba)"
+                >
+                        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                            <rect x="3" y="3" width="18" height="18" rx="5" stroke="currentColor" stroke-width="1.8"/>
+                            <circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="1.8"/>
+                            <circle cx="17.5" cy="6.5" r="1" fill="currentColor"/>
+                        </svg>
+                    Acompanhe no Instagram
+                </a>
+            </div>
+        </div>
+        <div class="footer-base">
+            <p>&copy; {% now "Y" %} Formiguinhas da Praia. Todos os direitos reservados.</p>
+            <a class="footer-topo" href="#topo">Voltar ao topo ↑</a>
+        </div>
     </footer>
 
     <script src="{% static 'site_institucional/js/script.js' %}?v=4"></script>

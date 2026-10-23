@@ -225,6 +225,18 @@ a {
   background: var(--selecionado-fundo);
 }
 
+.btn--contorno-branco {
+  background: transparent;
+  color: var(--papel);
+  border: 3px solid var(--papel);
+  box-shadow: none;
+}
+
+.btn--contorno-branco:active {
+  transform: none;
+  background: var(--selecionado-fundo);
+}
+
 /* Links de texto também respeitam a área de clique de 44 px */
 .link {
   display: inline-flex;

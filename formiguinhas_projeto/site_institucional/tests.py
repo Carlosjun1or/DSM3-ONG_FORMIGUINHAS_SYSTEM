@@ -36,26 +36,43 @@ class LocalizacaoPraiasTests(TestCase):
 
 
 class GaleriaMutiroesTests(TestCase):
-    def test_home_organiza_impacto_e_apoio_antes_da_secao_de_praias(self):
+    def test_home_segue_a_ordem_de_abertura_acao_historia_impacto_e_apoio(self):
         resposta = self.client.get(reverse('index'))
         conteudo = resposta.content.decode()
         posicoes = [
-            conteudo.index('class="secao-impacto"'),
+            conteudo.index('id="inicio"'),
+            conteudo.index('id="proxima-acao"'),
             conteudo.index('id="historia"'),
+            conteudo.index('class="secao-impacto"'),
             conteudo.index('id="multiroes"'),
             conteudo.index('id="apoie"'),
             conteudo.index('id="praias"'),
         ]
 
         self.assertEqual(posicoes, sorted(posicoes))
-        self.assertContains(resposta, 'Resultados que fazem a diferença')
-        self.assertContains(resposta, 'nossos mutirões limparam praias')
-        self.assertContains(resposta, 'encaminharam resíduos')
+        self.assertContains(resposta, 'O litoral precisa de você.')
+        self.assertContains(resposta, 'Participar de um mutirão')
+        self.assertContains(resposta, 'Conhecer a ONG')
+        self.assertContains(resposta, 'A transformação já começou')
+        self.assertContains(resposta, 'Dados históricos · desde 2019')
+        self.assertContains(resposta, 'Vamos cuidar da próxima praia?')
+        self.assertContains(resposta, 'Uma atitude simples que virou um movimento')
+        self.assertContains(resposta, 'O resultado do trabalho coletivo')
+        self.assertContains(resposta, 'Indicadores informados para 2025')
         self.assertContains(resposta, '1.512 kg')
         self.assertContains(resposta, '132 mil L')
         self.assertContains(resposta, '8.500 kg')
         self.assertContains(resposta, '43.729 mil')
+        self.assertContains(resposta, 'Conheça quem faz acontecer')
+        self.assertContains(resposta, 'Toda ajuda conta')
         self.assertContains(resposta, 'data-copiar-pix')
+        self.assertContains(resposta, 'Ver praia mais próxima')
+        self.assertContains(resposta, 'Fale pelo WhatsApp')
+        self.assertContains(
+            resposta,
+            'href="https://www.instagram.com/formiguinhasdapraia/"',
+        )
+        self.assertContains(resposta, 'Acompanhe no Instagram')
 
     def test_home_exibe_cartoes_de_mutiroes_realizados_e_proximos(self):
         praia = Praia.objects.create(
@@ -102,10 +119,10 @@ class GaleriaMutiroesTests(TestCase):
         )
         self.assertContains(resposta, 'Mutirão realizado')
         self.assertContains(resposta, 'Mutirão agendado')
-        self.assertContains(resposta, 'class="proximo-mutirao-data"')
+        self.assertContains(resposta, 'class="proximo-mutirao-imagem"')
         self.assertContains(resposta, 'Limpeza coletiva da faixa de areia.')
         self.assertContains(resposta, 'Traga sua garrafa reutilizável.')
-        self.assertContains(resposta, 'Quero participar')
+        self.assertContains(resposta, 'Participar deste mutirão')
 
     def test_filtros_e_paginacao_mantem_os_parametros_selecionados(self):
         praia = Praia.objects.create(

@@ -87,7 +87,7 @@ def index(request):
     concluidos = mutiroes_concluidos()
     futuros = mutiroes_futuros()
     return render(request, 'site_institucional/index.html', {
-        'mutiroes': concluidos[:1],
+        'mutiroes': concluidos[:3],
         'proximo_mutirao': futuros[0] if futuros else None,
         'praias': praias_de_atuacao(),
         'ultimo_comunicado': ultimo_comunicado,
