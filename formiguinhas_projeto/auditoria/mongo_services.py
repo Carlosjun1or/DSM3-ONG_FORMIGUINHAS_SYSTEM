@@ -1,5 +1,9 @@
 """
 Serviços de persistência e consulta no MongoDB Atlas para a Auditoria (Persistência Poliglota).
+
+A auditoria é WRITE-ONLY no MongoDB: eventos são inseridos via registrar_evento_mongo()
+e nunca editados/removidos. A leitura é feita por consultar_eventos_mongo() para a tela
+de auditoria global e por obter_estatisticas_mongo() para os dashboards.
 """
 import logging
 from datetime import datetime, time

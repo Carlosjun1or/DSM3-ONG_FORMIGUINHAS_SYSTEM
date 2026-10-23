@@ -4,6 +4,12 @@ from .mongo_services import get_auditoria_collection
 
 
 def notificacoes_auditoria(request):
+    """Context processor: conta eventos de auditoria não visualizados pelo admin.
+    
+    Usa EstadoLeituraAuditoria.ultimo_evento_id como watermark — a contagem de
+    "não lidos" é o total de eventos no MongoDB menos o último ID visto.
+    Injetado em todo template via TEMPLATES context_processors (settings.py).
+    """
     usuario_id = request.session.get('usuario_id')
     if not usuario_id or request.session.get('usuario_tipo') != 'ADMIN':
         return {'auditoria_nao_lida_count': 0}

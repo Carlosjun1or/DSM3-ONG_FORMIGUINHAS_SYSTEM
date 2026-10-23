@@ -1,6 +1,15 @@
 """
 Conector e utilitários para MongoDB Atlas (Persistência Poliglota - Cenário C).
-Fornece gerenciamento seguro de conexões, cache de conectividade e tolerância a falhas.
+
+Arquitetura:
+- SQLite é o banco primário (Django ORM grava e gera IDs auto-increment).
+- MongoDB Atlas é a fonte de LEITURA das telas (models com managed=False).
+- Toda escrita faz dual-write: salva no SQLite primeiro, depois sincroniza no MongoDB.
+
+Este módulo centraliza:
+1. O cliente MongoDB singleton (evita recriar conexão a cada requisição).
+2. O teste de conectividade com cache de 15s (evita timeout de 3s em cada request quando offline).
+3. Proxies que adaptam documentos BSON (dicts) para objetos com atributos (interface dos templates).
 """
 import logging
 import sys
@@ -11,10 +20,11 @@ from pymongo.errors import PyMongoError, ServerSelectionTimeoutError
 
 logger = logging.getLogger(__name__)
 
-_mongo_client = None
-_last_check_time = 0
-_last_check_result = None
-CACHE_TTL_SEGUNDOS = 15  # Evita re-testar handshake a cada requisição HTTP quando offline
+# --- Estado global do módulo (singleton + cache de conectividade) ---
+_mongo_client = None        # MongoClient singleton, reutilizado em todas as requisições
+_last_check_time = 0        # timestamp do último teste de conectividade
+_last_check_result = None   # resultado em cache do último teste (sucesso/fracasso + mensagem)
+CACHE_TTL_SEGUNDOS = 15     # evita re-testar handshake a cada requisição HTTP quando offline
 
 
 def _em_modo_teste():
@@ -25,7 +35,11 @@ def _em_modo_teste():
 def get_mongo_client():
     """
     Retorna a instância singleton do cliente MongoClient.
-    Reutiliza a conexão para eficiência e gerenciamento de pool.
+    
+    Reutiliza a conexão entre requisições (pool interno do PyMongo).
+    Se o MongoDB estiver offline, o timeout evita bloqueio indefinido:
+    após serverSelectionTimeoutMS, get_mongo_client() retorna o cliente,
+    mas a primeira operação real falhará e será tratada pelos services.
     """
     global _mongo_client
     if _em_modo_teste():
@@ -41,6 +55,7 @@ def get_mongo_client():
     timeout_ms = getattr(settings, 'MONGODB_TIMEOUT_MS', 3000)
     try:
         # Importa certifi se disponível para certificados SSL atualizados
+        # (necessário no Windows onde a CA store pode estar desatualizada)
         tls_kwargs = {}
         try:
             import certifi
@@ -95,8 +110,14 @@ def get_mongo_collection(nome_colecao):
 
 def test_mongo_connection(forcar=False):
     """
-    Testa a conectividade com o MongoDB Atlas com cache de 15 segundos para performance.
+    Testa a conectividade com o MongoDB Atlas.
+    
+    Usa cache de CACHE_TTL_SEGUNDOS (15s) para evitar re-testar a cada requisição:
+    quando o MongoDB cai, a primeira chamada demora 3s (timeout), mas as
+    próximas chamadas dentro de 15s retornam instantaneamente do cache.
+    
     Retorna uma tupla (sucesso: bool, mensagem: str, info: dict).
+    Use forcar=True para ignorar o cache (ex: após uma tentativa de escrita).
     """
     global _last_check_time, _last_check_result
 
@@ -135,6 +156,9 @@ def test_mongo_connection(forcar=False):
         _last_check_result = res
         return res
     except (ServerSelectionTimeoutError, PyMongoError) as erro:
+        # O MongoDB Atlas bloqueia conexões de IPs não autorizados.
+        # Esse erro específico de SSL indica que o IP público atual não está
+        # na lista de acesso do Atlas — mostramos instruções em vez de um erro genérico.
         erro_str = str(erro)
         if 'TLSV1_ALERT_INTERNAL_ERROR' in erro_str or 'SSL handshake failed' in erro_str:
             ip_atual = 'desconhecido'
@@ -180,8 +204,16 @@ def close_mongo_client():
 
 class MongoDictProxy:
     """
-    Proxy transparente para documentos/dicionários retornados do MongoDB Atlas,
-    permitindo acesso tanto por atributo (.campo) quanto por chave (['campo']).
+    Proxy transparente para documentos/dicionários retornados do MongoDB Atlas.
+    
+    Por que existe: o PyMongo retorna dicts comuns ({'nome': 'X'}), mas os
+    templates Django acessam campos por atributo ({{ obj.nome }}), não por
+    chave ({{ obj['nome'] }}). Este proxy faz __getattr__ delegar para o dict
+    interno, permitindo ambos os estilos de acesso.
+    
+    As subclasses (MongoAcaoProxy, MongoBagProxy) adicionam properties e
+    métodos get_*_display() que os templates esperam encontrar, simulando
+    a interface de um Model do Django.
     """
     def __init__(self, data=None):
         self._data = data if isinstance(data, dict) else {}
@@ -310,6 +342,7 @@ class MongoBagProxy(MongoDictProxy):
 
 
 # Aliases de compatibilidade para scripts e serviços utilitários
+# (algumas partes do código importam get_db/get_client em vez de get_mongo_db/get_mongo_client)
 get_db = get_mongo_db
 get_client = get_mongo_client
 

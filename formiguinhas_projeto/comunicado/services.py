@@ -1,3 +1,4 @@
+"""Operações de ciclo de vida de Comunicado: publicar, despublicar, arquivar, desarquivar."""
 import calendar
 from datetime import timedelta
 
@@ -8,6 +9,12 @@ from .mongo_services import salvar_comunicado_mongo
 
 
 def calcular_expiracao(inicio, quantidade, unidade):
+    """Calcula a data de expiração a partir da data de publicação.
+    
+    Meses e anos são calculados manualmente (calendar.monthrange) porque
+    timedelta não suporta meses. O dia é limitado ao último dia do mês
+    de destino (ex: 31/jan + 1 mês = 28/fev em anos não bissextos).
+    """
     if unidade == 'DIAS':
         return inicio + timedelta(days=quantidade)
     if unidade == 'SEMANAS':

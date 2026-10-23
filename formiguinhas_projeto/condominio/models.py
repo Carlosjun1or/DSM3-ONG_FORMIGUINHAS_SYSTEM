@@ -4,6 +4,15 @@ from django.utils import timezone
 
 
 class Condominio(models.Model):
+    """
+    Condomínio parceiro da ONG.
+
+    managed=False: a tabela foi criada manualmente no SQLite (não pelo makemigrations).
+    Isso porque o MongoDB é a fonte de leitura das telas, mas o SQLite mantém
+    a integridade relacional (FKs com Praia, Usuario) e gera o ID auto-increment
+    que vira id_sql no MongoDB. O Django ORM pode consultar e gravar normalmente,
+    apenas não tenta criar/alterar a estrutura da tabela via migrations.
+    """
     PORTE_CHOICES = [
         ('PEQUENO', 'Pequeno'),
         ('MEDIO', 'Médio'),
@@ -36,7 +45,7 @@ class Condominio(models.Model):
     praia = models.ForeignKey(
         'praia.Praia',
         on_delete=models.DO_NOTHING,
-        db_constraint=False,
+        db_constraint=False,   # não cria constraint FK no banco (tabela é managed=False)
         null=True,
         blank=True,
         related_name='condominios',
@@ -53,7 +62,7 @@ class Condominio(models.Model):
     cadastrado_por = models.ForeignKey(
         'usuario.Usuario',
         on_delete=models.DO_NOTHING,
-        db_constraint=False,
+        db_constraint=False,   # não cria constraint FK no banco (tabela é managed=False)
         null=True,
         related_name='condominios_cadastrados',
     )
@@ -79,6 +88,7 @@ class Condominio(models.Model):
 
 
 class Bag(models.Model):
+    # Import tardio (lazy) para evitar import circular: residuo.models importa condominio.models
     @property
     def coletas_residuos(self):
         from residuo.models import ColetaResiduo

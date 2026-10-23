@@ -6,7 +6,17 @@ from django.core.validators import MinValueValidator
 from django.db import models
 from django.utils import timezone
 
+
 class SoftRefQuerySet(models.QuerySet):
+    """
+    QuerySet customizado que aceita instâncias de objeto ou IDs crus como filtros.
+
+    Por que existe: acao_id e bag_id são PositiveIntegerField (não FKs reais) para
+    evitar constraint FK no banco — os modelos Acao e Bag têm managed=False ou
+    são lidos do MongoDB. Sem FK real, o ORM não aceita filter(acao=instance);
+    este QuerySet intercepta e converte para filter(acao_id=instance.pk).
+    """
+
     def filter(self, *args, **kwargs):
         if 'acao' in kwargs:
             val = kwargs.pop('acao')
@@ -41,6 +51,14 @@ UNIDADE_RESIDUO_CHOICES = [
 
 
 class ColetaResiduo(models.Model):
+    """
+    Coleta de resíduos vinculada a uma Ação ou a uma Bag de condomínio.
+
+    Usa acao_id e bag_id como campos inteiros simples (sem FK real) para
+    evitar constraint com tabelas managed=False. As properties acao e bag
+    resolvem o objeto correspondente consultando primeiro o MongoDB, depois
+    o SQLite como fallback. O SoftRefQuerySet permite usar filter(acao=obj).
+    """
     objects = SoftRefQuerySet.as_manager()
 
     def __init__(self, *args, **kwargs):
@@ -74,6 +92,7 @@ class ColetaResiduo(models.Model):
 
     @property
     def acao(self):
+        """Resolve a Ação: tenta MongoDB primeiro, SQLite como fallback, proxy mínimo se tudo falhar."""
         if not self.acao_id:
             return None
         from config.mongodb import MongoAcaoProxy
@@ -108,6 +127,7 @@ class ColetaResiduo(models.Model):
 
     @property
     def bag(self):
+        """Resolve a Bag: tenta MongoDB primeiro, SQLite como fallback, proxy mínimo se tudo falhar."""
         if not self.bag_id:
             return None
         from config.mongodb import MongoBagProxy
@@ -139,6 +159,7 @@ class ColetaResiduo(models.Model):
                 self.bag_id = int(value)
             except (ValueError, TypeError):
                 self.bag_id = None
+
     data_coleta = models.DateTimeField(default=timezone.now)
     observacao = models.TextField(blank=True, default='')
     registrado_por = models.ForeignKey(
@@ -192,6 +213,8 @@ class ItemColetaResiduo(models.Model):
 
 
 class ResiduoColetado(models.Model):
+    """Resíduo registrado diretamente em uma Ação (não via bag). Mesma lógica de
+    soft-reference: acao_id é inteiro sem FK real, resolvido via property."""
     objects = SoftRefQuerySet.as_manager()
 
     def __init__(self, *args, **kwargs):
@@ -233,6 +256,7 @@ class ResiduoColetado(models.Model):
 
     @property
     def acao(self):
+        """Resolve a Ação: tenta MongoDB primeiro, SQLite como fallback, proxy mínimo se tudo falhar."""
         if not self.acao_id:
             return None
         from config.mongodb import MongoAcaoProxy
@@ -264,6 +288,7 @@ class ResiduoColetado(models.Model):
                 self.acao_id = int(value)
             except (ValueError, TypeError):
                 self.acao_id = None
+
     tipo = models.CharField(max_length=20, choices=TIPO_CHOICES, blank=True, default='')
     categoria = models.CharField(max_length=20, choices=CATEGORIA_CHOICES, blank=True, default='')
     quantidade = models.DecimalField(
@@ -303,6 +328,8 @@ class ResiduoColetado(models.Model):
 
 
 class DestinacaoResiduo(models.Model):
+    """Destinação final de um resíduo coletado (reciclagem, compostagem, aterro, etc.)
+    Pode estar vinculada a um ResiduoColetado (de ação) ou ItemColetaResiduo (de bag)."""
     TIPO_CHOICES = [
         ('RECICLAGEM', 'Reciclagem'),
         ('REUTILIZACAO', 'Reutilização'),

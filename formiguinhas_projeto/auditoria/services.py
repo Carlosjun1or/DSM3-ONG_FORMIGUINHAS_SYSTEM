@@ -4,10 +4,19 @@ from decimal import Decimal
 from django.db.models.fields.files import FieldFile
 from django.utils import timezone
 
+# Campos que nunca devem aparecer no snapshot (segurança: não logar senhas/tokens)
 SENSITIVE = {'senha', 'password', 'senha_hash', 'token', 'secret', 'hash'}
 
 
 def snapshot(instance):
+    """Captura os valores atuais da instância como dict, filtrando campos sensíveis.
+    
+    Regras:
+    - Campos com 'senha', 'password', 'token', 'secret' no nome são omitidos.
+    - FieldFile (imagens) é omitido (não faz sentido logar o caminho do arquivo).
+    - Choices são resolvidas para o display label (ex: 'ATIVO' -> 'Ativo').
+    - FKs são convertidas para str(instancia) (legível, não o ID cru).
+    """
     result = {}
     for field in instance._meta.concrete_fields:
         name = field.name.lower()
@@ -34,6 +43,14 @@ def snapshot(instance):
 def registrar_evento(*, entidade, instancia=None, acao, usuario=None, resumo,
                      valores_anteriores=None, valores_novos=None, id_registro=None,
                      usuario_nome=None):
+    """
+    Registra um evento de auditoria em duas camadas:
+    1. MongoDB Atlas (primária) — falha silenciosa se offline.
+    2. SQLite (fallback) — só persiste se a tabela existir (testes locais).
+    
+    Ambas as escritas são best-effort: se falharem, o evento é perdido mas a
+    aplicação não quebra (auditoria não pode bloquear a operação principal).
+    """
     nome = usuario_nome or ''
     if not nome and usuario is not None:
         nome = getattr(getattr(usuario, 'id_voluntario', None), 'nome', '') or str(usuario)
@@ -43,7 +60,7 @@ def registrar_evento(*, entidade, instancia=None, acao, usuario=None, resumo,
     novos = valores_novos if valores_novos is not None else (snapshot(instancia) if instancia else {})
     momento = timezone.now()
 
-    # 1. Persistência Primária Exclusiva no MongoDB Atlas (NoSQL)
+    # 1. Persistência Primária no MongoDB Atlas (NoSQL)
     try:
         from .mongo_services import registrar_evento_mongo
         registrar_evento_mongo(

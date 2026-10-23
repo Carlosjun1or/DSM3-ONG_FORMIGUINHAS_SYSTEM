@@ -54,6 +54,12 @@ class Equipe(models.Model):
 
 
 class EquipeMembro(models.Model):
+    """Vínculo entre um Voluntario e uma Equipe com papel (coordenador/voluntário).
+    
+    A constraint UniqueConstraint condicional garante que um voluntário só pode
+    ter um vínculo ATIVO por equipe — mas permite múltiplos vínculos INATIVO
+    (histórico de saídas e entradas na mesma equipe).
+    """
     PAPEL_VOLUNTARIO = 'VOLUNTARIO'
     PAPEL_COORDENADOR = 'COORDENADOR'
     PAPEL_CHOICES = [

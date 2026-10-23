@@ -5,6 +5,12 @@ from django.utils import timezone
 # Create your models here.
 
 class Voluntario(models.Model):
+    """Pessoa cadastrada na ONG (não necessariamente com acesso ao sistema).
+    
+    Diferente de Usuario (que é quem faz login), o Voluntario é o perfil pessoal:
+    nome, contato, data de nascimento, status (ativo/inativo/pausado).
+    O relacionamento Voluntario 1:1 Usuario é opcional — nem todo voluntário tem login.
+    """
     STATUS_CHOICES = [
         ('ATIVO', 'Ativo'),
         ('INATIVO', 'Inativo'),
@@ -49,6 +55,7 @@ class Voluntario(models.Model):
 
     @property
     def idade(self):
+        """Calcula idade considerando se o aniversário já ocorreu no ano corrente."""
         hoje = timezone.localdate()
         idade = hoje.year - self.dt_nascimento.year
         aniversario_ainda_nao_chegou = (hoje.month, hoje.day) < (
@@ -59,6 +66,12 @@ class Voluntario(models.Model):
  
  
 class Usuario(models.Model):
+    """Credencial de acesso ao sistema (login por sessão, não Django auth.User).
+    
+    Vincula-se 1:1 a um Voluntario. A senha é hasheada com make_password/check_password
+    do Django, mas a autenticação é manual (session-based, sem usar contrib.auth).
+    Tipos: ADMIN (acesso total) ou COORDENADOR (acesso restrito a suas ações).
+    """
     TIPO_CHOICES = [
         ('ADMIN', 'Administrador'),
         ('COORDENADOR', 'Coordenador'),

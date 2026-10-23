@@ -34,7 +34,8 @@ def get_acoes_collection():
             col.create_index([('tipo', 1)])
             col.create_index([('praia.id', 1)])
             col.create_index([('participantes.voluntario_id', 1)])
-            # Índice geoespacial 2dsphere para buscar ações próximas via coordenadas
+            # Índice geoespacial 2dsphere: permite buscar ações por proximidade
+            # via coordenadas (consultar buscar_acoes_proximas_mongo)
             col.create_index([('praia.localizacao_geo', '2dsphere')])
             _indices_acoes_configurados = True
         except Exception as erro:
@@ -48,6 +49,7 @@ def formatar_acao_documento(acao):
     Participantes, Responsáveis, Fotos, Resíduos e Coordenadas) em um documento BSON rico.
     """
     # 1. Dados da Praia com GeoJSON (Point: [longitude, latitude])
+    # O MongoDB armazena coordenadas no formato GeoJSON [lng, lat] (não [lat, lng])
     praia_info = None
     if acao.praia_id and acao.praia:
         praia_obj = acao.praia
@@ -316,7 +318,8 @@ def obter_acao_mongo(acao_id):
 
 def buscar_acoes_proximas_mongo(latitude, longitude, raio_km=10):
     """
-    Busca ações próximas a uma coordenada geográfica usando a consulta $near nativa do MongoDB.
+    Busca ações próximas a uma coordenada usando $near do MongoDB (requer índice 2dsphere).
+    O MongoDB espera coordinates no formato [longitude, latitude] — atenção à ordem.
     """
     col = get_acoes_collection()
     if col is None:

@@ -14,7 +14,12 @@ STATUS_CONSIDERADOS = {
 
 
 def calcular_frequencias_voluntarios(voluntario_ids=None):
-    """Calcula a frequência atual sem armazenar o resultado no banco."""
+    """Calcula a frequência atual sem armazenar o resultado no banco.
+    
+    Fonte primária: MongoDB (onde ações e participantes residem como documentos).
+    Fallback: SQLite (tabelas acao_participante e acao_participante_historico).
+    Retorna um dict {voluntario_id: {total, presencas, percentual, nivel}}.
+    """
     participacoes = defaultdict(lambda: {
         'acoes': set(),
         'presencas': set(),
