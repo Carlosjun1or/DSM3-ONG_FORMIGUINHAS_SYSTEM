@@ -4,6 +4,10 @@
     box-sizing: border-box;
 }
 
+html {
+    scroll-behavior: smooth;
+}
+
 .system-page .system-list .volunteer-filters select.form-control {
     background-color: var(--layout-paper);
     background-image:
@@ -133,7 +137,7 @@ main {
     position: sticky;
     top: 0;
     display: flex;
-    flex: 0 0 349px;
+    flex: 0 0 300px;
     width: 349px;
     height: 100vh;
     min-height: 560px;
@@ -4142,6 +4146,10 @@ select.select-control:disabled {
     font-weight: 800;
     letter-spacing: 0.1em;
     text-transform: uppercase;
+}
+
+#chamada {
+    scroll-margin-top: 24px;
 }
 
 .donation-page-guidance {
