@@ -2974,6 +2974,10 @@ footer.site-footer {
         animation: none;
     }
 
+    header::after {
+        transform: scaleX(1);
+    }
+
     #historia .container .historia-conteudo article .pillar,
     #historia .container .historia-conteudo article .pillar .badge {
         transition: none;

@@ -198,13 +198,6 @@ a {
 }
 
 
-/* Azul = ação de navegação */
-.btn--azul {
-  --btn-bg: var(--azul);
-  --btn-base: var(--azul-base);
-  --btn-cor: #fff;
-}
-
 /* Roxo = ação de apoio */
 .btn--roxo {
   --btn-bg: var(--roxo);

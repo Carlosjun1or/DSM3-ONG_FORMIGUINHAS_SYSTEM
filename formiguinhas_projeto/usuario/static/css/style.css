@@ -65,7 +65,6 @@ body {
 h1 {
     font-size: clamp(1.7rem, 2vw, 2.2rem);
     font-weight: 700;
-    color: #f3f3f3;
     line-height: 1;
     margin: 0;
 }
@@ -238,7 +237,7 @@ main {
     border-left: 7px solid transparent;
     color: #f9f6ee;
     font-family: "Fredoka", "Trebuchet MS", Arial, sans-serif;
-    font-size: 22px;
+    font-size: 18px;
     font-weight: 500;
     line-height: 1.2;
     text-decoration: none;
@@ -335,6 +334,11 @@ main {
     white-space: nowrap;
 }
 
+.topbar-breadcrumb span[aria-current="page"] {
+    color: #00306b;
+    font-weight: 700;
+}
+
 .breadcrumb-separator {
     flex: 0 0 7px;
     width: 7px;
@@ -411,9 +415,9 @@ main {
     background: #d64545;
     color: #fff;
     font-family: "Fredoka", "Trebuchet MS", Arial, sans-serif;
-    font-size: 20px;
+    font-size: 13px;
     font-weight: 500;
-    line-height: 24px;
+    line-height: 1;
 }
 
 .topbar-user {
@@ -460,7 +464,7 @@ main {
     font-weight: 700;
     text-overflow: ellipsis;
     white-space: nowrap;
-    line-height: 1;
+    line-height: 1.2;
     text-align: center;
     text-decoration: none;
     white-space: nowrap;
@@ -573,7 +577,7 @@ main {
 .alert-box.alert-info,
 .auth-feedback--info {
     border-color: #0058b9;
-    background: #bcd0e3;
+    background: var(--layout-info-bg);
     color: #0b1e3d;
 }
 
@@ -710,7 +714,7 @@ main {
 
 .unified-collections .btn-small {
     padding: 5px 7px;
-    font-size: 0.68rem;
+    font-size: 0.875rem;
 }
 
 .unified-collections .collection-items {
@@ -721,7 +725,7 @@ main {
 .unified-collections .collection-items span,
 .unified-collections .collection-items small {
     padding: 2px 5px;
-    font-size: 0.64rem;
+    font-size: 0.8125rem;
 }
 
 .section-kicker,
@@ -746,7 +750,7 @@ main {
 }
 
 .unified-collections .section-heading .form-subtitle {
-    font-size: 0.8rem;
+    font-size: 0.875rem;
     line-height: 1.3;
 }
 
@@ -1783,12 +1787,12 @@ details summary {
 }
 
 .dashboard-page {
-    background: var(--papel, #f9f6ee);
-    color: var(--texto, #0b1e3d);
+    background: var(--layout-paper);
+    color: var(--layout-navy);
 }
 
 .dashboard-page .main-panel {
-    background: var(--papel, #f9f6ee);
+    background: var(--layout-paper);
     padding: 12px 24px 40px;
 }
 
@@ -1798,8 +1802,8 @@ details summary {
 
 .dashboard-page .topbar-kicker {
     margin-bottom: 2px;
-    color: var(--roxo, #7657cb);
-    font-family: var(--fonte-titulo, "Fredoka", system-ui, sans-serif);
+    color: var(--layout-purple);
+    font-family: "Fredoka", system-ui, sans-serif;
     font-size: 1.125rem;
     letter-spacing: normal;
     text-transform: none;
@@ -1807,17 +1811,23 @@ details summary {
 
 .dashboard-page .page-heading h1 {
     margin: 0;
-    color: var(--azul-profundo, #00306b);
+    color: var(--layout-navy);
     font-size: clamp(1.75rem, 2.4vw, 2.25rem);
 }
 
 .dashboard-page .dashboard-welcome {
+    display: flex;
+    align-items: center;
     width: fit-content;
     min-height: 0;
     margin: 0 0 14px;
     padding: 7px 14px;
-    border-radius: 5px;
+    border: 2px solid var(--layout-success);
+    border-radius: 14px;
+    background: var(--layout-success-bg);
+    color: var(--layout-navy);
     font-size: 0.875rem;
+    font-weight: 600;
 }
 
 .dashboard-page .dashboard-metrics {
@@ -1829,24 +1839,24 @@ details summary {
 .dashboard-page .dashboard-metric-card {
     min-width: 0;
     padding: 14px;
-    border: 1px solid var(--borda-neutra-forte, #b5afa4);
+    border: 1px solid var(--layout-border-strong);
     border-radius: 12px;
     box-shadow: none;
 }
 
 .dashboard-page .dashboard-metric-card h2 {
     margin: 0 0 6px;
-    color: var(--roxo, #7657cb);
-    font-family: var(--fonte-corpo, "Quicksand", system-ui, sans-serif);
-    font-size: 0.75rem;
+    color: var(--layout-purple);
+    font-family: "Quicksand", system-ui, sans-serif;
+    font-size: 0.875rem;
     font-weight: 600;
     text-transform: uppercase;
 }
 
 .dashboard-page .dashboard-metric-card .metric {
     margin: 0;
-    color: var(--azul-profundo, #00306b);
-    font-family: var(--fonte-titulo, "Fredoka", system-ui, sans-serif);
+    color: var(--layout-navy);
+    font-family: "Fredoka", system-ui, sans-serif;
     font-size: clamp(1.75rem, 3vw, 2.5rem);
     font-weight: 700;
     line-height: 1.15;
@@ -1854,7 +1864,7 @@ details summary {
 
 .dashboard-page .dashboard-section-title {
     margin: 0 0 10px;
-    color: var(--roxo, #7657cb);
+    color: var(--layout-purple);
     font-size: 1.125rem;
     text-transform: uppercase;
 }
@@ -1870,12 +1880,12 @@ details summary {
     gap: 12px;
     min-height: 44px;
     padding: 6px 10px;
-    border: 1px solid var(--borda-neutra-forte, #b5afa4);
+    border: 1px solid var(--layout-border-strong);
     border-radius: 6px;
 }
 
 .dashboard-page .dashboard-action-time {
-    color: var(--azul, #0058b9);
+    color: var(--layout-blue);
     font-size: 0.875rem;
     font-weight: 700;
     white-space: nowrap;
@@ -1888,7 +1898,7 @@ details summary {
 
 .dashboard-page .dashboard-action-details strong {
     overflow: hidden;
-    color: var(--texto, #0b1e3d);
+    color: var(--layout-navy);
     font-size: 0.9375rem;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -1897,7 +1907,7 @@ details summary {
 .dashboard-page .dashboard-action-details span {
     overflow: hidden;
     color: #6f7075;
-    font-size: 0.75rem;
+    font-size: 0.875rem;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
@@ -1906,26 +1916,27 @@ details summary {
     justify-self: end;
     padding: 2px 9px;
     border-radius: 999px;
-    background: var(--alerta-aviso-fundo, #bcd0e3);
-    color: var(--azul-profundo, #00306b);
-    font-size: 0.6875rem;
+    background: #bcd0e3;
+    color: var(--layout-navy);
+    font-size: 0.8125rem;
     font-weight: 700;
     white-space: nowrap;
 }
 
 .dashboard-page .dashboard-action-status--em_andamento {
-    background: var(--alerta-cuidado-fundo, #fceeb4);
+    background: var(--layout-warning-bg);
 }
 
 .dashboard-page .dashboard-action-status--concluida {
-    background: var(--alerta-sucesso-fundo, #cbddcb);
-    color: var(--sucesso-contraste, #287a4d);
+    background: var(--layout-success-bg);
+    color: var(--layout-success-text);
 }
 
 .dashboard-page .dashboard-action-empty {
     display: block;
+    grid-column: 1 / -1;
     padding: 14px;
-    color: var(--texto, #0b1e3d);
+    color: var(--layout-navy);
     font-size: 0.875rem;
 }
 
@@ -2949,6 +2960,12 @@ select.select-control:disabled {
     --layout-blue: #0058b9;
     --layout-purple: #7657cb;
     --layout-border: #d0cec8;
+    --layout-border-strong: #b5afa4;
+    --layout-success: #2e8b57;
+    --layout-success-bg: #cbddcb;
+    --layout-success-text: #287a4d;
+    --layout-warning-bg: #fceeb4;
+    --layout-info-bg: #bcd0e3;
     background: var(--layout-paper);
     color: #0b1e3d;
     font-family: "Quicksand", system-ui, sans-serif;
@@ -3039,6 +3056,17 @@ select.select-control:disabled {
 
 .system-page .section-heading .form-subtitle {
     color: #6f7075;
+    font-size: 0.875rem;
+}
+
+.system-page .status-badge,
+.system-page .bag-status,
+.system-page .team-status {
+    font-size: 0.8125rem;
+}
+
+.system-page .status-select {
+    font-size: 0.875rem;
 }
 
 .system-page .volunteer-control {
@@ -3146,6 +3174,7 @@ select.select-control:disabled {
 .system-page .section-kicker,
 .system-page .form-kicker {
     color: var(--layout-purple);
+    font-size: 0.8125rem;
 }
 
 .system-page .section-count {
@@ -3457,8 +3486,8 @@ select.select-control:disabled {
         width: 19px;
         height: 19px;
         padding: 0;
-        font-size: 14px;
-        line-height: 19px;
+        font-size: 13px;
+        line-height: 1;
     }
 
     .topbar-user {
@@ -6989,7 +7018,7 @@ select.select-control:disabled {
 .system-page .volunteer-card-details dt,
 .system-page .volunteer-card-frequency-heading > span {
     color: var(--layout-purple);
-    font-size: 0.7rem;
+    font-size: 0.8125rem;
     font-weight: 700;
     letter-spacing: 0.045em;
     text-transform: uppercase;
@@ -7174,7 +7203,7 @@ select.select-control:disabled {
     border-bottom: 1px solid var(--layout-border);
     background: #f4f8f7;
     color: var(--layout-purple);
-    font-size: 0.75rem;
+    font-size: 0.875rem;
     font-weight: 700;
     letter-spacing: 0.04em;
     vertical-align: middle;
@@ -7200,6 +7229,7 @@ select.select-control:disabled {
 .system-page .data-table td > small,
 .system-page .data-table .table-secondary {
     color: #6f7075;
+    font-size: 0.8125rem;
     line-height: 1.45;
 }
 
@@ -7433,7 +7463,7 @@ select.select-control:disabled {
     background: #fff;
     color: var(--layout-blue);
     font: inherit;
-    font-size: 0.78rem;
+    font-size: 0.875rem;
     font-weight: 700;
     white-space: nowrap;
     cursor: pointer;
@@ -7466,7 +7496,7 @@ select.select-control:disabled {
 .system-page .record-table-card-label {
     display: block;
     color: var(--layout-purple);
-    font-size: 0.68rem;
+    font-size: 0.8125rem;
     font-weight: 700;
     letter-spacing: 0.045em;
     line-height: 1.3;
@@ -7506,7 +7536,7 @@ select.select-control:disabled {
 .system-page .record-table-card-value .table-secondary {
     display: block;
     color: #6f7075;
-    font-size: 0.76rem;
+    font-size: 0.8125rem;
     line-height: 1.4;
 }
 
@@ -7616,7 +7646,7 @@ select.select-control:disabled {
 .system-page .record-card-eyebrow {
     display: block;
     color: var(--layout-purple);
-    font-size: 0.7rem;
+    font-size: 0.8125rem;
     font-weight: 700;
     letter-spacing: 0.045em;
     line-height: 1.4;
@@ -7676,7 +7706,7 @@ select.select-control:disabled {
 .system-page .record-card-fields dt {
     margin-bottom: 3px;
     color: var(--layout-purple);
-    font-size: 0.7rem;
+    font-size: 0.8125rem;
     font-weight: 700;
     letter-spacing: 0.045em;
     text-transform: uppercase;
@@ -7708,7 +7738,7 @@ select.select-control:disabled {
 
 .system-page .record-card-audit summary {
     color: var(--layout-blue);
-    font-size: 0.8rem;
+    font-size: 0.875rem;
     cursor: pointer;
 }
 
@@ -7721,7 +7751,7 @@ select.select-control:disabled {
 .system-page .record-card-audit p {
     margin: 0;
     color: #6f7075;
-    font-size: 0.75rem;
+    font-size: 0.8125rem;
     line-height: 1.4;
     overflow-wrap: anywhere;
 }
