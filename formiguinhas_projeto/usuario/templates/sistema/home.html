@@ -1,9 +1,8 @@
 {% extends 'sistema/template-sistema.html' %}
-{% load l10n static %}
+{% load l10n %}
 
 {% block titulo %}Home | Sistema{% endblock %}
 {% block body_class %}dashboard-page{% endblock %}
-{% block estilos %}<link rel="stylesheet" href="{% static 'css/template.css' %}?v=6">{% endblock %}
 {% block page_title %}Bem-vindo, {{ usuario.id_voluntario.nome }}!{% endblock %}
 
 {% block conteudo %}

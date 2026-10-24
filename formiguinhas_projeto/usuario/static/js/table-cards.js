@@ -47,6 +47,14 @@
             if (!cells.length) {
                 return;
             }
+            const isExpandableResidue = table.closest('.residue-records-table') !== null;
+            const residueDetails = isExpandableResidue
+                ? [
+                    ['Observação completa', cells[5]],
+                    ['Destinação', cells[3]],
+                    ['Histórico', cells[4]],
+                ]
+                : [];
 
             const card = document.createElement('article');
             card.className = 'record-table-card';
@@ -61,7 +69,15 @@
 
             const identityValue = document.createElement('div');
             identityValue.className = 'record-table-card-value record-table-card-title';
+            if (isExpandableResidue && cells[0].querySelector('.table-secondary')) {
+                const category = cells[0].querySelector('.table-secondary').cloneNode(true);
+                identityValue.appendChild(cells[0].querySelector('strong').cloneNode(true));
+                identityValue.appendChild(category);
+            }
             while (cells[0].firstChild) {
+                if (isExpandableResidue && cells[0].querySelector('.table-secondary')) {
+                    cells[0].querySelector('.table-secondary').remove();
+                }
                 identityValue.appendChild(cells[0].firstChild);
             }
             if (!identityValue.childNodes.length) {
@@ -73,7 +89,6 @@
             fields.className = 'record-table-card-fields';
             const actions = document.createElement('div');
             actions.className = 'record-table-card-actions';
-            const isExpandableResidue = table.closest('.residue-records-table') !== null;
 
             cells.slice(1).forEach((cell, offset) => {
                 const index = offset + 1;
@@ -103,6 +118,34 @@
             });
 
             card.append(identity, fields);
+            if (residueDetails.length) {
+                const details = document.createElement('div');
+                details.className = 'record-table-card-details';
+                details.setAttribute('aria-hidden', 'true');
+
+                residueDetails.forEach(([label, cell]) => {
+                    const detail = document.createElement('div');
+                    detail.className = 'record-table-card-detail';
+
+                    const heading = document.createElement('span');
+                    heading.className = 'record-table-card-label';
+                    heading.textContent = label;
+
+                    const value = document.createElement('div');
+                    value.className = 'record-table-card-detail-value';
+                    if (cell) {
+                        value.appendChild(cell.cloneNode(true));
+                    }
+                    if (!value.textContent.trim()) {
+                        value.textContent = '—';
+                    }
+
+                    detail.append(heading, value);
+                    details.appendChild(detail);
+                });
+
+                card.appendChild(details);
+            }
             if (actions.childNodes.length) {
                 card.appendChild(actions);
             }
@@ -119,6 +162,10 @@
                     const expanded = card.classList.toggle('is-expanded');
                     toggle.setAttribute('aria-expanded', String(expanded));
                     toggle.textContent = expanded ? 'Recolher' : 'Expandir';
+                    const details = card.querySelector('.record-table-card-details');
+                    if (details) {
+                        details.setAttribute('aria-hidden', String(!expanded));
+                    }
                 });
                 card.appendChild(toggle);
                 card.addEventListener('click', (event) => {
