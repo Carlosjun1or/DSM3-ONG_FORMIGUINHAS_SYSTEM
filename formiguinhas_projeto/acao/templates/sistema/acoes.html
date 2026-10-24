@@ -127,6 +127,7 @@
                 </div>
             </details>
             <div class="record-card-actions">
+                <a class="btn btn-outline btn-small" href="{% url 'acao_detalhe' acao.id_acao %}#participantes">Participantes</a>
                 <a class="btn btn-outline btn-small" href="{% url 'acao_detalhe' acao.id_acao %}">Detalhes</a>
                 {% if usuario.tipo == 'ADMIN' %}
                 <a class="btn btn-outline btn-small" href="{% url 'editar_acao' acao.id_acao %}">Editar</a>
