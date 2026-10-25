@@ -28,6 +28,11 @@
             return;
         }
 
+        // A tabela da auditoria global continua como tabela (não vira cards).
+        if (table.classList.contains('audit-history-table')) {
+            return;
+        }
+
         const rows = Array.from(table.tBodies).flatMap((body) => Array.from(body.rows));
         if (!rows.length) {
             return;
