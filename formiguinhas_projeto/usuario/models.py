@@ -81,6 +81,7 @@ class Usuario(models.Model):
     id_voluntario = models.OneToOneField(Voluntario, on_delete=models.CASCADE, related_name='usuario')
     tipo = models.CharField(max_length=20, choices=TIPO_CHOICES)
     senha = models.CharField(max_length=255)
+    primeiro_acesso_concluido = models.BooleanField(default=False)
     data_ultimo_acesso = models.DateTimeField(null=True, blank=True)
     dt_cadastro = models.DateTimeField(
         default=timezone.now,

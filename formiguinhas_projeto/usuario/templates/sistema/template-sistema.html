@@ -7,7 +7,7 @@
     <title>{% block titulo %}Formiguinhas | Sistema{% endblock %}</title>
     <link rel="icon" type="image/svg+xml" href="{% static 'site_institucional/img/mascote-formiguinha.svg' %}?v=1">
     <link rel="shortcut icon" href="{% static 'site_institucional/img/mascote-formiguinha.svg' %}?v=1">
-    <link rel="stylesheet" href="{% static 'css/style.css' %}?v=119">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}?v=129">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700&family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -17,13 +17,13 @@
     <div class="app-shell">
         {% if request.session.usuario_id and request.resolver_match.url_name != 'recuperar_senha' and request.resolver_match.url_name != 'redefinir_senha' %}
         <aside class="sidebar" id="system-sidebar">
-            <div class="sidebar-brand">
+            <a href="{% url 'home' %}" class="sidebar-brand" aria-label="Ir para a página inicial do sistema">
                 <img class="brand-mark" src="{% static 'site_institucional/img/mascote-formiguinha.svg' %}" alt="">
                 <div class="sidebar-brand-copy">
                     <strong>Formiguinhas</strong>
                     <small>DA PRAIA</small>
                 </div>
-            </div>
+            </a>
 
             <nav class="sidebar-nav" aria-label="Menu do sistema">
                 <div class="sidebar-group">
@@ -70,11 +70,12 @@
                     <a href="{% url 'comunicados_admin' %}" class="sidebar-link {% if '/comunicado/admin/' in request.path %}active{% endif %}"><svg class="sidebar-link-icon" aria-hidden="true"><use href="{% static 'usuario/icons/sidebar-icons.svg' %}#announcements"></use></svg><span>Comunicados</span></a>
                     {% endif %}
                 </div>
-                <div class="sidebar-group sidebar-group--footer">
-                    <a href="{% url 'logout' %}" class="sidebar-link logout-link"><svg class="sidebar-link-icon" aria-hidden="true"><use href="{% static 'usuario/icons/sidebar-icons.svg' %}?v=6#logout"></use></svg><span>Sair</span></a>
-                </div>
             </nav>
+            <div class="sidebar-footer">
+                <a href="{% url 'logout' %}" class="sidebar-link logout-link"><svg class="sidebar-link-icon" aria-hidden="true"><use href="{% static 'usuario/icons/sidebar-icons.svg' %}?v=6#logout"></use></svg><span>Sair</span></a>
+            </div>
         </aside>
+        <div class="sidebar-resize-handle" role="separator" aria-label="Redimensionar menu lateral" aria-description="Arraste para ajustar. Use Ctrl+F5, dois cliques ou Home para restaurar o tamanho padrão de 300 por 560 pixels." aria-keyshortcuts="ArrowLeft ArrowRight Home End" aria-orientation="vertical" aria-valuemin="220" aria-valuemax="480" aria-valuenow="300" title="Arraste para ajustar; Ctrl+F5 restaura o padrão de 300 por 560 pixels" tabindex="0"></div>
         <button class="sidebar-backdrop" type="button" aria-label="Fechar menu" tabindex="-1"></button>
         {% endif %}
 
@@ -89,6 +90,110 @@
                 <nav class="topbar-breadcrumb" aria-label="Navegação estrutural">
                     <a href="{% url 'home' %}">Início</a>
                     <svg class="breadcrumb-separator" viewBox="0 0 7 8" aria-hidden="true"><path d="M1 1l5 3-5 3" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+                    {% if request.resolver_match.url_name == 'cadastro_voluntario' %}
+                    <a href="{% url 'voluntarios' %}">Controle de Voluntários</a>
+                    <svg class="breadcrumb-separator" viewBox="0 0 7 8" aria-hidden="true"><path d="M1 1l5 3-5 3" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+                    {% endif %}
+                    {% if request.resolver_match.url_name == 'editar_voluntario' %}
+                    <a href="{% url 'voluntarios' %}">Controle de Voluntários</a>
+                    <svg class="breadcrumb-separator" viewBox="0 0 7 8" aria-hidden="true"><path d="M1 1l5 3-5 3" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+                    {% endif %}
+                    {% if request.resolver_match.url_name == 'editar_usuario' %}
+                    <a href="{% url 'usuarios' %}">Controle de Usuários</a>
+                    <svg class="breadcrumb-separator" viewBox="0 0 7 8" aria-hidden="true"><path d="M1 1l5 3-5 3" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+                    {% endif %}
+                    {% if request.resolver_match.url_name == 'cadastro' or request.resolver_match.url_name == 'cadastro_usuario' %}
+                    <a href="{% url 'usuarios' %}">Controle de Usuários</a>
+                    <svg class="breadcrumb-separator" viewBox="0 0 7 8" aria-hidden="true"><path d="M1 1l5 3-5 3" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+                    {% endif %}
+                    {% if request.resolver_match.url_name == 'equipe_detalhe' %}
+                    <a href="{% url 'equipes' %}">Controle de Equipes</a>
+                    <svg class="breadcrumb-separator" viewBox="0 0 7 8" aria-hidden="true"><path d="M1 1l5 3-5 3" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+                    {% endif %}
+                    {% if request.resolver_match.url_name == 'editar_equipe' %}
+                    <a href="{% url 'equipes' %}">Controle de Equipes</a>
+                    <svg class="breadcrumb-separator" viewBox="0 0 7 8" aria-hidden="true"><path d="M1 1l5 3-5 3" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+                    {% endif %}
+                    {% if request.resolver_match.url_name == 'acao_detalhe' %}
+                    <a href="{% url 'acoes' %}">Controle de Ações</a>
+                    <svg class="breadcrumb-separator" viewBox="0 0 7 8" aria-hidden="true"><path d="M1 1l5 3-5 3" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+                    {% endif %}
+                    {% if request.resolver_match.url_name == 'editar_acao' %}
+                    <a href="{% url 'acoes' %}">Controle de Ações</a>
+                    <svg class="breadcrumb-separator" viewBox="0 0 7 8" aria-hidden="true"><path d="M1 1l5 3-5 3" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+                    {% endif %}
+                    {% if request.resolver_match.url_name == 'cadastro_doacao' %}
+                    <a href="{% url 'doacoes' %}">Controle de Doações</a>
+                    <svg class="breadcrumb-separator" viewBox="0 0 7 8" aria-hidden="true"><path d="M1 1l5 3-5 3" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+                    {% endif %}
+                    {% if request.resolver_match.url_name == 'doacao_detalhe' %}
+                    <a href="{% url 'doacoes' %}">Controle de Doações</a>
+                    <svg class="breadcrumb-separator" viewBox="0 0 7 8" aria-hidden="true"><path d="M1 1l5 3-5 3" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+                    {% endif %}
+                    {% if request.resolver_match.url_name == 'editar_doacao' %}
+                    <a href="{% url 'doacoes' %}">Controle de Doações</a>
+                    <svg class="breadcrumb-separator" viewBox="0 0 7 8" aria-hidden="true"><path d="M1 1l5 3-5 3" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+                    {% endif %}
+                    {% if request.resolver_match.url_name == 'doador_detalhe' %}
+                    <a href="{% url 'doadores' %}">Controle de Doadores</a>
+                    <svg class="breadcrumb-separator" viewBox="0 0 7 8" aria-hidden="true"><path d="M1 1l5 3-5 3" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+                    {% endif %}
+                    {% if request.resolver_match.url_name == 'cadastro_doador' %}
+                    <a href="{% url 'doadores' %}">Controle de Doadores</a>
+                    <svg class="breadcrumb-separator" viewBox="0 0 7 8" aria-hidden="true"><path d="M1 1l5 3-5 3" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+                    {% endif %}
+                    {% if request.resolver_match.url_name == 'editar_doador' %}
+                    <a href="{% url 'doadores' %}">Controle de Doadores</a>
+                    <svg class="breadcrumb-separator" viewBox="0 0 7 8" aria-hidden="true"><path d="M1 1l5 3-5 3" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+                    {% endif %}
+                    {% if request.resolver_match.url_name == 'cadastrar_condominio' %}
+                    <a href="{% url 'condominios' %}">Controle de Condomínios</a>
+                    <svg class="breadcrumb-separator" viewBox="0 0 7 8" aria-hidden="true"><path d="M1 1l5 3-5 3" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+                    {% endif %}
+                    {% if request.resolver_match.url_name == 'cadastrar_bag' %}
+                    <a href="{% url 'bags' %}">Controle de Bags</a>
+                    <svg class="breadcrumb-separator" viewBox="0 0 7 8" aria-hidden="true"><path d="M1 1l5 3-5 3" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+                    {% endif %}
+                    {% if request.resolver_match.url_name == 'detalhe_bag' %}
+                    <a href="{% url 'bags' %}">Controle de Bags</a>
+                    <svg class="breadcrumb-separator" viewBox="0 0 7 8" aria-hidden="true"><path d="M1 1l5 3-5 3" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+                    {% endif %}
+                    {% if request.resolver_match.url_name == 'editar_bag' %}
+                    <a href="{% url 'bags' %}">Controle de Bags</a>
+                    <svg class="breadcrumb-separator" viewBox="0 0 7 8" aria-hidden="true"><path d="M1 1l5 3-5 3" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+                    {% endif %}
+                    {% if request.resolver_match.url_name == 'comunicado_cadastrar' or request.resolver_match.url_name == 'comunicado_editar' or request.resolver_match.url_name == 'temas_comunicados' or request.resolver_match.url_name == 'tema_cadastrar' or request.resolver_match.url_name == 'tema_editar' %}
+                    <a href="{% url 'comunicados_admin' %}">Controle de Comunicados</a>
+                    <svg class="breadcrumb-separator" viewBox="0 0 7 8" aria-hidden="true"><path d="M1 1l5 3-5 3" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+                    {% endif %}
+                    {% if request.resolver_match.url_name == 'tema_cadastrar' or request.resolver_match.url_name == 'tema_editar' %}
+                    <a href="{% url 'temas_comunicados' %}">Controle de Temas de Comunicados</a>
+                    <svg class="breadcrumb-separator" viewBox="0 0 7 8" aria-hidden="true"><path d="M1 1l5 3-5 3" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+                    {% endif %}
+                    {% if request.resolver_match.url_name == 'comunicado_interno_detalhe' %}
+                    <a href="{% url 'central_comunicados' %}">Central de Comunicados</a>
+                    <svg class="breadcrumb-separator" viewBox="0 0 7 8" aria-hidden="true"><path d="M1 1l5 3-5 3" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+                    {% endif %}
+                    {% if request.resolver_match.url_name == 'cadastrar_material' or request.resolver_match.url_name == 'editar_material' or request.resolver_match.url_name == 'movimentacoes_estoque' or request.resolver_match.url_name == 'cadastrar_movimentacao_estoque' or request.resolver_match.url_name == 'relatorio_estoque' or request.resolver_match.url_name == 'exportar_movimentacoes_estoque' %}
+                    <a href="{% url 'materiais' %}">Controle de Estoque</a>
+                    <svg class="breadcrumb-separator" viewBox="0 0 7 8" aria-hidden="true"><path d="M1 1l5 3-5 3" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+                    {% endif %}
+                    {% if request.resolver_match.url_name == 'exportar_movimentacoes_estoque' %}
+                    <a href="{% url 'movimentacoes_estoque' %}">Histórico de Movimentação do Estoque</a>
+                    <svg class="breadcrumb-separator" viewBox="0 0 7 8" aria-hidden="true"><path d="M1 1l5 3-5 3" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+                    {% endif %}
+                    {% if request.resolver_match.url_name == 'detalhe_condominio' %}
+                    <a href="{% url 'condominios' %}">Controle de Condomínios</a>
+                    <svg class="breadcrumb-separator" viewBox="0 0 7 8" aria-hidden="true"><path d="M1 1l5 3-5 3" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+                    {% endif %}
+                    {% if request.resolver_match.url_name == 'editar_praia' %}
+                    <a href="{% url 'praias' %}">Controle de Praias</a>
+                    <svg class="breadcrumb-separator" viewBox="0 0 7 8" aria-hidden="true"><path d="M1 1l5 3-5 3" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+                    {% endif %}
+                    {% if request.resolver_match.url_name == 'cadastrar_praia' %}
+                    <a href="{% url 'praias' %}">Controle de Praias</a>
+                    <svg class="breadcrumb-separator" viewBox="0 0 7 8" aria-hidden="true"><path d="M1 1l5 3-5 3" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+                    {% endif %}
                     {% if request.resolver_match.url_name == 'alterar_senha' %}
                     <a href="{% url 'perfil' %}">Perfil</a>
                     <svg class="breadcrumb-separator" viewBox="0 0 7 8" aria-hidden="true"><path d="M1 1l5 3-5 3" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
@@ -129,7 +234,7 @@
             </div>
         </main>
     </div>
-    <script src="{% static 'js/masks.js' %}?v=19"></script>
+    <script src="{% static 'js/masks.js' %}?v=22"></script>
     <script src="{% static 'js/table-cards.js' %}?v=6"></script>
     {% block scripts %}{% endblock %}
     <div vw class="enabled">
