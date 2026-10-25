@@ -33,6 +33,16 @@ class AuditoriaUsuariosTests(TestCase):
         session['usuario_tipo'] = self.admin.tipo
         session.save()
 
+    def test_auditoria_global_exibe_breadcrumb_com_titulo_do_sistema(self):
+        resposta = self.client.get(reverse('auditoria_global'))
+
+        self.assertTemplateUsed(resposta, 'auditoria/auditorias.html')
+        self.assertContains(resposta, 'href="/usuario/home/">Início</a>')
+        self.assertContains(
+            resposta,
+            '<span aria-current="page">Auditoria Global do Sistema</span>',
+        )
+
     def test_notificacao_mostra_novos_eventos_e_limpa_ao_abrir_auditoria(self):
         request = type('Request', (), {'session': self.client.session})()
         self.assertEqual(notificacoes_auditoria(request)['auditoria_nao_lida_count'], 0)
