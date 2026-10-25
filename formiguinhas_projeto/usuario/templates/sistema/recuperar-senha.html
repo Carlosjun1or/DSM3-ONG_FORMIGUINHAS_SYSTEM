@@ -10,10 +10,12 @@
             <p class="auth-brand-name">Formiguinhas da Praia</p>
             {% if email_enviado %}
                 {% if email_backend_console %}
-                    <h1>Solicitação recebida</h1>
+                    <h1>E-mail cadastrado</h1>
                 {% else %}
-                    <h1>Confira seu e-mail</h1>
+                    <h1>E-mail cadastrado</h1>
                 {% endif %}
+            {% elif email_consultado and not email_cadastrado %}
+                <h1>E-mail não cadastrado</h1>
             {% else %}
                 <h1>Recuperar senha</h1>
             {% endif %}
@@ -25,14 +27,20 @@
         {% if email_enviado %}
             <p class="auth-feedback" role="status">
                 {% if email_backend_console %}
-                    Se o e-mail estiver cadastrado, o link aparecerá no terminal onde o servidor Django está rodando.
+                    Este e-mail está cadastrado. O link de redefinição aparecerá no terminal onde o servidor Django está rodando.
                 {% else %}
-                    Se o e-mail estiver cadastrado, você receberá as instruções.
+                    Este e-mail está cadastrado. Enviamos as instruções para redefinir sua senha.
                 {% endif %}
             </p>
             <a href="{% url 'login' %}" class="btn btn-primary auth-submit-button auth-confirmation-link">Voltar ao login</a>
         {% else %}
-            <p class="auth-recovery-instruction">Informe seu e-mail para recuperar o acesso.</p>
+            {% if email_consultado and not email_cadastrado %}
+                <p class="auth-feedback auth-feedback--info" role="status">Este e-mail não está cadastrado em uma conta ativa. Nenhum e-mail foi enviado.</p>
+            {% elif email_consultado and email_cadastrado %}
+                <p class="auth-feedback auth-feedback--error" role="alert">Este e-mail está cadastrado, mas não foi possível enviar a mensagem. Tente novamente mais tarde.</p>
+            {% else %}
+                <p class="auth-recovery-instruction">Informe seu e-mail para recuperar o acesso.</p>
+            {% endif %}
             <form method="post">
                 {% csrf_token %}
                 {% if form.non_field_errors %}
