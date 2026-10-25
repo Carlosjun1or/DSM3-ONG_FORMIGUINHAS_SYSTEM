@@ -1,4 +1,5 @@
 from datetime import date
+from unittest.mock import patch
 
 from django.test import TestCase
 from django.urls import reverse
@@ -7,6 +8,7 @@ from praia.models import Praia
 from usuario.models import Usuario, Voluntario
 
 from auditoria.models import EventoAuditoria
+from residuo.models import ColetaResiduo, ItemColetaResiduo
 from .models import Bag, Condominio, MovimentacaoBag
 
 
@@ -54,6 +56,239 @@ class ControleCondominioPermissoesTests(TestCase):
             cadastrado_por=self.admin,
             cadastrado_por_nome=self.admin.id_voluntario.nome,
         )
+
+    def test_listagem_condominios_exibe_breadcrumb_simplificado(self):
+        self.autenticar(self.admin)
+
+        resposta = self.client.get(reverse('condominios'))
+
+        self.assertContains(resposta, 'href="/usuario/home/">Início</a>')
+        self.assertContains(
+            resposta,
+            '<span aria-current="page">Controle de Condomínios</span>',
+        )
+
+    def test_cadastro_condominio_exibe_breadcrumb_hierarquico(self):
+        self.autenticar(self.admin)
+
+        resposta = self.client.get(reverse('cadastrar_condominio'))
+
+        self.assertContains(resposta, 'href="/usuario/home/">Início</a>')
+        self.assertContains(
+            resposta,
+            'href="/condominio/">Controle de Condomínios</a>',
+        )
+        self.assertContains(
+            resposta,
+            '<span aria-current="page">Cadastro de Condomínio</span>',
+        )
+
+    def test_detalhe_condominio_exibe_breadcrumb_hierarquico(self):
+        self.autenticar(self.admin)
+
+        resposta = self.client.get(
+            reverse('detalhe_condominio', args=[self.condominio.id_condominio]),
+        )
+
+        self.assertContains(resposta, 'href="/usuario/home/">Início</a>')
+        self.assertContains(
+            resposta,
+            'href="/condominio/">Controle de Condomínios</a>',
+        )
+        self.assertContains(
+            resposta,
+            '<span aria-current="page">Detalhes de Condomínio - Condomínio Simulado</span>',
+        )
+
+    def test_cadastro_bag_exibe_breadcrumb_hierarquico(self):
+        self.autenticar(self.admin)
+
+        resposta = self.client.get(reverse('cadastrar_bag'))
+
+        self.assertContains(resposta, 'href="/usuario/home/">Início</a>')
+        self.assertContains(
+            resposta,
+            'href="/condominio/bags/">Controle de Bags</a>',
+        )
+        self.assertContains(
+            resposta,
+            '<span aria-current="page">Cadastro de Bag</span>',
+        )
+
+    def test_edicao_bag_exibe_breadcrumb_hierarquico(self):
+        self.autenticar(self.admin)
+
+        resposta = self.client.get(
+            reverse('editar_bag', args=[self.bag.id_bag]),
+        )
+
+        self.assertContains(resposta, 'href="/usuario/home/">Início</a>')
+        self.assertContains(
+            resposta,
+            'href="/condominio/bags/">Controle de Bags</a>',
+        )
+        self.assertContains(
+            resposta,
+            '<span aria-current="page">Edição de Bag - BAG-TESTE-001</span>',
+        )
+
+    def test_detalhe_bag_exibe_breadcrumb_hierarquico(self):
+        self.autenticar(self.admin)
+
+        resposta = self.client.get(
+            reverse('detalhe_bag', args=[self.bag.id_bag]),
+        )
+
+        self.assertContains(resposta, 'href="/usuario/home/">Início</a>')
+        self.assertContains(
+            resposta,
+            'href="/condominio/bags/">Controle de Bags</a>',
+        )
+        self.assertContains(
+            resposta,
+            '<span aria-current="page">Detalhes da Bag BAG-TESTE-001 - Condomínio Simulado</span>',
+        )
+
+    def test_detalhe_bag_exibe_formulario_inline_e_registra_coleta(self):
+        self.autenticar(self.admin)
+        url_detalhe = reverse('detalhe_bag', args=[self.bag.id_bag])
+
+        detalhe = self.client.get(url_detalhe)
+
+        self.assertContains(detalhe, 'id="registrar-coleta"')
+        self.assertContains(detalhe, 'name="formulario" value="registrar-coleta"')
+        self.assertContains(detalhe, 'Tipo de resíduo')
+
+        resposta = self.client.post(
+            url_detalhe,
+            {
+                'formulario': 'registrar-coleta',
+                'data_coleta': '2026-10-25T18:00',
+                'observacao': 'Coleta realizada no condomínio.',
+                'tipo': 'PLASTICO',
+                'categoria': 'RECICLAVEL',
+                'quantidade': '3.50',
+                'unidade': 'KG',
+                'observacao': 'Garrafas e embalagens.',
+            },
+        )
+
+        self.assertRedirects(resposta, f'{url_detalhe}#coletas', fetch_redirect_response=False)
+        coleta = ColetaResiduo.objects.get(bag_id=self.bag.id_bag)
+        item = ItemColetaResiduo.objects.get(coleta=coleta)
+        self.assertEqual(coleta.origem, 'BAG')
+        self.assertEqual(coleta.observacao, 'Garrafas e embalagens.')
+        self.assertEqual(item.tipo, 'PLASTICO')
+        self.assertEqual(item.quantidade, 3.5)
+
+    def test_detalhe_bag_nao_registra_coleta_sem_tipo_e_categoria(self):
+        self.autenticar(self.admin)
+        url_detalhe = reverse('detalhe_bag', args=[self.bag.id_bag])
+
+        resposta = self.client.post(
+            url_detalhe,
+            {
+                'formulario': 'registrar-coleta',
+                'data_coleta': '2026-10-25T18:00',
+            },
+        )
+
+        self.assertEqual(resposta.status_code, 200)
+        self.assertContains(resposta, 'Este campo é obrigatório.')
+        self.assertFalse(ColetaResiduo.objects.filter(bag_id=self.bag.id_bag).exists())
+        self.assertFalse(
+            resposta.content.decode().count('href="#registrar-coleta"'),
+        )
+
+    def test_detalhe_bag_exibe_formulario_inline_de_movimentacao(self):
+        self.autenticar(self.admin)
+        url_detalhe = reverse('detalhe_bag', args=[self.bag.id_bag])
+
+        resposta = self.client.get(url_detalhe)
+
+        self.assertContains(resposta, 'id="movimentacoes"')
+        self.assertContains(
+            resposta,
+            'name="formulario" value="registrar-movimentacao"',
+        )
+        self.assertContains(resposta, 'Tipo de movimentação')
+        self.assertContains(resposta, 'Novo status')
+
+    def test_botao_movimentar_abre_detalhes_da_bag_no_formulario(self):
+        self.autenticar(self.admin)
+        url_detalhe = reverse('detalhe_bag', args=[self.bag.id_bag])
+
+        lista_bags = self.client.get(reverse('bags'))
+        detalhe_condominio = self.client.get(
+            reverse('detalhe_condominio', args=[self.condominio.id_condominio]),
+        )
+
+        self.assertContains(
+            lista_bags,
+            f'href="{url_detalhe}#movimentacoes">Movimentar</a>',
+        )
+        self.assertContains(
+            detalhe_condominio,
+            f'href="{url_detalhe}#movimentacoes" class="btn btn-outline btn-small">Movimentar</a>',
+        )
+        destino = self.client.get(f'{url_detalhe}#movimentacoes')
+        self.assertEqual(destino.status_code, 200)
+        self.assertContains(destino, 'name="formulario" value="registrar-movimentacao"')
+
+    def test_rotas_externas_de_coleta_e_movimentacao_de_bag_foram_removidas(self):
+        self.autenticar(self.admin)
+
+        coleta_externa = self.client.get(
+            f'/residuo/bag/{self.bag.id_bag}/cadastrar/',
+        )
+        movimentacao_externa = self.client.get(
+            f'/condominio/bags/{self.bag.id_bag}/movimentar/',
+        )
+
+        self.assertEqual(coleta_externa.status_code, 404)
+        self.assertEqual(movimentacao_externa.status_code, 404)
+
+    def test_detalhe_bag_registra_movimentacao_inline_e_atualiza_status(self):
+        self.autenticar(self.admin)
+        url_detalhe = reverse('detalhe_bag', args=[self.bag.id_bag])
+
+        resposta = self.client.post(
+            url_detalhe,
+            {
+                'formulario': 'registrar-movimentacao',
+                'tipo': 'RETIRADA',
+                'status_novo': 'RETIRADA',
+                'data_movimentacao': '2026-10-25T18:00',
+                'observacao': 'Bag retirada para transporte.',
+            },
+        )
+
+        self.assertRedirects(
+            resposta,
+            f'{url_detalhe}#movimentacoes',
+            fetch_redirect_response=False,
+        )
+        self.bag.refresh_from_db()
+        self.assertEqual(self.bag.status, 'RETIRADA')
+        movimentacao = MovimentacaoBag.objects.get(bag=self.bag)
+        self.assertEqual(movimentacao.status_anterior, 'EM_USO')
+        self.assertEqual(movimentacao.status_novo, 'RETIRADA')
+        self.assertEqual(movimentacao.registrado_por, self.admin)
+
+    def test_detalhe_bag_nao_registra_movimentacao_incompleta(self):
+        self.autenticar(self.admin)
+        url_detalhe = reverse('detalhe_bag', args=[self.bag.id_bag])
+
+        resposta = self.client.post(
+            url_detalhe,
+            {'formulario': 'registrar-movimentacao'},
+        )
+
+        self.assertEqual(resposta.status_code, 200)
+        self.assertContains(resposta, 'Este campo é obrigatório.')
+        self.bag.refresh_from_db()
+        self.assertEqual(self.bag.status, 'EM_USO')
+        self.assertFalse(MovimentacaoBag.objects.filter(bag=self.bag).exists())
 
     def criar_usuario(self, nome, email, tipo):
         voluntario = Voluntario.objects.create(
@@ -132,8 +367,9 @@ class ControleCondominioPermissoesTests(TestCase):
         self.assertEqual(nova_bag.cadastrado_por, self.admin)
 
         movimentacao = self.client.post(
-            reverse('cadastrar_movimentacao_bag', args=[nova_bag.id_bag]),
+            reverse('detalhe_bag', args=[nova_bag.id_bag]),
             {
+                'formulario': 'registrar-movimentacao',
                 'tipo': 'INICIO_USO',
                 'status_novo': 'EM_USO',
                 'data_movimentacao': '2026-09-21T21:00',
@@ -157,6 +393,10 @@ class ControleCondominioPermissoesTests(TestCase):
         self.assertContains(detalhe_condominio, 'Ver auditoria completa')
         self.assertContains(detalhe_bag, 'Editar bag')
         self.assertContains(detalhe_bag, 'Registrar coleta')
+        self.assertContains(
+            detalhe_condominio,
+            f'href="{reverse("detalhe_bag", args=[nova_bag.id_bag])}#movimentacoes" class="btn btn-outline btn-small">Movimentar</a>',
+        )
 
     def test_coordenador_nao_visualiza_controles_restritos(self):
         self.autenticar(self.coordenador)
@@ -188,7 +428,6 @@ class ControleCondominioPermissoesTests(TestCase):
             reverse('cadastrar_bag'),
             reverse('detalhe_bag', args=[self.bag.id_bag]),
             reverse('editar_bag', args=[self.bag.id_bag]),
-            reverse('cadastrar_movimentacao_bag', args=[self.bag.id_bag]),
         ):
             resposta = self.client.get(url)
             self.assertEqual(resposta.status_code, 200)
@@ -281,6 +520,20 @@ class ControleCondominioPermissoesTests(TestCase):
         resposta_coordenador = self.client.get(reverse('bags'))
         self.assertEqual(resposta_coordenador.status_code, 403)
 
+    def test_lista_de_bags_destaca_codigo_e_exibe_condominio_como_contexto(self):
+        self.autenticar(self.admin)
+
+        resposta = self.client.get(reverse('bags'))
+
+        self.assertContains(
+            resposta,
+            '<span class="record-card-eyebrow">Condomínio Simulado</span>',
+        )
+        self.assertContains(
+            resposta,
+            f'<h3><a href="{reverse("detalhe_bag", args=[self.bag.id_bag])}">Bag - BAG-TESTE-001</a></h3>',
+        )
+
     def test_controle_de_bags_pagina_resultados_e_preserva_filtro(self):
         for indice in range(2, 23):
             Bag.objects.create(
@@ -302,13 +555,72 @@ class ControleCondominioPermissoesTests(TestCase):
         self.assertContains(response, 'BAG-TESTE-021')
         self.assertNotContains(response, 'BAG-TESTE-020')
 
+    @patch('condominio.views.test_mongo_connection', return_value=(False, 'offline', {}))
+    def test_controle_de_bags_filtra_por_condominio(self, _mongo_connection):
+        outro_condominio = Condominio.objects.create(
+            nome='Condomínio de Outra Praia',
+            responsavel_nome='Outro Responsável',
+            responsavel_telefone='13988887777',
+            responsavel_email='outro@teste.org',
+            endereco='Rua Diferente',
+            numero='200',
+            bairro='Gonzaga',
+            cidade='Santos',
+            estado='SP',
+            praia=self.praia,
+            porte='MEDIO',
+            confiabilidade='MEDIA',
+            cadastrado_por=self.admin,
+            cadastrado_por_nome=self.admin.id_voluntario.nome,
+        )
+        Bag.objects.create(
+            codigo='BAG-OUTRO-COND',
+            condominio=outro_condominio,
+            status='DISPONIVEL',
+        )
+        self.autenticar(self.admin)
+
+        response = self.client.get(
+            reverse('bags'),
+            {'condominio': str(self.condominio.id_condominio)},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['pagina'].paginator.count, 1)
+        self.assertEqual(
+            response.context['filtros_query'],
+            f'condominio={self.condominio.id_condominio}',
+        )
+        self.assertContains(response, 'BAG-TESTE-001')
+        self.assertNotContains(response, 'BAG-OUTRO-COND')
+        self.assertContains(response, 'Todos os condomínios')
+        self.assertContains(response, 'Condomínio de Outra Praia')
+
+    @patch('condominio.views.test_mongo_connection', return_value=(False, 'offline', {}))
+    def test_alteracao_de_status_preserva_filtro_de_condominio(self, _mongo_connection):
+        self.autenticar(self.admin)
+
+        response = self.client.post(
+            reverse('atualizar_status_bag', args=[self.bag.id_bag]),
+            {
+                'status': 'CHEIA',
+                'filtro_condominio': str(self.condominio.id_condominio),
+            },
+        )
+
+        self.assertRedirects(
+            response,
+            f'{reverse("bags")}?condominio={self.condominio.id_condominio}',
+            fetch_redirect_response=False,
+        )
+
     def test_usuario_consegue_consultar_tela_geral_de_auditoria(self):
         self.autenticar(self.admin)
 
         response = self.client.get(reverse('auditorias'))
 
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'sistema/auditorias.html')
+        self.assertTemplateUsed(response, 'auditoria/auditorias.html')
 
     def test_coordenador_nao_visualiza_auditoria_global_nas_rotas(self):
         self.autenticar(self.coordenador)
@@ -343,8 +655,9 @@ class ControleCondominioPermissoesTests(TestCase):
             },
         )
         movimentacao = self.client.post(
-            reverse('cadastrar_movimentacao_bag', args=[self.bag.id_bag]),
+            reverse('detalhe_bag', args=[self.bag.id_bag]),
             {
+                'formulario': 'registrar-movimentacao',
                 'tipo': 'REGISTRO_CHEIA',
                 'status_novo': 'CHEIA',
                 'data_movimentacao': '2026-09-21T21:00',
@@ -392,8 +705,9 @@ class ControleCondominioPermissoesTests(TestCase):
         )
         bag = Bag.objects.get(codigo='BAG-AUDIT-001')
         self.client.post(
-            reverse('cadastrar_movimentacao_bag', args=[bag.id_bag]),
+            reverse('detalhe_bag', args=[bag.id_bag]),
             {
+                'formulario': 'registrar-movimentacao',
                 'tipo': 'INICIO_USO',
                 'status_novo': 'EM_USO',
                 'data_movimentacao': '21/09/2026 21:00',
