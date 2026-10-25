@@ -1,0 +1,50 @@
+/* ==========================================================================
+   tokens.css — variáveis compartilhadas do sistema Formiguinhas da Praia
+   Fonte: manual de identidade visual (mesmos nomes e valores do template.css).
+   Carregar ANTES do style.css.
+   ========================================================================== */
+
+:root {
+  /* Marca */
+  --azul: #0058b9;
+  --azul-profundo: #00306b;
+  --roxo: #7657cb;
+  --amarelo: #f4e01e;
+  --papel: #f9f6ee;
+  --texto: #0b1e3d;
+
+  /* Feedback */
+  --sucesso: #2e8b57;            /* fundos e bordas */
+  --sucesso-contraste: #287a4d;  /* texto e ícone */
+  --erro: #d64545;               /* fundos e bordas */
+  --erro-contraste: #cc2d2d;     /* texto e ícone */
+
+  /* Fundos de alerta */
+  --alerta-erro-fundo: #f3cbc6;
+  --alerta-sucesso-fundo: #cbddcb;
+  --alerta-cuidado-fundo: #fceeb4;
+  --alerta-aviso-fundo: #bcd0e3;
+
+  /* Neutros */
+  --borda-neutra-forte: #b5afa4;
+  --selecionado-fundo: #efe9fb;
+
+  /* Tipografia */
+  --fonte-titulo: "Fredoka", system-ui, sans-serif;
+  --fonte-corpo: "Quicksand", system-ui, sans-serif;
+
+  /* Apelidos antigos do style.css (--layout-*).
+     Existem só para não quebrar o que já usa esses nomes.
+     Em código novo, prefira os nomes acima. */
+  --layout-paper: var(--papel);
+  --layout-navy: var(--azul-profundo);
+  --layout-blue: var(--azul);
+  --layout-purple: var(--roxo);
+  --layout-border: #d0cec8;
+  --layout-border-strong: var(--borda-neutra-forte);
+  --layout-success: var(--sucesso);
+  --layout-success-bg: var(--alerta-sucesso-fundo);
+  --layout-success-text: var(--sucesso-contraste);
+  --layout-warning-bg: var(--alerta-cuidado-fundo);
+  --layout-info-bg: var(--alerta-aviso-fundo);
+}
