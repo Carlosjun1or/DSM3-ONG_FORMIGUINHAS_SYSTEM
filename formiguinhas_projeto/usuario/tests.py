@@ -191,6 +191,32 @@ class LoginPageTests(TestCase):
         self.assertNotContains(resposta, 'Painel administrativo')
         self.assertNotContains(resposta, '> Dashboard <')
 
+    def test_login_valido_cria_sessao_e_redireciona_para_home(self):
+        voluntario = Voluntario.objects.create(
+            nome='Voluntário de teste',
+            dt_nascimento=date(1990, 1, 1),
+            endereco='Rua de teste',
+            telefone='11999999999',
+            email='login@teste.org',
+        )
+        usuario = Usuario(
+            id_voluntario=voluntario,
+            tipo='ADMIN',
+            senha='',
+        )
+        usuario.set_password('senha-segura')
+        usuario.save()
+
+        resposta = self.client.post(reverse('login'), {
+            'email': voluntario.email,
+            'senha': 'senha-segura',
+        })
+
+        self.assertRedirects(resposta, reverse('home'))
+        self.assertEqual(self.client.session['usuario_id'], usuario.id_usuario)
+        self.assertEqual(self.client.session['usuario_nome'], voluntario.nome)
+        self.assertEqual(self.client.session['usuario_tipo'], usuario.tipo)
+
 
 @override_settings(EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend')
 class PermissoesStatusVoluntarioTests(TestCase):

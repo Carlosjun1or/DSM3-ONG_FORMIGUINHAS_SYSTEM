@@ -124,9 +124,9 @@ main {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 17px;
-    min-height: 91px;
-    padding: 0 18px;
+    gap: clamp(12px, 5.667cqi, 27px);
+    min-height: clamp(76px, 30.333cqi, 146px);
+    padding: 0 clamp(12px, 6cqi, 29px);
     margin-bottom: 30px;
     color: inherit;
     text-decoration: none;
@@ -142,7 +142,7 @@ main {
     display: block;
     color: #fff;
     font-family: var(--fonte-titulo);
-    font-size: 30px;
+    font-size: clamp(26px, 10cqi, 48px);
     font-weight: 700;
     line-height: 1.15;
 }
@@ -151,16 +151,16 @@ main {
     display: block;
     color: #fff;
     font-family: var(--fonte-corpo);
-    font-size: 18px;
+    font-size: clamp(16px, 6cqi, 29px);
     font-weight: 700;
     line-height: 1.2;
     letter-spacing: 0.04em;
 }
 
 .brand-mark {
-    flex: 0 0 58px;
-    width: 58px;
-    height: 64px;
+    flex: 0 0 clamp(42px, 19.333cqi, 93px);
+    width: clamp(42px, 19.333cqi, 93px);
+    height: clamp(48px, 21.333cqi, 102px);
     object-fit: contain;
     filter: drop-shadow(0 2px 0 rgb(0 0 0 / 10%));
     transform-origin: 50% 85%;
@@ -221,12 +221,12 @@ main {
 
 .sidebar-group {
     display: grid;
-    gap: 10px;
-    padding: 0 0 30px;
+    gap: clamp(8px, 3.333cqi, 16px);
+    padding: 0 0 clamp(18px, 10cqi, 48px);
 }
 
 .sidebar-group:first-child {
-    padding-bottom: 18px;
+    padding-bottom: clamp(12px, 6cqi, 29px);
 }
 
 .sidebar-footer {
@@ -238,26 +238,33 @@ main {
 
 .sidebar-link {
     display: flex;
-    min-height: 46px;
+    min-height: clamp(42px, 15.333cqi, 72px);
     align-items: center;
-    gap: 18px;
-    padding: 3px 20px;
-    border-left: 7px solid transparent;
+    gap: clamp(12px, 6cqi, 29px);
+    padding: 3px clamp(14px, 6.667cqi, 32px);
+    border-left: clamp(5px, 2.333cqi, 11px) solid transparent;
     color: var(--papel);
     font-family: var(--fonte-titulo);
-    font-size: 18px;
+    font-size: clamp(16px, 6cqi, 29px);
     font-weight: 500;
     line-height: 1.2;
     text-decoration: none;
-    transition: background-color 0.2s ease, border-color 0.2s ease;
+    transition:
+        background-color 0.2s ease,
+        border-color 0.2s ease,
+        font-size 0.15s ease,
+        gap 0.15s ease,
+        min-height 0.15s ease,
+        padding 0.15s ease;
 }
 
 .sidebar-link-icon {
-    flex: 0 0 28px;
-    width: 28px;
-    height: 28px;
+    flex: 0 0 clamp(24px, 9.333cqi, 45px);
+    width: clamp(24px, 9.333cqi, 45px);
+    height: clamp(24px, 9.333cqi, 45px);
     fill: currentColor;
     stroke: none;
+    transition: width 0.15s ease, height 0.15s ease, flex-basis 0.15s ease;
 }
 
 .sidebar-link:hover {
@@ -274,9 +281,9 @@ main {
 }
 
 .logout-link .sidebar-link-icon {
-    flex-basis: 23px;
-    width: 23px;
-    height: 23px;
+    flex-basis: clamp(20px, 7.667cqi, 37px);
+    width: clamp(20px, 7.667cqi, 37px);
+    height: clamp(20px, 7.667cqi, 37px);
     color: #ffaaa7;
 }
 
