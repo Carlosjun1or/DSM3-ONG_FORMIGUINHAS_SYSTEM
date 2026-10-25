@@ -1,7 +1,7 @@
 {% extends 'sistema/template-sistema.html' %}
 
 {% block titulo %}{% if modo_edicao %}Editar Praia{% else %}Cadastrar Praia{% endif %} | Sistema{% endblock %}
-{% block page_title %}{% if modo_edicao %}Editar Praia{% else %}Cadastrar Praia{% endif %}{% endblock %}
+{% block page_title %}{% if modo_edicao %}Edição de Praia - {{ praia.nome }}{% else %}Cadastro de Praia{% endif %}{% endblock %}
 {% block estilos %}
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
     integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
