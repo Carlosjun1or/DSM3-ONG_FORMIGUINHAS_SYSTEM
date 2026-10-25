@@ -1,6 +1,6 @@
 {% extends 'sistema/template-sistema.html' %}
 
-{% block page_title %}{% if modo == 'edicao' %}Editar doador{% else %}Cadastrar doador{% endif %}{% endblock %}
+{% block page_title %}{% if modo == 'edicao' %}Edição de Doador(a) - {{ doador.nome }}{% else %}Cadastro de Doador{% endif %}{% endblock %}
 
 {% block conteudo %}
 <section class="form-shell donor-form-shell">
