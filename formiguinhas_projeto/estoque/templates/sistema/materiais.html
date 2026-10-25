@@ -3,7 +3,7 @@
 
 {% block titulo %}Controle de Estoque | Sistema{% endblock %}
 {% block page_title %}Controle de Estoque{% endblock %}
-{% block estilos %}<link rel="stylesheet" href="{% static 'estoque/estoque.css' %}?v=5">
+{% block estilos %}<link rel="stylesheet" href="{% static 'estoque/estoque.css' %}?v=6">
 <script src="{% static 'estoque/estoque.js' %}" defer></script>{% endblock %}
 
 {% block conteudo %}
@@ -32,9 +32,7 @@
         </div>
         <div class="estoque-acoes">
             {% if usuario.tipo == 'ADMIN' %}
-            <a href="{% url 'relatorios' %}?relatorio=estoque" class="btn btn-outline">Relatório</a>
             <a href="{% url 'movimentacoes_estoque' %}" class="btn btn-outline">Histórico</a>
-            <a href="{% url 'doacoes' %}" class="btn btn-outline">Doações</a>
             <a href="{% url 'cadastrar_movimentacao_estoque' %}" class="btn btn-outline">Registrar movimentação</a>
             <a href="{% url 'cadastrar_material' %}" class="btn btn-primary">Novo material</a>
             {% endif %}
