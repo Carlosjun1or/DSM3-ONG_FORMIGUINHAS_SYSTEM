@@ -10,31 +10,49 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RemoveField(
+        migrations.AlterField(
             model_name='coletaresiduo',
             name='acao',
+            field=models.PositiveIntegerField(
+                blank=True,
+                db_column='acao_id',
+                null=True,
+                verbose_name='Ação (ID)',
+            ),
         ),
-        migrations.RemoveField(
+        migrations.RenameField(
+            model_name='coletaresiduo',
+            old_name='acao',
+            new_name='acao_id',
+        ),
+        migrations.AlterField(
             model_name='coletaresiduo',
             name='bag',
+            field=models.PositiveIntegerField(
+                blank=True,
+                db_column='bag_id',
+                null=True,
+                verbose_name='Bag (ID)',
+            ),
         ),
-        migrations.RemoveField(
+        migrations.RenameField(
+            model_name='coletaresiduo',
+            old_name='bag',
+            new_name='bag_id',
+        ),
+        migrations.AlterField(
             model_name='residuocoletado',
             name='acao',
+            field=models.PositiveIntegerField(
+                blank=True,
+                db_column='acao_id',
+                null=True,
+                verbose_name='Ação (ID)',
+            ),
         ),
-        migrations.AddField(
-            model_name='coletaresiduo',
-            name='acao_id',
-            field=models.PositiveIntegerField(blank=True, db_column='acao_id', null=True, verbose_name='Ação (ID)'),
-        ),
-        migrations.AddField(
-            model_name='coletaresiduo',
-            name='bag_id',
-            field=models.PositiveIntegerField(blank=True, db_column='bag_id', null=True, verbose_name='Bag (ID)'),
-        ),
-        migrations.AddField(
+        migrations.RenameField(
             model_name='residuocoletado',
-            name='acao_id',
-            field=models.PositiveIntegerField(blank=True, db_column='acao_id', null=True, verbose_name='Ação (ID)'),
+            old_name='acao',
+            new_name='acao_id',
         ),
     ]
