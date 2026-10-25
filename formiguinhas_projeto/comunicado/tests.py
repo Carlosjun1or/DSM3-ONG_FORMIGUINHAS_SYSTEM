@@ -1,7 +1,8 @@
 from datetime import date
 
 from django.test import RequestFactory, TestCase
-from django.urls import reverse
+from django.template.loader import get_template
+from django.urls import resolve, reverse
 from django.utils import timezone
 
 from acao.models import Acao
@@ -72,6 +73,7 @@ class ComunicadoLeituraTests(TestCase):
         response = self.client.get(reverse('central_comunicados'))
 
         self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Central de Comunicados')
         self.assertEqual(
             ComunicadoLeitura.objects.filter(usuario=self.usuario).count(),
             0,
@@ -179,6 +181,23 @@ class ComunicadoLeituraTests(TestCase):
                 comunicado=outro,
             ).exists()
         )
+
+    def test_breadcrumb_de_detalhe_do_comunicado(self):
+        comunicado = self.criar_comunicado('Aviso detalhado')
+        caminho = reverse(
+            'comunicado_interno_detalhe',
+            args=[comunicado.id_comunicado],
+        )
+        request = RequestFactory().get(caminho)
+        request.resolver_match = resolve(caminho)
+        request.session = self.session
+        html = get_template('sistema/comunicado-detalhe.html').render({
+            'comunicado': comunicado,
+            'request': request,
+        })
+
+        self.assertIn('Central de Comunicados', html)
+        self.assertIn('Detalhes do Comunicado - Aviso detalhado', html)
         request = RequestFactory().get('/')
         request.session = self.session
         self.assertEqual(
@@ -289,6 +308,7 @@ class ComunicadoStatusAdminTests(TestCase):
         response = self.client.get(reverse('comunicados_admin'))
 
         self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Controle de Comunicados')
         self.assertContains(response, 'name="status"')
         self.assertContains(response, 'Rascunho')
         self.assertContains(response, 'name="filtro_status"')
@@ -298,6 +318,33 @@ class ComunicadoStatusAdminTests(TestCase):
         self.assertContains(response, 'aria-label="Paginação de registros"')
         self.assertContains(response, 'Página 1 de 1')
         self.assertContains(response, 'Exibindo 1–1 de 1')
+
+    def test_breadcrumbs_de_formularios_de_comunicados(self):
+        cadastro = self.client.get(reverse('comunicado_cadastrar'))
+        edicao = self.client.get(
+            reverse('comunicado_editar', args=[self.comunicado.id_comunicado])
+        )
+
+        self.assertEqual(cadastro.status_code, 200)
+        self.assertContains(cadastro, 'Controle de Comunicados')
+        self.assertContains(cadastro, 'Cadastro de Comunicado')
+        self.assertEqual(edicao.status_code, 200)
+        self.assertContains(edicao, 'Edição de Comunicado - Aviso para alterar status')
+
+    def test_breadcrumbs_de_temas_de_comunicados(self):
+        lista = self.client.get(reverse('temas_comunicados'))
+        cadastro = self.client.get(reverse('tema_cadastrar'))
+        tema = Tema.objects.create(nome='Tema de teste')
+        edicao = self.client.get(reverse('tema_editar', args=[tema.id]))
+
+        self.assertEqual(lista.status_code, 200)
+        self.assertContains(lista, 'Controle de Comunicados')
+        self.assertContains(lista, 'Controle de Temas de Comunicados')
+        self.assertEqual(cadastro.status_code, 200)
+        self.assertContains(cadastro, 'Controle de Temas de Comunicados')
+        self.assertContains(cadastro, 'Cadastro de Tema')
+        self.assertEqual(edicao.status_code, 200)
+        self.assertContains(edicao, 'Edição de Tema - Tema de teste')
 
     def test_controle_pagina_resultados_e_mantem_filtros(self):
         for indice in range(20):
