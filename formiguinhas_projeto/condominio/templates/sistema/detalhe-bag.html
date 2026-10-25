@@ -1,6 +1,6 @@
 {% extends 'sistema/template-sistema.html' %}
 {% block titulo %}Bag {{ bag.codigo }} | Sistema{% endblock %}
-{% block page_title %}Detalhes da bag{% endblock %}
+{% block page_title %}Detalhes da Bag {{ bag.codigo }} - {{ bag.condominio.nome }}{% endblock %}
 {% block conteudo %}
 <article class="bag-detail-page">
     <section class="card donation-detail-hero bag-detail-hero">
@@ -18,8 +18,6 @@
                 <a href="{% url 'bags' %}" class="btn btn-outline">Voltar às bags</a>
                 {% if usuario.tipo == 'ADMIN' %}
                 <a href="{% url 'editar_bag' bag.id_bag %}" class="btn btn-outline">Editar bag</a>
-                <a href="{% url 'cadastrar_movimentacao_bag' bag.id_bag %}" class="btn btn-outline">Movimentar</a>
-                <a href="{% url 'registrar_coleta_bag' bag.id_bag %}" class="btn btn-primary">Registrar coleta</a>
                 {% endif %}
             </div>
         </div>
@@ -52,17 +50,49 @@
         </div>
     </section>
 
-    <section class="card donation-detail-content bag-detail-section">
+    <section class="card donation-detail-content bag-detail-section" id="coletas">
         <div class="section-heading donation-content-heading">
             <div>
                 <span class="section-kicker">Registros</span>
                 <h2>Coletas de resíduos <span class="section-count">{{ coletas_residuos|length }}</span></h2>
                 <p class="form-subtitle">Coletas e itens registrados para esta bag.</p>
             </div>
-            {% if usuario.tipo == 'ADMIN' %}
-            <a href="{% url 'registrar_coleta_bag' bag.id_bag %}" class="btn btn-primary">Registrar coleta</a>
-            {% endif %}
         </div>
+        {% if usuario.tipo == 'ADMIN' %}
+        <div class="member-form-panel" id="registrar-coleta">
+            <h3>Registrar coleta</h3>
+            <p class="form-subtitle">Registre o tipo, a categoria e a quantidade coletada. Você pode preencher a quantidade depois.</p>
+            <form method="post" action="{% url 'detalhe_bag' bag.id_bag %}">
+                {% csrf_token %}
+                <input type="hidden" name="formulario" value="registrar-coleta">
+                {% if coleta_form.non_field_errors %}<div class="error-box">{{ coleta_form.non_field_errors|join:', ' }}</div>{% endif %}
+                {% if item_form.non_field_errors %}<div class="error-box">{{ item_form.non_field_errors|join:', ' }}</div>{% endif %}
+                <div class="form-grid">
+                    {% for field in coleta_form %}
+                    {% if field.name != 'observacao' %}
+                    <div class="form-group{% if field.name == 'observacao' %} full{% endif %}">
+                        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                        {{ field }}
+                        {% if field.help_text %}<small class="form-help">{{ field.help_text }}</small>{% endif %}
+                        {% for error in field.errors %}<small class="field-error">{{ error }}</small>{% endfor %}
+                    </div>
+                    {% endif %}
+                    {% endfor %}
+                    {% for field in item_form %}
+                    <div class="form-group{% if field.name == 'observacao' %} full{% endif %}">
+                        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                        {{ field }}
+                        {% if field.help_text %}<small class="form-help">{{ field.help_text }}</small>{% endif %}
+                        {% for error in field.errors %}<small class="field-error">{{ error }}</small>{% endfor %}
+                    </div>
+                    {% endfor %}
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Salvar coleta</button>
+                </div>
+            </form>
+        </div>
+        {% endif %}
         <div class="table-wrap">
             <table class="data-table bag-detail-table">
                 <thead>
@@ -89,6 +119,41 @@
                 </tbody>
             </table>
         </div>
+    </section>
+
+    <section class="card donation-detail-content bag-detail-section" id="movimentacoes">
+        <div class="section-heading donation-content-heading">
+            <div>
+                <span class="section-kicker">Operação</span>
+                <h2>Movimentar bag</h2>
+                <p class="form-subtitle">Status atual: <strong>{{ bag.get_status_display }}</strong>. Registre o evento e o novo status da bag.</p>
+            </div>
+        </div>
+        {% if usuario.tipo == 'ADMIN' %}
+        <div class="member-form-panel" id="registrar-movimentacao">
+            <form method="post" action="{% url 'detalhe_bag' bag.id_bag %}">
+                {% csrf_token %}
+                <input type="hidden" name="formulario" value="registrar-movimentacao">
+                {% if movimentacao_form.non_field_errors %}<div class="error-box">{{ movimentacao_form.non_field_errors|join:', ' }}</div>{% endif %}
+                <div class="form-grid">
+                    {% for field in movimentacao_form %}
+                    <div class="form-group{% if field.name == 'observacao' %} full{% endif %}">
+                        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                        {{ field }}
+                        {% if field.name == 'tipo' %}<small class="form-help">Escolha o evento que ocorreu com a bag.</small>{% endif %}
+                        {% if field.name == 'status_novo' %}<small class="form-help">Esse será o novo status atual da bag.</small>{% endif %}
+                        {% if field.name == 'data_movimentacao' %}<small class="form-help">Formato: dia/mês/ano e horário de 24 horas.</small>{% endif %}
+                        {% if field.name == 'observacao' %}<small class="form-help">Inclua detalhes importantes, como quantidade, condição ou local da bag.</small>{% endif %}
+                        {% for error in field.errors %}<small class="field-error">{{ error }}</small>{% endfor %}
+                    </div>
+                    {% endfor %}
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Registrar movimentação</button>
+                </div>
+            </form>
+        </div>
+        {% endif %}
     </section>
 
     <details class="card donation-audit bag-detail-section">

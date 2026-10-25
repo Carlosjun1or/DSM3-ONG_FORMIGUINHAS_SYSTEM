@@ -1,6 +1,6 @@
 {% extends 'sistema/template-sistema.html' %}
 {% block titulo %}{% if modo_edicao %}Editar bag{% else %}Nova bag{% endif %} | Sistema{% endblock %}
-{% block page_title %}{% if modo_edicao %}Editar bag{% else %}Cadastrar bag grande{% endif %}{% endblock %}
+{% block page_title %}{% if modo_edicao %}Edição de Bag - {{ bag.codigo }}{% else %}Cadastro de Bag{% endif %}{% endblock %}
 {% block conteudo %}
 <section class="form-card">
     <div class="section-heading"><div><h2>Bag grande</h2><p class="form-subtitle">Todas as bags deste controle são consideradas grandes. O código identifica a bag durante todo o ciclo de uso.</p></div><a href="{% url 'condominios' %}" class="btn btn-outline">Voltar</a></div>
