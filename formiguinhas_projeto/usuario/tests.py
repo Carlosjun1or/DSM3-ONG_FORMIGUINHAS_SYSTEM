@@ -297,7 +297,7 @@ class PermissoesStatusVoluntarioTests(TestCase):
             '<span aria-current="page">Controle de Voluntários</span>',
         )
         self.assertContains(resposta, 'href="/comunicado/central/" class="notification-link"'        )
-        self.assertContains(resposta, 'sidebar-icons.svg?v=4#topbar-bell')
+        self.assertContains(resposta, 'sidebar-icons.svg?v=5#topbar-bell')
         self.assertContains(resposta, 'class="topbar-user" href="/usuario/perfil/"')
         self.assertContains(resposta, '<span class="topbar-user-initial" aria-hidden="true">V</span>')
         self.assertLess(

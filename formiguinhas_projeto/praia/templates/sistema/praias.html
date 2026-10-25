@@ -88,6 +88,10 @@
                             <dt>Descrição</dt>
                             <dd>{{ praia.descricao|default:'-'|truncatechars:120 }}</dd>
                         </div>
+                        <div>
+                            <dt>Cidade</dt>
+                            <dd>{{ praia.cidade }}</dd>
+                        </div>
                     </dl>
                     <details class="record-card-audit">
                         <summary>Histórico do cadastro</summary>
@@ -107,7 +111,7 @@
                     </div>
                     {% endif %}
                 </article>
-                {% endfor %}
+            {% endfor %}
     </div>
     {% include 'sistema/includes/paginacao.html' %}
     {% else %}

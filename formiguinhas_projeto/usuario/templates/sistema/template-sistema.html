@@ -7,6 +7,7 @@
     <title>{% block titulo %}Formiguinhas | Sistema{% endblock %}</title>
     <link rel="icon" type="image/svg+xml" href="{% static 'site_institucional/img/mascote-formiguinha.svg' %}?v=1">
     <link rel="shortcut icon" href="{% static 'site_institucional/img/mascote-formiguinha.svg' %}?v=1">
+    <link rel="stylesheet" href="{% static 'css/tokens.css' %}?v=1">
     <link rel="stylesheet" href="{% static 'css/style.css' %}?v=129">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -203,7 +204,7 @@
 
                 <div class="topbar-actions">
                     <a href="{% url 'central_comunicados' %}" class="notification-link" aria-label="Central de comunicados{% if comunicados_nao_lidos_count %}, {{ comunicados_nao_lidos_count }} não lidos{% endif %}" title="Central de comunicados">
-                        <svg class="notification-icon notification-icon--bell" viewBox="0 0 44 44" aria-hidden="true"><use href="{% static 'usuario/icons/sidebar-icons.svg' %}?v=4#topbar-bell" x="12.5" y="11.5" width="19" height="21"></use></svg>
+                        <svg class="notification-icon notification-icon--bell" viewBox="0 0 44 44" aria-hidden="true"><use href="{% static 'usuario/icons/sidebar-icons.svg' %}?v=5#topbar-bell" x="12.5" y="11.5" width="19" height="21"></use></svg>
                         {% if comunicados_nao_lidos_count %}<span class="notification-badge">{{ comunicados_nao_lidos_count }}</span>{% endif %}
                     </a>
                     {% if request.session.usuario_tipo == 'ADMIN' %}
