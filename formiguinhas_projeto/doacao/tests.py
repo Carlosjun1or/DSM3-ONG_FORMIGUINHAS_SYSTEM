@@ -138,6 +138,87 @@ class DoacaoTestCase(TestCase):
         self.assertContains(response, 'data-categoria-options')
         self.assertContains(response, 'data-value="Bebidas"')
 
+    def test_cadastro_doacao_exibe_breadcrumb_hierarquico(self):
+        response = self.client.get(reverse('cadastro_doacao'))
+
+        self.assertContains(response, 'href="/usuario/home/">Início</a>')
+        self.assertContains(
+            response,
+            'href="/doacao/">Controle de Doações</a>',
+        )
+        self.assertContains(
+            response,
+            '<span aria-current="page">Cadastro de Doação</span>',
+        )
+
+    def test_detalhe_doacao_exibe_breadcrumb_com_tipo_e_doador(self):
+        tipos_e_rotulos = (
+            (Doacao.FINANCEIRA, 'Financeira'),
+            (Doacao.MATERIAL, 'Material'),
+        )
+
+        for tipo, rotulo in tipos_e_rotulos:
+            with self.subTest(tipo=tipo):
+                doacao = Doacao.objects.create(
+                    tipo=tipo,
+                    doador=self.doador,
+                    data_recebimento=timezone.localdate(),
+                    registrado_por=self.usuario,
+                    registrado_por_nome='Administrador',
+                    registrado_por_tipo='ADMIN',
+                )
+
+                response = self.client.get(
+                    reverse('doacao_detalhe', args=[doacao.pk])
+                )
+
+                self.assertContains(
+                    response,
+                    'href="/usuario/home/">Início</a>',
+                )
+                self.assertContains(
+                    response,
+                    'href="/doacao/">Controle de Doações</a>',
+                )
+                self.assertContains(
+                    response,
+                    f'<span aria-current="page">Detalhes da Doação {rotulo} - Doador Teste</span>',
+                )
+
+    def test_edicao_doacao_exibe_breadcrumb_com_tipo_e_doador(self):
+        tipos_e_rotulos = (
+            (Doacao.FINANCEIRA, 'Financeira'),
+            (Doacao.MATERIAL, 'Material'),
+        )
+
+        for tipo, rotulo in tipos_e_rotulos:
+            with self.subTest(tipo=tipo):
+                doacao = Doacao.objects.create(
+                    tipo=tipo,
+                    doador=self.doador,
+                    data_recebimento=timezone.localdate(),
+                    registrado_por=self.usuario,
+                    registrado_por_nome='Administrador',
+                    registrado_por_tipo='ADMIN',
+                )
+
+                response = self.client.get(
+                    reverse('editar_doacao', args=[doacao.pk])
+                )
+
+                self.assertContains(
+                    response,
+                    'href="/usuario/home/">Início</a>',
+                )
+                self.assertContains(
+                    response,
+                    'href="/doacao/">Controle de Doações</a>',
+                )
+                self.assertContains(
+                    response,
+                    f'<span aria-current="page">Edição de Doação {rotulo} - Doador Teste</span>',
+                )
+
     def test_doacao_anonima_nao_exige_doador(self):
         form = DoacaoForm(data={
             'tipo': Doacao.FINANCEIRA,
@@ -598,6 +679,49 @@ class DoacaoTestCase(TestCase):
         )
         self.doador.refresh_from_db()
         self.assertFalse(self.doador.ativo)
+
+    def test_detalhe_doador_exibe_breadcrumb_com_nome(self):
+        response = self.client.get(
+            reverse('doador_detalhe', args=[self.doador.pk])
+        )
+
+        self.assertContains(response, 'href="/usuario/home/">Início</a>')
+        self.assertContains(
+            response,
+            'href="/doacao/doadores/">Controle de Doadores</a>',
+        )
+        self.assertContains(
+            response,
+            '<span aria-current="page">Detalhes do Doador(a) - Doador Teste</span>',
+        )
+
+    def test_cadastro_doador_exibe_breadcrumb_hierarquico(self):
+        response = self.client.get(reverse('cadastro_doador'))
+
+        self.assertContains(response, 'href="/usuario/home/">Início</a>')
+        self.assertContains(
+            response,
+            'href="/doacao/doadores/">Controle de Doadores</a>',
+        )
+        self.assertContains(
+            response,
+            '<span aria-current="page">Cadastro de Doador</span>',
+        )
+
+    def test_edicao_doador_exibe_breadcrumb_com_nome(self):
+        response = self.client.get(
+            reverse('editar_doador', args=[self.doador.pk])
+        )
+
+        self.assertContains(response, 'href="/usuario/home/">Início</a>')
+        self.assertContains(
+            response,
+            'href="/doacao/doadores/">Controle de Doadores</a>',
+        )
+        self.assertContains(
+            response,
+            '<span aria-current="page">Edição de Doador(a) - Doador Teste</span>',
+        )
 
     def test_cadastro_cria_doador_na_mesma_tela(self):
         response = self.client.post(reverse('cadastro_doacao'), {
