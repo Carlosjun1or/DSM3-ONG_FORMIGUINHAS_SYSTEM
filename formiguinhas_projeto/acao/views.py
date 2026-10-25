@@ -326,14 +326,23 @@ def acao_detalhe_view(request, acao_id):
     if usuario.tipo not in ('ADMIN', 'COORDENADOR'):
         return redirect('home')
 
-    acao = get_object_or_404(
-        Acao.objects.select_related(
-            'praia',
-            'cadastrado_por__id_voluntario',
-            'ultimo_editado_por__id_voluntario',
-        ).prefetch_related('imagens_acao'),
+    acao = Acao.objects.filter(
         id_acao=acao_id,
-    )
+    ).select_related(
+        'praia',
+        'cadastrado_por__id_voluntario',
+        'ultimo_editado_por__id_voluntario',
+    ).prefetch_related('imagens_acao').first()
+    if acao is None:
+        mongo_ok, _, _ = test_mongo_connection()
+        doc_mongo = obter_acao_mongo(acao_id) if mongo_ok else None
+        if doc_mongo is None:
+            return get_object_or_404(Acao, id_acao=acao_id)
+        return render(request, 'sistema/detalhe-acao-mongo.html', {
+            'usuario': usuario,
+            'acao': MongoAcaoAdapter(doc_mongo),
+            'participantes': doc_mongo.get('participantes', []),
+        })
     busca_participante = request.GET.get('busca_participante', '').strip()
     status_participante = request.GET.get('status_participante', '').strip()
     busca_equipe = request.GET.get('busca_equipe', '').strip()
