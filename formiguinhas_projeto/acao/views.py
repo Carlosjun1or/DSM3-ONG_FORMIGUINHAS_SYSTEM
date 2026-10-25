@@ -176,6 +176,19 @@ def sincronizar_relacionamentos_mutirao(acao, usuario):
                 valores_novos=valores_novos,
             )
 
+# ==========================================
+# FUNÇÃO AUXILIAR DE REDIRECIONAMENTO DINÂMICO
+# ==========================================
+def redirecionar_apos_acao_participante(request, acao_id):
+    """
+    Redireciona o usuário de volta para a tela de onde ele disparou a ação:
+    Se ele estava na página de participantes, volta para participantes_acao.
+    Caso contrário (ex: estava no detalhe da ação), volta para acao_detalhe.
+    """
+    referer = request.META.get('HTTP_REFERER', '')
+    if 'participantes' in referer:
+        return redirect('participantes_acao', acao_id=acao_id)
+    return redirect('acao_detalhe', acao_id=acao_id)
 
 def acoes_view(request):
     """
@@ -432,6 +445,55 @@ def acao_detalhe_view(request, acao_id):
         'materiais_utilizados': materiais_utilizados,
     })
 
+def participantes_view(request, acao_id):
+    usuario = get_session_usuario(request)
+    if not usuario:
+        return redirect('login')
+    if usuario.tipo != 'ADMIN':
+        return render_acesso_bloqueado(request)
+
+    acao = get_object_or_404(
+        Acao.objects.select_related('praia', 'cadastrado_por__id_voluntario', 'ultimo_editado_por__id_voluntario'),
+        id_acao=acao_id
+    )
+
+    # Captura os filtros da tela de participantes
+    busca_participante = request.GET.get('busca_participante', '').strip()
+    status_participante = request.GET.get('status_participante', '').strip()
+
+    # Queryset de participantes com filtros aplicados
+    participantes = acao.participantes.select_related('voluntario').order_by('voluntario__nome')
+    if busca_participante:
+        participantes = participantes.filter(
+            Q(voluntario__nome__icontains=busca_participante) |
+            Q(voluntario__email__icontains=busca_participante)
+        )
+    if status_participante in dict(AcaoParticipante.STATUS_CHOICES):
+        participantes = participantes.filter(status=status_participante)
+
+    # Histórico de participantes (recusados / não compareceram)
+    historico_participantes = acao.historico_participantes.filter(
+        restaurado=False
+    ).select_related(
+        'voluntario',
+        'movido_por__id_voluntario',
+    ).order_by('-dt_movimentacao', 'voluntario__nome')
+
+    # Formulário para adicionar novo participante na página dedicada
+    form = AcaoParticipanteForm(acao=acao)
+
+    return render(request, 'sistema/participantes-acao.html', {
+        'usuario': usuario,
+        'acao': acao,
+        'participantes': participantes,
+        'historico_participantes': historico_participantes,
+        'form': form,
+        'busca_participante': busca_participante,
+        'status_participante': status_participante,
+        'status_participante_choices': AcaoParticipante.STATUS_CHOICES,
+    })
+
+
 
 @transaction.atomic
 def adicionar_material_utilizado_view(request, acao_id):
@@ -501,7 +563,8 @@ def adicionar_participante_view(request, acao_id):
                 resumo=f'{participante.voluntario.nome} vinculado à ação #{acao.pk}.',
             )
             salvar_acao_mongo(acao)
-    return redirect('acao_detalhe', acao_id=acao.id_acao)
+
+    return redirecionar_apos_acao_participante(request, acao.id_acao)
 
 
 @transaction.atomic
@@ -674,8 +737,8 @@ def confirmar_participacao_view(request, acao_id, participante_id):
                     valores_anteriores=valores_anteriores,
                 )
                 salvar_acao_mongo(participante.acao)
-    return redirect('acao_detalhe', acao_id=acao_id)
 
+    return redirecionar_apos_acao_participante(request, acao_id)
 
 @transaction.atomic
 def registrar_comparecimento_view(request, acao_id, participante_id):
@@ -713,7 +776,8 @@ def registrar_comparecimento_view(request, acao_id, participante_id):
             salvar_acao_mongo(participante.acao)
         else:
             mover_participante_para_historico(participante, usuario, novo_status)
-    return redirect('acao_detalhe', acao_id=acao_id)
+
+    return redirecionar_apos_acao_participante(request, acao_id)
 
 
 @transaction.atomic
@@ -769,8 +833,7 @@ def restaurar_participante_view(request, acao_id, historico_id):
         )
         salvar_acao_mongo(participante.acao)
 
-    return redirect('acao_detalhe', acao_id=acao_id)
-
+    return redirecionar_apos_acao_participante(request, acao_id)
 
 @transaction.atomic
 def mover_participante_para_historico(participante, usuario, status):
