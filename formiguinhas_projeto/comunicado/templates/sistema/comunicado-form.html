@@ -1,7 +1,7 @@
 {% extends 'sistema/template-sistema.html' %}
 
 {% block titulo %}{% if comunicado %}Editar comunicado{% else %}Cadastro de comunicado{% endif %} | Sistema{% endblock %}
-{% block page_title %}{% if comunicado %}Editar comunicado{% else %}Cadastro de comunicado{% endif %}{% endblock %}
+{% block page_title %}{% if comunicado %}Edição de Comunicado - {{ comunicado.titulo }}{% else %}Cadastro de Comunicado{% endif %}{% endblock %}
 
 {% block conteudo %}
 <section class="card communication-form-card">

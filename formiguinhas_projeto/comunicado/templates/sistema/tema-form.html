@@ -1,6 +1,6 @@
 {% extends 'sistema/template-sistema.html' %}
 {% block titulo %}{% if tema %}Editar tema{% else %}Cadastro de tema{% endif %} | Sistema{% endblock %}
-{% block page_title %}{% if tema %}Editar tema{% else %}Cadastro de tema{% endif %}{% endblock %}
+{% block page_title %}{% if tema %}Edição de Tema - {{ tema.nome }}{% else %}Cadastro de Tema{% endif %}{% endblock %}
 {% block conteudo %}
 <section class="card form-card communication-topic-form-card">
     <div class="section-heading communication-topic-form-heading">

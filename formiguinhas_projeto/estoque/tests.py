@@ -68,6 +68,91 @@ class EstoqueTestCase(TestCase):
         sessao.save()
 
 
+class BreadcrumbsEstoqueTests(EstoqueTestCase):
+    def test_lista_de_estoque_omite_botoes_de_relatorio_e_doacoes(self):
+        self.entrar(self.admin)
+
+        resposta = self.client.get(reverse('materiais'))
+
+        self.assertNotContains(resposta, '>Relatório</a>')
+        self.assertNotContains(resposta, '>Doações</a>')
+        self.assertContains(resposta, 'class="btn btn-outline">Histórico</a>')
+        self.assertContains(
+            resposta,
+            'class="btn btn-outline">Registrar movimentação</a>',
+        )
+        self.assertContains(
+            resposta,
+            'class="btn btn-primary">Novo material</a>',
+        )
+
+    def test_telas_de_estoque_exibem_breadcrumbs_hierarquicos(self):
+        self.entrar(self.admin)
+        material = criar_material(nome='Tinta de teste', codigo='TIN-01')
+        telas = (
+            (
+                reverse('materiais'),
+                False,
+                '<span aria-current="page">Controle de Estoque</span>',
+            ),
+            (
+                reverse('cadastrar_material'),
+                True,
+                '<span aria-current="page">Cadastro de Material</span>',
+            ),
+            (
+                reverse('editar_material', args=[material.pk]),
+                True,
+                '<span aria-current="page">Edição de Material - Tinta de teste</span>',
+            ),
+            (
+                reverse('movimentacoes_estoque'),
+                True,
+                '<span aria-current="page">Histórico de Movimentação do Estoque</span>',
+            ),
+            (
+                reverse('cadastrar_movimentacao_estoque'),
+                True,
+                '<span aria-current="page">Registro de Movimentação do Estoque</span>',
+            ),
+            (
+                reverse('relatorio_estoque'),
+                True,
+                '<span aria-current="page">Relatório de estoque</span>',
+            ),
+        )
+
+        for url, tem_controle_estoque, titulo_final in telas:
+            with self.subTest(url=url):
+                resposta = self.client.get(url)
+                self.assertEqual(resposta.status_code, 200)
+                self.assertContains(resposta, 'href="/usuario/home/">Início</a>')
+                if tem_controle_estoque:
+                    self.assertContains(
+                        resposta,
+                        'href="/estoque/materiais/">Controle de Estoque</a>',
+                    )
+                self.assertContains(resposta, titulo_final)
+
+    def test_cadastro_de_movimentacao_nao_inclui_historico_no_breadcrumb(self):
+        self.entrar(self.admin)
+
+        resposta = self.client.get(reverse('cadastrar_movimentacao_estoque'))
+
+        self.assertContains(
+            resposta,
+            '<a href="/estoque/materiais/">Controle de Estoque</a>',
+        )
+        self.assertContains(
+            resposta,
+            '<span aria-current="page">Registro de Movimentação do Estoque</span>',
+        )
+        self.assertNotContains(
+            resposta,
+            'href="/estoque/movimentacoes/">Histórico de Movimentação do Estoque</a>',
+        )
+
+
 class SimularEstoqueCommandTests(TestCase):
     def setUp(self):
         criar_usuario('Administrador', 'admin-simulacao@teste.org', 'ADMIN')

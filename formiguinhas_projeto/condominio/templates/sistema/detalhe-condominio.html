@@ -1,6 +1,6 @@
 {% extends 'sistema/template-sistema.html' %}
 {% block titulo %}{{ condominio.nome }} | Sistema{% endblock %}
-{% block page_title %}Detalhes do condomínio{% endblock %}
+{% block page_title %}Detalhes de Condomínio - {{ condominio.nome }}{% endblock %}
 {% block conteudo %}
 <article class="condominium-detail-page">
     <section class="card donation-detail-hero condominium-detail-hero">
@@ -17,7 +17,6 @@
                 <a href="{% url 'condominios' %}" class="btn btn-outline">Voltar aos condomínios</a>
                 {% if usuario.tipo == 'ADMIN' %}
                 <a href="{% url 'editar_condominio' condominio.id_condominio %}" class="btn btn-outline">Editar condomínio</a>
-                <a href="{% url 'cadastrar_bag' %}" class="btn btn-primary">Cadastrar bag</a>
                 {% endif %}
             </div>
         </div>
@@ -73,7 +72,7 @@
                         <td><strong>{{ bag.percentual_ocupacao }}%</strong></td>
                         <td>{{ bag.peso_atual_kg|floatformat:2 }} kg</td>
                         <td><a href="{% url 'detalhe_bag' bag.id_bag %}" class="btn btn-outline btn-small">Ver bag</a></td>
-                        {% if usuario.tipo == 'ADMIN' %}<td><a href="{% url 'cadastrar_movimentacao_bag' bag.id_bag %}" class="btn btn-outline btn-small">Movimentar</a></td>{% endif %}
+                        {% if usuario.tipo == 'ADMIN' %}<td><a href="{% url 'detalhe_bag' bag.id_bag %}#movimentacoes" class="btn btn-outline btn-small">Movimentar</a></td>{% endif %}
                     </tr>
                 {% empty %}
                     <tr><td colspan="{% if usuario.tipo == 'ADMIN' %}6{% else %}5{% endif %}">Nenhuma bag cadastrada para este condomínio.</td></tr>

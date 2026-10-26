@@ -51,6 +51,141 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
+    var sidebarResizeHandle = document.querySelector('.sidebar-resize-handle');
+    var sidebarWidthStorageKey = 'system-sidebar-width';
+    var sidebarDefaultWidth = 300;
+    var sidebarMinWidth = 220;
+    var sidebarMaxWidth = 480;
+    var resizingSidebar = false;
+
+    function getSidebarWidthBounds() {
+        return {
+            min: sidebarMinWidth,
+            max: Math.max(sidebarMinWidth, Math.min(
+                sidebarMaxWidth,
+                window.innerWidth - 360
+            )),
+        };
+    }
+
+    function setSidebarWidth(width, persist) {
+        if (!sidebar || !sidebarResizeHandle) return;
+
+        var bounds = getSidebarWidthBounds();
+        var clampedWidth = Math.round(Math.max(
+            bounds.min,
+            Math.min(bounds.max, width)
+        ));
+        sidebar.style.setProperty('--sidebar-width', clampedWidth + 'px');
+        sidebarResizeHandle.setAttribute('aria-valuemax', String(bounds.max));
+        sidebarResizeHandle.setAttribute('aria-valuenow', String(clampedWidth));
+        sidebarResizeHandle.setAttribute(
+            'aria-valuetext',
+            clampedWidth + ' pixels'
+        );
+
+        if (persist) {
+            try {
+                localStorage.setItem(sidebarWidthStorageKey, String(clampedWidth));
+            } catch (error) {
+                console.warn('Não foi possível salvar a largura do menu lateral.', error);
+            }
+        }
+    }
+
+    if (sidebar && sidebarResizeHandle) {
+        document.addEventListener('keydown', function (event) {
+            if (event.key !== 'F5' || !event.ctrlKey) return;
+
+            setSidebarWidth(sidebarDefaultWidth, false);
+            try {
+                localStorage.removeItem(sidebarWidthStorageKey);
+            } catch (error) {
+                console.warn('Não foi possível remover a largura salva do menu lateral.', error);
+            }
+        });
+
+        try {
+            var savedSidebarWidth = Number(
+                localStorage.getItem(sidebarWidthStorageKey)
+            );
+            if (Number.isFinite(savedSidebarWidth) && savedSidebarWidth > 0) {
+                setSidebarWidth(savedSidebarWidth, false);
+            } else {
+                setSidebarWidth(300, false);
+            }
+        } catch (error) {
+            setSidebarWidth(300, false);
+            console.warn('Não foi possível carregar a largura salva do menu lateral.', error);
+        }
+
+        sidebarResizeHandle.addEventListener('pointerdown', function (event) {
+            if (sidebarMedia.matches) return;
+            event.preventDefault();
+            resizingSidebar = true;
+            document.body.classList.add('sidebar-resizing');
+            sidebarResizeHandle.setPointerCapture(event.pointerId);
+            setSidebarWidth(event.clientX, false);
+        });
+
+        sidebarResizeHandle.addEventListener('pointermove', function (event) {
+            if (resizingSidebar) setSidebarWidth(event.clientX, false);
+        });
+
+        function finishSidebarResize(event) {
+            if (!resizingSidebar) return;
+            resizingSidebar = false;
+            document.body.classList.remove('sidebar-resizing');
+            if (sidebarResizeHandle.hasPointerCapture(event.pointerId)) {
+                sidebarResizeHandle.releasePointerCapture(event.pointerId);
+            }
+            setSidebarWidth(
+                Number(sidebarResizeHandle.getAttribute('aria-valuenow')),
+                true
+            );
+        }
+
+        sidebarResizeHandle.addEventListener('pointerup', finishSidebarResize);
+        sidebarResizeHandle.addEventListener('pointercancel', finishSidebarResize);
+
+        function restoreDefaultSidebarWidth() {
+            setSidebarWidth(sidebarDefaultWidth, true);
+        }
+
+        sidebarResizeHandle.addEventListener('dblclick', function () {
+            restoreDefaultSidebarWidth();
+            sidebarResizeHandle.focus();
+        });
+
+        sidebarResizeHandle.addEventListener('keydown', function (event) {
+            var width = Number(
+                sidebarResizeHandle.getAttribute('aria-valuenow')
+            ) || 300;
+            var nextWidth;
+
+            if (event.key === 'ArrowRight') nextWidth = width + 16;
+            else if (event.key === 'ArrowLeft') nextWidth = width - 16;
+            else if (event.key === 'Home') {
+                event.preventDefault();
+                restoreDefaultSidebarWidth();
+                return;
+            }
+            else if (event.key === 'End') nextWidth = getSidebarWidthBounds().max;
+            else return;
+
+            event.preventDefault();
+            setSidebarWidth(nextWidth, true);
+        });
+
+        window.addEventListener('resize', function () {
+            setSidebarWidth(
+                Number(sidebarResizeHandle.getAttribute('aria-valuenow')) || 300,
+                false
+            );
+        });
+
+    }
+
     var scrollStorageKey = 'system-scroll-position';
 
     function salvarPosicaoDaPagina() {

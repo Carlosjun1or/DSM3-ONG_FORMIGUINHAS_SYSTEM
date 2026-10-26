@@ -1,7 +1,7 @@
 {% extends 'sistema/template-sistema.html' %}
 
 {% block titulo %}{% if modo == 'cadastro' %}Cadastro de equipe{% else %}Editar equipe{% endif %} | Sistema{% endblock %}
-{% block page_title %}{% if modo == 'cadastro' %}Cadastro de equipe{% else %}Editar equipe{% endif %}{% endblock %}
+{% block page_title %}{% if modo == 'cadastro' %}Cadastro de equipe{% else %}Edição de Equipe - {{ equipe.nome }}{% endif %}{% endblock %}
 
 {% block conteudo %}
 <section class="form-shell">

@@ -263,6 +263,37 @@ class PraiaViewsTests(TestCase):
         praia.refresh_from_db()
         self.assertEqual(praia.praia_ativa, 'ATIVA')
 
+    def test_edicao_exibe_breadcrumb_com_nome_da_praia(self):
+        praia = Praia.objects.create(
+            nome='Praia Central',
+            cidade='Santos',
+            latitude=-23.967,
+            longitude=-46.328,
+            praia_ativa='ATIVA',
+            descricao='Praia de teste',
+        )
+
+        response = self.client.get(
+            reverse('editar_praia', args=[praia.id_praia])
+        )
+
+        self.assertContains(response, 'href="/usuario/home/">Início</a>')
+        self.assertContains(response, 'href="/praia/praias/">Controle de Praias</a>')
+        self.assertContains(
+            response,
+            '<span aria-current="page">Edição de Praia - Praia Central</span>',
+        )
+
+    def test_cadastro_exibe_breadcrumb_hierarquico(self):
+        response = self.client.get(reverse('cadastrar_praia'))
+
+        self.assertContains(response, 'href="/usuario/home/">Início</a>')
+        self.assertContains(response, 'href="/praia/praias/">Controle de Praias</a>')
+        self.assertContains(
+            response,
+            '<span aria-current="page">Cadastro de Praia</span>',
+        )
+
     def test_formulario_rejeita_latitude_invalida(self):
         form = PraiaForm(data={
             'nome': 'Praia Central',

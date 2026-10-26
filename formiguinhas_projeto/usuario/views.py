@@ -1,11 +1,11 @@
 import logging
 from datetime import date, time as dt_time
 from decimal import Decimal
-from smtplib import SMTPException
+from smtplib import SMTPException, SMTPServerDisconnected
 
 from django.conf import settings
 from django.contrib import messages
-from django.core.mail import send_mail
+from django.core.mail import get_connection, send_mail
 from django.db import transaction
 from django.db.models import Prefetch, Q, Sum
 from django.shortcuts import render, redirect
@@ -36,6 +36,61 @@ from auditoria.services import registrar_evento, snapshot
 
 # Create your views here.
 logger = logging.getLogger(__name__)
+
+
+def _send_email(subject, message, recipient):
+    smtp_configurations = (
+        {},
+        {'port': 465, 'use_tls': False, 'use_ssl': True},
+    )
+    for attempt, smtp_configuration in enumerate(smtp_configurations):
+        connection = get_connection(
+            fail_silently=False,
+            **smtp_configuration,
+        )
+        try:
+            connection.open()
+        except SMTPServerDisconnected:
+            connection.close()
+            if attempt == 1:
+                raise
+            logger.warning(
+                'Servidor SMTP encerrou a conexão durante a autenticação '
+                'em STARTTLS; tentando SSL na porta 465.'
+            )
+            continue
+
+        try:
+            sent_count = send_mail(
+                subject=subject,
+                message=message,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[recipient],
+                fail_silently=False,
+                connection=connection,
+            )
+            if sent_count != 1:
+                raise SMTPException('O e-mail não foi aceito pelo backend SMTP.')
+            return
+        finally:
+            connection.close()
+
+
+def _send_account_credentials_email(request, volunteer, password):
+    login_url = request.build_absolute_uri(reverse('login'))
+    _send_email(
+        subject='Acesso ao sistema | Formiguinhas da Praia',
+        message=(
+            f'Olá, {volunteer.nome}.\n\n'
+            'Seu acesso ao sistema Formiguinhas da Praia foi criado.\n\n'
+            f'E-mail de acesso: {volunteer.email}\n'
+            f'Senha temporária: {password}\n\n'
+            f'Acesse o sistema: {login_url}\n\n'
+            'Após entrar pela primeira vez, acesse Perfil > Alterar senha '
+            'e troque esta senha por uma pessoal.\n'
+        ),
+        recipient=volunteer.email,
+    )
 
 
 def get_session_usuario(request):
@@ -710,8 +765,10 @@ def recuperar_senha_view(request):
         request.POST if request.method == 'POST' else None
     )
     email_enviado = False
+    email_cadastrado = False
+    email_consultado = request.method == 'POST' and form.is_valid()
 
-    if request.method == 'POST' and form.is_valid():
+    if email_consultado:
         email = form.cleaned_data['email']
         usuario = Usuario.objects.select_related('id_voluntario').filter(
             id_voluntario__email__iexact=email,
@@ -719,12 +776,13 @@ def recuperar_senha_view(request):
         ).first()
 
         if usuario:
+            email_cadastrado = True
             url_redefinicao = request.build_absolute_uri(reverse(
                 'redefinir_senha',
                 args=[usuario.id_usuario, password_reset_token.make_token(usuario)],
             ))
             try:
-                send_mail(
+                _send_email(
                     subject='Recuperação de senha | Formiguinhas da Praia',
                     message=(
                         f'Olá, {usuario.id_voluntario.nome}.\n\n'
@@ -733,9 +791,7 @@ def recuperar_senha_view(request):
                         f'{url_redefinicao}\n\n'
                         'Se você não solicitou esta alteração, ignore este e-mail.'
                     ),
-                    from_email=settings.DEFAULT_FROM_EMAIL,
-                    recipient_list=[usuario.id_voluntario.email],
-                    fail_silently=False,
+                    recipient=usuario.id_voluntario.email,
                 )
             except (OSError, SMTPException):
                 logger.exception('Falha ao enviar e-mail de recuperação de senha.')
@@ -745,12 +801,12 @@ def recuperar_senha_view(request):
                 )
             else:
                 email_enviado = True
-        else:
-            email_enviado = True
 
     return render(request, 'sistema/recuperar-senha.html', {
         'form': form,
         'email_enviado': email_enviado,
+        'email_cadastrado': email_cadastrado,
+        'email_consultado': email_consultado,
         'email_backend_console': (
             settings.EMAIL_BACKEND
             == 'django.core.mail.backends.console.EmailBackend'
@@ -844,23 +900,42 @@ def cadastro_usuario_view(request):
         form = UsuarioForm(request.POST)
         if form.is_valid():
             voluntario = form.cleaned_data['voluntario']
-            usuario = Usuario(
-                id_voluntario=voluntario,
-                tipo=form.cleaned_data['tipo'],
-                cadastrado_por=usuario_logado,
-                cadastrado_por_nome=usuario_logado.id_voluntario.nome,
-                cadastrado_por_tipo=usuario_logado.tipo,
-            )
-            usuario.set_password(form.cleaned_data['senha'])
-            usuario.save()
-            registrar_evento(
-                entidade='USUARIO',
-                instancia=usuario,
-                acao='CRIACAO',
-                usuario=usuario_logado,
-                resumo=f'Usuário de "{voluntario.nome}" cadastrado.',
-            )
-            return redirect('usuarios')
+            try:
+                with transaction.atomic():
+                    usuario = Usuario(
+                        id_voluntario=voluntario,
+                        tipo=form.cleaned_data['tipo'],
+                        cadastrado_por=usuario_logado,
+                        cadastrado_por_nome=usuario_logado.id_voluntario.nome,
+                        cadastrado_por_tipo=usuario_logado.tipo,
+                    )
+                    usuario.set_password(form.cleaned_data['senha'])
+                    usuario.save()
+                    registrar_evento(
+                        entidade='USUARIO',
+                        instancia=usuario,
+                        acao='CRIACAO',
+                        usuario=usuario_logado,
+                        resumo=f'Usuário de "{voluntario.nome}" cadastrado.',
+                    )
+                    _send_account_credentials_email(
+                        request,
+                        voluntario,
+                        form.cleaned_data['senha'],
+                    )
+            except (OSError, SMTPException):
+                logger.exception('Falha ao enviar credenciais de novo usuário.')
+                form.add_error(
+                    None,
+                    'Não foi possível enviar o e-mail de acesso; o cadastro não foi concluído. '
+                    'Tente novamente mais tarde.',
+                )
+            else:
+                messages.success(
+                    request,
+                    f'Usuário criado e e-mail de acesso enviado para {voluntario.email}.',
+                )
+                return redirect('usuarios')
     else:
         form = UsuarioForm()
 
@@ -878,22 +953,43 @@ def cadastro_view(request):
     if request.method == 'POST':
         form = CadastroForm(request.POST)
         if form.is_valid():
-            voluntario, novo_usuario = form.save(cadastrado_por=usuario_logado)
-            registrar_evento(
-                entidade='VOLUNTARIO',
-                instancia=voluntario,
-                acao='CRIACAO',
-                usuario=usuario_logado,
-                resumo=f'Voluntário "{voluntario.nome}" cadastrado com usuário.',
-            )
-            registrar_evento(
-                entidade='USUARIO',
-                instancia=novo_usuario,
-                acao='CRIACAO',
-                usuario=usuario_logado,
-                resumo=f'Usuário de "{voluntario.nome}" cadastrado.',
-            )
-            return redirect('usuarios')
+            try:
+                with transaction.atomic():
+                    voluntario, novo_usuario = form.save(
+                        cadastrado_por=usuario_logado
+                    )
+                    registrar_evento(
+                        entidade='VOLUNTARIO',
+                        instancia=voluntario,
+                        acao='CRIACAO',
+                        usuario=usuario_logado,
+                        resumo=f'Voluntário "{voluntario.nome}" cadastrado com usuário.',
+                    )
+                    registrar_evento(
+                        entidade='USUARIO',
+                        instancia=novo_usuario,
+                        acao='CRIACAO',
+                        usuario=usuario_logado,
+                        resumo=f'Usuário de "{voluntario.nome}" cadastrado.',
+                    )
+                    _send_account_credentials_email(
+                        request,
+                        voluntario,
+                        form.cleaned_data['senha'],
+                    )
+            except (OSError, SMTPException):
+                logger.exception('Falha ao enviar credenciais de novo usuário.')
+                form.add_error(
+                    None,
+                    'Não foi possível enviar o e-mail de acesso; o cadastro não foi concluído. '
+                    'Tente novamente mais tarde.',
+                )
+            else:
+                messages.success(
+                    request,
+                    f'Cadastro concluído e e-mail de acesso enviado para {voluntario.email}.',
+                )
+                return redirect('usuarios')
     else:
         form = CadastroForm()
 

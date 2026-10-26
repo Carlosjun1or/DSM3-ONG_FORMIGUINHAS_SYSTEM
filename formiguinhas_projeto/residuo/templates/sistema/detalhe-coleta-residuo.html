@@ -9,18 +9,22 @@
                 <p class="eyebrow">Coleta de resíduos · Registro #{{ coleta.id_coleta }}</p>
                 <h2>Detalhes da coleta</h2>
                 <p class="donation-detail-subtitle">
-                    {% if coleta.bag %}
+                    {% if coleta.origem == 'BAG' and coleta.bag %}
                     Coleta da bag <a class="table-link" href="{% url 'detalhe_bag' coleta.bag.id_bag %}">{{ coleta.bag.codigo }}</a>
                     · <a class="table-link" href="{% url 'detalhe_condominio' coleta.bag.condominio.id_condominio %}">{{ coleta.bag.condominio.nome }}</a>
-                    {% else %}
+                    {% elif coleta.origem == 'BAG' %}
+                    Coleta de bag sem vínculo
+                    {% elif coleta.acao_id and coleta.acao %}
                     Coleta da ação <a class="table-link" href="{% url 'acao_detalhe' coleta.acao.id_acao %}">{{ coleta.acao.get_tipo_display }} · {{ coleta.acao.data|date:'d/m/Y' }} · {{ coleta.acao.praia.nome }}</a>
+                    {% else %}
+                    Coleta de ação sem vínculo
                     {% endif %}
                 </p>
             </div>
             <div class="button-group donation-detail-actions">
-                {% if coleta.bag %}
+                {% if coleta.origem == 'BAG' and coleta.bag %}
                 <a href="{% url 'detalhe_bag' coleta.bag.id_bag %}" class="btn btn-outline">Voltar à bag</a>
-                {% else %}
+                {% elif coleta.origem == 'ACAO' and coleta.acao_id and coleta.acao %}
                 <a href="{% url 'acao_detalhe' coleta.acao.id_acao %}#residuos" class="btn btn-outline">Voltar à ação</a>
                 {% endif %}
                 <a href="{% url 'residuos' %}" class="btn btn-outline">Todos os resíduos</a>
