@@ -1,16 +1,11 @@
 """
-Migration que cria fisicamente as tabelas do app 'acao' no SQLite.
-
-Contexto: todos os models deste app têm managed=False desde a migration inicial,
-portanto o Django nunca as criou via migrate. Como o código ORM ainda precisa
-dessas tabelas (save, filter, get_object_or_404, etc.), elas são criadas aqui
-via RunSQL. O MongoDB Atlas continua sendo a fonte primária para leituras —
-o SQLite serve como backend de escrita/leitura relacional de apoio.
+Migration que cria fisicamente as tabelas do app 'acao'.
+Compatível com SQLite e PostgreSQL.
 """
 from django.db import migrations
 
-
-CREATE_ACAO = """
+SQLITE = {
+    'acao': """
 CREATE TABLE IF NOT EXISTS acao (
     id_acao       INTEGER PRIMARY KEY AUTOINCREMENT,
     tipo          VARCHAR(30)   NOT NULL,
@@ -29,29 +24,23 @@ CREATE TABLE IF NOT EXISTS acao (
     ultimo_editado_por_id  INTEGER,
     ultimo_editado_por_nome VARCHAR(150),
     ultimo_editado_por_tipo VARCHAR(20)
-);
-"""
-
-CREATE_ACAO_IMAGEM = """
+)""",
+    'acao_imagem': """
 CREATE TABLE IF NOT EXISTS acao_imagem (
     id_acao_imagem INTEGER PRIMARY KEY AUTOINCREMENT,
     acao_id        INTEGER  NOT NULL REFERENCES acao(id_acao) ON DELETE CASCADE,
     imagem         VARCHAR(100) NOT NULL,
     descricao      VARCHAR(255) NOT NULL DEFAULT '',
     dt_cadastro    DATETIME     NOT NULL
-);
-"""
-
-CREATE_ACAO_EQUIPE = """
+)""",
+    'acao_equipe': """
 CREATE TABLE IF NOT EXISTS acao_equipe (
     id_acao_equipe INTEGER PRIMARY KEY AUTOINCREMENT,
     acao_id        INTEGER NOT NULL REFERENCES acao(id_acao) ON DELETE CASCADE,
     equipe_id      INTEGER NOT NULL,
     UNIQUE (acao_id, equipe_id)
-);
-"""
-
-CREATE_ACAO_PARTICIPANTE = """
+)""",
+    'acao_participante': """
 CREATE TABLE IF NOT EXISTS acao_participante (
     id_acao_participante INTEGER PRIMARY KEY AUTOINCREMENT,
     acao_id        INTEGER  NOT NULL REFERENCES acao(id_acao) ON DELETE CASCADE,
@@ -62,10 +51,8 @@ CREATE TABLE IF NOT EXISTS acao_participante (
     dt_confirmacao DATETIME,
     dt_cadastro    DATETIME     NOT NULL,
     UNIQUE (acao_id, voluntario_id)
-);
-"""
-
-CREATE_ACAO_PARTICIPANTE_HISTORICO = """
+)""",
+    'acao_participante_historico': """
 CREATE TABLE IF NOT EXISTS acao_participante_historico (
     id_historico   INTEGER PRIMARY KEY AUTOINCREMENT,
     acao_id        INTEGER  NOT NULL REFERENCES acao(id_acao) ON DELETE CASCADE,
@@ -83,18 +70,105 @@ CREATE TABLE IF NOT EXISTS acao_participante_historico (
     restaurado_por_id INTEGER,
     restaurado_por_nome VARCHAR(150),
     restaurado_por_tipo VARCHAR(20)
-);
-"""
-
-CREATE_ACAO_RESPONSAVEL = """
+)""",
+    'acao_responsavel': """
 CREATE TABLE IF NOT EXISTS acao_responsavel (
     id_acao_responsavel INTEGER PRIMARY KEY AUTOINCREMENT,
     acao_id       INTEGER  NOT NULL REFERENCES acao(id_acao) ON DELETE CASCADE,
     voluntario_id INTEGER  NOT NULL,
     papel         VARCHAR(20) NOT NULL DEFAULT 'RESPONSAVEL',
     UNIQUE (acao_id, voluntario_id)
-);
-"""
+)""",
+}
+
+POSTGRES = {
+    'acao': """
+CREATE TABLE IF NOT EXISTS acao (
+    id_acao       SERIAL PRIMARY KEY,
+    tipo          VARCHAR(30)   NOT NULL,
+    data          DATE          NOT NULL,
+    horario       TIME,
+    local         VARCHAR(255)  NOT NULL DEFAULT '',
+    descricao     TEXT          NOT NULL DEFAULT '',
+    status        VARCHAR(20)   NOT NULL DEFAULT 'PLANEJADA',
+    imagens       JSONB         NOT NULL DEFAULT '[]',
+    praia_id      INTEGER,
+    dt_cadastro   TIMESTAMPTZ   NOT NULL DEFAULT NOW(),
+    cadastrado_por_id      INTEGER,
+    cadastrado_por_nome    VARCHAR(150),
+    cadastrado_por_tipo    VARCHAR(20),
+    dt_ultima_edicao       TIMESTAMPTZ,
+    ultimo_editado_por_id  INTEGER,
+    ultimo_editado_por_nome VARCHAR(150),
+    ultimo_editado_por_tipo VARCHAR(20)
+)""",
+    'acao_imagem': """
+CREATE TABLE IF NOT EXISTS acao_imagem (
+    id_acao_imagem SERIAL PRIMARY KEY,
+    acao_id        INTEGER     NOT NULL REFERENCES acao(id_acao) ON DELETE CASCADE,
+    imagem         VARCHAR(255) NOT NULL,
+    descricao      VARCHAR(255) NOT NULL DEFAULT '',
+    dt_cadastro    TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+)""",
+    'acao_equipe': """
+CREATE TABLE IF NOT EXISTS acao_equipe (
+    id_acao_equipe SERIAL PRIMARY KEY,
+    acao_id        INTEGER NOT NULL REFERENCES acao(id_acao) ON DELETE CASCADE,
+    equipe_id      INTEGER NOT NULL,
+    UNIQUE (acao_id, equipe_id)
+)""",
+    'acao_participante': """
+CREATE TABLE IF NOT EXISTS acao_participante (
+    id_acao_participante SERIAL PRIMARY KEY,
+    acao_id        INTEGER     NOT NULL REFERENCES acao(id_acao) ON DELETE CASCADE,
+    voluntario_id  INTEGER     NOT NULL,
+    status         VARCHAR(20) NOT NULL DEFAULT 'PENDENTE',
+    compareceu     BOOLEAN     NOT NULL DEFAULT FALSE,
+    observacao     TEXT        NOT NULL DEFAULT '',
+    dt_confirmacao TIMESTAMPTZ,
+    dt_cadastro    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    UNIQUE (acao_id, voluntario_id)
+)""",
+    'acao_participante_historico': """
+CREATE TABLE IF NOT EXISTS acao_participante_historico (
+    id_historico    SERIAL PRIMARY KEY,
+    acao_id         INTEGER     NOT NULL REFERENCES acao(id_acao) ON DELETE CASCADE,
+    voluntario_id   INTEGER     NOT NULL,
+    movido_por_id   INTEGER,
+    status          VARCHAR(20) NOT NULL,
+    compareceu      BOOLEAN     NOT NULL DEFAULT FALSE,
+    observacao      TEXT        NOT NULL DEFAULT '',
+    dt_cadastro     TIMESTAMPTZ NOT NULL,
+    dt_movimentacao TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    movido_por_nome VARCHAR(150),
+    movido_por_tipo VARCHAR(20),
+    restaurado      BOOLEAN     NOT NULL DEFAULT FALSE,
+    restaurado_em   TIMESTAMPTZ,
+    restaurado_por_id   INTEGER,
+    restaurado_por_nome VARCHAR(150),
+    restaurado_por_tipo VARCHAR(20)
+)""",
+    'acao_responsavel': """
+CREATE TABLE IF NOT EXISTS acao_responsavel (
+    id_acao_responsavel SERIAL PRIMARY KEY,
+    acao_id       INTEGER     NOT NULL REFERENCES acao(id_acao) ON DELETE CASCADE,
+    voluntario_id INTEGER     NOT NULL,
+    papel         VARCHAR(20) NOT NULL DEFAULT 'RESPONSAVEL',
+    UNIQUE (acao_id, voluntario_id)
+)""",
+}
+
+
+def _criar(apps, schema_editor):
+    sqls = POSTGRES if schema_editor.connection.vendor == 'postgresql' else SQLITE
+    for sql in sqls.values():
+        schema_editor.execute(sql)
+
+
+def _reverter(apps, schema_editor):
+    for t in reversed(['acao_responsavel', 'acao_participante_historico',
+                       'acao_participante', 'acao_equipe', 'acao_imagem', 'acao']):
+        schema_editor.execute(f'DROP TABLE IF EXISTS {t}')
 
 
 class Migration(migrations.Migration):
@@ -107,10 +181,5 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunSQL(CREATE_ACAO,                      reverse_sql='DROP TABLE IF EXISTS acao;'),
-        migrations.RunSQL(CREATE_ACAO_IMAGEM,               reverse_sql='DROP TABLE IF EXISTS acao_imagem;'),
-        migrations.RunSQL(CREATE_ACAO_EQUIPE,               reverse_sql='DROP TABLE IF EXISTS acao_equipe;'),
-        migrations.RunSQL(CREATE_ACAO_PARTICIPANTE,         reverse_sql='DROP TABLE IF EXISTS acao_participante;'),
-        migrations.RunSQL(CREATE_ACAO_PARTICIPANTE_HISTORICO, reverse_sql='DROP TABLE IF EXISTS acao_participante_historico;'),
-        migrations.RunSQL(CREATE_ACAO_RESPONSAVEL,          reverse_sql='DROP TABLE IF EXISTS acao_responsavel;'),
+        migrations.RunPython(_criar, reverse_code=_reverter),
     ]
