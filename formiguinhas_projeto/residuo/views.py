@@ -9,7 +9,6 @@ from usuario.views import get_session_usuario, render_acesso_bloqueado
 from usuario.paginacao import paginar_queryset
 
 from .forms import (
-    ColetaResiduoForm,
     DestinacaoResiduoForm,
     ItemColetaResiduoForm,
     ResiduoColetadoForm,
@@ -98,49 +97,6 @@ def residuos_view(request):
     })
 
 
-@transaction.atomic
-def registrar_coleta_bag_view(request, bag_id):
-    usuario = usuario_admin(request)
-    if usuario is None:
-        return redirect('login')
-    if usuario is False:
-        messages.error(request, 'Somente administradores podem registrar coletas.')
-        return render_acesso_bloqueado(request)
-
-    from condominio.models import Bag
-    bag = get_object_or_404(Bag, id_bag=bag_id)
-    coleta_form = ColetaResiduoForm(request.POST or None)
-    item_form = ItemColetaResiduoForm(request.POST or None)
-    if request.method == 'POST' and coleta_form.is_valid() and item_form.is_valid():
-        coleta = coleta_form.save(commit=False)
-        coleta.origem = 'BAG'
-        coleta.bag = bag
-        coleta.registrado_por = usuario
-        coleta.registrado_por_nome = usuario.id_voluntario.nome
-        coleta.registrado_por_tipo = usuario.tipo
-        coleta.save()
-        item = item_form.save(commit=False)
-        item.coleta = coleta
-        item.registrado_por = usuario
-        item.registrado_por_nome = usuario.id_voluntario.nome
-        item.registrado_por_tipo = usuario.tipo
-        item.save()
-        registrar_evento(
-            entidade='COLETA_RESIDUO', instancia=coleta, acao='CRIACAO',
-            usuario=usuario, resumo=f'Coleta #{coleta.pk} registrada para a bag {bag.codigo}.',
-        )
-        registrar_evento(
-            entidade='ITEM_COLETA_RESIDUO', instancia=item, acao='CRIACAO',
-            usuario=usuario, resumo=f'Item de resíduo #{item.pk} registrado na coleta #{coleta.pk}.',
-        )
-        messages.success(request, 'Coleta da bag registrada com sucesso.')
-        return redirect('detalhe_coleta_residuo', coleta_id=coleta.pk)
-    return render(request, 'sistema/cadastro-coleta-residuo.html', {
-        'usuario': usuario, 'bag': bag, 'coleta_form': coleta_form,
-        'item_form': item_form, 'origem_label': f'Bag {bag.codigo}',
-    })
-
-
 def detalhe_coleta_residuo_view(request, coleta_id):
     usuario = get_session_usuario(request)
     if not usuario:
@@ -198,7 +154,10 @@ def registrar_residuo_view(request, acao_id):
         raise Http404('Ação não encontrada.')
     acao = MongoAcaoProxy(doc)
     if request.method == 'POST':
-        form = ResiduoColetadoForm(request.POST)
+        form = ResiduoColetadoForm(
+            request.POST,
+            require_type_and_category=True,
+        )
         if form.is_valid():
             residuo = form.save(commit=False)
             residuo.acao = acao

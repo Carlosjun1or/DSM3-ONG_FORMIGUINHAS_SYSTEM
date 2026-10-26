@@ -18,5 +18,4 @@ urlpatterns = [
         views.atualizar_status_bag_view,
         name='atualizar_status_bag',
     ),
-    path('bags/<int:bag_id>/movimentar/', views.cadastrar_movimentacao_view, name='cadastrar_movimentacao_bag'),
 ]

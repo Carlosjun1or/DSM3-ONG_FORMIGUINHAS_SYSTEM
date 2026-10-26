@@ -34,6 +34,15 @@
             <input id="id_busca" name="busca" type="search" value="{{ busca }}" class="form-control" placeholder="Código da bag ou condomínio">
         </div>
         <div class="form-group">
+            <label for="id_condominio">Condomínio</label>
+            <select id="id_condominio" name="condominio" class="form-control">
+                <option value="">Todos os condomínios</option>
+                {% for condominio in condominios_filtro %}
+                <option value="{{ condominio.id_condominio }}" {% if condominio_selecionado == condominio.id_condominio|stringformat:"s" %}selected{% endif %}>{{ condominio.nome }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="form-group">
             <label for="id_status">Status da bag</label>
             <select id="id_status" name="status" class="form-control">
                 <option value="">Todos os status</option>
@@ -42,7 +51,7 @@
         </div>
         <div class="filter-actions">
             <button type="submit" class="btn btn-primary">Aplicar filtros</button>
-            {% if busca or status_selecionado %}<a href="{% url 'bags' %}" class="form-link">Limpar filtros</a>{% endif %}
+            {% if busca or status_selecionado or condominio_selecionado %}<a href="{% url 'bags' %}" class="form-link">Limpar filtros</a>{% endif %}
         </div>
     </form>
 
@@ -52,8 +61,8 @@
             <article class="record-card record-card--line">
                 <div class="record-card-heading">
                     <div>
-                        <span class="record-card-eyebrow">Bag grande · {{ bag.codigo }}</span>
-                        <h3><a href="{% url 'detalhe_bag' bag.id_bag %}">{{ bag.condominio.nome }}</a></h3>
+                        <span class="record-card-eyebrow">{{ bag.condominio.nome }}</span>
+                        <h3><a href="{% url 'detalhe_bag' bag.id_bag %}">Bag - {{ bag.codigo }}</a></h3>
                     </div>
                     <div class="record-card-control">
                         {% if usuario.tipo == 'ADMIN' %}
@@ -61,6 +70,7 @@
                             {% csrf_token %}
                             <input type="hidden" name="busca" value="{{ busca }}">
                             <input type="hidden" name="filtro_status" value="{{ status_selecionado }}">
+                            <input type="hidden" name="filtro_condominio" value="{{ condominio_selecionado }}">
                             <select name="status" class="status-select bag-status-select status-{{ bag.status|lower }}" aria-label="Status da bag {{ bag.codigo }}" onchange="this.form.submit()">
                                 {% for valor, rotulo in status_choices %}
                                 <option value="{{ valor }}" {% if bag.status == valor %}selected{% endif %}>{{ rotulo }}</option>
@@ -104,7 +114,7 @@
                         {% if bag.ultimo_editado_por_nome %}<p>Editada por {{ bag.ultimo_editado_por_nome }} em {{ bag.dt_ultima_edicao|date:'d/m/Y H:i' }}</p>{% elif bag.ultimo_editado_por %}<p>Editada por {{ bag.ultimo_editado_por.id_voluntario.nome }} em {{ bag.dt_ultima_edicao|date:'d/m/Y H:i' }}</p>{% else %}<p>Sem edições</p>{% endif %}
                     </div>
                 </details>
-                {% if usuario.tipo == 'ADMIN' %}<div class="record-card-actions"><a class="btn btn-outline btn-small" href="{% url 'cadastrar_movimentacao_bag' bag.id_bag %}">Movimentar</a></div>{% endif %}
+                {% if usuario.tipo == 'ADMIN' %}<div class="record-card-actions"><a class="btn btn-outline btn-small" href="{% url 'detalhe_bag' bag.id_bag %}#movimentacoes">Movimentar</a></div>{% endif %}
             </article>
             {% endfor %}
     </div>

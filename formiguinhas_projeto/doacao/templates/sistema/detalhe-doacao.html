@@ -1,7 +1,7 @@
 {% extends 'sistema/template-sistema.html' %}
 {% load static %}
 
-{% block page_title %}Detalhes da doação{% endblock %}
+{% block page_title %}Detalhes da Doação {{ doacao.get_tipo_display }}{% if doacao.doador %} - {{ doacao.doador.nome }}{% endif %}{% endblock %}
 {% block estilos %}<link rel="stylesheet" href="{% static 'estoque/estoque.css' %}?v=2">{% endblock %}
 
 {% block conteudo %}

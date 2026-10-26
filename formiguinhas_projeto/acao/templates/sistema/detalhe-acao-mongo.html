@@ -1,0 +1,68 @@
+{% extends 'sistema/template-sistema.html' %}
+
+{% block titulo %}Participantes da ação | Sistema{% endblock %}
+{% block page_title %}{% if acao.tipo == 'COLETA_VOLUNTARIA' %}Detalhes da Coleta Voluntária - {{ acao.praia.nome }}{% else %}Detalhes do Mutirão - {{ acao.praia.nome }}{% endif %}{% endblock %}
+
+{% block conteudo %}
+<section class="team-detail volunteer-control action-detail-hero">
+    <div class="team-hero">
+        <div>
+            <span class="team-eyebrow">Ação em modo de leitura</span>
+            <h2>{{ acao.get_tipo_display }}</h2>
+            <p>{{ acao.praia.nome }} · {{ acao.praia.cidade }}</p>
+            <p>{{ acao.descricao|default:'Esta ação ainda não possui uma descrição detalhada.' }}</p>
+        </div>
+        <div class="team-hero-side">
+            <span class="status-select status-{{ acao.status|lower }}">{{ acao.get_status_display }}</span>
+            <small>{{ participantes|length }} participante{{ participantes|length|pluralize }}</small>
+        </div>
+    </div>
+    <p class="form-subtitle">Esta ação está disponível apenas no MongoDB. Os participantes podem ser consultados, mas não alterados por esta tela.</p>
+    <div class="table-actions">
+        <a href="{% url 'acoes' %}" class="btn btn-outline">Voltar às ações</a>
+    </div>
+</section>
+
+<section class="card volunteer-control action-detail-section action-participants-section" id="participantes">
+    <div class="section-heading">
+        <div>
+            <h2>Participantes <span class="section-count">{{ participantes|length }}</span></h2>
+        </div>
+    </div>
+    {% if participantes %}
+    <div class="table-wrap action-participants-list">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Voluntário</th>
+                    <th>Status</th>
+                    <th>Compareceu</th>
+                    <th>Confirmação</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for participante in participantes %}
+                <tr>
+                    <td>
+                        {% if participante.voluntario_id %}
+                        <a class="table-link" href="{% url 'voluntarios' %}?voluntario={{ participante.voluntario_id }}"><strong>{{ participante.nome|default:'Voluntário' }}</strong></a>
+                        {% else %}
+                        <strong>{{ participante.nome|default:'Voluntário' }}</strong>
+                        {% endif %}
+                        {% if participante.email %}<br><small>{{ participante.email }}</small>{% endif %}
+                    </td>
+                    <td>{{ participante.status_display|default:participante.status|default:'-' }}</td>
+                    <td>{% if participante.compareceu %}Sim{% else %}Não{% endif %}</td>
+                    <td>{{ participante.dt_confirmacao|default:'-' }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state table-empty">
+        <h3>Nenhum participante vinculado</h3>
+    </div>
+    {% endif %}
+</section>
+{% endblock %}

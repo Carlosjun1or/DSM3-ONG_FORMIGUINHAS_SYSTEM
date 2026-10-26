@@ -60,6 +60,15 @@ class RelatoriosTestCase(TestCase):
 
 
 class AcessoRelatoriosTests(RelatoriosTestCase):
+    def test_relatorios_exibem_breadcrumb_central_de_relatorios(self):
+        resposta = self.client.get(reverse('relatorios'))
+
+        self.assertContains(resposta, 'href="/usuario/home/">Início</a>')
+        self.assertContains(
+            resposta,
+            '<span aria-current="page">Central de Relatórios</span>',
+        )
+
     def test_redireciona_usuario_sem_sessao(self):
         self.client.logout()
         sessao = self.client.session

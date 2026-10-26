@@ -2,8 +2,9 @@ from datetime import date, time, timedelta
 from decimal import Decimal
 import os
 from pathlib import Path
+from smtplib import SMTPServerDisconnected
 from tempfile import TemporaryDirectory
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from django.core import mail
 from django.db.models import Sum
@@ -190,9 +191,37 @@ class LoginPageTests(TestCase):
         self.assertNotContains(resposta, 'Painel administrativo')
         self.assertNotContains(resposta, '> Dashboard <')
 
+    def test_login_valido_cria_sessao_e_redireciona_para_home(self):
+        voluntario = Voluntario.objects.create(
+            nome='Voluntário de teste',
+            dt_nascimento=date(1990, 1, 1),
+            endereco='Rua de teste',
+            telefone='11999999999',
+            email='login@teste.org',
+        )
+        usuario = Usuario(
+            id_voluntario=voluntario,
+            tipo='ADMIN',
+            senha='',
+        )
+        usuario.set_password('senha-segura')
+        usuario.save()
 
+        resposta = self.client.post(reverse('login'), {
+            'email': voluntario.email,
+            'senha': 'senha-segura',
+        })
+
+        self.assertRedirects(resposta, reverse('home'))
+        self.assertEqual(self.client.session['usuario_id'], usuario.id_usuario)
+        self.assertEqual(self.client.session['usuario_nome'], voluntario.nome)
+        self.assertEqual(self.client.session['usuario_tipo'], usuario.tipo)
+
+
+@override_settings(EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend')
 class PermissoesStatusVoluntarioTests(TestCase):
     def setUp(self):
+        mail.outbox.clear()
         self.coordenador_voluntario = Voluntario.objects.create(
             nome='Coordenador',
             dt_nascimento=date(1990, 1, 1),
@@ -216,6 +245,13 @@ class PermissoesStatusVoluntarioTests(TestCase):
         session = self.client.session
         session['usuario_id'] = self.coordenador.id_usuario
         session['usuario_tipo'] = self.coordenador.tipo
+        session.save()
+
+    def autenticar_como_admin(self):
+        self.coordenador.tipo = 'ADMIN'
+        self.coordenador.save(update_fields=['tipo'])
+        session = self.client.session
+        session['usuario_tipo'] = 'ADMIN'
         session.save()
 
     def test_coordenador_nao_altera_status_pelo_endpoint(self):
@@ -261,6 +297,10 @@ class PermissoesStatusVoluntarioTests(TestCase):
         resposta = self.client.get(reverse('voluntarios'))
 
         self.assertContains(resposta, 'DA PRAIA')
+        self.assertContains(
+            resposta,
+            'href="/usuario/home/" class="sidebar-brand" aria-label="Ir para a página inicial do sistema"',
+        )
         self.assertContains(resposta, 'href="/usuario/voluntarios/" class="sidebar-link active"')
         self.assertContains(
             resposta,
@@ -271,14 +311,19 @@ class PermissoesStatusVoluntarioTests(TestCase):
         self.assertContains(resposta, 'aria-controls="system-sidebar"')
         self.assertContains(resposta, 'class="sidebar-backdrop"')
         self.assertContains(resposta, 'class="sidebar-link logout-link"')
+        self.assertContains(resposta, 'class="sidebar-footer"')
         self.assertContains(resposta, 'sidebar-icons.svg?v=6#logout')
+        self.assertLess(
+            resposta.content.index(b'</nav>'),
+            resposta.content.index(b'<div class="sidebar-footer">'),
+        )
         self.assertContains(resposta, 'href="/usuario/home/">Início</a>')
         self.assertContains(
             resposta,
             '<span aria-current="page">Controle de Voluntários</span>',
         )
         self.assertContains(resposta, 'href="/comunicado/central/" class="notification-link"'        )
-        self.assertContains(resposta, 'sidebar-icons.svg?v=4#topbar-bell')
+        self.assertContains(resposta, 'sidebar-icons.svg?v=5#topbar-bell')
         self.assertContains(resposta, 'class="topbar-user" href="/usuario/perfil/"')
         self.assertContains(resposta, '<span class="topbar-user-initial" aria-hidden="true">V</span>')
         self.assertLess(
@@ -288,6 +333,163 @@ class PermissoesStatusVoluntarioTests(TestCase):
         self.assertContains(resposta, '<span>Resíduos</span>')
         self.assertNotContains(resposta, 'href="/usuario/usuarios/"')
         self.assertNotContains(resposta, 'href="/auditoria/"')
+
+    def test_cadastro_voluntario_exibe_breadcrumb_hierarquico(self):
+        resposta = self.client.get(reverse('cadastro_voluntario'))
+
+        self.assertContains(resposta, 'href="/usuario/home/">Início</a>')
+        self.assertContains(
+            resposta,
+            'href="/usuario/voluntarios/">Controle de Voluntários</a>',
+        )
+        self.assertContains(
+            resposta,
+            '<span aria-current="page">Cadastro de voluntário</span>',
+        )
+
+    def test_edicao_voluntario_exibe_breadcrumb_com_nome(self):
+        resposta = self.client.get(
+            reverse('editar_voluntario', args=[self.voluntario.id_voluntario])
+        )
+
+        self.assertContains(resposta, 'href="/usuario/home/">Início</a>')
+        self.assertContains(
+            resposta,
+            'href="/usuario/voluntarios/">Controle de Voluntários</a>',
+        )
+        self.assertContains(
+            resposta,
+            '<span aria-current="page">Edição de Voluntário - Voluntário</span>',
+        )
+
+    def test_edicao_usuario_exibe_breadcrumb_com_nome(self):
+        self.autenticar_como_admin()
+        usuario_editado = Usuario.objects.create(
+            id_voluntario=self.voluntario,
+            tipo='COORDENADOR',
+            senha='senha',
+        )
+
+        resposta = self.client.get(
+            reverse('editar_usuario', args=[usuario_editado.id_usuario])
+        )
+
+        self.assertContains(resposta, 'href="/usuario/home/">Início</a>')
+        self.assertContains(
+            resposta,
+            'href="/usuario/usuarios/">Controle de Usuários</a>',
+        )
+        self.assertContains(
+            resposta,
+            '<span aria-current="page">Edição de Usuário - Voluntário</span>',
+        )
+
+    def test_cadastro_completo_exibe_breadcrumb_hierarquico(self):
+        self.autenticar_como_admin()
+
+        resposta = self.client.get(reverse('cadastro'))
+
+        self.assertContains(resposta, 'href="/usuario/home/">Início</a>')
+        self.assertContains(
+            resposta,
+            'href="/usuario/usuarios/">Controle de Usuários</a>',
+        )
+        self.assertContains(
+            resposta,
+            '<span aria-current="page">Cadastro completo</span>',
+        )
+
+    def test_cadastro_usuario_exibe_breadcrumb_hierarquico(self):
+        self.autenticar_como_admin()
+
+        resposta = self.client.get(reverse('cadastro_usuario'))
+
+        self.assertContains(resposta, 'href="/usuario/home/">Início</a>')
+        self.assertContains(
+            resposta,
+            'href="/usuario/usuarios/">Controle de Usuários</a>',
+        )
+        self.assertContains(
+            resposta,
+            '<span aria-current="page">Cadastro de usuário</span>',
+        )
+
+    def test_cadastro_usuario_envia_credenciais_por_email(self):
+        self.autenticar_como_admin()
+        senha = 'SenhaInicialSegura2026!'
+
+        resposta = self.client.post(
+            reverse('cadastro_usuario'),
+            {
+                'voluntario': self.voluntario.pk,
+                'tipo': 'COORDENADOR',
+                'senha': senha,
+                'confirmar_senha': senha,
+            },
+            follow=True,
+        )
+
+        usuario = Usuario.objects.get(id_voluntario=self.voluntario)
+        self.assertTrue(usuario.check_password(senha))
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(mail.outbox[0].to, [self.voluntario.email])
+        self.assertIn(f'E-mail de acesso: {self.voluntario.email}', mail.outbox[0].body)
+        self.assertIn(f'Senha temporária: {senha}', mail.outbox[0].body)
+        self.assertIn('Perfil > Alterar senha', mail.outbox[0].body)
+        self.assertContains(resposta, 'e-mail de acesso enviado')
+
+    def test_cadastro_completo_envia_credenciais_por_email(self):
+        self.autenticar_como_admin()
+        senha = 'SenhaInicialSegura2026!'
+        email = 'novo-voluntario@teste.org'
+
+        resposta = self.client.post(
+            reverse('cadastro'),
+            {
+                'nome': 'Novo Voluntário',
+                'dt_nascimento': '01/01/1994',
+                'endereco': 'Rua Nova',
+                'telefone': '11977776666',
+                'email': email,
+                'tipo': 'COORDENADOR',
+                'senha': senha,
+                'confirmar_senha': senha,
+            },
+            follow=True,
+        )
+
+        voluntario = Voluntario.objects.get(email=email)
+        usuario = Usuario.objects.get(id_voluntario=voluntario)
+        self.assertTrue(usuario.check_password(senha))
+        self.assertFalse(usuario.primeiro_acesso_concluido)
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(mail.outbox[0].to, [email])
+        self.assertIn(f'Senha temporária: {senha}', mail.outbox[0].body)
+        self.assertIn('Perfil > Alterar senha', mail.outbox[0].body)
+        self.assertContains(resposta, 'e-mail de acesso enviado')
+
+    @patch('usuario.views.send_mail', side_effect=SMTPServerDisconnected('SMTP indisponível'))
+    def test_cadastro_usuario_e_cancelado_se_email_nao_puder_ser_enviado(
+        self,
+        send_mail_mock,
+    ):
+        self.autenticar_como_admin()
+        senha = 'SenhaInicialSegura2026!'
+
+        resposta = self.client.post(
+            reverse('cadastro_usuario'),
+            {
+                'voluntario': self.voluntario.pk,
+                'tipo': 'COORDENADOR',
+                'senha': senha,
+                'confirmar_senha': senha,
+            },
+        )
+
+        self.assertEqual(resposta.status_code, 200)
+        self.assertFalse(Usuario.objects.filter(id_voluntario=self.voluntario).exists())
+        self.assertContains(resposta, 'o cadastro não foi concluído')
+        send_mail_mock.assert_called_once()
 
     def test_perfil_usa_identidade_visual_e_preserva_acoes(self):
         resposta = self.client.get(reverse('perfil'))
@@ -377,7 +579,8 @@ class RecuperacaoSenhaTests(TestCase):
             {'email': self.voluntario.email},
         )
 
-        self.assertContains(resposta, 'Se o e-mail estiver cadastrado')
+        self.assertContains(resposta, 'Este e-mail está cadastrado.')
+        self.assertContains(resposta, 'Enviamos as instruções')
         self.assertEqual(len(mail.outbox), 1)
         token = password_reset_token.make_token(self.usuario)
         self.assertIn(
@@ -385,13 +588,68 @@ class RecuperacaoSenhaTests(TestCase):
             mail.outbox[0].body,
         )
 
+    @patch('usuario.views.send_mail')
+    @patch('usuario.views.get_connection')
+    def test_solicitacao_tenta_ssl_apos_desconexao_smtp_em_starttls(
+        self,
+        get_connection,
+        send_mail,
+    ):
+        primeira_conexao = Mock()
+        segunda_conexao = Mock()
+        primeira_conexao.open.side_effect = SMTPServerDisconnected(
+            'Connection unexpectedly closed'
+        )
+        get_connection.side_effect = [primeira_conexao, segunda_conexao]
+        send_mail.return_value = 1
+
+        resposta = self.client.post(
+            reverse('recuperar_senha'),
+            {'email': self.voluntario.email},
+        )
+
+        self.assertContains(resposta, 'Este e-mail está cadastrado.')
+        self.assertEqual(get_connection.call_count, 2)
+        primeira_conexao.open.assert_called_once()
+        segunda_conexao.open.assert_called_once()
+        self.assertEqual(
+            get_connection.call_args_list[1].kwargs,
+            {
+                'fail_silently': False,
+                'port': 465,
+                'use_tls': False,
+                'use_ssl': True,
+            },
+        )
+        send_mail.assert_called_once()
+        self.assertIs(send_mail.call_args.kwargs['connection'], segunda_conexao)
+
+    @patch(
+        'usuario.views.send_mail',
+        side_effect=SMTPServerDisconnected('Connection unexpectedly closed'),
+    )
+    def test_solicitacao_informa_conta_cadastrada_se_envio_falhar(self, send_mail):
+        resposta = self.client.post(
+            reverse('recuperar_senha'),
+            {'email': self.voluntario.email},
+        )
+
+        self.assertContains(resposta, 'Este e-mail está cadastrado, mas não foi possível enviar')
+        self.assertContains(resposta, 'class="auth-feedback auth-feedback--error" role="alert"')
+        send_mail.assert_called_once()
+
     def test_solicitacao_nao_revela_email_inexistente(self):
         resposta = self.client.post(
             reverse('recuperar_senha'),
             {'email': 'inexistente@teste.org'},
         )
 
-        self.assertContains(resposta, 'Se o e-mail estiver cadastrado')
+        self.assertContains(resposta, 'E-mail não cadastrado')
+        self.assertContains(
+            resposta,
+            'class="auth-feedback auth-feedback--info" role="status"',
+        )
+        self.assertContains(resposta, 'Nenhum e-mail foi enviado')
         self.assertEqual(len(mail.outbox), 0)
 
     @override_settings(
@@ -406,7 +664,7 @@ class RecuperacaoSenhaTests(TestCase):
 
         self.assertContains(
             resposta,
-            'o link aparecerá no terminal onde o servidor Django está rodando',
+            'Este e-mail está cadastrado. O link de redefinição aparecerá no terminal',
         )
 
     def test_link_redefine_senha_e_fica_invalido_apos_uso(self):
@@ -443,8 +701,27 @@ class RecuperacaoSenhaTests(TestCase):
             {'senha': 'password', 'confirmar_senha': 'password'},
         )
 
-        self.assertContains(resposta, 'class="auth-password-error" role="alert"')
+        self.assertContains(
+            resposta,
+            'class="auth-feedback auth-feedback--error" role="alert"',
+        )
         self.assertContains(resposta, 'muito comum')
+
+    def test_erro_de_confirmacao_usa_feedback_padrao(self):
+        token = password_reset_token.make_token(self.usuario)
+        resposta = self.client.post(
+            reverse('redefinir_senha', args=[self.usuario.id_usuario, token]),
+            {
+                'senha': 'Trilha!DoMar2026',
+                'confirmar_senha': 'Outra!Senha2026',
+            },
+        )
+
+        self.assertContains(
+            resposta,
+            'class="auth-feedback auth-feedback--error" role="alert"',
+        )
+        self.assertContains(resposta, 'As senhas não coincidem.')
 
     def test_redefinicao_rejeita_senha_comum_com_mensagem_de_validacao(self):
         token = password_reset_token.make_token(self.usuario)

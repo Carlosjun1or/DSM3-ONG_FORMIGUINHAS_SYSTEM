@@ -223,28 +223,9 @@ class ResiduoColetado(models.Model):
         if acao_val is not None:
             self.acao = acao_val
 
-    TIPO_CHOICES = [
-        ('PLASTICO', 'Plástico'),
-        ('PAPEL', 'Papel'),
-        ('VIDRO', 'Vidro'),
-        ('METAL', 'Metal'),
-        ('ORGANICO', 'Orgânico'),
-        ('ELETRONICO', 'Eletrônico'),
-        ('PERIGOSO', 'Perigoso'),
-        ('OUTRO', 'Outro'),
-    ]
-    CATEGORIA_CHOICES = [
-        ('RECICLAVEL', 'Reciclável'),
-        ('ORGANICO', 'Orgânico'),
-        ('REJEITO', 'Rejeito'),
-        ('PERIGOSO', 'Perigoso'),
-        ('OUTROS', 'Outros'),
-    ]
-    UNIDADE_CHOICES = [
-        ('KG', 'Quilograma (kg)'),
-        ('LITRO', 'Litro (L)'),
-        ('UNIDADE', 'Unidade'),
-    ]
+    TIPO_CHOICES = TIPO_RESIDUO_CHOICES
+    CATEGORIA_CHOICES = CATEGORIA_RESIDUO_CHOICES
+    UNIDADE_CHOICES = UNIDADE_RESIDUO_CHOICES
 
     id_residuo = models.AutoField(primary_key=True)
     acao_id = models.PositiveIntegerField(

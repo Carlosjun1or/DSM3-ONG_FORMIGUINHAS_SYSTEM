@@ -100,7 +100,7 @@ def global_auditoria(request):
         pagina, filtros_query = paginar_queryset(request, eventos, por_pagina=20)
         entidades_nomes = list(EventoAuditoria.ENTIDADE_LABELS.keys())
 
-    return render(request, 'sistema/auditorias.html', {
+    return render(request, 'auditoria/auditorias.html', {
         'usuario': usuario,
         'auditorias': pagina.object_list,
         'pagina': pagina,
