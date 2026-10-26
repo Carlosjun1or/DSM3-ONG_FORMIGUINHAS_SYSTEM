@@ -6,3 +6,5 @@ pymongo>=4.0
 dnspython>=2.0
 python-dotenv>=1.0
 certifi
+psycopg2-binary>=2.9,<3
+dj-database-url>=2.1,<3
