@@ -175,6 +175,31 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
+# ── Armazenamento de mídia no Amazon S3 ──────────────────────────────────────
+# Quando AWS_STORAGE_BUCKET_NAME estiver definido, arquivos de mídia (uploads)
+# são enviados direto para o S3 em vez do disco local.
+# Arquivos estáticos continuam servidos pelo whitenoise.
+_AWS_BUCKET = os.getenv('AWS_STORAGE_BUCKET_NAME', '')
+if _AWS_BUCKET:
+    AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID', '')
+    AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY', '')
+    AWS_STORAGE_BUCKET_NAME = _AWS_BUCKET
+    AWS_S3_REGION_NAME = os.getenv('AWS_S3_REGION_NAME', 'sa-east-1')
+    AWS_S3_FILE_OVERWRITE = False
+    AWS_DEFAULT_ACL = 'public-read'
+    AWS_QUERYSTRING_AUTH = False
+    MEDIA_URL = f'https://{_AWS_BUCKET}.s3.amazonaws.com/'
+
+    # Django 4.2+ usa STORAGES em vez de DEFAULT_FILE_STORAGE
+    STORAGES = {
+        'default': {
+            'BACKEND': 'storages.backends.s3boto3.S3Boto3Storage',
+        },
+        'staticfiles': {
+            'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage',
+        },
+    }
+
 
 # E-mail de recuperação de senha. Um arquivo .env local pode manter a
 # configuracao SMTP entre execucoes sem incluir credenciais no repositorio.

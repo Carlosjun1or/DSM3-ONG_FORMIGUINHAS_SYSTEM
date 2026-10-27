@@ -188,6 +188,11 @@ def condominios_view(request):
         mongo_stats = obter_metricas_condominios_mongo()
         filtros_mql = {'busca': busca, 'status': status}
         docs, total_docs = consultar_condominios_mongo(filtros_mql, pagina=1, por_pagina=1000)
+
+        # Filtra apenas condomínios que existem no PostgreSQL para evitar 404 no detalhe
+        ids_no_pg = set(Condominio.objects.values_list('id_condominio', flat=True))
+        docs = [d for d in docs if d.get('id_sql') in ids_no_pg]
+
         lista_adaptada = [MongoCondominioAdapter(d) for d in docs]
         pagina, filtros_query = paginar_queryset(request, lista_adaptada)
 

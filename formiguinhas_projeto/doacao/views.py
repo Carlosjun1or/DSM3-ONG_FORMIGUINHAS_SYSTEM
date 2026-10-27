@@ -495,12 +495,21 @@ def doadores_view(request):
         )
     doadores = doadores.order_by('-dt_cadastro', '-id_doador')
     pagina, filtros_query = paginar_queryset(request, doadores)
+
+    # Métricas para os cards
+    total_doadores = Doador.objects.count()
+    total_ativos = Doador.objects.filter(ativo=True).count()
+
     return render(request, 'sistema/doadores.html', {
         'usuario': usuario,
         'doadores': pagina.object_list,
         'pagina': pagina,
         'filtros_query': filtros_query,
         'busca': busca,
+        'doador': {
+            'total_doadores': total_doadores,
+            'total_ativos': total_ativos,
+        },
     })
 
 
