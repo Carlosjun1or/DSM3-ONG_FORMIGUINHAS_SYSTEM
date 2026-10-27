@@ -1,99 +1,105 @@
 {% extends 'sistema/template-sistema.html' %}
-
+{% load static %}
 {% block page_title %}Controle de Doadores{% endblock %}
+{% block estilos %}<link rel="stylesheet" href="{% static 'doacao/doacao.css' %}?v=1">{% endblock %}
 
 {% block conteudo %}
 <section class="card-grid volunteer-metrics">
     <article class="card">
-        <h3>Total de Doadores</h3>
+        <h3>Total de doadores</h3>
         <div class="metric">{{ doador.total_doadores }}</div>
     </article>
     <article class="card">
-        <h3>Doadores ativos</h3>
+        <h3>Ativos</h3>
         <div class="metric">{{ doador.total_ativos }}</div>
     </article>
 </section>
-<section class="page-section donation-dashboard donor-dashboard">
 
+<section class="card volunteer-control system-list">
     <div class="section-heading">
         <div>
-            <h2>Doadores</h2>
-            <p class="form-subtitle donation-page-guidance">Consulte os cadastros e pesquise por nome, documento ou e-mail. Doadores inativos continuam no histórico, mas não podem ser vinculados a novas doações.</p>
+            <h2>Doadores cadastrados</h2>
+            <p class="form-subtitle">Consulte os cadastros e pesquise por nome, documento ou e-mail.</p>
         </div>
         {% if usuario.tipo == 'ADMIN' %}
-        <div class="button-group">
-            <a class="btn btn-primary" href="{% url 'cadastro_doador' %}">Novo doador</a>
+        <div class="table-actions">
             <a class="btn btn-outline" href="{% url 'cadastro_doacao' %}">Nova doação</a>
+            <a class="btn btn-primary" href="{% url 'cadastro_doador' %}">Novo doador</a>
         </div>
         {% endif %}
     </div>
 
-    <section class="card volunteer-control donor-records">
-        <form method="get" class="donor-search-form">
-            <div class="form-group">
-                <label for="busca-doador">Buscar doador</label>
-                <input id="busca-doador" name="busca" value="{{ busca }}" class="form-control" type="search" placeholder="Nome, CPF/CNPJ ou e-mail">
-            </div>
+    <form method="get" class="volunteer-filters">
+        <div class="form-group">
+            <label for="busca-doador">Buscar</label>
+            <input id="busca-doador" name="busca" value="{{ busca }}" class="form-control" type="search" placeholder="Nome, CPF/CNPJ ou e-mail">
+        </div>
+        <div class="filter-actions">
             <button class="btn btn-primary" type="submit">Filtrar</button>
-            {% if busca %}<a class="form-link donor-clear-filter" href="{% url 'doadores' %}">Limpar busca</a>{% endif %}
-        </form>
+            {% if busca %}<a class="form-link" href="{% url 'doadores' %}">Limpar</a>{% endif %}
+        </div>
+    </form>
 
-        {% if doadores %}
-        <div class="record-card-grid record-card-grid--line">
-            {% for doador in doadores %}
-            <article class="record-card record-card--line">
-                <div class="record-card-heading">
-                    <div>
-                        <span class="record-card-eyebrow">{{ doador.get_tipo_display }}{% if doador.documento %} · {{ doador.documento }}{% endif %}</span>
-                        <h3><a href="{% url 'doador_detalhe' doador.id_doador %}">{{ doador.nome }}</a></h3>
-                    </div>
-                    <div class="record-card-control">
-                            {% if usuario.tipo == 'ADMIN' %}
-                            <form method="post" action="{% url 'atualizar_status_doador' doador.id_doador %}" class="inline-status-form">
-                                {% csrf_token %}
-                                <select name="status" class="status-select {% if doador.ativo %}status-ativo{% else %}status-inativo{% endif %}" aria-label="Situação do doador {{ doador.nome }}" onchange="this.form.submit()">
-                                    <option value="ATIVO" {% if doador.ativo %}selected{% endif %}>Ativo</option>
-                                    <option value="INATIVO" {% if not doador.ativo %}selected{% endif %}>Inativo</option>
-                                </select>
-                            </form>
-                            {% else %}
-                            <span class="status-badge {% if doador.ativo %}status-ativo{% else %}status-inativo{% endif %}">{% if doador.ativo %}Ativo{% else %}Inativo{% endif %}</span>
-                            {% endif %}
-                    </div>
+    {% if doadores %}
+    <div class="volunteer-card-grid">
+        {% for doador in doadores %}
+        <article class="volunteer-card">
+
+            <div class="volunteer-card-heading">
+                <div class="volunteer-card-identity">
+                    <span class="volunteer-card-label">{{ doador.get_tipo_display }}{% if doador.documento %} · {{ doador.documento }}{% endif %}</span>
+                    <h3><a href="{% url 'doador_detalhe' doador.id_doador %}">{{ doador.nome }}</a></h3>
                 </div>
-                <dl class="record-card-fields">
-                    <div>
-                        <dt>E-mail</dt>
-                        <dd>{% if doador.email %}<a href="mailto:{{ doador.email }}">{{ doador.email }}</a>{% else %}<span class="muted">Não informado</span>{% endif %}</dd>
-                    </div>
-                    <div>
-                        <dt>Telefone</dt>
-                        <dd>{% if doador.telefone %}<a href="tel:{{ doador.telefone }}">{{ doador.telefone }}</a>{% else %}<span class="muted">Não informado</span>{% endif %}</dd>
-                    </div>
-                </dl>
-                <details class="record-card-audit">
-                    <summary>Histórico do cadastro</summary>
-                    <div>
-                        <p><strong>Cadastrado por {{ doador.cadastrado_por_nome|default:'Sistema' }}</strong></p>
-                        <p>{{ doador.dt_cadastro|date:"d/m/Y H:i" }}</p>
-                        {% if doador.dt_ultima_edicao %}<p>Editado por {{ doador.ultimo_editado_por_nome|default:'Usuário do sistema' }} · {{ doador.dt_ultima_edicao|date:"d/m/Y H:i" }}</p>{% else %}<p>Sem edições</p>{% endif %}
-                    </div>
-                </details>
-                <div class="record-card-actions">
-                    <a class="btn btn-outline btn-small" href="{% url 'doador_detalhe' doador.id_doador %}">Detalhes</a>
-                    {% if usuario.tipo == 'ADMIN' %}<a class="btn btn-outline btn-small" href="{% url 'editar_doador' doador.id_doador %}">Editar</a>{% endif %}
+                <div class="volunteer-card-status">
+                    {% if usuario.tipo == 'ADMIN' %}
+                    <form method="post" action="{% url 'atualizar_status_doador' doador.id_doador %}" class="inline-status-form">
+                        {% csrf_token %}
+                        <select name="status" class="status-select {% if doador.ativo %}status-ativo{% else %}status-inativo{% endif %}" aria-label="Situação do doador {{ doador.nome }}" onchange="this.form.submit()">
+                            <option value="ATIVO" {% if doador.ativo %}selected{% endif %}>Ativo</option>
+                            <option value="INATIVO" {% if not doador.ativo %}selected{% endif %}>Inativo</option>
+                        </select>
+                    </form>
+                    {% else %}
+                    <span class="status-badge {% if doador.ativo %}status-ativo{% else %}status-inativo{% endif %}">{% if doador.ativo %}Ativo{% else %}Inativo{% endif %}</span>
+                    {% endif %}
                 </div>
-            </article>
-            {% endfor %}
-        </div>
-        {% include 'sistema/includes/paginacao.html' %}
-        {% else %}
-        <div class="empty-state table-empty">
-            <h3>{% if busca %}Nenhum doador encontrado{% else %}Nenhum doador cadastrado{% endif %}</h3>
-            <p class="form-subtitle">{% if busca %}Tente outro nome, documento ou e-mail.{% else %}Cadastre um doador para associá-lo às doações.{% endif %}</p>
-            {% if not busca and usuario.tipo == 'ADMIN' %}<a class="btn btn-primary" href="{% url 'cadastro_doador' %}">Novo doador</a>{% endif %}
-        </div>
-        {% endif %}
-    </section>
+            </div>
+
+            <dl class="volunteer-card-details">
+                <div>
+                    <dt>E-mail</dt>
+                    <dd>{% if doador.email %}<a href="mailto:{{ doador.email }}">{{ doador.email }}</a>{% else %}<span class="muted">Não informado</span>{% endif %}</dd>
+                </div>
+                <div>
+                    <dt>Telefone</dt>
+                    <dd>{% if doador.telefone %}<a href="tel:{{ doador.telefone }}">{{ doador.telefone }}</a>{% else %}<span class="muted">Não informado</span>{% endif %}</dd>
+                </div>
+            </dl>
+
+            <details class="volunteer-card-audit">
+                <summary>Histórico do cadastro</summary>
+                <div>
+                    <p><strong>Cadastrado por {{ doador.cadastrado_por_nome|default:'Sistema' }}</strong></p>
+                    <p>{{ doador.dt_cadastro|date:"d/m/Y H:i" }}</p>
+                    {% if doador.dt_ultima_edicao %}<p>Editado por {{ doador.ultimo_editado_por_nome|default:'Usuário do sistema' }} · {{ doador.dt_ultima_edicao|date:"d/m/Y H:i" }}</p>{% else %}<p>Sem edições</p>{% endif %}
+                </div>
+            </details>
+
+            <div class="volunteer-card-actions">
+                <a class="btn btn-outline btn-small" href="{% url 'doador_detalhe' doador.id_doador %}">Detalhes</a>
+                {% if usuario.tipo == 'ADMIN' %}<a class="btn btn-outline btn-small" href="{% url 'editar_doador' doador.id_doador %}">Editar</a>{% endif %}
+            </div>
+
+        </article>
+        {% endfor %}
+    </div>
+    {% include 'sistema/includes/paginacao.html' %}
+    {% else %}
+    <div class="empty-state table-empty">
+        <h3>{% if busca %}Nenhum doador encontrado{% else %}Nenhum doador cadastrado{% endif %}</h3>
+        <p class="form-subtitle">{% if busca %}Tente outro nome, documento ou e-mail.{% else %}Cadastre um doador para associá-lo às doações.{% endif %}</p>
+        {% if not busca and usuario.tipo == 'ADMIN' %}<a class="btn btn-primary" href="{% url 'cadastro_doador' %}">Novo doador</a>{% endif %}
+    </div>
+    {% endif %}
 </section>
 {% endblock %}

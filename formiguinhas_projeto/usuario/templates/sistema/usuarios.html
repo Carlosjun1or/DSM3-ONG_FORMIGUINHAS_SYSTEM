@@ -44,27 +44,29 @@
     </form>
 
     {% if usuarios %}
-    <div class="record-card-grid record-card-grid--line">
+    <div class="volunteer-card-grid">
         {% for usuario_item in usuarios %}
-        <article class="record-card record-card--line">
-            <div class="record-card-heading">
-                <div>
-                    <span class="record-card-eyebrow">Usuário</span>
+        <article class="volunteer-card">
+
+            <div class="volunteer-card-heading">
+                <div class="volunteer-card-identity">
+                    <span class="volunteer-card-label">Usuário · {{ usuario_item.get_tipo_display }}</span>
                     <h3><a href="{% url 'voluntarios' %}?voluntario={{ usuario_item.id_voluntario.id_voluntario }}">{{ usuario_item.id_voluntario.nome }}</a></h3>
                 </div>
-                <div class="record-card-control">
-                        <form method="post" action="{% url 'atualizar_tipo_usuario' usuario_item.id_usuario %}" class="inline-status-form">
-                            {% csrf_token %}
-                            <select name="tipo" class="status-select type-select type-{{ usuario_item.tipo|lower }}" aria-label="Tipo de {{ usuario_item.id_voluntario.nome }}" onchange="this.form.submit()">
-                                {% for valor, rotulo in tipo_choices %}
-                                    <option value="{{ valor }}" {% if usuario_item.tipo == valor %}selected{% endif %}>{{ rotulo }}</option>
-                                {% endfor %}
-                            </select>
-                        </form>
+                <div class="volunteer-card-status">
+                    <form method="post" action="{% url 'atualizar_tipo_usuario' usuario_item.id_usuario %}" class="inline-status-form">
+                        {% csrf_token %}
+                        <select name="tipo" class="status-select type-select type-{{ usuario_item.tipo|lower }}" aria-label="Tipo de {{ usuario_item.id_voluntario.nome }}" onchange="this.form.submit()">
+                            {% for valor, rotulo in tipo_choices %}
+                                <option value="{{ valor }}" {% if usuario_item.tipo == valor %}selected{% endif %}>{{ rotulo }}</option>
+                            {% endfor %}
+                        </select>
+                    </form>
                 </div>
             </div>
-            <dl class="record-card-fields">
-                <div>
+
+            <dl class="volunteer-card-details">
+                <div class="volunteer-card-detail-wide">
                     <dt>E-mail</dt>
                     <dd><a href="mailto:{{ usuario_item.id_voluntario.email }}">{{ usuario_item.id_voluntario.email }}</a></dd>
                 </div>
@@ -73,27 +75,26 @@
                     <dd><a href="tel:{{ usuario_item.id_voluntario.telefone }}">{{ usuario_item.id_voluntario.telefone }}</a></dd>
                 </div>
                 <div>
-                    <dt>Praia do coordenador</dt>
-                    <dd>
-                        {% if usuario_item.tipo == 'COORDENADOR' %}
-                            {% if usuario_item.praias_coordenador %}
-                                {% for praia in usuario_item.praias_coordenador %}
-                                <a class="table-link" href="{% url 'praias' %}?praia={{ praia.id_praia }}">{{ praia.nome }}</a>{% if not forloop.last %}<br>{% endif %}
-                                {% endfor %}
-                            {% else %}
-                                <span class="field-hint">Sem equipe ativa</span>
-                            {% endif %}
-                        {% else %}
-                            <span class="field-hint">Não se aplica</span>
-                        {% endif %}
-                    </dd>
-                </div>
-                <div>
                     <dt>Último acesso</dt>
                     <dd>{% if usuario_item.data_ultimo_acesso %}{{ usuario_item.data_ultimo_acesso|date:'d/m/Y H:i' }}{% else %}Nunca acessou{% endif %}</dd>
                 </div>
+                {% if usuario_item.tipo == 'COORDENADOR' %}
+                <div class="volunteer-card-detail-wide">
+                    <dt>Praia do coordenador</dt>
+                    <dd>
+                        {% if usuario_item.praias_coordenador %}
+                            {% for praia in usuario_item.praias_coordenador %}
+                            <a class="table-link" href="{% url 'praias' %}?praia={{ praia.id_praia }}">{{ praia.nome }}</a>{% if not forloop.last %}, {% endif %}
+                            {% endfor %}
+                        {% else %}
+                            <span class="muted">Sem equipe ativa</span>
+                        {% endif %}
+                    </dd>
+                </div>
+                {% endif %}
             </dl>
-            <details class="record-card-audit">
+
+            <details class="volunteer-card-audit">
                 <summary>Histórico do cadastro</summary>
                 <div>
                     <p><strong>{% if usuario_item.cadastrado_por_nome %}Cadastrado por {{ usuario_item.cadastrado_por_nome }}{% elif usuario_item.cadastrado_por %}Cadastrado por {{ usuario_item.cadastrado_por.id_voluntario.nome }}{% else %}Cadastro anterior{% endif %}</strong></p>
@@ -101,7 +102,8 @@
                     {% if usuario_item.ultimo_editado_por_nome %}<p>Editado por {{ usuario_item.ultimo_editado_por_nome }} em {{ usuario_item.dt_ultima_edicao|date:'d/m/Y H:i' }}</p>{% elif usuario_item.ultimo_editado_por %}<p>Editado por {{ usuario_item.ultimo_editado_por.id_voluntario.nome }} em {{ usuario_item.dt_ultima_edicao|date:'d/m/Y H:i' }}</p>{% else %}<p>Sem edições</p>{% endif %}
                 </div>
             </details>
-            <div class="record-card-actions">
+
+            <div class="volunteer-card-actions">
                 <a class="btn btn-outline btn-small" href="{% url 'editar_usuario' usuario_item.id_usuario %}">Editar</a>
                 {% if usuario_item.id_usuario != usuario.id_usuario %}
                 <form method="post" action="{% url 'excluir_usuario' usuario_item.id_usuario %}" onsubmit="return confirm('Excluir este usuário? O voluntário continuará cadastrado.');">
@@ -110,15 +112,16 @@
                 </form>
                 {% endif %}
             </div>
+
         </article>
         {% endfor %}
     </div>
     {% include 'sistema/includes/paginacao.html' %}
     {% else %}
-        <div class="empty-state table-empty">
-            <h3>Nenhum usuário encontrado</h3>
-            <p class="form-subtitle">Tente ajustar os filtros ou cadastre um novo usuário.</p>
-        </div>
+    <div class="empty-state table-empty">
+        <h3>Nenhum usuário encontrado</h3>
+        <p class="form-subtitle">Tente ajustar os filtros ou cadastre um novo usuário.</p>
+    </div>
     {% endif %}
 </section>
 {% endblock %}

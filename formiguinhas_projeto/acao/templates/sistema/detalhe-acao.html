@@ -3,7 +3,7 @@
 
 {% block titulo %}{{ acao.get_tipo_display }} | Sistema{% endblock %}
 {% block page_title %}{% if acao.tipo == 'COLETA_VOLUNTARIA' %}Detalhes da Coleta Voluntária - {{ acao.praia.nome }}{% else %}Detalhes do Mutirão - {{ acao.praia.nome }}{% endif %}{% endblock %}
-{% block estilos %}<link rel="stylesheet" href="{% static 'estoque/estoque.css' %}?v=11">{% endblock %}
+{% block estilos %}<link rel="stylesheet" href="{% static 'acao/acao.css' %}?v=1"><link rel="stylesheet" href="{% static 'estoque/estoque.css' %}?v=11">{% endblock %}
 {% block scripts %}<script src="{% static 'estoque/material-combobox.js' %}?v=1" defer></script>{% endblock %}
 
 {% block conteudo %}
