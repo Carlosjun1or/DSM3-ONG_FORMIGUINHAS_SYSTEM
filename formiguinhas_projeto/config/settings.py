@@ -170,7 +170,13 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+# Em desenvolvimento (DEBUG=True) usa o storage simples para não exigir
+# collectstatic antes de rodar o servidor. Em produção usa o manifesto
+# comprimido para cache-busting automático.
+if DEBUG:
+    STATICFILES_STORAGE = 'whitenoise.storage.StaticFilesStorage'
+else:
+    STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
@@ -196,7 +202,11 @@ if _AWS_BUCKET:
             'BACKEND': 'storages.backends.s3boto3.S3Boto3Storage',
         },
         'staticfiles': {
-            'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage',
+            'BACKEND': (
+                'whitenoise.storage.StaticFilesStorage'
+                if DEBUG
+                else 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+            ),
         },
     }
 

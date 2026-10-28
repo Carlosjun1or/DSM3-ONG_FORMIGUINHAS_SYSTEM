@@ -1,0 +1,6 @@
+/* ── Controle de Praias ────────────────────────────────────────── */
+
+.praia-destacada {
+    border-color: var(--layout-purple) !important;
+    box-shadow: 0 0 0 3px rgb(118 87 203 / 16%) !important;
+}
