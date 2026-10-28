@@ -46,7 +46,7 @@
                 {% if praia.descricao %}<p>{{ praia.descricao }}</p>{% endif %}
                 <a
                     class="praia-mapa"
-                    href="https://www.google.com/maps/search/?api=1&query={{ praia.latitude }},{{ praia.longitude }}"
+                    href="https://www.google.com/maps/search/?api=1&query={{ praia.latitude|unlocalize }},{{ praia.longitude|unlocalize }}"
                     target="_blank"
                     rel="noopener noreferrer"
                 >
