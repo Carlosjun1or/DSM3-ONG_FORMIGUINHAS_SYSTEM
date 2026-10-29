@@ -194,3 +194,31 @@
         grid-template-columns: 1fr;
     }
 }
+
+/* ── Elementos estruturais do card de doação ────────────────────── */
+
+/* Valor/itens em destaque entre heading e dl */
+.doacao-card-valor {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    padding: 10px 0 8px;
+    border-bottom: 1px solid var(--layout-border);
+}
+
+.doacao-card-valor-num {
+    font-family: var(--fonte-titulo);
+    font-size: 1.45rem;
+    font-weight: 700;
+    color: var(--azul-profundo);
+    line-height: 1;
+}
+
+.doacao-card-valor-label {
+    font-size: 0.8rem;
+    font-family: var(--fonte-corpo);
+    color: var(--azul);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}

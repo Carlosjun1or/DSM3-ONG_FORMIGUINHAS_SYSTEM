@@ -60,3 +60,13 @@
 .communication-topic-metrics {
     grid-template-columns: repeat(2, minmax(180px, 240px));
 }
+
+/* Parágrafo de resumo — cresce para empurrar ações para o fundo */
+.system-page .comunicados-list .volunteer-card-summary {
+    flex: 1;
+    font-family: var(--fonte-corpo);
+    font-size: 0.875rem;
+    line-height: 1.55;
+    color: var(--texto);
+    opacity: 0.75;
+}

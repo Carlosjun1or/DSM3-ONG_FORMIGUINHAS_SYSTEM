@@ -8366,3 +8366,39 @@ select.select-control:disabled {
         width: 100%;
     }
 }
+
+/* ── Cards da listagem de usuários ──────────────────────────────── */
+
+.system-page .usuarios-list .volunteer-card-heading {
+    border-bottom-color: var(--layout-border);
+}
+
+/* Badge de tipo de usuário no status — usa variáveis do design system */
+.system-page .usuarios-list .type-select.type-admin {
+    background: var(--selecionado-fundo);
+    color: var(--roxo);
+    font-weight: 700;
+}
+
+.system-page .usuarios-list .type-select.type-coordenador {
+    background: var(--alerta-aviso-fundo);
+    color: var(--azul-profundo);
+    font-weight: 700;
+}
+
+.system-page .usuarios-list .type-select.type-voluntario {
+    background: var(--layout-paper);
+    color: var(--texto);
+    font-weight: 700;
+}
+
+/* Sublabel genérico nos cards (usado por ação, estoque) */
+.system-page .volunteer-card-sublabel {
+    display: block;
+    margin-top: 2px;
+    color: var(--roxo);
+    font-size: 0.8rem;
+    font-family: var(--fonte-corpo);
+    font-weight: 600;
+    line-height: 1.3;
+}

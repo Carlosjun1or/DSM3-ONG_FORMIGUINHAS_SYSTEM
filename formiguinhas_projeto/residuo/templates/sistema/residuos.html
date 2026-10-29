@@ -61,7 +61,7 @@
 </section>
 
 {# ── Todos os resíduos ── #}
-<section class="card volunteer-control system-list">
+<section class="card volunteer-control system-list residuos-list">
     <div class="section-heading">
         <div>
             <h2>Todos os resíduos registrados</h2>
@@ -123,13 +123,14 @@
                     <span class="volunteer-card-label">{{ residuo.get_categoria_display }}</span>
                     <h3>{{ residuo.get_tipo_display }}</h3>
                 </div>
-                <div class="volunteer-card-status">
-                    <span class="status-badge status-ativo">{{ residuo.quantidade }} {{ residuo.get_unidade_display }}</span>
+                <div class="volunteer-card-status residuo-card-quantidade">
+                    <span class="residuo-card-qtd-num">{{ residuo.quantidade }}</span>
+                    <span class="residuo-card-qtd-unidade">{{ residuo.get_unidade_display }}</span>
                 </div>
             </div>
 
             <dl class="volunteer-card-details">
-                <div>
+                <div class="volunteer-card-detail-wide">
                     <dt>Ação vinculada</dt>
                     <dd>
                         {% if residuo.acao and residuo.acao.id_acao %}
@@ -140,17 +141,11 @@
                         {% endif %}
                     </dd>
                 </div>
-                <div>
-                    <dt>Registro</dt>
-                    <dd>{{ residuo.registrado_por_nome }}<br><small>{{ residuo.registrado_por_tipo }} · {{ residuo.dt_registro|date:'d/m/Y H:i' }}</small></dd>
-                </div>
                 <div class="volunteer-card-detail-wide">
                     <dt>Destinação</dt>
                     <dd>
                         {% for destinacao in residuo.destinacoes.all %}
-                            <strong>{{ destinacao.get_tipo_display }}</strong>
-                            {% if destinacao.quantidade %}<small>{{ destinacao.quantidade }} {{ destinacao.get_unidade_display }}</small>{% endif %}
-                            {% if destinacao.observacao %}<small>{{ destinacao.observacao }}</small>{% endif %}
+                            <span>{{ destinacao.get_tipo_display }}{% if destinacao.quantidade %} · {{ destinacao.quantidade }} {{ destinacao.get_unidade_display }}{% endif %}</span>{% if not forloop.last %}, {% endif %}
                         {% empty %}
                             <span class="muted">Não informada</span>
                         {% endfor %}
@@ -163,6 +158,14 @@
                 </div>
                 {% endif %}
             </dl>
+
+            <details class="volunteer-card-audit">
+                <summary>Registro</summary>
+                <div>
+                    <p><strong>{{ residuo.registrado_por_nome }}</strong></p>
+                    <p>{{ residuo.registrado_por_tipo }} · {{ residuo.dt_registro|date:'d/m/Y H:i' }}</p>
+                </div>
+            </details>
 
         </article>
         {% endfor %}

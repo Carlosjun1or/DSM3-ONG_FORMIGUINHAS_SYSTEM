@@ -17,7 +17,7 @@
 </section>
 
 
-<section class="card volunteer-control system-list">
+<section class="card volunteer-control system-list acao-list">
     <div class="section-heading">
         <div>
             <h2>Ações cadastradas</h2>
@@ -87,8 +87,9 @@
 
             <div class="volunteer-card-heading">
                 <div class="volunteer-card-identity">
-                    <span class="volunteer-card-label">{{ acao.get_tipo_display }} · {{ acao.praia.cidade }}</span>
-                    <h3><a href="{% url 'acao_detalhe' acao.id_acao %}">Ação em {{ acao.praia.nome }}</a></h3>
+                    <span class="volunteer-card-label">{{ acao.get_tipo_display }}</span>
+                    <h3><a href="{% url 'acao_detalhe' acao.id_acao %}">{{ acao.praia.nome }}</a></h3>
+                    <span class="volunteer-card-sublabel">{{ acao.praia.cidade }}</span>
                 </div>
                 <div class="volunteer-card-status">
                     {% if usuario.tipo == 'ADMIN' %}
@@ -106,26 +107,19 @@
                 </div>
             </div>
 
+            <div class="acao-card-data">
+                <span class="acao-card-data-valor"><strong>{{ acao.data|date:'d/m/Y' }}</strong></span>
+                {% if acao.horario %}<span class="acao-card-data-hora">{{ acao.horario|time:'H:i' }}</span>{% endif %}
+            </div>
+
             <dl class="volunteer-card-details">
                 <div>
-                    <dt>Data</dt>
-                    <dd>{{ acao.data|date:'d/m/Y' }}{% if acao.horario %} · {{ acao.horario|time:'H:i' }}{% endif %}</dd>
-                </div>
-                <div>
                     <dt>Participantes</dt>
-                    <dd>{{ acao.participantes.count }}</dd>
+                    <dd><strong>{{ acao.participantes.count }}</strong></dd>
                 </div>
                 <div>
-                    <dt>Praia</dt>
-                    <dd><a href="{% url 'praias' %}?praia={{ acao.praia.id_praia }}#praia-{{ acao.praia.id_praia }}">{{ acao.praia.nome }}</a></dd>
-                </div>
-                <div>
-                    <dt>Cidade</dt>
-                    <dd>{{ acao.praia.cidade }}</dd>
-                </div>
-                <div class="volunteer-card-detail-wide">
                     <dt>Local</dt>
-                    <dd>{{ acao.local|default:'-' }}</dd>
+                    <dd>{{ acao.local|default:'—' }}</dd>
                 </div>
             </dl>
 

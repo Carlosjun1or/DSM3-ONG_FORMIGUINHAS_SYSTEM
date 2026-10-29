@@ -30,7 +30,7 @@
     </article>
 </section>
 
-<section class="card volunteer-control system-list">
+<section class="card volunteer-control system-list condominios-list">
     <div class="section-heading">
         <div>
             <h2>Condomínios parceiros</h2>
@@ -82,35 +82,29 @@
             <dl class="volunteer-card-details">
                 <div>
                     <dt>Responsável</dt>
-                    <dd>{{ condominio.responsavel_nome }}</dd>
+                    <dd>{{ condominio.responsavel_nome|default:'—' }}</dd>
                 </div>
                 <div>
-                    <dt>Porte / confiabilidade</dt>
-                    <dd>{{ condominio.get_porte_display }} · {{ condominio.get_confiabilidade_display }}</dd>
-                </div>
-                <div class="volunteer-card-detail-wide">
-                    <dt>Endereço</dt>
-                    <dd>{{ condominio.endereco }}, {{ condominio.numero }} · {{ condominio.bairro }}</dd>
-                </div>
-                <div>
-                    <dt>Praia</dt>
+                    <dt>Praia vinculada</dt>
                     <dd>{% if condominio.praia %}{{ condominio.praia.nome }}{% else %}<span class="muted">Não vinculada</span>{% endif %}</dd>
                 </div>
-                <div class="volunteer-card-detail-wide">
-                    <dt>Bags</dt>
-                    <dd class="condominio-bags">
-                        {% for bag in condominio.bags.all %}
-                            <span class="bag-summary">
-                                <a class="table-link" href="{% url 'detalhe_bag' bag.id_bag %}">{{ bag.codigo }}</a>
-                                <small class="table-secondary">{{ bag.get_status_display }}</small>
-                            </span>
-                        {% empty %}
-                            <span class="muted">Nenhuma cadastrada</span>
-                        {% endfor %}
-                    </dd>
+                <div>
+                    <dt>Porte</dt>
+                    <dd>{{ condominio.get_porte_display }}</dd>
+                </div>
+                <div>
+                    <dt>Confiabilidade</dt>
+                    <dd>{{ condominio.get_confiabilidade_display }}</dd>
                 </div>
             </dl>
 
+            <div class="condominio-card-bags">
+                {% with total=condominio.bags.count disponiveis=condominio.bags.all|length %}
+                <span class="condominio-card-bags-count"><strong>{{ total }}</strong></span>
+                <span class="condominio-card-bags-label">bag{{ total|pluralize }} cadastrada{{ total|pluralize }}</span>
+                {% endwith %}
+            </div>
+            
             <details class="volunteer-card-audit">
                 <summary>Histórico do cadastro</summary>
                 <div>
@@ -123,6 +117,7 @@
             {% if usuario.tipo == 'ADMIN' %}
             <div class="volunteer-card-actions">
                 <a class="btn btn-outline btn-small" href="{% url 'detalhe_condominio' condominio.id_condominio %}">Detalhes</a>
+                <a class="btn btn-outline btn-small condominio-card-bags-link" href="{% url 'bags' %}?condominio={{ condominio.id_condominio }}">Ver bags</a>
             </div>
             {% endif %}
 

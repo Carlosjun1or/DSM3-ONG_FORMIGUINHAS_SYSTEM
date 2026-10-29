@@ -1,7 +1,9 @@
 {% extends 'sistema/template-sistema.html' %}
+{% load static %}
 
 {% block titulo %}Controle de Equipes | Sistema{% endblock %}
 {% block page_title %}Controle de Equipes{% endblock %}
+{% block estilos %}<link rel="stylesheet" href="{% static 'equipe/equipe.css' %}?v=1">{% endblock %}
 
 {% block conteudo %}
 <section class="card-grid volunteer-metrics">
@@ -15,7 +17,7 @@
     </article>
 </section>
 
-<section class="card volunteer-control system-list">
+<section class="card volunteer-control system-list equipes-list">
     <div class="section-heading">
         <div>
             <h2>Equipes cadastradas</h2>
@@ -71,7 +73,7 @@
 
             <div class="volunteer-card-heading">
                 <div class="volunteer-card-identity">
-                    <span class="volunteer-card-label">Equipe · {{ equipe.total_membros }} membros ativos</span>
+                    <span class="volunteer-card-label">{% if equipe.praia %}{{ equipe.praia.nome }} · {{ equipe.praia.cidade }}{% else %}Sem praia vinculada{% endif %}</span>
                     <h3><a href="{% url 'equipe_detalhe' equipe.id_equipe %}">{{ equipe.nome }}</a></h3>
                 </div>
                 <div class="volunteer-card-status">
@@ -90,18 +92,15 @@
                 </div>
             </div>
 
+            <div class="equipe-card-membros">
+                <span class="equipe-card-membros-num">{{ equipe.total_membros }}</span>
+                <span class="equipe-card-membros-label">membro{{ equipe.total_membros|pluralize }} ativo{{ equipe.total_membros|pluralize }}</span>
+            </div>
+
             <dl class="volunteer-card-details">
-                <div>
-                    <dt>Praia</dt>
-                    <dd>{% if equipe.praia %}<a href="{% url 'praias' %}?praia={{ equipe.praia.id_praia }}">{{ equipe.praia.nome }}</a>{% else %}<span class="muted">Sem praia</span>{% endif %}</dd>
-                </div>
-                <div>
-                    <dt>Cidade</dt>
-                    <dd>{% if equipe.praia %}{{ equipe.praia.cidade }}{% else %}<span class="muted">-</span>{% endif %}</dd>
-                </div>
                 <div class="volunteer-card-detail-wide">
                     <dt>Descrição</dt>
-                    <dd>{{ equipe.descricao|default:'-'|truncatechars:120 }}</dd>
+                    <dd>{{ equipe.descricao|default:'—'|truncatechars:100 }}</dd>
                 </div>
             </dl>
 

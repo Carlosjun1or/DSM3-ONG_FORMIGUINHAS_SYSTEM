@@ -16,7 +16,7 @@
     </article>
 </section>
 
-<section class="card volunteer-control system-list">
+<section class="card volunteer-control system-list praia-list">
     <div class="section-heading">
         <div>
             <h2>Praias de atuação</h2>
@@ -63,7 +63,7 @@
 
             <div class="volunteer-card-heading">
                 <div class="volunteer-card-identity">
-                    <span class="volunteer-card-label">Praia · {{ praia.cidade }}</span>
+                    <span class="volunteer-card-label">{{ praia.cidade }}</span>
                     <h3><a href="{% url 'editar_praia' praia.id_praia %}">{{ praia.nome }}</a></h3>
                 </div>
                 <div class="volunteer-card-status">
@@ -83,19 +83,17 @@
             </div>
 
             <dl class="volunteer-card-details">
-                <div>
-                    <dt>Cidade</dt>
-                    <dd>{{ praia.cidade }}</dd>
-                </div>
-                <div>
-                    <dt>Coordenadas</dt>
-                    <dd>{{ praia.latitude }}, {{ praia.longitude }}</dd>
-                </div>
                 <div class="volunteer-card-detail-wide">
                     <dt>Descrição</dt>
-                    <dd>{{ praia.descricao|default:'-'|truncatechars:120 }}</dd>
+                    <dd>{{ praia.descricao|default:'—'|truncatechars:120 }}</dd>
                 </div>
             </dl>
+
+            <details class="volunteer-card-audit">
+                <summary>Coordenadas</summary>
+                <div>
+                    <p><strong>{{ praia.latitude }}, {{ praia.longitude }}</strong></p>
+            </details>
 
             <details class="volunteer-card-audit">
                 <summary>Histórico do cadastro</summary>

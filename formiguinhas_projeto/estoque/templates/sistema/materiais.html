@@ -23,7 +23,7 @@
     </article>
 </section>
 
-<section class="card volunteer-control system-list estoque-lista">
+<section class="card volunteer-control system-list estoque-lista materiais-list">
     <div class="section-heading">
         <div>
             <span class="section-kicker">Inventário</span>
@@ -88,12 +88,13 @@
 
             <div class="volunteer-card-heading">
                 <div class="volunteer-card-identity">
-                    <span class="volunteer-card-label">{{ mat.categoria }} · {{ mat.codigo }}</span>
+                    <span class="volunteer-card-label">{{ mat.categoria }}</span>
                     <h3>
                         {% if usuario.tipo == 'ADMIN' %}
                         <a href="{% url 'editar_material' mat.id_material %}">{{ mat.nome }}</a>
                         {% else %}{{ mat.nome }}{% endif %}
                     </h3>
+                    <span class="volunteer-card-sublabel">{{ mat.codigo }}</span>
                 </div>
                 <div class="volunteer-card-status">
                     {% if mat.sem_estoque %}<span class="status-badge status-inativo">Sem estoque</span>
@@ -102,32 +103,22 @@
                 </div>
             </div>
 
-            <dl class="volunteer-card-details">
-                <div>
-                    <dt>Saldo atual</dt>
-                    <dd><strong>{{ mat.saldo }}</strong> {{ mat.get_unidade_display }}{% if mat.estoque_minimo %} · mín. {{ mat.estoque_minimo }}{% endif %}</dd>
-                </div>
-                <div>
-                    <dt>Origem</dt>
-                    <dd>{% if mat.eh_donativo %}Donativo{% if mat.doador_origem %} ({{ mat.doador_origem }}){% endif %}{% else %}Comprado{% endif %}</dd>
-                </div>
-            </dl>
+            <div class="material-card-saldo">
+                <span class="material-card-saldo-num"><strong>{{ mat.saldo }}</strong></span>
+                <span class="material-card-saldo-unidade">{{ mat.get_unidade_display }}</span>
+                {% if mat.estoque_minimo %}<span class="material-card-saldo-minimo">mín. {{ mat.estoque_minimo }}</span>{% endif %}
+            </div>
+            
 
             <section class="volunteer-card-frequency" aria-label="Nível de estoque">
                 <div class="volunteer-card-frequency-heading">
-                    <span>Nível de estoque</span>
-                    <strong>
-                        {% if mat.sem_estoque %}Zerado
-                        {% elif mat.baixo_estoque %}Baixo
-                        {% else %}Normal{% endif %}
-                    </strong>
+                    <span>Nível</span>
+                    <strong>{% if mat.sem_estoque %}Zerado{% elif mat.baixo_estoque %}Baixo{% else %}Normal{% endif %}</strong>
                 </div>
                 {% if mat.estoque_minimo and mat.estoque_minimo > 0 %}
-                {% with pct=mat.saldo|floatformat:0 %}
                 <progress class="volunteer-card-frequency-track" max="{{ mat.estoque_minimo }}" value="{{ mat.saldo }}" aria-label="Nível de {{ mat.nome }}"></progress>
-                {% endwith %}
                 {% endif %}
-                <small>{{ mat.saldo }} {{ mat.get_unidade_display }} disponíveis{% if mat.estoque_minimo %} · mínimo {{ mat.estoque_minimo }}{% endif %}</small>
+                <small>{% if mat.eh_donativo %}Donativo{% if mat.doador_origem %} · {{ mat.doador_origem }}{% endif %}{% else %}Comprado{% endif %}</small>
             </section>
 
             <details class="volunteer-card-audit">
