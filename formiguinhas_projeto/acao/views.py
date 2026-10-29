@@ -443,6 +443,9 @@ def acao_detalhe_view(request, acao_id):
         'destinacao_form': DestinacaoResiduoForm(),
         'material_utilizado_form': material_utilizado_form,
         'materiais_utilizados': materiais_utilizados,
+        'total_participantes': acao.participantes.count(),
+        'total_confirmados': acao.participantes.filter(status=AcaoParticipante.STATUS_CONFIRMADO).count(),
+        'total_presentes': acao.participantes.filter(status=AcaoParticipante.STATUS_PRESENTE).count(),
     })
 
 def participantes_view(request, acao_id):

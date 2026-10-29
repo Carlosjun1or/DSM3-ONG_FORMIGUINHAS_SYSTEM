@@ -1,0 +1,496 @@
+/* ==========================================================================
+   acao-detalhe.css — tela "Detalhes da ação" (acao/detalhe-acao.html)
+   Carregado DEPOIS do CSS base (pelo {% block estilos %}), por isso consegue
+   ajustar as classes antigas sem mexer nos arquivos de css/sistema/.
+   Tudo é escopado em .acao-detalhe para não vazar para outras telas.
+   Usa os tokens do tokens.css (--azul, --roxo, --papel, ...).
+   ========================================================================== */
+
+:root {
+    scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    :root { scroll-behavior: auto; }
+}
+
+.acao-detalhe {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.acao-detalhe .acao-leitor {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+}
+
+.acao-detalhe svg.acao-icone {
+    flex: none;
+    width: 18px;
+    height: 18px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+/* ---------------------------------------------------------------- topo */
+.acao-detalhe .acao-topo {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 16px 24px;
+    align-items: start;
+    padding: 22px 24px;
+    border: 1px solid var(--layout-border);
+    border-radius: 16px;
+    background: #fff;
+}
+
+.acao-detalhe .acao-topo__principal {
+    min-width: 0;
+}
+
+.acao-detalhe .acao-topo__eyebrow {
+    display: block;
+    color: var(--roxo);
+    font-family: var(--fonte-corpo);
+    font-size: 0.8125rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.acao-detalhe .acao-topo__titulo {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 14px;
+    margin-top: 4px;
+}
+
+.system-page .acao-detalhe .acao-topo__titulo h2 {
+    margin: 0;
+    color: var(--azul-profundo);
+    font-family: var(--fonte-titulo);
+    font-size: 1.875rem;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.acao-detalhe .acao-info {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 22px;
+    margin: 14px 0 0;
+    padding: 0;
+    list-style: none;
+    color: #4c5663;
+    font-size: 0.9375rem;
+}
+
+.acao-detalhe .acao-info li {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.acao-detalhe .acao-info svg.acao-icone {
+    color: var(--azul);
+}
+
+.acao-detalhe .acao-info a {
+    color: var(--azul-profundo);
+    font-weight: 700;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+.acao-detalhe .acao-info a:hover {
+    color: var(--azul);
+}
+
+.acao-detalhe .acao-topo__descricao {
+    max-width: 70ch;
+    margin: 14px 0 0;
+    color: #4c5663;
+    line-height: 1.55;
+}
+
+.acao-detalhe .acao-topo__acoes {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.acao-detalhe .acao-metricas {
+    display: grid;
+    grid-column: 1 / -1;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.acao-detalhe .acao-metrica {
+    padding: 12px 16px;
+    border: 1px solid var(--layout-border);
+    border-radius: 12px;
+    background: var(--papel);
+}
+
+.acao-detalhe .acao-metrica span {
+    display: block;
+    color: var(--roxo);
+    font-size: 0.8125rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.acao-detalhe .acao-metrica strong {
+    display: block;
+    margin-top: 2px;
+    color: var(--azul-profundo);
+    font-family: var(--fonte-titulo);
+    font-size: 1.875rem;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.acao-detalhe .acao-topo__auditoria {
+    grid-column: 1 / -1;
+    margin: 0;
+    padding-top: 12px;
+    border-top: 1px solid var(--layout-border);
+    color: #6f7075;
+    font-size: 0.8125rem;
+    line-height: 1.5;
+}
+
+/* ------------------------------------------------- navegação por seções */
+.acao-detalhe .acao-nav {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    display: flex;
+    gap: 8px;
+    padding: 10px 0;
+    overflow-x: auto;
+    background: var(--papel);
+    scrollbar-width: thin;
+}
+
+.acao-detalhe .acao-nav a {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    gap: 8px;
+    min-height: 40px;
+    padding: 0 16px;
+    border: 1px solid var(--layout-border);
+    border-radius: 999px;
+    background: #fff;
+    color: var(--azul-profundo);
+    font-size: 0.875rem;
+    font-weight: 700;
+    text-decoration: none;
+    transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.acao-detalhe .acao-nav a b {
+    min-width: 22px;
+    padding: 1px 7px;
+    border-radius: 999px;
+    background: var(--selecionado-fundo);
+    color: var(--roxo);
+    font-size: 0.8125rem;
+    text-align: center;
+}
+
+.acao-detalhe .acao-nav a:hover {
+    border-color: var(--azul);
+    color: var(--azul);
+}
+
+.acao-detalhe .acao-nav a.is-ativo {
+    border-color: var(--azul);
+    background: var(--azul);
+    color: #fff;
+}
+
+.acao-detalhe .acao-nav a.is-ativo b {
+    background: rgba(255, 255, 255, 0.22);
+    color: #fff;
+}
+
+/* --------------------------------------------------------------- seções */
+.acao-detalhe .acao-secao {
+    scroll-margin-top: 72px;
+    padding: 20px 24px 24px;
+    border: 1px solid var(--layout-border);
+    border-radius: 16px;
+    background: #fff;
+}
+
+.acao-detalhe .acao-secao__cabecalho {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 10px 16px;
+    margin-bottom: 14px;
+}
+
+.system-page .acao-detalhe .acao-secao__cabecalho h2 {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 4px;
+    color: var(--roxo);
+    font-family: var(--fonte-titulo);
+    font-size: 1.25rem;
+    font-weight: 700;
+    line-height: 1.25;
+}
+
+.acao-detalhe .acao-secao__cabecalho p {
+    margin: 0;
+    color: #6f7075;
+    font-size: 0.875rem;
+    line-height: 1.45;
+}
+
+.acao-detalhe .acao-secao__cabecalho .btn svg.acao-icone {
+    width: 16px;
+    height: 16px;
+}
+
+/* painel de formulário (abre ao clicar no botão da seção) */
+.acao-detalhe .member-form-panel {
+    margin: 0 0 16px;
+    padding: 18px;
+    border: 1px solid var(--layout-border);
+    border-radius: 12px;
+    background: var(--papel);
+    box-shadow: none;
+}
+
+.system-page .acao-detalhe .member-form-panel h3 {
+    margin: 0 0 12px;
+    color: var(--azul-profundo);
+    font-family: var(--fonte-titulo);
+    font-size: 1rem;
+    font-weight: 700;
+}
+
+.acao-detalhe .field-error,
+.acao-detalhe .error-msg {
+    display: block;
+    margin-top: 4px;
+    color: var(--erro-contraste);
+    font-size: 0.875rem;
+    font-weight: 700;
+}
+
+/* campo de arquivo: o botão padrão do navegador vira pílula do sistema */
+.system-page .acao-detalhe input[type="file"] {
+    padding: 6px 8px;
+    color: #4c5663;
+    font-size: 0.9375rem;
+}
+
+.acao-detalhe input[type="file"]::file-selector-button {
+    margin-right: 12px;
+    padding: 8px 18px;
+    border: 2px solid var(--azul);
+    border-radius: 999px;
+    background: #fff;
+    color: var(--azul);
+    font-family: var(--fonte-corpo);
+    font-size: 0.875rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+}
+
+.acao-detalhe input[type="file"]::file-selector-button:hover {
+    background: var(--selecionado-fundo);
+}
+
+/* estado vazio compacto */
+.acao-detalhe .acao-vazio {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 4px 10px;
+    padding: 14px 16px;
+    border: 1px dashed var(--borda-neutra-forte);
+    border-radius: 12px;
+    color: #4c5663;
+    font-size: 0.9375rem;
+}
+
+.acao-detalhe .acao-vazio strong {
+    color: var(--azul-profundo);
+}
+
+/* --------------------------------------------------------------- tabelas */
+.acao-detalhe .table-wrap {
+    overflow: auto;
+    border: 1px solid var(--layout-border);
+    border-radius: 12px;
+    background: #fff;
+}
+
+.acao-detalhe .data-table {
+    width: 100%;
+    min-width: 0;
+}
+
+.acao-detalhe .data-table th,
+.acao-detalhe .data-table td {
+    white-space: normal;
+    vertical-align: middle;
+}
+
+.acao-detalhe .acao-tabela--rolavel {
+    max-height: 520px;
+}
+
+.acao-detalhe .acao-tabela--rolavel thead th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+
+.acao-detalhe .acao-pessoa {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+}
+
+.acao-detalhe .acao-avatar {
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--selecionado-fundo);
+    color: var(--roxo);
+    font-family: var(--fonte-titulo);
+    font-size: 1rem;
+    font-weight: 700;
+}
+
+.acao-detalhe .acao-pessoa strong,
+.acao-detalhe .acao-pessoa small {
+    display: block;
+}
+
+.acao-detalhe .acao-pessoa small {
+    color: #6f7075;
+    font-size: 0.8125rem;
+    overflow-wrap: anywhere;
+}
+
+.acao-detalhe .acao-destinacao {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 10px;
+}
+
+.acao-detalhe .acao-destinacao + .acao-destinacao {
+    margin-top: 8px;
+}
+
+.acao-detalhe .acao-celula-acoes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.acao-detalhe .acao-celula-acoes form,
+.acao-detalhe .acao-destinacao form {
+    display: inline;
+    margin: 0;
+}
+
+.acao-detalhe .checkbox-inline {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--azul-profundo);
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.acao-detalhe .checkbox-inline input {
+    width: 18px;
+    height: 18px;
+    margin: 0;
+}
+
+/* status da participação (o select ficava preto e sem cor) */
+.system-page .acao-detalhe .status-select.status-confirmado,
+.system-page .acao-detalhe .status-select.status-presente {
+    border-color: #c8d8ec;
+    background-color: #e8eef8;
+    color: var(--azul);
+}
+
+.system-page .acao-detalhe .status-select.status-recusado {
+    border-color: #efbcbc;
+    background-color: #fde3e3;
+    color: #a23737;
+}
+
+.system-page .acao-detalhe .status-select.status-nao_compareceu {
+    border-color: #d5dce0;
+    background-color: #edf0f2;
+    color: #52616b;
+}
+
+/* --------------------------------------------------------------- filtros */
+.acao-detalhe .volunteer-filters {
+    margin-bottom: 16px;
+}
+
+/* ---------------------------------------------------------------- imagens */
+.acao-detalhe .action-image-grid {
+    max-height: none;
+}
+
+/* ------------------------------------------------------------- responsivo */
+@media (max-width: 900px) {
+    .acao-detalhe .acao-metricas {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 700px) {
+    .acao-detalhe .acao-topo {
+        grid-template-columns: minmax(0, 1fr);
+        padding: 18px 16px;
+    }
+
+    .acao-detalhe .acao-topo__acoes {
+        justify-content: flex-start;
+    }
+
+    .acao-detalhe .acao-secao {
+        padding: 16px;
+    }
+
+    .system-page .acao-detalhe .acao-topo__titulo h2 {
+        font-size: 1.5rem;
+    }
+}
