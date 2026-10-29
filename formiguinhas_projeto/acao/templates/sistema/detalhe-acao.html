@@ -660,29 +660,48 @@
 </div>
 
 <script>
+   /* Modal de restaurar participante */
     (function () {
         var modal = document.getElementById('restore-confirmation-modal');
         var volunteerName = document.getElementById('restore-volunteer-name');
         var confirmButton = document.getElementById('confirm-restore-participant');
+        if (!modal || !volunteerName || !confirmButton) return;
+
         var selectedForm = null;
+        var botaoOrigem = null;
+
+        function abrir(button) {
+            selectedForm = button.closest('form');
+            botaoOrigem = button;
+            volunteerName.textContent = button.dataset.volunteerName;
+            confirmButton.disabled = false;
+            modal.hidden = false;
+            confirmButton.focus();
+        }
+
+        function fechar() {
+            modal.hidden = true;
+            selectedForm = null;
+            if (botaoOrigem) botaoOrigem.focus();
+            botaoOrigem = null;
+        }
 
         document.querySelectorAll('.restore-participant-button').forEach(function (button) {
-            button.addEventListener('click', function () {
-                selectedForm = button.closest('form');
-                volunteerName.textContent = button.dataset.volunteerName;
-                modal.hidden = false;
-            });
+            button.addEventListener('click', function () { abrir(button); });
         });
 
         document.querySelectorAll('[data-close-restore-modal]').forEach(function (element) {
-            element.addEventListener('click', function () {
-                modal.hidden = true;
-                selectedForm = null;
-            });
+            element.addEventListener('click', fechar);
+        });
+
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape' && !modal.hidden) fechar();
         });
 
         confirmButton.addEventListener('click', function () {
-            if (selectedForm) selectedForm.submit();
+            if (!selectedForm) return;
+            confirmButton.disabled = true; /* evita duplo envio */
+            selectedForm.requestSubmit();
         });
     }());
 
@@ -694,6 +713,8 @@
             if (!painel || !rotulo) return;
             var textoFechado = rotulo.textContent.trim();
             var textoAberto = botao.dataset.textoAberto || 'Fechar';
+
+            botao.setAttribute('aria-controls', painel.id);
 
             function atualizar(aberto) {
                 painel.hidden = !aberto;
@@ -713,22 +734,58 @@
         });
     }());
 
-    /* Menu de seções: destaca o link da seção que está na tela. */
+    /* Menu de seções: destaca o link da seção atual. */
     (function () {
-        var links = document.querySelectorAll('.acao-nav a');
-        if (!links.length || !('IntersectionObserver' in window)) return;
-        var observador = new IntersectionObserver(function (entradas) {
-            entradas.forEach(function (entrada) {
-                if (!entrada.isIntersecting) return;
-                links.forEach(function (link) {
-                    link.classList.toggle('is-ativo', link.getAttribute('href') === '#' + entrada.target.id);
-                });
-            });
-        }, { rootMargin: '-20% 0px -70% 0px' });
-        links.forEach(function (link) {
-            var secao = document.querySelector(link.getAttribute('href'));
-            if (secao) observador.observe(secao);
+        var itens = [];
+        document.querySelectorAll('.acao-nav a').forEach(function (link) {
+            var href = link.getAttribute('href');
+            if (!href || href.length < 2 || href.charAt(0) !== '#') return;
+            var secao = document.getElementById(href.slice(1));
+            if (secao) itens.push({ link: link, secao: secao });
         });
+        if (!itens.length) return;
+
+        var DESLOCAMENTO = 120; /* ajuste: altura do header fixo + folga */
+        var travado = false;
+        var agendado = false;
+
+        function ativar(atual) {
+            itens.forEach(function (item) {
+                var ativo = item === atual;
+                item.link.classList.toggle('is-ativo', ativo);
+                if (ativo) item.link.setAttribute('aria-current', 'true');
+                else item.link.removeAttribute('aria-current');
+            });
+        }
+
+        function atualizar() {
+            agendado = false;
+            if (travado) return;
+            var atual = itens[0];
+            itens.forEach(function (item) {
+                if (item.secao.getBoundingClientRect().top <= DESLOCAMENTO) atual = item;
+            });
+            var fimDaPagina = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 2;
+            if (fimDaPagina) atual = itens[itens.length - 1];
+            ativar(atual);
+        }
+
+        window.addEventListener('scroll', function () {
+            if (agendado) return;
+            agendado = true;
+            requestAnimationFrame(atualizar);
+        }, { passive: true });
+
+        /* Ao clicar, o link clicado fica ativo na hora e o scroll é ignorado por um instante. */
+        itens.forEach(function (item) {
+            item.link.addEventListener('click', function () {
+                ativar(item);
+                travado = true;
+                setTimeout(function () { travado = false; atualizar(); }, 800);
+            });
+        });
+
+        atualizar();
     }());
 </script>
 {% endblock %}
