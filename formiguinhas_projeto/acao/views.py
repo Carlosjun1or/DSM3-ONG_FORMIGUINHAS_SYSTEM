@@ -222,6 +222,11 @@ def acoes_view(request):
             'voluntario_id': usuario.id_voluntario_id if participacao == 'MINHAS' else None,
         }
         docs, total_docs = consultar_acoes_mongo(filtros_mongo, pagina=1, por_pagina=1000)
+
+        # Filtra apenas ações que existem no PostgreSQL para evitar 404 no detalhe
+        ids_no_pg = set(Acao.objects.values_list('id_acao', flat=True))
+        docs = [d for d in docs if d.get('id_sql') in ids_no_pg]
+
         acoes_adaptadas = [MongoAcaoAdapter(d) for d in docs]
         pagina, filtros_query = paginar_queryset(request, acoes_adaptadas)
         total_acoes = mongo_metricas.get('total', len(docs))
@@ -347,15 +352,9 @@ def acao_detalhe_view(request, acao_id):
         'ultimo_editado_por__id_voluntario',
     ).prefetch_related('imagens_acao').first()
     if acao is None:
-        mongo_ok, _, _ = test_mongo_connection()
-        doc_mongo = obter_acao_mongo(acao_id) if mongo_ok else None
-        if doc_mongo is None:
-            return get_object_or_404(Acao, id_acao=acao_id)
-        return render(request, 'sistema/detalhe-acao-mongo.html', {
-            'usuario': usuario,
-            'acao': MongoAcaoAdapter(doc_mongo),
-            'participantes': doc_mongo.get('participantes', []),
-        })
+        # Ação não encontrada no banco relacional — retorna 404.
+        # O MongoDB é usado apenas para listagens, não para o detalhe completo.
+        return get_object_or_404(Acao, id_acao=acao_id)
     busca_participante = request.GET.get('busca_participante', '').strip()
     status_participante = request.GET.get('status_participante', '').strip()
     busca_equipe = request.GET.get('busca_equipe', '').strip()
@@ -563,6 +562,12 @@ def adicionar_participante_view(request, acao_id):
                 resumo=f'{participante.voluntario.nome} vinculado à ação #{acao.pk}.',
             )
             salvar_acao_mongo(acao)
+        else:
+            erros = '; '.join(
+                f'{campo}: {", ".join(msgs)}'
+                for campo, msgs in form.errors.items()
+            )
+            messages.error(request, f'Não foi possível vincular o participante. {erros}')
 
     return redirecionar_apos_acao_participante(request, acao.id_acao)
 

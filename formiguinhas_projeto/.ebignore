@@ -1,0 +1,30 @@
+# Ambiente virtual
+venv/
+.venv/
+env/
+
+# Banco local
+db.sqlite3
+db.sqlite3.backup
+db.sqlite3.pre_drop_migrated
+
+# Credenciais locais (variáveis de ambiente serão configuradas no painel do EB)
+.env
+
+# Cache Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Arquivos de mídia (não incluir no deploy — usar S3 em produção)
+media/
+
+# IDEs
+.vscode/
+.idea/
+
+# Testes e ferramentas de dev
+*.log
+*.pot

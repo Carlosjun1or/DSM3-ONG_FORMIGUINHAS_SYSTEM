@@ -46,12 +46,12 @@ load_local_environment(BASE_DIR / '.env')
 # See https://docs.djangoproject.com/en/6.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-i2iftzn)*8usyz)!!q+mdwz-h$!xsh$9^61fraq4%kq1$2gd)p'
+SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-i2iftzn)*8usyz)!!q+mdwz-h$!xsh$9^61fraq4%kq1$2gd)p')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.getenv('DEBUG', 'False').lower() == 'true'
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '*').split(',')
 
 
 # Application definition
@@ -79,6 +79,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -168,9 +169,46 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.1/howto/static-files/
 
 STATIC_URL = 'static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+# Em desenvolvimento (DEBUG=True) usa o storage simples para não exigir
+# collectstatic antes de rodar o servidor. Em produção usa o manifesto
+# comprimido para cache-busting automático.
+if DEBUG:
+    STATICFILES_STORAGE = 'whitenoise.storage.StaticFilesStorage'
+else:
+    STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
+
+# ── Armazenamento de mídia no Amazon S3 ──────────────────────────────────────
+# Quando AWS_STORAGE_BUCKET_NAME estiver definido, arquivos de mídia (uploads)
+# são enviados direto para o S3 em vez do disco local.
+# Arquivos estáticos continuam servidos pelo whitenoise.
+_AWS_BUCKET = os.getenv('AWS_STORAGE_BUCKET_NAME', '')
+if _AWS_BUCKET:
+    AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID', '')
+    AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY', '')
+    AWS_STORAGE_BUCKET_NAME = _AWS_BUCKET
+    AWS_S3_REGION_NAME = os.getenv('AWS_S3_REGION_NAME', 'sa-east-1')
+    AWS_S3_FILE_OVERWRITE = False
+    AWS_DEFAULT_ACL = 'public-read'
+    AWS_QUERYSTRING_AUTH = False
+    MEDIA_URL = f'https://{_AWS_BUCKET}.s3.amazonaws.com/'
+
+    # Django 4.2+ usa STORAGES em vez de DEFAULT_FILE_STORAGE
+    STORAGES = {
+        'default': {
+            'BACKEND': 'storages.backends.s3boto3.S3Boto3Storage',
+        },
+        'staticfiles': {
+            'BACKEND': (
+                'whitenoise.storage.StaticFilesStorage'
+                if DEBUG
+                else 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+            ),
+        },
+    }
 
 
 # E-mail de recuperação de senha. Um arquivo .env local pode manter a

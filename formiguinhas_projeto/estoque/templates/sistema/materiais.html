@@ -7,36 +7,36 @@
 <script src="{% static 'estoque/estoque.js' %}" defer></script>{% endblock %}
 
 {% block conteudo %}
-<section class="card-grid volunteer-metrics estoque-metricas" data-live="metricas">
-    <article class="card estoque-metrica-card">
+<section class="card-grid volunteer-metrics" data-live="metricas">
+    <article class="card">
         <h3>Materiais cadastrados</h3>
         <div class="metric">{{ total_materiais }}</div>
     </article>
-    <article class="card estoque-metrica-card">
+    <article class="card">
         <h3>Estoque baixo ou zerado</h3>
         <div class="metric">{{ total_baixo_estoque }}</div>
     </article>
-    <article class="card estoque-metrica-card">
+    <article class="card">
         <h3>Doado no período</h3>
         <div class="metric">{{ doado_total }}</div>
-        <small class="form-help">{{ doado_registros }} registro(s) · {{ data_inicio }} a {{ data_fim }}</small>
+        <small class="metric-caption">{{ doado_registros }} registro(s) · {{ data_inicio }} a {{ data_fim }}</small>
     </article>
 </section>
 
-<section class="card volunteer-control estoque-painel estoque-lista">
+<section class="card volunteer-control system-list estoque-lista">
     <div class="section-heading">
         <div>
             <span class="section-kicker">Inventário</span>
             <h2>Materiais e saldos</h2>
             <p class="form-subtitle">Consulte o saldo atual de cada material e acompanhe o estoque mínimo.</p>
         </div>
-        <div class="estoque-acoes">
-            {% if usuario.tipo == 'ADMIN' %}
+        {% if usuario.tipo == 'ADMIN' %}
+        <div class="table-actions estoque-acoes">
             <a href="{% url 'movimentacoes_estoque' %}" class="btn btn-outline">Histórico</a>
             <a href="{% url 'cadastrar_movimentacao_estoque' %}" class="btn btn-outline">Registrar movimentação</a>
             <a href="{% url 'cadastrar_material' %}" class="btn btn-primary">Novo material</a>
-            {% endif %}
         </div>
+        {% endif %}
     </div>
 
     <form method="get" class="volunteer-filters estoque-filtros" data-filtro-vivo aria-label="Filtrar materiais do estoque">
@@ -82,47 +82,72 @@
 
     <div data-live="resultado">
     {% if materiais %}
-    <p class="estoque-dica-tabela">Em telas menores, deslize a tabela para ver todas as colunas.</p>
-    <div class="table-wrap estoque-tabela">
-        <table class="data-table">
-            <thead>
-                <tr>
-                    <th>Material</th>
-                    <th>Identificação</th>
-                    <th>Saldo atual</th>
-                    <th>Situação</th>
-                    <th>Origem</th>
-                    <th>Cadastro e auditoria</th>
-                    {% if usuario.tipo == 'ADMIN' %}<th>Ações</th>{% endif %}
-                </tr>
-            </thead>
-            <tbody>
-                {% for mat in materiais %}
-                <tr class="{% if mat.baixo_estoque %}estoque-baixo{% elif mat.eh_donativo %}estoque-donativo{% endif %}">
-                    <td>
-                        {% if usuario.tipo == 'ADMIN' %}<a class="table-link" href="{% url 'editar_material' mat.id_material %}"><strong>{{ mat.nome }}</strong></a>{% else %}<strong>{{ mat.nome }}</strong>{% endif %}
-                        <small class="table-secondary">{{ mat.categoria }}</small>
-                    </td>
-                    <td><a class="table-link" href="{% url 'movimentacoes_estoque' %}?busca={{ mat.codigo|urlencode }}" title="Ver movimentações de {{ mat.nome }}"><strong>{{ mat.codigo }}</strong></a></td>
-                    <td><strong>{{ mat.saldo }}</strong><small class="table-secondary">{{ mat.get_unidade_display }}{% if mat.estoque_minimo %} · mínimo {{ mat.estoque_minimo }}{% endif %}</small></td>
-                    <td>
-                        {% if mat.sem_estoque %}<span class="status-badge status-inativo">Sem estoque</span>
-                        {% elif mat.baixo_estoque %}<span class="status-badge status-pausado">Estoque baixo (mín. {{ mat.estoque_minimo }})</span>
-                        {% else %}<span class="status-badge status-ativo">Normal</span>{% endif %}
-                    </td>
-                    <td>{% if mat.eh_donativo %}Donativo{% if mat.doador_origem %} ({{ mat.doador_origem }}){% endif %}{% else %}Comprado{% endif %}</td>
-                    <td class="audit-cell estoque-auditoria">
-                        <strong>{% if mat.cadastrado_por_nome %}Cadastrado por {{ mat.cadastrado_por_nome }}{% else %}Cadastro anterior{% endif %}</strong>
-                        <small>{{ mat.dt_cadastro|date:'d/m/Y H:i' }}</small>
-                        {% if mat.ultimo_editado_por_nome %}<small>Editado por {{ mat.ultimo_editado_por_nome }} em {{ mat.dt_ultima_edicao|date:'d/m/Y H:i' }}</small>{% else %}<small>Sem edições</small>{% endif %}
-                    </td>
-                    {% if usuario.tipo == 'ADMIN' %}
-                    <td class="table-actions"><a class="btn btn-outline btn-small" href="{% url 'editar_material' mat.id_material %}">Editar</a></td>
-                    {% endif %}
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+    <div class="volunteer-card-grid">
+        {% for mat in materiais %}
+        <article class="volunteer-card {% if mat.baixo_estoque %}estoque-baixo{% elif mat.eh_donativo %}estoque-donativo{% endif %}">
+
+            <div class="volunteer-card-heading">
+                <div class="volunteer-card-identity">
+                    <span class="volunteer-card-label">{{ mat.categoria }} · {{ mat.codigo }}</span>
+                    <h3>
+                        {% if usuario.tipo == 'ADMIN' %}
+                        <a href="{% url 'editar_material' mat.id_material %}">{{ mat.nome }}</a>
+                        {% else %}{{ mat.nome }}{% endif %}
+                    </h3>
+                </div>
+                <div class="volunteer-card-status">
+                    {% if mat.sem_estoque %}<span class="status-badge status-inativo">Sem estoque</span>
+                    {% elif mat.baixo_estoque %}<span class="status-badge status-pausado">Estoque baixo</span>
+                    {% else %}<span class="status-badge status-ativo">Normal</span>{% endif %}
+                </div>
+            </div>
+
+            <dl class="volunteer-card-details">
+                <div>
+                    <dt>Saldo atual</dt>
+                    <dd><strong>{{ mat.saldo }}</strong> {{ mat.get_unidade_display }}{% if mat.estoque_minimo %} · mín. {{ mat.estoque_minimo }}{% endif %}</dd>
+                </div>
+                <div>
+                    <dt>Origem</dt>
+                    <dd>{% if mat.eh_donativo %}Donativo{% if mat.doador_origem %} ({{ mat.doador_origem }}){% endif %}{% else %}Comprado{% endif %}</dd>
+                </div>
+            </dl>
+
+            <section class="volunteer-card-frequency" aria-label="Nível de estoque">
+                <div class="volunteer-card-frequency-heading">
+                    <span>Nível de estoque</span>
+                    <strong>
+                        {% if mat.sem_estoque %}Zerado
+                        {% elif mat.baixo_estoque %}Baixo
+                        {% else %}Normal{% endif %}
+                    </strong>
+                </div>
+                {% if mat.estoque_minimo and mat.estoque_minimo > 0 %}
+                {% with pct=mat.saldo|floatformat:0 %}
+                <progress class="volunteer-card-frequency-track" max="{{ mat.estoque_minimo }}" value="{{ mat.saldo }}" aria-label="Nível de {{ mat.nome }}"></progress>
+                {% endwith %}
+                {% endif %}
+                <small>{{ mat.saldo }} {{ mat.get_unidade_display }} disponíveis{% if mat.estoque_minimo %} · mínimo {{ mat.estoque_minimo }}{% endif %}</small>
+            </section>
+
+            <details class="volunteer-card-audit">
+                <summary>Histórico do cadastro</summary>
+                <div>
+                    <p><strong>{% if mat.cadastrado_por_nome %}Cadastrado por {{ mat.cadastrado_por_nome }}{% else %}Cadastro anterior{% endif %}</strong></p>
+                    <p>{{ mat.dt_cadastro|date:'d/m/Y H:i' }}</p>
+                    {% if mat.ultimo_editado_por_nome %}<p>Editado por {{ mat.ultimo_editado_por_nome }} em {{ mat.dt_ultima_edicao|date:'d/m/Y H:i' }}</p>{% else %}<p>Sem edições</p>{% endif %}
+                </div>
+            </details>
+
+            {% if usuario.tipo == 'ADMIN' %}
+            <div class="volunteer-card-actions">
+                <a class="btn btn-outline btn-small" href="{% url 'movimentacoes_estoque' %}?busca={{ mat.codigo|urlencode }}">Movimentações</a>
+                <a class="btn btn-outline btn-small" href="{% url 'editar_material' mat.id_material %}">Editar</a>
+            </div>
+            {% endif %}
+
+        </article>
+        {% endfor %}
     </div>
     {% else %}
     <div class="empty-state table-empty">

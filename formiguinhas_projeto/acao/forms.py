@@ -189,7 +189,8 @@ class AcaoParticipanteForm(forms.ModelForm):
     def __init__(self, *args, acao=None, **kwargs):
         super().__init__(*args, **kwargs)
         participantes = AcaoParticipante.objects.filter(acao=acao)
-        historico = AcaoParticipanteHistorico.objects.filter(acao=acao)
+        # Exclui do histórico apenas quem NÃO foi restaurado
+        historico = AcaoParticipanteHistorico.objects.filter(acao=acao, restaurado=False)
         self.fields['voluntario'].queryset = Voluntario.objects.filter(
             status='ATIVO'
         ).exclude(

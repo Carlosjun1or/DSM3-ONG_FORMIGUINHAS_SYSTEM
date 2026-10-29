@@ -252,6 +252,11 @@ def admin_lista(request):
     if fonte == 'mongo' and mongo_ok:
         filtros_mql = {'busca': busca, 'tipo': tipo, 'status': status}
         docs, total_filtrados = consultar_comunicados_mongo(filtros_mql, pagina=1, por_pagina=1000)
+
+        # Filtra apenas comunicados que existem no PostgreSQL
+        ids_no_pg = set(Comunicado.objects.values_list('id_comunicado', flat=True))
+        docs = [d for d in docs if d.get('id_sql') in ids_no_pg]
+
         lista_adaptada = [MongoComunicadoAdapter(d) for d in docs]
         pagina = Paginator(lista_adaptada, 20).get_page(request.GET.get('page'))
         total_comunicados = mongo_stats.get('total', 0)

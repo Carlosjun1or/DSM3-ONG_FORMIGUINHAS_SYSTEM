@@ -3,6 +3,7 @@
 {% block titulo %}Controle de Condomínios e Bags | Sistema{% endblock %}
 {% block page_title %}Controle de Condomínios{% endblock %}
 {% block estilos %}<link rel="stylesheet" href="{% static 'condominio/condominio.css' %}?v=4">{% endblock %}
+
 {% block conteudo %}
 {% if not mongo_conectado %}
 <div class="message-banner message-banner--warning" style="margin-bottom: 1.5rem;">
@@ -10,13 +11,26 @@
     <p style="margin: 0.5rem 0 0;">Exibindo dados do SQLite (banco local). Algumas informações podem estar desatualizadas em relação ao MongoDB Atlas. {{ mongo_msg }}</p>
 </div>
 {% endif %}
-<section class="card-grid volunteer-metrics condominio-metricas" aria-label="Resumo dos condomínios">
-    <article class="card"><h3>Condomínios</h3><div class="metric">{{ total_condominios }}</div><small class="metric-caption">{{ condominios_ativos }} ativos</small></article>
-    <article class="card"><h3>Bags cadastradas</h3><div class="metric">{{ total_bags }}</div><small class="metric-caption">{{ bags_disponiveis }} disponíveis</small></article>
-    <article class="card"><h3>Confiabilidade</h3><div class="metric">{{ condominios_em_avaliacao }}</div><small class="metric-caption">em avaliação</small></article>
+
+<section class="card-grid volunteer-metrics" aria-label="Resumo dos condomínios">
+    <article class="card">
+        <h3>Condomínios</h3>
+        <div class="metric">{{ total_condominios }}</div>
+        <small class="metric-caption">{{ condominios_ativos }} ativos</small>
+    </article>
+    <article class="card">
+        <h3>Bags cadastradas</h3>
+        <div class="metric">{{ total_bags }}</div>
+        <small class="metric-caption">{{ bags_disponiveis }} disponíveis</small>
+    </article>
+    <article class="card">
+        <h3>Em avaliação</h3>
+        <div class="metric">{{ condominios_em_avaliacao }}</div>
+        <small class="metric-caption">confiabilidade</small>
+    </article>
 </section>
 
-<section class="card volunteer-control">
+<section class="card volunteer-control system-list">
     <div class="section-heading">
         <div>
             <h2>Condomínios parceiros</h2>
@@ -24,57 +38,104 @@
         </div>
         {% if usuario.tipo == 'ADMIN' %}
         <div class="table-actions">
-            <a href="{% url 'cadastrar_condominio' %}" class="btn btn-primary">Novo condomínio</a>
             <a href="{% url 'cadastrar_bag' %}" class="btn btn-outline">Nova bag</a>
+            <a href="{% url 'cadastrar_condominio' %}" class="btn btn-primary">Novo condomínio</a>
         </div>
         {% endif %}
     </div>
+
     <form method="get" class="volunteer-filters condominio-filtros">
-        <div class="form-group"><label for="id_busca">Buscar</label><input id="id_busca" name="busca" type="search" value="{{ busca }}" class="form-control" placeholder="Nome do condomínio"></div>
-        <div class="form-group"><label for="id_status">Status</label><select id="id_status" name="status" class="form-control"><option value="">Todos os status</option>{% for valor, rotulo in status_choices %}<option value="{{ valor }}" {% if status_selecionado == valor %}selected{% endif %}>{{ rotulo }}</option>{% endfor %}</select></div>
-        <div class="filter-actions"><button type="submit" class="btn btn-primary">Aplicar filtros</button>{% if busca or status_selecionado %}<a href="{% url 'condominios' %}" class="form-link">Limpar filtros</a>{% endif %}</div>
-    </form>
-    {% if condominios %}
-    <div class="record-card-grid record-card-grid--line condominio-tabela">
-    {% for condominio in condominios %}
-    <article class="record-card record-card--line">
-        <div class="record-card-heading">
-            <div>
-                <span class="record-card-eyebrow">{{ condominio.responsavel_nome }} · {{ condominio.cidade }}/{{ condominio.estado }}</span>
-                <h3><a href="{% url 'detalhe_condominio' condominio.id_condominio %}">{{ condominio.nome }}</a></h3>
-            </div>
-            <span class="situacao-badge situacao-{{ condominio.status|lower }}">{{ condominio.get_status_display }}</span>
+        <div class="form-group">
+            <label for="id_busca">Buscar</label>
+            <input id="id_busca" name="busca" type="search" value="{{ busca }}" class="form-control" placeholder="Nome do condomínio">
         </div>
-        <dl class="record-card-fields">
-            <div class="record-card-field-wide">
-                <dt>Endereço</dt>
-                <dd>{{ condominio.endereco }}, {{ condominio.numero }} · {{ condominio.bairro }}</dd>
+        <div class="form-group">
+            <label for="id_status">Status</label>
+            <select id="id_status" name="status" class="form-control">
+                <option value="">Todos os status</option>
+                {% for valor, rotulo in status_choices %}
+                    <option value="{{ valor }}" {% if status_selecionado == valor %}selected{% endif %}>{{ rotulo }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="filter-actions">
+            <button type="submit" class="btn btn-primary">Filtrar</button>
+            {% if busca or status_selecionado %}<a href="{% url 'condominios' %}" class="form-link">Limpar</a>{% endif %}
+        </div>
+    </form>
+
+    {% if condominios %}
+    <div class="volunteer-card-grid">
+        {% for condominio in condominios %}
+        <article class="volunteer-card">
+
+            <div class="volunteer-card-heading">
+                <div class="volunteer-card-identity">
+                    <span class="volunteer-card-label">{{ condominio.cidade }}/{{ condominio.estado }}</span>
+                    <h3><a href="{% url 'detalhe_condominio' condominio.id_condominio %}">{{ condominio.nome }}</a></h3>
+                </div>
+                <div class="volunteer-card-status">
+                    <span class="situacao-badge situacao-{{ condominio.status|lower }}">{{ condominio.get_status_display }}</span>
+                </div>
             </div>
-            <div>
-                <dt>Praia</dt>
-                <dd>{% if condominio.praia %}{{ condominio.praia.nome }}{% else %}<span class="muted">Não vinculada</span>{% endif %}</dd>
+
+            <dl class="volunteer-card-details">
+                <div>
+                    <dt>Responsável</dt>
+                    <dd>{{ condominio.responsavel_nome }}</dd>
+                </div>
+                <div>
+                    <dt>Porte / confiabilidade</dt>
+                    <dd>{{ condominio.get_porte_display }} · {{ condominio.get_confiabilidade_display }}</dd>
+                </div>
+                <div class="volunteer-card-detail-wide">
+                    <dt>Endereço</dt>
+                    <dd>{{ condominio.endereco }}, {{ condominio.numero }} · {{ condominio.bairro }}</dd>
+                </div>
+                <div>
+                    <dt>Praia</dt>
+                    <dd>{% if condominio.praia %}{{ condominio.praia.nome }}{% else %}<span class="muted">Não vinculada</span>{% endif %}</dd>
+                </div>
+                <div class="volunteer-card-detail-wide">
+                    <dt>Bags</dt>
+                    <dd class="condominio-bags">
+                        {% for bag in condominio.bags.all %}
+                            <span class="bag-summary">
+                                <a class="table-link" href="{% url 'detalhe_bag' bag.id_bag %}">{{ bag.codigo }}</a>
+                                <small class="table-secondary">{{ bag.get_status_display }}</small>
+                            </span>
+                        {% empty %}
+                            <span class="muted">Nenhuma cadastrada</span>
+                        {% endfor %}
+                    </dd>
+                </div>
+            </dl>
+
+            <details class="volunteer-card-audit">
+                <summary>Histórico do cadastro</summary>
+                <div>
+                    <p><strong>{% if condominio.cadastrado_por_nome %}Cadastrado por {{ condominio.cadastrado_por_nome }}{% elif condominio.cadastrado_por %}Cadastrado por {{ condominio.cadastrado_por.id_voluntario.nome }}{% else %}Cadastro anterior{% endif %}</strong></p>
+                    <p>{{ condominio.dt_cadastro|date:'d/m/Y H:i' }}</p>
+                    {% if condominio.ultimo_editado_por_nome %}<p>Editado por {{ condominio.ultimo_editado_por_nome }} em {{ condominio.dt_ultima_edicao|date:'d/m/Y H:i' }}</p>{% elif condominio.ultimo_editado_por %}<p>Editado por {{ condominio.ultimo_editado_por.id_voluntario.nome }} em {{ condominio.dt_ultima_edicao|date:'d/m/Y H:i' }}</p>{% else %}<p>Sem edições</p>{% endif %}
+                </div>
+            </details>
+
+            {% if usuario.tipo == 'ADMIN' %}
+            <div class="volunteer-card-actions">
+                <a class="btn btn-outline btn-small" href="{% url 'detalhe_condominio' condominio.id_condominio %}">Detalhes</a>
             </div>
-            <div>
-                <dt>Porte / confiabilidade</dt>
-                <dd>{{ condominio.get_porte_display }} · {{ condominio.get_confiabilidade_display }}</dd>
-            </div>
-            <div class="record-card-field-wide">
-                <dt>Bags</dt>
-                <dd class="condominio-bags">{% for bag in condominio.bags.all %}<span class="bag-summary"><a class="table-link" href="{% url 'detalhe_bag' bag.id_bag %}">{{ bag.codigo }}</a><small class="table-secondary">{{ bag.get_status_display }}</small></span>{% empty %}<span class="muted">Nenhuma cadastrada</span>{% endfor %}</dd>
-            </div>
-        </dl>
-        <details class="record-card-audit">
-            <summary>Histórico do cadastro</summary>
-            <div>
-                <p><strong>{% if condominio.cadastrado_por_nome %}Cadastrado por {{ condominio.cadastrado_por_nome }}{% elif condominio.cadastrado_por %}Cadastrado por {{ condominio.cadastrado_por.id_voluntario.nome }}{% else %}Cadastro anterior{% endif %}</strong></p>
-                <p>{{ condominio.dt_cadastro|date:'d/m/Y H:i' }}</p>
-                {% if condominio.ultimo_editado_por_nome %}<p>Editado por {{ condominio.ultimo_editado_por_nome }} em {{ condominio.dt_ultima_edicao|date:'d/m/Y H:i' }}</p>{% elif condominio.ultimo_editado_por %}<p>Editado por {{ condominio.ultimo_editado_por.id_voluntario.nome }} em {{ condominio.dt_ultima_edicao|date:'d/m/Y H:i' }}</p>{% else %}<p>Sem edições</p>{% endif %}
-            </div>
-        </details>
-    </article>
-    {% endfor %}
+            {% endif %}
+
+        </article>
+        {% endfor %}
     </div>
     {% include 'sistema/includes/paginacao.html' %}
-    {% else %}<div class="empty-state table-empty condominio-vazio"><h3>Nenhum condomínio encontrado</h3><p class="form-subtitle">Tente limpar os filtros ou cadastre um novo condomínio parceiro.</p><a href="{% url 'cadastrar_condominio' %}" class="btn btn-primary">Cadastrar condomínio</a></div>{% endif %}
+    {% else %}
+    <div class="empty-state table-empty condominio-vazio">
+        <h3>Nenhum condomínio encontrado</h3>
+        <p class="form-subtitle">Tente limpar os filtros ou cadastre um novo condomínio parceiro.</p>
+        <a href="{% url 'cadastrar_condominio' %}" class="btn btn-primary">Cadastrar condomínio</a>
+    </div>
+    {% endif %}
 </section>
 {% endblock %}
