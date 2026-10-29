@@ -86,23 +86,22 @@
                 </div>
             </div>
 
+            <div class="comunicado-card-publicacao">
+                {% if comunicado.dt_publicacao %}
+                <span class="comunicado-card-publicacao-data">{{ comunicado.dt_publicacao|date:'d/m/Y' }}</span>
+                <span class="comunicado-card-publicacao-label"> · {{ comunicado.get_publico_display }}</span>
+                {% else %}
+                <span class="comunicado-card-publicacao-data comunicado-card-publicacao-data--vazio">—</span>
+                <span class="comunicado-card-publicacao-label"> · {{ comunicado.get_publico_display }}</span>
+                {% endif %}
+            </div>
+
             {% if comunicado.resumo or comunicado.conteudo %}
             <p class="volunteer-card-summary">{{ comunicado.resumo|default:comunicado.conteudo|striptags|truncatechars:140 }}</p>
             {% endif %}
 
-            <div class="comunicado-card-meta">
-                <div class="comunicado-card-meta-item">
-                    <span class="comunicado-card-meta-label">Público</span>
-                    <span class="comunicado-card-meta-valor">{{ comunicado.get_publico_display }}</span>
-                </div>
-                <div class="comunicado-card-meta-item">
-                    <span class="comunicado-card-meta-label">Publicação</span>
-                    <span class="comunicado-card-meta-valor">{% if comunicado.dt_publicacao %}{{ comunicado.dt_publicacao|date:'d/m/Y' }}{% else %}<span class="muted">—</span>{% endif %}</span>
-                </div>
-            </div>
-
             <details class="volunteer-card-audit">
-                <summary>Histórico</summary>
+                <summary>Histórico do cadastro</summary>
                 <div>
                     <p><strong>{% if comunicado.autor %}{{ comunicado.autor.id_voluntario.nome }}{% else %}Cadastro anterior{% endif %}</strong></p>
                     {% if comunicado.autor %}<p>Cadastrado em {{ comunicado.criado_em|date:'d/m/Y H:i' }}</p>{% endif %}

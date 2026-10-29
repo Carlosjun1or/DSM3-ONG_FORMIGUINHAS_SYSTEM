@@ -119,47 +119,42 @@
     opacity: 0.85;
 }
 
-/* Resumo — ocupa o espaço disponível e empurra meta + ações para o fundo */
+/* ── Bloco de destaque: data de publicação (mesmo padrão dos outros módulos) */
+.comunicado-card-publicacao {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    padding: 10px 0 8px;
+    border-bottom: 1px solid var(--layout-border);
+}
+
+.comunicado-card-publicacao-data {
+    font-family: var(--fonte-titulo);
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: var(--azul-profundo);
+    line-height: 1;
+}
+
+.comunicado-card-publicacao-data--vazio {
+    color: var(--borda-neutra-forte);
+}
+
+.comunicado-card-publicacao-label {
+    font-size: 0.875rem;
+    font-family: var(--fonte-corpo);
+    color: var(--azul);
+    font-weight: 600;
+}
+
+/* Resumo — ocupa o espaço disponível e empurra ações para o fundo */
 .system-page .comunicados-list .volunteer-card-summary {
     flex: 1;
-    margin: 10px 0 0;
-    padding-bottom: 12px;
-    border-bottom: 1px solid var(--layout-border);
+    margin: 12px 0 0;
     font-family: var(--fonte-corpo);
     font-size: 0.875rem;
     line-height: 1.55;
     color: var(--texto);
     opacity: 0.8;
-    overflow-wrap: anywhere;
-}
-
-/* Meta: público + data — linha compacta abaixo do resumo */
-.comunicado-card-meta {
-    display: flex;
-    align-items: center;
-    gap: 18px;
-    padding: 10px 0;
-    border-bottom: 1px solid var(--layout-border);
-}
-
-.comunicado-card-meta-item {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    min-width: 0;
-}
-
-.comunicado-card-meta-label {
-    font-size: 0.7rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.07em;
-    color: var(--roxo);
-}
-
-.comunicado-card-meta-valor {
-    font-size: 0.82rem;
-    font-weight: 600;
-    color: var(--azul-profundo);
     overflow-wrap: anywhere;
 }
