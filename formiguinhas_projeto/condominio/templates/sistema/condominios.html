@@ -99,12 +99,13 @@
             </dl>
 
             <div class="condominio-card-bags">
-                {% with total=condominio.bags.count disponiveis=condominio.bags.all|length %}
-                <span class="condominio-card-bags-count"><strong>{{ total }}</strong></span>
+                {% with total=condominio.bags.count %}
+                <span class="condominio-card-bags-count">{{ total }}</span>
                 <span class="condominio-card-bags-label">bag{{ total|pluralize }} cadastrada{{ total|pluralize }}</span>
+                <a class="btn btn-outline btn-small condominio-card-bags-link" href="{% url 'bags' %}?condominio={{ condominio.id_condominio }}">Ver bags</a>
                 {% endwith %}
             </div>
-            
+
             <details class="volunteer-card-audit">
                 <summary>Histórico do cadastro</summary>
                 <div>
@@ -117,7 +118,6 @@
             {% if usuario.tipo == 'ADMIN' %}
             <div class="volunteer-card-actions">
                 <a class="btn btn-outline btn-small" href="{% url 'detalhe_condominio' condominio.id_condominio %}">Detalhes</a>
-                <a class="btn btn-outline btn-small condominio-card-bags-link" href="{% url 'bags' %}?condominio={{ condominio.id_condominio }}">Ver bags</a>
             </div>
             {% endif %}
 
