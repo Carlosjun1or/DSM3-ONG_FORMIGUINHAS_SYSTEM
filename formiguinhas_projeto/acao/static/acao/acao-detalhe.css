@@ -40,7 +40,6 @@
     stroke-linejoin: round;
 }
 
-
 /* ---------------------------------------------------------------- topo */
 .acao-detalhe .acao-topo {
     display: grid;
@@ -280,9 +279,6 @@
     background: var(--papel);
     box-shadow: none;
 }
-
-section[id] { scroll-margin-top: 120px; }
-#restore-confirmation-modal[hidden] { display: none; }
 
 .system-page .acao-detalhe .member-form-panel h3 {
     margin: 0 0 12px;

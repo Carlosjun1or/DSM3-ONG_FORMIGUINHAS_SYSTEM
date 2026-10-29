@@ -22,7 +22,7 @@
 
     <section class="acao-topo" id="resumo" aria-labelledby="acao-titulo">
         <div class="acao-topo__principal">
-            <span class="acao-topo__eyebrow">A????o cadastrada</span>
+            <span class="acao-topo__eyebrow">Ação cadastrada</span>
             <div class="acao-topo__titulo">
                 <h2 id="acao-titulo">{{ acao.get_tipo_display }}</h2>
                 <span class="status-select status-{{ acao.status|lower }}">{{ acao.get_status_display }}</span>
@@ -35,14 +35,14 @@
                 {% if acao.horario %}
                 <li>
                     <svg class="acao-icone" aria-hidden="true"><use href="#i-clock"></use></svg>
-                    <span class="acao-leitor">Hor??rio:</span>{{ acao.horario|time:'H:i' }}
+                    <span class="acao-leitor">Horário:</span>{{ acao.horario|time:'H:i' }}
                 </li>
                 {% endif %}
                 <li>
                     <svg class="acao-icone" aria-hidden="true"><use href="#i-onda"></use></svg>
                     <span class="acao-leitor">Praia:</span>
                     <a href="{% url 'praias' %}?praia={{ acao.praia.id_praia }}">{{ acao.praia.nome }}</a>
-                    <span>?? {{ acao.praia.cidade }}</span>
+                    <span>· {{ acao.praia.cidade }}</span>
                 </li>
                 {% if acao.local %}
                 <li>
@@ -56,7 +56,7 @@
 
         <div class="acao-topo__acoes">
             {% if usuario.tipo == 'ADMIN' %}
-            <a href="{% url 'editar_acao' acao.id_acao %}" class="btn btn-outline">Editar a????o</a>
+            <a href="{% url 'editar_acao' acao.id_acao %}" class="btn btn-outline">Editar ação</a>
             {% endif %}
             <a href="{% url 'acoes' %}" class="btn btn-outline">Voltar</a>
         </div>
@@ -65,42 +65,42 @@
             <div class="acao-metrica"><span>Participantes</span><strong>{{ total_participantes }}</strong></div>
             <div class="acao-metrica"><span>Confirmados</span><strong>{{ total_confirmados }}</strong></div>
             <div class="acao-metrica"><span>Presentes</span><strong>{{ total_presentes }}</strong></div>
-            <div class="acao-metrica"><span>Res??duos</span><strong>{{ residuos|length }}</strong></div>
+            <div class="acao-metrica"><span>Resíduos</span><strong>{{ residuos|length }}</strong></div>
         </div>
 
         <p class="acao-topo__auditoria">
             Cadastrada por
             {% if acao.cadastrado_por_nome %}{{ acao.cadastrado_por_nome }}{% elif acao.cadastrado_por %}{{ acao.cadastrado_por.id_voluntario.nome }}{% else %}cadastro anterior{% endif %}{% if acao.dt_cadastro %} em {{ acao.dt_cadastro|date:'d/m/Y H:i' }}{% endif %}
-            ?? ??ltima edi????o:
-            {% if acao.ultimo_editado_por_nome %}{{ acao.ultimo_editado_por_nome }}{% elif acao.ultimo_editado_por %}{{ acao.ultimo_editado_por.id_voluntario.nome }}{% else %}sem edi????es{% endif %}{% if acao.dt_ultima_edicao %} em {{ acao.dt_ultima_edicao|date:'d/m/Y H:i' }}{% endif %}
+            · Última edição:
+            {% if acao.ultimo_editado_por_nome %}{{ acao.ultimo_editado_por_nome }}{% elif acao.ultimo_editado_por %}{{ acao.ultimo_editado_por.id_voluntario.nome }}{% else %}sem edições{% endif %}{% if acao.dt_ultima_edicao %} em {{ acao.dt_ultima_edicao|date:'d/m/Y H:i' }}{% endif %}
         </p>
     </section>
 
-    <nav class="acao-nav" aria-label="Se????es desta a????o">
-        <a href="#residuos">Res??duos <b>{{ residuos|length }}</b></a>
+    <nav class="acao-nav" aria-label="Seções desta ação">
+        <a href="#residuos">Resíduos <b>{{ residuos|length }}</b></a>
         <a href="#materiais-utilizados">Materiais <b>{{ materiais_utilizados|length }}</b></a>
         <a href="#imagens">Imagens <b>{{ imagens_acao|length }}</b></a>
-        <a href="#responsaveis">Respons??veis <b>{{ responsaveis|length }}</b></a>
+        <a href="#responsaveis">Responsáveis <b>{{ responsaveis|length }}</b></a>
         {% if equipes or acao.tipo == 'MUTIRAO' %}<a href="#equipes">Equipes <b>{{ equipes|length }}</b></a>{% endif %}
         <a href="#chamada">Chamada <b>{{ participantes|length }}</b></a>
-        {% if historico_participantes %}<a href="#historico">Hist??rico</a>{% endif %}
+        {% if historico_participantes %}<a href="#historico">Histórico</a>{% endif %}
     </nav>
 
     <section class="acao-secao" id="residuos">
         <div class="acao-secao__cabecalho">
             <div>
-                <h2>Res??duos coletados <span class="section-count">{{ residuos|length }}</span></h2>
-                <p>Registre o tipo, a categoria e a quantidade coletada. Cada registro pode ter mais de uma destina????o.</p>
+                <h2>Resíduos coletados <span class="section-count">{{ residuos|length }}</span></h2>
+                <p>Registre o tipo, a categoria e a quantidade coletada. Cada registro pode ter mais de uma destinação.</p>
             </div>
             {% if usuario.tipo == 'ADMIN' %}
-            <button type="button" class="btn btn-outline btn-small" data-abrir-painel="painel-residuo" data-texto-aberto="Fechar formul??rio" aria-expanded="false" aria-controls="painel-residuo">
-                <svg class="acao-icone" aria-hidden="true"><use href="#i-mais"></use></svg><span>Registrar res??duo</span>
+            <button type="button" class="btn btn-outline btn-small" data-abrir-painel="painel-residuo" data-texto-aberto="Fechar formulário" aria-expanded="false" aria-controls="painel-residuo">
+                <svg class="acao-icone" aria-hidden="true"><use href="#i-mais"></use></svg><span>Registrar resíduo</span>
             </button>
             {% endif %}
         </div>
         {% if usuario.tipo == 'ADMIN' %}
         <div class="member-form-panel" id="painel-residuo" hidden>
-            <h3>Registrar res??duo</h3>
+            <h3>Registrar resíduo</h3>
             <form method="post" action="{% url 'registrar_residuo' acao.id_acao %}">
                 {% csrf_token %}
                 {% if residuo_form.non_field_errors %}<div class="error-box">{{ residuo_form.non_field_errors|join:', ' }}</div>{% endif %}
@@ -137,7 +137,7 @@
                     </div>
                 </div>
                 <div class="form-actions">
-                    <button type="submit" class="btn btn-primary">Registrar res??duo</button>
+                    <button type="submit" class="btn btn-primary">Registrar resíduo</button>
                 </div>
             </form>
         </div>
@@ -150,15 +150,15 @@
                         <th>Tipo / categoria</th>
                         <th>Quantidade</th>
                         <th>Registro</th>
-                        <th>Destina????es</th>
-                        {% if usuario.tipo == 'ADMIN' %}<th>A????o</th>{% endif %}
+                        <th>Destinações</th>
+                        {% if usuario.tipo == 'ADMIN' %}<th>Ação</th>{% endif %}
                     </tr>
                 </thead>
                 <tbody>
                     {% for residuo in residuos %}
                     <tr>
                         <td>
-                            <a class="table-link" href="{% url 'residuos' %}?acao={{ acao.id_acao }}&amp;tipo={{ residuo.tipo|urlencode }}" title="Ver este tipo de res??duo na lista geral">
+                            <a class="table-link" href="{% url 'residuos' %}?acao={{ acao.id_acao }}&amp;tipo={{ residuo.tipo|urlencode }}" title="Ver este tipo de resíduo na lista geral">
                                 <strong>{{ residuo.get_tipo_display }}</strong>
                             </a>
                             <br><small>{{ residuo.get_categoria_display }}</small>
@@ -166,7 +166,7 @@
                         <td>{{ residuo.quantidade }} {{ residuo.get_unidade_display }}</td>
                         <td>
                             {{ residuo.registrado_por_nome }}<br><small>{{ residuo.dt_registro|date:'d/m/Y H:i' }}</small>
-                            {% if residuo.ultimo_editado_por_nome %}<br><small>Editado por {{ residuo.ultimo_editado_por_nome }} em {{ residuo.dt_ultima_edicao|date:'d/m/Y H:i' }}</small>{% else %}<br><small>Sem edi????es</small>{% endif %}
+                            {% if residuo.ultimo_editado_por_nome %}<br><small>Editado por {{ residuo.ultimo_editado_por_nome }} em {{ residuo.dt_ultima_edicao|date:'d/m/Y H:i' }}</small>{% else %}<br><small>Sem edições</small>{% endif %}
                         </td>
                         <td>
                             {% for destinacao in residuo.destinacoes.all %}
@@ -174,19 +174,19 @@
                                 <span>{{ destinacao.get_tipo_display }}{% if destinacao.quantidade %} ({{ destinacao.quantidade }} {{ destinacao.get_unidade_display }}){% endif %}</span>
                                 {% if usuario.tipo == 'ADMIN' %}
                                 <a class="btn btn-outline btn-small" href="{% url 'editar_destinacao' acao.id_acao residuo.id_residuo destinacao.id_destinacao %}">Editar</a>
-                                <form method="post" action="{% url 'excluir_destinacao' acao.id_acao residuo.id_residuo destinacao.id_destinacao %}" onsubmit="return confirm('Excluir esta destina????o?');">{% csrf_token %}<button type="submit" class="btn btn-danger btn-small">Excluir</button></form>
+                                <form method="post" action="{% url 'excluir_destinacao' acao.id_acao residuo.id_residuo destinacao.id_destinacao %}" onsubmit="return confirm('Excluir esta destinação?');">{% csrf_token %}<button type="submit" class="btn btn-danger btn-small">Excluir</button></form>
                                 {% endif %}
                             </div>
                             {% empty %}
-                            <span class="field-hint">Ainda n??o informada</span>
+                            <span class="field-hint">Ainda não informada</span>
                             {% endfor %}
                         </td>
                         {% if usuario.tipo == 'ADMIN' %}
                         <td>
                             <div class="acao-celula-acoes">
-                                <a class="btn btn-outline btn-small" href="{% url 'registrar_destinacao' acao.id_acao residuo.id_residuo %}">Adicionar destina????o</a>
-                                <a class="btn btn-outline btn-small" href="{% url 'editar_residuo' acao.id_acao residuo.id_residuo %}">Editar res??duo</a>
-                                <form method="post" action="{% url 'excluir_residuo' acao.id_acao residuo.id_residuo %}" onsubmit="return confirm('Excluir este res??duo e suas destina????es?');">{% csrf_token %}<button type="submit" class="btn btn-danger btn-small">Excluir res??duo</button></form>
+                                <a class="btn btn-outline btn-small" href="{% url 'registrar_destinacao' acao.id_acao residuo.id_residuo %}">Adicionar destinação</a>
+                                <a class="btn btn-outline btn-small" href="{% url 'editar_residuo' acao.id_acao residuo.id_residuo %}">Editar resíduo</a>
+                                <form method="post" action="{% url 'excluir_residuo' acao.id_acao residuo.id_residuo %}" onsubmit="return confirm('Excluir este resíduo e suas destinações?');">{% csrf_token %}<button type="submit" class="btn btn-danger btn-small">Excluir resíduo</button></form>
                             </div>
                         </td>
                         {% endif %}
@@ -196,7 +196,7 @@
             </table>
         </div>
         {% else %}
-        <div class="acao-vazio"><strong>Nenhum res??duo registrado.</strong> <span>Os registros desta a????o aparecer??o aqui.</span></div>
+        <div class="acao-vazio"><strong>Nenhum resíduo registrado.</strong> <span>Os registros desta ação aparecerão aqui.</span></div>
         {% endif %}
     </section>
 
@@ -204,10 +204,10 @@
         <div class="acao-secao__cabecalho">
             <div>
                 <h2>Materiais utilizados <span class="section-count">{{ materiais_utilizados|length }}</span></h2>
-                <p>Cada registro cria uma sa??da no estoque e fica vinculado a esta a????o.</p>
+                <p>Cada registro cria uma saída no estoque e fica vinculado a esta ação.</p>
             </div>
             {% if usuario.tipo == 'ADMIN' %}
-            <button type="button" class="btn btn-outline btn-small" data-abrir-painel="painel-material" data-texto-aberto="Fechar formul??rio" aria-expanded="{% if material_utilizado_form.errors %}true{% else %}false{% endif %}" aria-controls="painel-material">
+            <button type="button" class="btn btn-outline btn-small" data-abrir-painel="painel-material" data-texto-aberto="Fechar formulário" aria-expanded="{% if material_utilizado_form.errors %}true{% else %}false{% endif %}" aria-controls="painel-material">
                 <svg class="acao-icone" aria-hidden="true"><use href="#i-mais"></use></svg><span>Registrar material</span>
             </button>
             {% endif %}
@@ -221,7 +221,7 @@
                     <div class="form-group material-picker{% if material_utilizado_form.material.errors %} campo-invalido{% endif %}">
                         <label for="material-utilizado-search">{{ material_utilizado_form.material.label }}</label>
                         <div class="material-combobox" data-material-combobox>
-                            <input id="material-utilizado-search" data-material-search type="search" class="form-control" placeholder="Digite o nome ou c??digo do material" autocomplete="off" role="combobox" aria-autocomplete="list" aria-controls="material-utilizado-options" aria-expanded="false">
+                            <input id="material-utilizado-search" data-material-search type="search" class="form-control" placeholder="Digite o nome ou código do material" autocomplete="off" role="combobox" aria-autocomplete="list" aria-controls="material-utilizado-options" aria-expanded="false">
                             <div id="material-utilizado-options" data-material-options class="material-options" role="listbox" hidden></div>
                             <div class="material-select-real">{{ material_utilizado_form.material }}</div>
                         </div>
@@ -245,7 +245,7 @@
         <div class="table-wrap">
             <table class="data-table" data-sem-cards>
                 <thead>
-                    <tr><th>Material</th><th>Quantidade utilizada</th><th>Registrado em</th><th>Respons??vel</th></tr>
+                    <tr><th>Material</th><th>Quantidade utilizada</th><th>Registrado em</th><th>Responsável</th></tr>
                 </thead>
                 <tbody>
                     {% for movimentacao in materiais_utilizados %}
@@ -269,18 +269,18 @@
             </table>
         </div>
         {% else %}
-        <div class="acao-vazio"><strong>Nenhum material utilizado registrado.</strong> <span>Registre aqui os materiais consumidos durante esta a????o.</span></div>
+        <div class="acao-vazio"><strong>Nenhum material utilizado registrado.</strong> <span>Registre aqui os materiais consumidos durante esta ação.</span></div>
         {% endif %}
     </section>
 
     <section class="acao-secao" id="imagens">
         <div class="acao-secao__cabecalho">
             <div>
-                <h2>Imagens da a????o <span class="section-count">{{ imagens_acao|length }}</span></h2>
-                <p>Adicione registros fotogr??ficos da atividade. At?? 10 imagens de 5 MB por envio.</p>
+                <h2>Imagens da ação <span class="section-count">{{ imagens_acao|length }}</span></h2>
+                <p>Adicione registros fotográficos da atividade. Até 10 imagens de 5 MB por envio.</p>
             </div>
             {% if usuario.tipo == 'ADMIN' %}
-            <button type="button" class="btn btn-outline btn-small" data-abrir-painel="painel-imagens" data-texto-aberto="Fechar formul??rio" aria-expanded="false" aria-controls="painel-imagens">
+            <button type="button" class="btn btn-outline btn-small" data-abrir-painel="painel-imagens" data-texto-aberto="Fechar formulário" aria-expanded="false" aria-controls="painel-imagens">
                 <svg class="acao-icone" aria-hidden="true"><use href="#i-mais"></use></svg><span>Adicionar imagens</span>
             </button>
             {% endif %}
@@ -313,7 +313,7 @@
         <div class="action-image-grid">
             {% for imagem in imagens_acao %}
             <figure class="action-image-card">
-                <img src="{{ imagem.imagem.url }}" alt="{{ imagem.descricao|default:'Imagem da a????o' }}" loading="lazy" decoding="async">
+                <img src="{{ imagem.imagem.url }}" alt="{{ imagem.descricao|default:'Imagem da ação' }}" loading="lazy" decoding="async">
                 {% if imagem.descricao %}<figcaption>{{ imagem.descricao }}</figcaption>{% endif %}
                 {% if usuario.tipo == 'ADMIN' %}
                 <form method="post" action="{% url 'excluir_imagem_acao' acao.id_acao imagem.id_acao_imagem %}">
@@ -325,32 +325,32 @@
             {% endfor %}
         </div>
         {% else %}
-        <div class="acao-vazio"><strong>Nenhuma imagem cadastrada.</strong> <span>Adicione fotos para registrar esta a????o.</span></div>
+        <div class="acao-vazio"><strong>Nenhuma imagem cadastrada.</strong> <span>Adicione fotos para registrar esta ação.</span></div>
         {% endif %}
     </section>
 
     <section class="acao-secao" id="responsaveis">
         <div class="acao-secao__cabecalho">
             <div>
-                <h2>Respons??veis pela a????o <span class="section-count">{{ responsaveis|length }}</span></h2>
-                <p>Volunt??rios respons??veis pela organiza????o e acompanhamento desta atividade.</p>
+                <h2>Responsáveis pela ação <span class="section-count">{{ responsaveis|length }}</span></h2>
+                <p>Voluntários responsáveis pela organização e acompanhamento desta atividade.</p>
             </div>
             {% if usuario.tipo == 'ADMIN' %}
-            <button type="button" class="btn btn-outline btn-small" data-abrir-painel="painel-responsavel" data-texto-aberto="Fechar formul??rio" aria-expanded="false" aria-controls="painel-responsavel">
-                <svg class="acao-icone" aria-hidden="true"><use href="#i-mais"></use></svg><span>Adicionar respons??vel</span>
+            <button type="button" class="btn btn-outline btn-small" data-abrir-painel="painel-responsavel" data-texto-aberto="Fechar formulário" aria-expanded="false" aria-controls="painel-responsavel">
+                <svg class="acao-icone" aria-hidden="true"><use href="#i-mais"></use></svg><span>Adicionar responsável</span>
             </button>
             {% endif %}
         </div>
         {% if usuario.tipo == 'ADMIN' %}
         <div class="member-form-panel" id="painel-responsavel" hidden>
-            <h3>Adicionar respons??vel</h3>
+            <h3>Adicionar responsável</h3>
             <form method="post" action="{% url 'adicionar_responsavel_acao' acao.id_acao %}">
                 {% csrf_token %}
                 <div class="form-grid">
                     <div class="form-group">
                         {{ responsavel_form.voluntario.label_tag }}
                         <div class="searchable-select">
-                            <input type="search" class="form-control volunteer-search" placeholder="Pesquise por nome ou e-mail" autocomplete="off" aria-label="Pesquisar respons??vel">
+                            <input type="search" class="form-control volunteer-search" placeholder="Pesquise por nome ou e-mail" autocomplete="off" aria-label="Pesquisar responsável">
                             {{ responsavel_form.voluntario }}
                         </div>
                         {% if responsavel_form.voluntario.errors %}<small class="error-msg">{{ responsavel_form.voluntario.errors|join:', ' }}</small>{% endif %}
@@ -362,14 +362,14 @@
                     </div>
                 </div>
                 <div class="form-actions">
-                    <button type="submit" class="btn btn-primary">Adicionar respons??vel</button>
+                    <button type="submit" class="btn btn-primary">Adicionar responsável</button>
                 </div>
             </form>
         </div>
         {% endif %}
         <form method="get" action="#responsaveis" class="volunteer-filters team-member-filters responsible-filters">
             <div class="form-group">
-                <label for="id_busca_responsavel">Buscar respons??vel</label>
+                <label for="id_busca_responsavel">Buscar responsável</label>
                 <input id="id_busca_responsavel" name="busca_responsavel" type="search" value="{{ busca_responsavel }}" class="form-control" placeholder="Nome ou e-mail">
             </div>
             <div class="filter-actions">
@@ -382,7 +382,7 @@
             <table class="data-table" data-sem-cards>
                 <thead>
                     <tr>
-                        <th>Volunt??rio</th>
+                        <th>Voluntário</th>
                         <th>Papel</th>
                     </tr>
                 </thead>
@@ -405,7 +405,7 @@
             </table>
         </div>
         {% else %}
-        <div class="acao-vazio"><strong>Nenhum respons??vel cadastrado.</strong> <span>Adicione os respons??veis por esta a????o.</span></div>
+        <div class="acao-vazio"><strong>Nenhum responsável cadastrado.</strong> <span>Adicione os responsáveis por esta ação.</span></div>
         {% endif %}
     </section>
 
@@ -414,7 +414,7 @@
         <div class="acao-secao__cabecalho">
             <div>
                 <h2>Equipes vinculadas <span class="section-count">{{ equipes|length }}</span></h2>
-                <p>Equipes associadas a este mutir??o e ?? praia da a????o.</p>
+                <p>Equipes associadas a este mutirão e à praia da ação.</p>
             </div>
         </div>
         <form method="get" action="#equipes" class="volunteer-filters team-member-filters">
@@ -435,7 +435,7 @@
                         <th>Equipe</th>
                         <th>Praia</th>
                         <th>Status</th>
-                        <th>Auditoria da a????o</th>
+                        <th>Auditoria da ação</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -445,7 +445,7 @@
                         <td>{{ vinculada.equipe.praia.nome }} - {{ vinculada.equipe.praia.cidade }}</td>
                         <td><span class="status-select status-{{ vinculada.equipe.status|lower }}">{{ vinculada.equipe.get_status_display }}</span></td>
                         <td class="audit-cell">
-                            <strong>{% if acao.cadastrado_por_nome %}A????o cadastrada por {{ acao.cadastrado_por_nome }}{% elif acao.cadastrado_por %}A????o cadastrada por {{ acao.cadastrado_por.id_voluntario.nome }}{% else %}Cadastro anterior{% endif %}</strong>
+                            <strong>{% if acao.cadastrado_por_nome %}Ação cadastrada por {{ acao.cadastrado_por_nome }}{% elif acao.cadastrado_por %}Ação cadastrada por {{ acao.cadastrado_por.id_voluntario.nome }}{% else %}Cadastro anterior{% endif %}</strong>
                             <small>{{ acao.dt_cadastro|date:'d/m/Y H:i' }}</small>
                         </td>
                     </tr>
@@ -454,7 +454,7 @@
             </table>
         </div>
         {% else %}
-        <div class="acao-vazio"><strong>Nenhuma equipe encontrada.</strong> <span>Esta a????o n??o possui equipes vinculadas ou nenhum resultado corresponde ao filtro.</span></div>
+        <div class="acao-vazio"><strong>Nenhuma equipe encontrada.</strong> <span>Esta ação não possui equipes vinculadas ou nenhum resultado corresponde ao filtro.</span></div>
         {% endif %}
     </section>
     {% endif %}
@@ -463,10 +463,10 @@
         <div class="acao-secao__cabecalho">
             <div>
                 <h2>Chamada <span class="section-count">{{ participantes|length }}</span></h2>
-                <p>Adicione volunt??rios e acompanhe confirma????o e comparecimento.</p>
+                <p>Adicione voluntários e acompanhe confirmação e comparecimento.</p>
             </div>
             {% if usuario.tipo == 'ADMIN' %}
-            <button type="button" class="btn btn-outline btn-small" data-abrir-painel="painel-participante" data-texto-aberto="Fechar formul??rio" aria-expanded="false" aria-controls="painel-participante">
+            <button type="button" class="btn btn-outline btn-small" data-abrir-painel="painel-participante" data-texto-aberto="Fechar formulário" aria-expanded="false" aria-controls="painel-participante">
                 <svg class="acao-icone" aria-hidden="true"><use href="#i-mais"></use></svg><span>Adicionar participante</span>
             </button>
             {% endif %}
@@ -483,10 +483,10 @@
                         {{ field.label_tag }}
                         {% if field.name == 'voluntario' %}
                         <div class="searchable-select">
-                            <input type="search" class="form-control volunteer-search" placeholder="Pesquise pelo nome ou e-mail" autocomplete="off" aria-label="Pesquisar volunt??rio">
+                            <input type="search" class="form-control volunteer-search" placeholder="Pesquise pelo nome ou e-mail" autocomplete="off" aria-label="Pesquisar voluntário">
                             {{ field }}
                         </div>
-                        <small class="field-hint">Digite para localizar o volunt??rio e selecione o nome.</small>
+                        <small class="field-hint">Digite para localizar o voluntário e selecione o nome.</small>
                         {% else %}
                         {{ field }}
                         {% endif %}
@@ -507,7 +507,7 @@
                 <input id="id_busca_participante" name="busca_participante" type="search" value="{{ busca_participante }}" class="form-control" placeholder="Nome ou e-mail">
             </div>
             <div class="form-group">
-                <label for="id_status_participante">Status da participa????o</label>
+                <label for="id_status_participante">Status da participação</label>
                 <select id="id_status_participante" name="status_participante" class="form-control">
                     <option value="">Todos os status</option>
                     {% for valor, rotulo in status_participante_choices %}
@@ -526,10 +526,10 @@
             <table class="data-table" data-sem-cards>
                 <thead>
                     <tr>
-                        <th>Volunt??rio</th>
+                        <th>Voluntário</th>
                         <th>Status</th>
                         <th>Compareceu</th>
-                        <th>Confirma????o</th>
+                        <th>Confirmação</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -568,7 +568,7 @@
                                 </label>
                             </form>
                             {% else %}
-                            {% if participante.compareceu %}Sim{% else %}N??o{% endif %}
+                            {% if participante.compareceu %}Sim{% else %}Não{% endif %}
                             {% endif %}
                         </td>
                         <td>{{ participante.dt_confirmacao|date:'d/m/Y H:i'|default:'-' }}</td>
@@ -578,7 +578,7 @@
             </table>
         </div>
         {% else %}
-        <div class="acao-vazio"><strong>Nenhum participante vinculado.</strong> <span>Para mutir??es, o sistema inclui automaticamente os volunt??rios das equipes da praia.</span></div>
+        <div class="acao-vazio"><strong>Nenhum participante vinculado.</strong> <span>Para mutirões, o sistema inclui automaticamente os voluntários das equipes da praia.</span></div>
         {% endif %}
     </section>
 
@@ -586,20 +586,20 @@
     <section class="acao-secao" id="historico">
         <div class="acao-secao__cabecalho">
             <div>
-                <h2>Hist??rico de participantes</h2>
-                <p>Pessoas que recusaram ou n??o compareceram ?? a????o.</p>
+                <h2>Histórico de participantes</h2>
+                <p>Pessoas que recusaram ou não compareceram à ação.</p>
             </div>
         </div>
         <div class="table-wrap">
             <table class="data-table" data-sem-cards>
                 <thead>
                     <tr>
-                        <th>Volunt??rio</th>
+                        <th>Voluntário</th>
                         <th>Resultado</th>
                         <th>Movimentado em</th>
                         <th>Auditoria</th>
-                        <th>Observa????o</th>
-                        <th>A????o</th>
+                        <th>Observação</th>
+                        <th>Ação</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -625,7 +625,7 @@
                         <td class="table-actions">
                             {% if usuario.tipo == 'ADMIN' %}
                             {% if historico.restaurado %}
-                                <span class="field-hint">J?? restaurado</span>
+                                <span class="field-hint">Já restaurado</span>
                             {% else %}
                                 <form method="post" action="{% url 'restaurar_participante_acao' acao.id_acao historico.id_historico %}" class="restore-participant-form">
                                     {% csrf_token %}
@@ -633,7 +633,7 @@
                                 </form>
                             {% endif %}
                             {% else %}
-                            <span class="field-hint">Somente visualiza????o</span>
+                            <span class="field-hint">Somente visualização</span>
                             {% endif %}
                         </td>
                     </tr>
@@ -649,9 +649,9 @@
 <div class="confirmation-modal" id="restore-confirmation-modal" hidden>
     <div class="confirmation-modal-backdrop" data-close-restore-modal></div>
     <section class="confirmation-modal-card" role="dialog" aria-modal="true" aria-labelledby="restore-confirmation-title">
-        <div class="confirmation-modal-icon">???</div>
+        <div class="confirmation-modal-icon">↩</div>
         <h2 id="restore-confirmation-title">Restaurar participante?</h2>
-        <p>O volunt??rio <strong id="restore-volunteer-name"></strong> voltar?? para a lista de participantes com status pendente.</p>
+        <p>O voluntário <strong id="restore-volunteer-name"></strong> voltará para a lista de participantes com status pendente.</p>
         <div class="confirmation-modal-actions">
             <button type="button" class="btn btn-outline" data-close-restore-modal>Cancelar</button>
             <button type="button" class="btn btn-primary" id="confirm-restore-participant">Restaurar</button>
@@ -686,7 +686,7 @@
         });
     }());
 
-    /* Bot??es "Registrar..." / "Adicionar...": abrem e fecham o painel do formul??rio. */
+    /* Botões "Registrar..." / "Adicionar...": abrem e fecham o painel do formulário. */
     (function () {
         document.querySelectorAll('[data-abrir-painel]').forEach(function (botao) {
             var painel = document.getElementById(botao.dataset.abrirPainel);
@@ -713,7 +713,7 @@
         });
     }());
 
-    /* Menu de se????es: destaca o link da se????o que est?? na tela. */
+    /* Menu de seções: destaca o link da seção que está na tela. */
     (function () {
         var links = document.querySelectorAll('.acao-nav a');
         if (!links.length || !('IntersectionObserver' in window)) return;
