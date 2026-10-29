@@ -223,3 +223,36 @@
         grid-template-columns: 1fr;
     }
 }
+
+/* ── Elementos estruturais do card de condomínio ─────────────────── */
+
+/* Bloco de contagem de bags */
+.condominio-card-bags {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 0 8px;
+    border-bottom: 1px solid var(--layout-border);
+    margin-bottom: 4px;
+}
+
+.condominio-card-bags-count {
+    font-family: var(--fonte-titulo);
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--azul-profundo);
+    line-height: 1;
+}
+
+.condominio-card-bags-label {
+    font-size: 0.8rem;
+    font-family: var(--fonte-corpo);
+    color: var(--azul);
+    font-weight: 600;
+    flex: 1;
+}
+
+.condominio-card-bags-link {
+    margin-left: auto;
+    flex: 0 0 auto;
+}

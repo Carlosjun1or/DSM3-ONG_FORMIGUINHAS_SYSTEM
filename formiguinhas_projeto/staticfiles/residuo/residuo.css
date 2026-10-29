@@ -112,3 +112,31 @@
     color: #71827b;
     font-size: 0.74rem;
 }
+
+/* ── Elementos estruturais do card de resíduo ───────────────────── */
+
+/* Quantidade em destaque no lado direito do heading */
+.residuo-card-quantidade {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 1px;
+    flex: 0 0 auto;
+}
+
+.residuo-card-qtd-num {
+    font-family: var(--fonte-titulo);
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--azul-profundo);
+    line-height: 1;
+}
+
+.residuo-card-qtd-unidade {
+    font-size: 0.72rem;
+    font-family: var(--fonte-corpo);
+    font-weight: 700;
+    color: var(--roxo);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}

@@ -1,0 +1,517 @@
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 1040px;
+}
+
+.data-table th,
+.data-table td {
+    padding: 15px 12px;
+    text-align: left;
+    border-bottom: 1px solid #edf1ee;
+    white-space: nowrap;
+}
+
+.voluntario-destacado {
+    background: #e8f5ec;
+    box-shadow: inset 4px 0 0 #2f8f57;
+}
+
+.praia-destacada {
+    background: #e8f5ec;
+    box-shadow: inset 4px 0 0 #2f8f57;
+}
+
+.data-table th {
+    color: #5b6f68;
+    font-size: 0.76rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.data-table td {
+    color: #30463f;
+}
+
+.data-table td > small.table-secondary,
+.data-table td > .bag-summary {
+    display: block;
+    margin-top: 5px;
+}
+
+.bag-summary {
+    min-width: 105px;
+    white-space: normal;
+}
+
+.bag-summary .table-link {
+    display: inline-block;
+    white-space: nowrap;
+}
+
+.bag-summary .table-secondary {
+    display: block;
+    margin-top: 4px;
+    white-space: nowrap;
+}
+
+.table-secondary {
+    color: #6b7d76;
+    font-size: 0.78rem;
+}
+
+.bag-summary + .bag-summary {
+    margin-top: 8px;
+}
+
+.bag-status {
+    display: inline-block;
+    padding: 5px 9px;
+    border-radius: 999px;
+    background: #edf2ef;
+    color: #3d554b;
+    font-size: 0.78rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.bag-status-cheia {
+    background: #fff0d8;
+    color: #9a5b00;
+}
+
+.bag-status-em_uso {
+    background: #e1f2e7;
+    color: #176247;
+}
+
+.bag-status-em_transito,
+.bag-status-retirada {
+    background: #e4eef8;
+    color: #245d8c;
+}
+
+.bag-status-danificada,
+.bag-status-perdida {
+    background: #fbe3e3;
+    color: #a33c3c;
+}
+
+.audit-history-table {
+    min-width: 1100px;
+}
+
+.audit-action {
+    display: inline-block;
+    padding: 5px 9px;
+    border-radius: 999px;
+    background: #edf2ef;
+    color: #3d554b;
+    font-size: 0.78rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.audit-action-criacao {
+    background: #e1f2e7;
+    color: #176247;
+}
+
+.audit-action-edicao {
+    background: #e4eef8;
+    color: #245d8c;
+}
+
+.audit-action-mudanca_status,
+.audit-action-movimentacao {
+    background: #fff0d8;
+    color: #9a5b00;
+}
+
+.audit-json {
+    max-width: 440px;
+    margin-top: 8px;
+    color: #5b6f68;
+    font-size: 0.76rem;
+    line-height: 1.5;
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+
+details summary {
+    color: #1d785d;
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-weight: 700;
+}
+
+.table-link {
+    color: #1b5a46;
+    text-decoration: none;
+}
+
+.table-link:hover {
+    text-decoration: underline;
+}
+
+.table-actions {
+    white-space: nowrap !important;
+}
+
+.table-actions form {
+    display: inline;
+    margin: 0 0 0 8px;
+}
+
+.table-actions .btn {
+    border: 1px solid transparent;
+    font-weight: 700;
+}
+
+.table-actions .btn {
+    vertical-align: middle;
+}
+
+.btn-small {
+    padding: 8px 11px;
+    font-size: 0.8rem;
+}
+
+.btn-danger {
+    background: #b42318;
+    color: #fff;
+}
+
+.btn-danger:hover {
+    background: #8f1c13;
+}
+
+.user-edit-summary {
+    display: grid;
+    gap: 4px;
+    padding: 14px 16px;
+    margin-bottom: 22px;
+    border-left: 4px solid #1d785d;
+    border-radius: 8px;
+    background: #f1f8f4;
+    color: #173d31;
+}
+
+.user-edit-summary span {
+    color: #5b6f68;
+    font-size: 0.88rem;
+}
+
+.user-access-title {
+    margin-top: 26px;
+}
+
+.data-table tbody tr:hover {
+    background: #f8fbf9;
+}
+
+.team-detail {
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 24px;
+    padding: 0;
+    background: #fff;
+    border: 1px solid #e1ebe4;
+    border-radius: 20px;
+    box-shadow: 0 14px 32px rgba(18, 58, 45, 0.07);
+}
+
+.team-hero {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 24px;
+    padding: 28px 30px;
+    background: linear-gradient(120deg, #edf8f0 0%, #f9fcf8 68%, #fff8e9 100%);
+    border-bottom: 1px solid #e3ede5;
+}
+
+.team-eyebrow {
+    display: block;
+    margin-bottom: 8px;
+    color: #5b806f;
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+
+.team-hero h2 {
+    color: #173d31;
+    font-size: clamp(1.55rem, 3vw, 2rem);
+    margin-bottom: 8px;
+}
+
+.team-location {
+    display: inline-block;
+    margin-bottom: 10px;
+    color: #1d785d;
+    font-size: 0.86rem;
+    font-weight: 800;
+}
+
+.team-hero p {
+    max-width: 680px;
+    color: #5b6f68;
+    line-height: 1.55;
+}
+
+.team-hero-side {
+    display: grid;
+    justify-items: end;
+    gap: 10px;
+    flex-shrink: 0;
+}
+
+.team-hero-side small {
+    color: #5b6f68;
+    font-weight: 700;
+}
+
+.team-detail > .section-heading,
+.team-detail > .volunteer-filters,
+.team-detail > .table-wrap,
+.team-detail > .empty-state {
+    margin-left: 30px;
+    margin-right: 30px;
+}
+
+.team-detail > .section-heading {
+    margin-top: 28px;
+}
+
+.member-form-panel {
+    margin: 0 30px 24px;
+    padding: 20px;
+    background: #f7fbf8;
+    border: 1px solid #e1ebe4;
+    border-radius: 14px;
+}
+
+.member-form-panel h3 {
+    margin-bottom: 16px;
+    color: #173d31;
+    font-size: 1rem;
+}
+
+.team-member-filters {
+    grid-template-columns: minmax(220px, 1fr) minmax(180px, 240px) auto;
+    margin-top: 4px;
+}
+
+.section-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 28px;
+    height: 28px;
+    margin-left: 6px;
+    padding: 0 8px;
+    border-radius: 999px;
+    background: #e6f3ea;
+    color: #1d7048;
+    font-size: 0.78rem;
+    vertical-align: middle;
+}
+
+.team-history-section {
+    border-color: #e5ebe7;
+    box-shadow: 0 8px 22px rgba(18, 58, 45, 0.04);
+}
+
+.action-detail-section {
+    padding: 26px 30px 30px;
+    border: 1px solid #e1ebe4;
+    border-radius: 20px;
+    box-shadow: 0 10px 26px rgba(18, 58, 45, 0.05);
+}
+
+.action-detail-section .section-heading {
+    margin-bottom: 18px;
+}
+
+.action-detail-section .section-heading h2 {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.action-detail-section .table-wrap {
+    margin-top: 4px;
+}
+
+.action-teams-section {
+    background: #fbfdfb;
+}
+
+.action-participants-section {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.action-participants-section > .section-heading {
+    order: 0;
+}
+
+.action-participants-section > .member-form-panel {
+    order: 1;
+    margin: 0 0 20px;
+    padding: 22px;
+    background: linear-gradient(135deg, #eff9f2 0%, #f8fcf9 100%);
+    border: 1px solid #cfe6d7;
+    box-shadow: inset 4px 0 0 #2d8a68;
+}
+
+.action-participants-section > .action-participant-filters {
+    order: 2;
+    margin: 0 0 20px;
+}
+
+.action-participants-section > .table-wrap,
+.action-participants-section > .empty-state {
+    order: 3;
+}
+
+.action-participants-section .member-form-panel h3 {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+}
+
+.action-participants-section .member-form-panel h3::before {
+    content: '+';
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: #2d8a68;
+    color: #fff;
+    font-size: 1rem;
+}
+
+.action-participants-section .member-form-panel h3::after {
+    content: 'Inclua um voluntário manualmente nesta ação';
+    color: #5b6f68;
+    font-size: 0.8rem;
+    font-weight: 400;
+}
+
+.action-participants-section .data-table {
+    min-width: 820px;
+}
+
+.action-detail-hero {
+    margin-bottom: 28px;
+}
+
+.confirmation-modal[hidden] {
+    display: none;
+}
+
+.confirmation-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 20;
+    display: grid;
+    place-items: center;
+    padding: 20px;
+}
+
+.confirmation-modal-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(15, 42, 32, 0.52);
+    backdrop-filter: blur(3px);
+}
+
+.confirmation-modal-card {
+    position: relative;
+    width: min(100%, 440px);
+    padding: 30px;
+    border: 1px solid #d6e6dc;
+    border-radius: 20px;
+    background: #fff;
+    box-shadow: 0 24px 70px rgba(13, 52, 38, 0.24);
+    text-align: center;
+}
+
+.confirmation-modal-icon {
+    display: grid;
+    place-items: center;
+    width: 48px;
+    height: 48px;
+    margin: 0 auto 14px;
+    border-radius: 50%;
+    background: #e4f4e9;
+    color: #237654;
+    font-size: 1.5rem;
+    font-weight: 800;
+}
+
+.confirmation-modal-card h2 {
+    margin-bottom: 10px;
+    color: #173d31;
+    font-size: 1.3rem;
+}
+
+.confirmation-modal-card p {
+    color: #5b6f68;
+    line-height: 1.55;
+}
+
+.confirmation-modal-actions {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 24px;
+}
+
+@media (max-width: 720px) {
+    .action-detail-section {
+        padding: 20px;
+    }
+
+    .action-participants-section > .member-form-panel {
+        padding: 16px;
+    }
+
+    .action-participants-section .member-form-panel h3 {
+        align-items: flex-start;
+        flex-wrap: wrap;
+    }
+}
+
+@media (max-width: 720px) {
+    .team-hero {
+        display: grid;
+        padding: 24px 20px;
+    }
+
+    .team-hero-side {
+        justify-items: start;
+    }
+
+    .team-detail > .section-heading,
+    .team-detail > .volunteer-filters,
+    .team-detail > .table-wrap,
+    .team-detail > .empty-state {
+        margin-left: 20px;
+        margin-right: 20px;
+    }
+
+    .member-form-panel {
+        margin-left: 20px;
+        margin-right: 20px;
+        padding: 16px;
+    }
+}
+

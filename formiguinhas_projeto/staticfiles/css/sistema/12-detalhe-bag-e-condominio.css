@@ -1,0 +1,172 @@
+    .bag-detail-page,
+    .condominium-detail-page {
+        padding-bottom: 8px;
+    }
+
+    .bag-detail-hero,
+    .condominium-detail-hero {
+        background:
+            radial-gradient(ellipse at top right, rgba(225, 242, 231, 0.6), transparent 48%),
+            #fff;
+    }
+
+    .bag-detail-hero .donation-detail-heading h2,
+    .condominium-detail-hero .donation-detail-heading h2 {
+        margin: 0;
+        color: #173d31;
+        font-size: clamp(1.45rem, 2.5vw, 2rem);
+        overflow-wrap: anywhere;
+    }
+
+    .bag-detail-hero .eyebrow,
+    .condominium-detail-hero .eyebrow {
+        margin-bottom: 7px;
+        color: #56806c;
+        font-size: 0.72rem;
+        font-weight: 800;
+        letter-spacing: 0.09em;
+        text-transform: uppercase;
+    }
+
+    .bag-detail-hero .donation-detail-subtitle,
+    .condominium-detail-hero .donation-detail-subtitle {
+        max-width: 760px;
+        line-height: 1.55;
+        overflow-wrap: anywhere;
+    }
+
+    .detail-status-label {
+        color: #60756c;
+        font-size: 0.82rem;
+        font-weight: 700;
+    }
+
+    .condominium-status,
+    .condominium-location-tag {
+        display: inline-flex;
+        align-items: center;
+        padding: 6px 10px;
+        border-radius: 999px;
+        background: #e1f2e7;
+        color: #176247;
+        font-size: 0.78rem;
+        font-weight: 800;
+    }
+
+    .condominium-status-inativo,
+    .condominium-status-bloqueado {
+        background: #fbe3e3;
+        color: #a33c3c;
+    }
+
+    .condominium-location-tag {
+        background: #edf4f1;
+        color: #426356;
+    }
+
+    .bag-detail-hero .bag-summary,
+    .condominium-detail-hero .condominium-summary {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .bag-detail-hero .bag-summary > div,
+    .condominium-detail-hero .condominium-summary > div {
+        min-width: 0;
+    }
+
+    .bag-detail-hero .bag-summary p,
+    .condominium-summary p {
+        margin: 0;
+        overflow-wrap: anywhere;
+    }
+
+    .condominium-summary a {
+        color: #176146;
+        font-weight: 700;
+        overflow-wrap: anywhere;
+    }
+
+    .bag-occupancy-track {
+        height: 7px;
+        margin-top: 9px;
+        overflow: hidden;
+        border-radius: 999px;
+        background: #e6eee9;
+    }
+
+    .bag-occupancy-track > span {
+        display: block;
+        height: 100%;
+        min-width: 2px;
+        border-radius: inherit;
+        background: linear-gradient(90deg, #64a47c, #258060);
+    }
+
+    .bag-detail-section,
+    .condominium-detail-section {
+        margin-bottom: 16px;
+    }
+
+    .bag-detail-table,
+    .condominium-detail-table {
+        min-width: 760px;
+    }
+
+    .bag-detail-table td,
+    .condominium-detail-table td {
+        vertical-align: top;
+        overflow-wrap: anywhere;
+    }
+
+    .bag-collection-item {
+        display: inline-block;
+        margin: 0 5px 5px 0;
+        padding: 5px 8px;
+        border: 1px solid #e3ede7;
+        border-radius: 8px;
+        background: #f7faf8;
+        color: #34574a;
+        font-size: 0.82rem;
+    }
+
+    .bag-detail-table .btn-small,
+    .condominium-detail-table .btn-small {
+        white-space: nowrap;
+    }
+
+    .bag-detail-page .donation-audit,
+    .condominium-detail-page .donation-audit {
+        max-width: 1240px;
+    }
+
+    @media (max-width: 980px) {
+        .bag-detail-hero .bag-summary,
+        .condominium-detail-hero .condominium-summary {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+
+    @media (max-width: 620px) {
+        .bag-detail-hero .bag-summary,
+        .condominium-detail-hero .condominium-summary {
+            grid-template-columns: 1fr;
+        }
+
+        .bag-detail-page .donation-detail-status-row,
+        .condominium-detail-page .donation-detail-status-row {
+            align-items: flex-start;
+            flex-wrap: wrap;
+        }
+
+        .bag-detail-page .donation-content-heading,
+        .condominium-detail-page .donation-content-heading {
+            align-items: stretch;
+            flex-direction: column;
+        }
+
+        .bag-detail-page .donation-content-heading .btn,
+        .condominium-detail-page .donation-content-heading .btn {
+            width: 100%;
+        }
+    }
+

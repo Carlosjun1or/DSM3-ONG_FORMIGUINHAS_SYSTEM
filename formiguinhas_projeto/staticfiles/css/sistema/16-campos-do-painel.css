@@ -1,0 +1,219 @@
+.system-page .main-panel h2,
+.system-page .main-panel h3,
+.system-page .main-panel h4 {
+    color: var(--layout-purple);
+}
+
+.system-page .main-panel .section-heading h2,
+.system-page .main-panel .inline-donor-section-heading h4,
+.system-page .main-panel .donation-content-heading h2,
+.system-page .main-panel .donation-status-card h2,
+.system-page .main-panel .donation-detail > h3,
+.system-page .main-panel .collection-detail-hero .donation-detail-heading h2,
+.system-page .main-panel .communication-topic-card h3,
+.system-page .main-panel .communication-form-section-heading h3 {
+    color: var(--layout-purple);
+}
+
+.system-page .main-panel .profile-eyebrow,
+.system-page .main-panel .profile-section-title {
+    color: var(--layout-purple);
+}
+
+.system-page .main-panel .inline-donor-heading strong,
+.system-page .main-panel .material-name-result,
+.system-page .main-panel .condominio-identificacao strong,
+.system-page .main-panel .bag-identificacao strong,
+.system-page .main-panel .estoque-detalhe-resumo strong {
+    color: var(--layout-navy);
+}
+
+.system-page .main-panel label {
+    color: var(--layout-navy);
+}
+
+.system-page .main-panel input:not([type="hidden"], [type="checkbox"], [type="radio"], [type="submit"], [type="reset"], [type="button"], [type="image"], [type="range"], [type="color"]),
+.system-page .main-panel select:not(.status-select, .material-select-real),
+.system-page .main-panel textarea {
+    width: 100%;
+    max-width: 100%;
+    min-height: 44px;
+    padding: 10px 12px;
+    border: 1px solid var(--layout-border);
+    border-radius: 8px;
+    background-color: #fffdf7;
+    color: var(--layout-navy);
+    font-family: var(--fonte-corpo);
+    font-size: 1rem;
+}
+
+.system-page .main-panel select:not(.status-select, .material-select-real, .relationship-select) {
+    appearance: none;
+    padding-right: 42px;
+    background-image:
+        linear-gradient(45deg, transparent 50%, var(--layout-blue) 50%),
+        linear-gradient(135deg, var(--layout-blue) 50%, transparent 50%);
+    background-position:
+        calc(100% - 19px) 52%,
+        calc(100% - 13px) 52%;
+    background-repeat: no-repeat;
+    background-size: 6px 6px, 6px 6px;
+}
+
+.system-page .main-panel select.relationship-select {
+    width: 100%;
+    max-width: 100%;
+    min-height: 148px;
+    padding: 8px;
+    border: 1px solid var(--layout-border);
+    border-radius: 8px;
+    background-color: #fff;
+    background-image: none;
+    color: var(--layout-navy);
+    font-family: var(--fonte-corpo);
+    font-size: 1rem;
+}
+
+.system-page .main-panel input:not([type="hidden"], [type="checkbox"], [type="radio"], [type="submit"], [type="reset"], [type="button"], [type="image"], [type="range"], [type="color"]):focus,
+.system-page .main-panel select:not(.status-select, .material-select-real):focus,
+.system-page .main-panel textarea:focus {
+    border-color: var(--layout-blue);
+    outline: 3px solid rgba(0, 88, 185, 0.18);
+}
+
+.system-page .main-panel input:not([type="hidden"], [type="checkbox"], [type="radio"], [type="submit"], [type="reset"], [type="button"], [type="image"], [type="range"], [type="color"])::placeholder,
+.system-page .main-panel textarea::placeholder {
+    color: #6f7075;
+    opacity: 1;
+}
+
+.system-page .main-panel input:disabled,
+.system-page .main-panel select:disabled,
+.system-page .main-panel textarea:disabled,
+.system-page .main-panel input[readonly],
+.system-page .main-panel textarea[readonly] {
+    background-color: #efede7;
+    color: #6f7075;
+}
+
+.system-page .main-panel input:disabled,
+.system-page .main-panel select:disabled,
+.system-page .main-panel textarea:disabled {
+    cursor: not-allowed;
+}
+
+.system-page .main-panel input[readonly],
+.system-page .main-panel textarea[readonly] {
+    cursor: default;
+}
+
+.system-page .main-panel input[type="checkbox"],
+.system-page .main-panel input[type="radio"] {
+    accent-color: var(--layout-blue);
+}
+
+.system-page .main-panel .campo-invalido label {
+    color: #b42318;
+}
+
+.system-page .main-panel .campo-invalido input,
+.system-page .main-panel .campo-invalido select,
+.system-page .main-panel .campo-invalido textarea {
+    border-color: #b42318;
+    background-color: #fff8f7;
+}
+
+.system-page .main-panel .campo-invalido input:focus,
+.system-page .main-panel .campo-invalido select:focus,
+.system-page .main-panel .campo-invalido textarea:focus {
+    outline-color: #b42318;
+}
+
+.system-page .main-panel .form-link,
+.system-page .main-panel .form-link:hover,
+.system-page .main-panel .table-link:hover,
+.system-page .main-panel .communication-item h3 a:hover,
+.system-page .main-panel .communication-relation-kind,
+.system-page .main-panel .communication-topic-icon {
+    color: var(--layout-blue);
+}
+
+.system-page .main-panel .material-name-result:hover,
+.system-page .main-panel .material-name-result:focus,
+.system-page .main-panel .communication-relation:hover {
+    border-color: #c8d8ec;
+    background: #edf2fa;
+}
+
+.system-page .main-panel .material-name-result:hover,
+.system-page .main-panel .material-name-result:focus {
+    outline-color: #c8d8ec;
+}
+
+.system-page .main-panel .relationship-chip:hover,
+.system-page .main-panel .relationship-chip:focus-visible {
+    border-color: var(--layout-blue);
+    background: #e8eef8;
+}
+
+.system-page .main-panel .communication-item:not(.is-unread) {
+    border-left-color: var(--layout-blue);
+}
+
+.system-page .main-panel .communication-item:hover {
+    border-color: #d6e1f0;
+    box-shadow: 0 8px 20px rgba(0, 88, 185, 0.08);
+}
+
+.system-page .main-panel .communication-item:not(.is-unread):hover {
+    border-left-color: var(--layout-blue);
+}
+
+.system-page .main-panel .communication-item.is-unread:hover {
+    border-left-color: #e29a36;
+}
+
+.system-page .main-panel .communication-total:not(.has-unread),
+.system-page .main-panel .communication-type:not(.communication-type-noticia) {
+    background: #e8eef8;
+    color: var(--layout-blue);
+}
+
+.system-page .main-panel .table-link,
+.system-page .main-panel .table-link:visited {
+    color: var(--layout-navy);
+}
+
+.system-page .main-panel .table-link:hover,
+.system-page .main-panel .table-link:focus-visible {
+    color: var(--layout-blue);
+}
+
+.system-page .main-panel .status-ativo,
+.system-page .main-panel .status-ativa,
+.system-page .main-panel .status-confirmada,
+.system-page .main-panel .status-concluida,
+.system-page .main-panel .status-publicado,
+.system-page .main-panel .status-disponivel,
+.system-page .main-panel .status-entregue,
+.system-page .main-panel .status-normal,
+.system-page .main-panel .funcao-voluntario,
+.system-page .main-panel .type-admin {
+    border-color: #c8d8ec;
+    background: #e8eef8;
+    color: var(--layout-blue);
+}
+
+.system-page .main-panel .status-select:hover {
+    border-color: var(--layout-blue);
+    box-shadow: 0 2px 6px rgba(0, 88, 185, 0.12);
+}
+
+.system-page .main-panel .status-select:focus,
+.system-page .main-panel .type-select:focus,
+.system-page .main-panel .funcao-select:focus {
+    border-color: var(--layout-blue);
+    outline: 3px solid rgba(0, 88, 185, 0.18);
+    box-shadow: none;
+}
+

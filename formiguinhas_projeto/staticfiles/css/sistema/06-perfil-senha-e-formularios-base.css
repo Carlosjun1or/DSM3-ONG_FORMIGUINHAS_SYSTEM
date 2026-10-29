@@ -1,0 +1,450 @@
+.form-shell,
+.auth-shell {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: calc(100vh - 120px);
+    padding: 40px 20px;
+}
+
+.auth-card,
+.form-card {
+    width: min(100%, 620px);
+    background: #fff;
+    border: 1px solid #e7efe9;
+    border-radius: 20px;
+    padding: 32px;
+    box-shadow: 0 18px 38px rgba(19, 44, 36, 0.08);
+}
+
+.collection-form {
+    display: flex;
+    flex-direction: column;
+}
+
+.collection-form-heading {
+    align-items: center;
+    margin-bottom: 18px;
+}
+
+.collection-form-heading h2 {
+    margin-bottom: 6px;
+}
+
+.collection-form-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 0.82fr) minmax(0, 1.18fr);
+    gap: 18px;
+}
+
+.collection-form-section {
+    padding: 18px;
+    border: 1px solid #e1ebe4;
+    border-radius: 14px;
+    background: #f8fbf9;
+}
+
+.collection-section-heading {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 16px;
+}
+
+.collection-section-number {
+    display: grid;
+    place-items: center;
+    width: 25px;
+    height: 25px;
+    flex: 0 0 25px;
+    border-radius: 50%;
+    background: #dff2e6;
+    color: #1d785d;
+    font-size: 0.8rem;
+    font-weight: 800;
+}
+
+.collection-section-heading h3 {
+    color: #173d31;
+    font-size: 1rem;
+    margin-bottom: 3px;
+}
+
+.collection-section-heading p {
+    color: #6b7d76;
+    font-size: 0.78rem;
+    line-height: 1.35;
+}
+
+.collection-form-section .form-grid {
+    gap: 12px;
+}
+
+.collection-form-section .form-group {
+    gap: 6px;
+    margin-bottom: 10px;
+}
+
+.collection-form-section .form-control {
+    padding: 10px 12px;
+    font-size: 0.92rem;
+}
+
+.collection-form-section textarea.form-control {
+    min-height: 68px;
+}
+
+.collection-form-actions {
+    justify-content: flex-end;
+    padding-top: 16px;
+}
+
+.profile-page {
+    width: min(100%, 1056px);
+    margin: 0 auto;
+}
+
+.system-page.profile-page-body {
+    background: var(--papel);
+}
+
+.profile-card {
+    width: 100%;
+    padding: 18px 20px 20px;
+    border-color: #d1cfc8;
+    border-radius: 15px;
+    background: var(--papel);
+    box-shadow: 0 6px 20px rgba(0, 42, 89, 0.08);
+}
+
+.profile-heading {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    min-height: 112px;
+    margin-bottom: 18px;
+}
+
+.profile-avatar {
+    display: grid;
+    place-items: center;
+    width: 112px;
+    height: 112px;
+    flex: 0 0 112px;
+    border-radius: 15px;
+    background: var(--roxo);
+    color: var(--papel);
+    font-family: var(--fonte-titulo);
+    font-size: 56px;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.profile-eyebrow {
+    display: block;
+    margin-bottom: 2px;
+    color: #6a50b4;
+    font-family: var(--fonte-titulo);
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.profile-heading h2 {
+    margin: 0 0 2px;
+    color: #002a59;
+    font-family: var(--fonte-titulo);
+    font-size: 36px;
+    font-weight: 700;
+    line-height: 1.1;
+}
+
+.profile-heading .form-subtitle {
+    margin-bottom: 0;
+    color: rgba(0, 0, 0, 0.6);
+    font-family: var(--fonte-corpo);
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.profile-section-title {
+    margin-bottom: 12px;
+    color: #6a50b4;
+    font-family: var(--fonte-titulo);
+    font-size: 22px;
+    font-weight: 700;
+}
+
+.profile-fields {
+    grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+    gap: 8px 14px;
+    margin-bottom: 0;
+}
+
+.profile-fields .form-group {
+    gap: 4px;
+    margin-bottom: 0;
+}
+
+.profile-fields .form-group label {
+    color: #111;
+    font-family: var(--fonte-corpo);
+    font-size: 15px;
+    font-weight: 700;
+}
+
+.profile-fields .form-control {
+    min-height: 51px;
+    padding: 11px 14px;
+    border: 2px solid rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+    background: transparent;
+    color: #333;
+    font-family: var(--fonte-corpo);
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.profile-fields .form-control:focus {
+    border-color: var(--azul);
+    outline: 3px solid rgba(0, 88, 185, 0.14);
+}
+
+.profile-fields .access-type {
+    min-height: 51px;
+    padding: 8px 12px;
+    border: 2px solid var(--sucesso);
+    border-radius: 14px;
+    background: rgba(46, 139, 87, 0.25);
+    color: #111;
+    font-family: var(--fonte-corpo);
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.profile-fields .access-type strong {
+    color: inherit;
+    font-weight: 500;
+}
+
+.profile-fields .access-type small {
+    color: rgba(0, 0, 0, 0.55);
+    font-size: 12px;
+}
+
+.profile-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-top: 16px;
+}
+
+.profile-actions .form-actions {
+    margin-top: 0;
+    gap: 8px;
+    padding-top: 0;
+}
+
+.profile-note {
+    max-width: 42%;
+    color: rgba(0, 0, 0, 0.55);
+    font-family: var(--fonte-corpo);
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 1.45;
+}
+
+.profile-button {
+    min-height: 44px;
+    padding: 9px 14px;
+    border: 0;
+    border-radius: 28px;
+    font-family: var(--fonte-corpo);
+    font-size: 14px;
+    font-weight: 700;
+    white-space: nowrap;
+    transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+}
+
+.profile-button:hover {
+    transform: translateY(2px);
+}
+
+.profile-button:focus-visible {
+    outline: 3px solid rgba(0, 88, 185, 0.28);
+    outline-offset: 3px;
+}
+
+.profile-button--save {
+    background: var(--amarelo);
+    box-shadow: 0 4px 0 #d99a24;
+    color: var(--azul);
+}
+
+.profile-button--save:hover {
+    background: #f7e949;
+    box-shadow: 0 2px 0 #d99a24;
+}
+
+.profile-button--password {
+    background: var(--azul);
+    box-shadow: 0 4px 0 var(--azul-profundo);
+    color: var(--papel);
+}
+
+.profile-button--password:hover {
+    background: #004b9f;
+    box-shadow: 0 2px 0 var(--azul-profundo);
+}
+
+.profile-button--cancel {
+    border: 2px solid var(--azul);
+    background: transparent;
+    color: var(--azul);
+}
+
+.profile-button--cancel:hover {
+    background: rgba(0, 88, 185, 0.06);
+}
+
+.system-page.password-page-body {
+    background: var(--papel);
+}
+
+.password-page {
+    display: flex;
+    width: min(100%, 760px);
+    min-height: calc(100vh - 190px);
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+    padding: 24px 0;
+}
+
+.password-card {
+    width: 100%;
+    padding: 30px 34px;
+    border-color: #d1cfc8;
+    border-radius: 16px;
+    background: var(--papel);
+    box-shadow: 0 6px 20px rgba(0, 42, 89, 0.08);
+}
+
+.password-heading {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    margin-bottom: 24px;
+}
+
+.password-avatar {
+    display: grid;
+    width: 76px;
+    height: 76px;
+    flex: 0 0 76px;
+    place-items: center;
+    border-radius: 14px;
+    background: var(--roxo);
+    color: var(--papel);
+}
+
+.password-avatar svg {
+    width: 42px;
+    height: 42px;
+}
+
+.password-eyebrow {
+    display: block;
+    margin-bottom: 3px;
+    color: #6a50b4;
+    font-family: var(--fonte-titulo);
+    font-size: 16px;
+    font-weight: 700;
+}
+
+.password-heading h2 {
+    margin: 0 0 4px;
+    color: #002a59;
+    font-family: var(--fonte-titulo);
+    font-size: 32px;
+    font-weight: 700;
+    line-height: 1.1;
+}
+
+.password-heading .form-subtitle {
+    margin: 0;
+    color: rgba(0, 0, 0, 0.6);
+    font-family: var(--fonte-corpo);
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.password-card .form-group {
+    gap: 5px;
+    margin-bottom: 15px;
+}
+
+.password-card .form-group label {
+    color: #111;
+    font-family: var(--fonte-corpo);
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.password-card .form-control {
+    min-height: 48px;
+    padding: 11px 84px 11px 14px;
+    border: 2px solid rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+    background: transparent;
+    color: #002a59;
+    font-family: var(--fonte-corpo);
+    font-size: 14px;
+}
+
+.password-card .form-control:focus {
+    border-color: var(--azul);
+    outline: 3px solid rgba(0, 88, 185, 0.14);
+}
+
+.password-card .password-toggle {
+    color: var(--azul);
+    font-family: var(--fonte-corpo);
+    font-size: 12px;
+}
+
+.password-card .password-toggle:focus-visible {
+    outline-color: rgba(0, 88, 185, 0.35);
+}
+
+.password-card .error-box {
+    margin-top: 4px;
+    border-color: var(--erro);
+    border-left-width: 5px;
+    border-radius: 14px;
+    background: var(--alerta-erro-fundo);
+    color: var(--texto);
+}
+
+.password-card .form-actions {
+    gap: 12px;
+    margin-top: 8px;
+}
+
+.auth-card h2,
+.form-card h2 {
+    font-size: 2rem;
+    margin-bottom: 8px;
+    color: #173d31;
+}
+
+.password-card .password-heading h2 {
+    color: var(--azul-profundo);
+}
+
+.auth-subtitle,
+.form-subtitle {
+    color: #5b6f68;
+    margin-bottom: 24px;
+}
+

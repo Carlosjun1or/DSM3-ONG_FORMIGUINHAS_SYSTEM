@@ -693,7 +693,6 @@ main {
     margin-bottom: 24px;
 }
 
-
 .section-kicker,
 .form-kicker {
     display: block;
@@ -704,7 +703,6 @@ main {
     letter-spacing: 0.1em;
     text-transform: uppercase;
 }
-
 
 .section-heading {
     display: flex;
@@ -2651,10 +2649,6 @@ select.select-control:disabled {
     color: #6f7075;
     font-size: 0.8rem;
     line-height: 1.4;
-}
-    font-size: 2rem;
-    font-weight: 700;
-    line-height: 1.2;
 }
 
 .system-page .section-heading h2 {
@@ -8371,4 +8365,40 @@ select.select-control:disabled {
     .system-page .main-content .member-form-panel form .form-actions > .btn {
         width: 100%;
     }
+}
+
+/* ── Cards da listagem de usuários ──────────────────────────────── */
+
+.system-page .usuarios-list .volunteer-card-heading {
+    border-bottom-color: var(--layout-border);
+}
+
+/* Badge de tipo de usuário no status — usa variáveis do design system */
+.system-page .usuarios-list .type-select.type-admin {
+    background: var(--selecionado-fundo);
+    color: var(--roxo);
+    font-weight: 700;
+}
+
+.system-page .usuarios-list .type-select.type-coordenador {
+    background: var(--alerta-aviso-fundo);
+    color: var(--azul-profundo);
+    font-weight: 700;
+}
+
+.system-page .usuarios-list .type-select.type-voluntario {
+    background: var(--layout-paper);
+    color: var(--texto);
+    font-weight: 700;
+}
+
+/* Sublabel genérico nos cards (usado por ação, estoque) */
+.system-page .volunteer-card-sublabel {
+    display: block;
+    margin-top: 2px;
+    color: var(--roxo);
+    font-size: 0.8rem;
+    font-family: var(--fonte-corpo);
+    font-weight: 600;
+    line-height: 1.3;
 }

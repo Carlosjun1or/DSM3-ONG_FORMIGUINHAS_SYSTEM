@@ -148,3 +148,40 @@
     .action-participants-section > .member-form-panel { padding: 16px; }
     .action-participants-section .member-form-panel h3 { align-items: flex-start; flex-wrap: wrap; }
 }
+
+@media (max-width: 700px) {
+    .acao-filters {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .acao-filters .form-group:nth-child(4),
+    .acao-filters .form-group:nth-child(5),
+    .acao-filters .filter-actions {
+        grid-column: 1 / -1;
+    }
+}
+
+/* ── Elementos estruturais do card de ação ───────────────────────── */
+
+/* Bloco de data em destaque entre o heading e o dl */
+.acao-card-data {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    padding: 10px 0 8px;
+    border-bottom: 1px solid var(--layout-border);
+}
+
+.acao-card-data-valor {
+    font-family: var(--fonte-titulo);
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: var(--azul-profundo);
+    line-height: 1;
+}
+
+.acao-card-data-hora {
+    font-size: 0.875rem;
+    font-family: var(--fonte-corpo);
+    color: var(--azul);
+    font-weight: 600;
+}

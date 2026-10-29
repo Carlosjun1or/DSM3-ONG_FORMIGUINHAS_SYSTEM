@@ -804,3 +804,54 @@
         padding: 16px 12px;
     }
 }
+
+/* ── Elementos estruturais do card de material ───────────────────── */
+
+/* Estoque baixo — faixa âmbar via alerta */
+.system-page .materiais-list .volunteer-card.estoque-baixo {
+    border-top-color: var(--erro);
+    background: var(--papel);
+}
+
+/* Sublabel — código abaixo do nome */
+.system-page .materiais-list .volunteer-card-sublabel {
+    display: block;
+    margin-top: 2px;
+    color: var(--roxo);
+    font-size: 0.78rem;
+    font-weight: 700;
+    font-family: 'Courier New', monospace;
+    letter-spacing: 0.04em;
+}
+
+/* Saldo em destaque entre heading e barra */
+.material-card-saldo {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    padding: 10px 0 8px;
+    border-bottom: 1px solid var(--layout-border);
+}
+
+.material-card-saldo-num {
+    font-family: var(--fonte-titulo);
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--azul-profundo);
+    line-height: 1;
+}
+
+.material-card-saldo-unidade {
+    font-size: 0.875rem;
+    font-family: var(--fonte-corpo);
+    color: var(--azul);
+    font-weight: 600;
+}
+
+.material-card-saldo-minimo {
+    margin-left: auto;
+    font-size: 0.78rem;
+    font-family: var(--fonte-corpo);
+    color: var(--borda-neutra-forte);
+    font-weight: 600;
+}
