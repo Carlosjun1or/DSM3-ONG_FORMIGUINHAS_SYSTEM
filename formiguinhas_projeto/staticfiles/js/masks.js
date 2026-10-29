@@ -187,6 +187,8 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     var scrollStorageKey = 'system-scroll-position';
+    var sidebarNavScrollKey = 'system-sidebar-nav-scroll';
+    var sidebarNav = document.querySelector('.sidebar-nav');
 
     function salvarPosicaoDaPagina() {
         try {
@@ -196,6 +198,27 @@ document.addEventListener('DOMContentLoaded', function () {
             }));
         } catch (error) {
             // A posição é apenas um aprimoramento; não deve impedir o envio.
+        }
+    }
+
+    function salvarScrollSidebar() {
+        if (!sidebarNav) return;
+        try {
+            sessionStorage.setItem(sidebarNavScrollKey, String(sidebarNav.scrollTop));
+        } catch (error) {
+            // silencioso
+        }
+    }
+
+    function restaurarScrollSidebar() {
+        if (!sidebarNav) return;
+        try {
+            var saved = sessionStorage.getItem(sidebarNavScrollKey);
+            if (saved !== null) {
+                sidebarNav.scrollTop = Number(saved);
+            }
+        } catch (error) {
+            // silencioso
         }
     }
 
@@ -234,9 +257,26 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }, true);
 
-    window.addEventListener('beforeunload', salvarPosicaoDaPagina);
-    window.addEventListener('pageshow', restaurarPosicaoDaPagina);
+    // Salva scroll do sidebar ao navegar ou submeter
+    window.addEventListener('beforeunload', function () {
+        salvarPosicaoDaPagina();
+        salvarScrollSidebar();
+    });
+
+    // Links do sidebar: salva posição antes de navegar
+    if (sidebarNav) {
+        sidebarNav.addEventListener('click', function (event) {
+            var link = event.target.closest('a[href]');
+            if (link) salvarScrollSidebar();
+        });
+    }
+
+    window.addEventListener('pageshow', function () {
+        restaurarPosicaoDaPagina();
+        restaurarScrollSidebar();
+    });
     restaurarPosicaoDaPagina();
+    restaurarScrollSidebar();
 
     document.querySelectorAll('.telefone-input').forEach(function (input) {
         input.addEventListener('input', function () {
