@@ -61,13 +61,12 @@
     {% if comunicados %}
     <div class="volunteer-card-grid">
         {% for comunicado in comunicados %}
-        <article class="volunteer-card">
+        <article class="volunteer-card comunicado-card comunicado-card--{{ comunicado.tipo|lower }}">
 
             <div class="volunteer-card-heading">
                 <div class="volunteer-card-identity">
                     <span class="volunteer-card-label">
-                        <span class="communication-type communication-type-{{ comunicado.tipo|lower }}">{{ comunicado.get_tipo_display }}</span>
-                        {% if comunicado.tema %} · {{ comunicado.tema.nome }}{% endif %}
+                        <span class="communication-type communication-type-{{ comunicado.tipo|lower }}">{{ comunicado.get_tipo_display }}</span>{% if comunicado.tema %}<span class="comunicado-tema-label"> · {{ comunicado.tema.nome }}</span>{% endif %}
                     </span>
                     <h3><a href="{% url 'comunicado_editar' comunicado.id_comunicado %}">{{ comunicado.titulo }}</a></h3>
                 </div>
@@ -87,21 +86,23 @@
                 </div>
             </div>
 
-            <p class="volunteer-card-summary">{{ comunicado.resumo|default:comunicado.conteudo|striptags|truncatechars:160 }}</p>
+            {% if comunicado.resumo or comunicado.conteudo %}
+            <p class="volunteer-card-summary">{{ comunicado.resumo|default:comunicado.conteudo|striptags|truncatechars:140 }}</p>
+            {% endif %}
 
-            <dl class="volunteer-card-details">
-                <div>
-                    <dt>Público</dt>
-                    <dd>{{ comunicado.get_publico_display }}</dd>
+            <div class="comunicado-card-meta">
+                <div class="comunicado-card-meta-item">
+                    <span class="comunicado-card-meta-label">Público</span>
+                    <span class="comunicado-card-meta-valor">{{ comunicado.get_publico_display }}</span>
                 </div>
-                <div>
-                    <dt>Publicação</dt>
-                    <dd>{% if comunicado.dt_publicacao %}{{ comunicado.dt_publicacao|date:'d/m/Y H:i' }}{% else %}<span class="muted">Não publicado</span>{% endif %}</dd>
+                <div class="comunicado-card-meta-item">
+                    <span class="comunicado-card-meta-label">Publicação</span>
+                    <span class="comunicado-card-meta-valor">{% if comunicado.dt_publicacao %}{{ comunicado.dt_publicacao|date:'d/m/Y' }}{% else %}<span class="muted">—</span>{% endif %}</span>
                 </div>
-            </dl>
+            </div>
 
             <details class="volunteer-card-audit">
-                <summary>Histórico do cadastro</summary>
+                <summary>Histórico</summary>
                 <div>
                     <p><strong>{% if comunicado.autor %}{{ comunicado.autor.id_voluntario.nome }}{% else %}Cadastro anterior{% endif %}</strong></p>
                     {% if comunicado.autor %}<p>Cadastrado em {{ comunicado.criado_em|date:'d/m/Y H:i' }}</p>{% endif %}
