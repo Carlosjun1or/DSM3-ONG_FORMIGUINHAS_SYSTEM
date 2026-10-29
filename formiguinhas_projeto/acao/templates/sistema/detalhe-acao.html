@@ -82,7 +82,7 @@
         <a href="#imagens">Imagens <b>{{ imagens_acao|length }}</b></a>
         <a href="#responsaveis">Responsáveis <b>{{ responsaveis|length }}</b></a>
         {% if equipes or acao.tipo == 'MUTIRAO' %}<a href="#equipes">Equipes <b>{{ equipes|length }}</b></a>{% endif %}
-        <a href="#chamada">Chamada <b>{{ participantes|length }}</b></a>
+        <a href="#chamada">Lista de presença <b>{{ participantes|length }}</b></a>
         {% if historico_participantes %}<a href="#historico">Histórico</a>{% endif %}
     </nav>
 
@@ -462,7 +462,7 @@
     <section class="acao-secao" id="chamada">
         <div class="acao-secao__cabecalho">
             <div>
-                <h2>Chamada <span class="section-count">{{ participantes|length }}</span></h2>
+                <h2>Lista de presença <span class="section-count">{{ participantes|length }}</span></h2>
                 <p>Adicione voluntários e acompanhe confirmação e comparecimento.</p>
             </div>
             {% if usuario.tipo == 'ADMIN' %}
