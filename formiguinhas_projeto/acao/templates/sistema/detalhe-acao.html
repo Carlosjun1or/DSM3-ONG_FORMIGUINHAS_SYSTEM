@@ -3,623 +3,648 @@
 
 {% block titulo %}{{ acao.get_tipo_display }} | Sistema{% endblock %}
 {% block page_title %}{% if acao.tipo == 'COLETA_VOLUNTARIA' %}Detalhes da Coleta Voluntária - {{ acao.praia.nome }}{% else %}Detalhes do Mutirão - {{ acao.praia.nome }}{% endif %}{% endblock %}
-{% block estilos %}<link rel="stylesheet" href="{% static 'acao/acao.css' %}?v=1"><link rel="stylesheet" href="{% static 'estoque/estoque.css' %}?v=11">{% endblock %}
+{% block estilos %}
+<link rel="stylesheet" href="{% static 'estoque/estoque.css' %}?v=11">
+<link rel="stylesheet" href="{% static 'acao/acao-detalhe.css' %}?v=1">
+{% endblock %}
 {% block scripts %}<script src="{% static 'estoque/material-combobox.js' %}?v=1" defer></script>{% endblock %}
 
 {% block conteudo %}
-<section class="team-detail volunteer-control action-detail-hero">
-    <div class="team-hero">
-        <div>
-            <span class="team-eyebrow">Ação cadastrada</span>
-            <h2>{{ acao.get_tipo_display }}</h2>
-            <a class="team-location table-link" href="{% url 'praias' %}?praia={{ acao.praia.id_praia }}">{{ acao.praia.nome }} · {{ acao.praia.cidade }}</a>
-            <p>{{ acao.descricao|default:'Esta ação ainda não possui uma descrição detalhada.' }}</p>
-        </div>
-        <div class="team-hero-side">
-            <span class="status-select status-{{ acao.status|lower }}">{{ acao.get_status_display }}</span>
-            <small>{{ participantes|length }} participante{{ participantes|length|pluralize }}</small>
-        </div>
-    </div>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+    <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 11h18"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+    <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 21s-7-6.2-7-11a7 7 0 0114 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></symbol>
+    <symbol id="i-onda" viewBox="0 0 24 24"><path d="M3 17c2 0 2-2 4.5-2S10 17 12 17s2.5-2 4.5-2S19 17 21 17M3 11c2 0 2-2 4.5-2S10 11 12 11s2.5-2 4.5-2S19 11 21 11"/></symbol>
+    <symbol id="i-mais" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+</svg>
 
-    <div class="section-heading">
-        <div>
-            <h2>Detalhes da ação</h2>
-            <p class="form-subtitle">Data, local, status e informações da atividade.</p>
+<div class="acao-detalhe">
+
+    <section class="acao-topo" id="resumo" aria-labelledby="acao-titulo">
+        <div class="acao-topo__principal">
+            <span class="acao-topo__eyebrow">Ação cadastrada</span>
+            <div class="acao-topo__titulo">
+                <h2 id="acao-titulo">{{ acao.get_tipo_display }}</h2>
+                <span class="status-select status-{{ acao.status|lower }}">{{ acao.get_status_display }}</span>
+            </div>
+            <ul class="acao-info">
+                <li>
+                    <svg class="acao-icone" aria-hidden="true"><use href="#i-calendar"></use></svg>
+                    <span class="acao-leitor">Data:</span>{{ acao.data|date:'d/m/Y' }}
+                </li>
+                {% if acao.horario %}
+                <li>
+                    <svg class="acao-icone" aria-hidden="true"><use href="#i-clock"></use></svg>
+                    <span class="acao-leitor">Horário:</span>{{ acao.horario|time:'H:i' }}
+                </li>
+                {% endif %}
+                <li>
+                    <svg class="acao-icone" aria-hidden="true"><use href="#i-onda"></use></svg>
+                    <span class="acao-leitor">Praia:</span>
+                    <a href="{% url 'praias' %}?praia={{ acao.praia.id_praia }}">{{ acao.praia.nome }}</a>
+                    <span>· {{ acao.praia.cidade }}</span>
+                </li>
+                {% if acao.local %}
+                <li>
+                    <svg class="acao-icone" aria-hidden="true"><use href="#i-pin"></use></svg>
+                    <span class="acao-leitor">Local:</span>{{ acao.local }}
+                </li>
+                {% endif %}
+            </ul>
+            {% if acao.descricao %}<p class="acao-topo__descricao">{{ acao.descricao }}</p>{% endif %}
         </div>
-        <div class="table-actions">
+
+        <div class="acao-topo__acoes">
             {% if usuario.tipo == 'ADMIN' %}
             <a href="{% url 'editar_acao' acao.id_acao %}" class="btn btn-outline">Editar ação</a>
             {% endif %}
             <a href="{% url 'acoes' %}" class="btn btn-outline">Voltar</a>
         </div>
-    </div>
 
-    <div class="form-card detail-summary">
-        <div class="form-grid">
-            <div class="form-group">
-                <label>Tipo</label>
-                <div class="field-value">{{ acao.get_tipo_display }}</div>
-            </div>
-            <div class="form-group">
-                <label>Praia</label>
-                <div class="field-value">
-                    <a class="table-link" href="{% url 'praias' %}?praia={{ acao.praia.id_praia }}">{{ acao.praia.nome }}</a>
-                </div>
-            </div>
-            <div class="form-group">
-                <label>Data</label>
-                <div class="field-value">{{ acao.data|date:'d/m/Y' }}</div>
-            </div>
-            <div class="form-group">
-                <label>Horário</label>
-                <div class="field-value">{% if acao.horario %}{{ acao.horario|time:'H:i' }}{% else %}-{% endif %}</div>
-            </div>
-            <div class="form-group full">
-                <label>Local</label>
-                <div class="field-value">{{ acao.local|default:'-' }}</div>
-            </div>
-            <div class="form-group full">
-                <label>Descrição</label>
-                <div class="field-value">{{ acao.descricao|default:'Sem descrição.' }}</div>
-            </div>
-            <div class="form-group">
-                <label>Cadastrado por</label>
-                <div class="field-value">
-                    {% if acao.cadastrado_por_nome %}{{ acao.cadastrado_por_nome }}{% elif acao.cadastrado_por %}{{ acao.cadastrado_por.id_voluntario.nome }}{% else %}Cadastro anterior{% endif %}
-                    {% if acao.dt_cadastro %}<br><small>{{ acao.dt_cadastro|date:'d/m/Y H:i' }}</small>{% endif %}
-                </div>
-            </div>
-            <div class="form-group">
-                <label>Última edição</label>
-                <div class="field-value">
-                    {% if acao.ultimo_editado_por_nome %}{{ acao.ultimo_editado_por_nome }}{% elif acao.ultimo_editado_por %}{{ acao.ultimo_editado_por.id_voluntario.nome }}{% else %}Sem edições{% endif %}
-                    {% if acao.dt_ultima_edicao %}<br><small>{{ acao.dt_ultima_edicao|date:'d/m/Y H:i' }}</small>{% endif %}
-                </div>
-            </div>
+        <div class="acao-metricas">
+            <div class="acao-metrica"><span>Participantes</span><strong>{{ total_participantes }}</strong></div>
+            <div class="acao-metrica"><span>Confirmados</span><strong>{{ total_confirmados }}</strong></div>
+            <div class="acao-metrica"><span>Presentes</span><strong>{{ total_presentes }}</strong></div>
+            <div class="acao-metrica"><span>Resíduos</span><strong>{{ residuos|length }}</strong></div>
         </div>
-    </div>
-</section>
 
-<section class="card volunteer-control action-detail-section" id="residuos">
-    <div class="section-heading">
-        <div>
-            <h2>Resíduos coletados <span class="section-count">{{ residuos|length }}</span></h2>
-            <p class="form-subtitle">Registre o tipo, a categoria e a quantidade coletada. Cada registro pode ter mais de uma destinação.</p>
-        </div>
-    </div>
-    {% if usuario.tipo == 'ADMIN' %}
-    <div class="member-form-panel">
-        <h3>Registrar resíduo</h3>
-        <form method="post" action="{% url 'registrar_residuo' acao.id_acao %}">
-            {% csrf_token %}
-            {% if residuo_form.non_field_errors %}<div class="error-box">{{ residuo_form.non_field_errors|join:', ' }}</div>{% endif %}
-            <div class="form-grid">
-                <div class="form-group">
-                    {{ residuo_form.tipo.label_tag }}
-                    {{ residuo_form.tipo }}
-                    {% if residuo_form.tipo.help_text %}<small class="form-help">{{ residuo_form.tipo.help_text }}</small>{% endif %}
-                    {% for error in residuo_form.tipo.errors %}<small class="field-error">{{ error }}</small>{% endfor %}
-                </div>
-                <div class="form-group">
-                    {{ residuo_form.categoria.label_tag }}
-                    {{ residuo_form.categoria }}
-                    {% if residuo_form.categoria.help_text %}<small class="form-help">{{ residuo_form.categoria.help_text }}</small>{% endif %}
-                    {% for error in residuo_form.categoria.errors %}<small class="field-error">{{ error }}</small>{% endfor %}
-                </div>
-                <div class="form-group">
-                    {{ residuo_form.quantidade.label_tag }}
-                    {{ residuo_form.quantidade }}
-                    {% if residuo_form.quantidade.help_text %}<small class="form-help">{{ residuo_form.quantidade.help_text }}</small>{% endif %}
-                    {% for error in residuo_form.quantidade.errors %}<small class="field-error">{{ error }}</small>{% endfor %}
-                </div>
-                <div class="form-group">
-                    {{ residuo_form.unidade.label_tag }}
-                    {{ residuo_form.unidade }}
-                    {% if residuo_form.unidade.help_text %}<small class="form-help">{{ residuo_form.unidade.help_text }}</small>{% endif %}
-                    {% for error in residuo_form.unidade.errors %}<small class="field-error">{{ error }}</small>{% endfor %}
-                </div>
-                <div class="form-group full">
-                    {{ residuo_form.observacao.label_tag }}
-                    {{ residuo_form.observacao }}
-                    {% if residuo_form.observacao.help_text %}<small class="form-help">{{ residuo_form.observacao.help_text }}</small>{% endif %}
-                    {% for error in residuo_form.observacao.errors %}<small class="field-error">{{ error }}</small>{% endfor %}
-                </div>
-            </div>
-            <div class="form-actions">
-                <button type="submit" class="btn btn-primary">Registrar resíduo</button>
-            </div>
-        </form>
-    </div>
-    {% endif %}
-    {% if residuos %}
-    <div class="table-wrap">
-        <table class="data-table">
-            <thead>
-                <tr>
-                    <th>Tipo / categoria</th>
-                    <th>Quantidade</th>
-                    <th>Registro</th>
-                    <th>Destinações</th>
-                    {% if usuario.tipo == 'ADMIN' %}<th>Ação</th>{% endif %}
-                </tr>
-            </thead>
-            <tbody>
-                {% for residuo in residuos %}
-                <tr>
-                    <td>
-                        <a class="table-link" href="{% url 'residuos' %}?acao={{ acao.id_acao }}&amp;tipo={{ residuo.tipo|urlencode }}" title="Ver este tipo de resíduo na lista geral">
-                            <strong>{{ residuo.get_tipo_display }}</strong>
-                        </a>
-                        <br><small>{{ residuo.get_categoria_display }}</small>
-                    </td>
-                    <td>{{ residuo.quantidade }} {{ residuo.get_unidade_display }}</td>
-                    <td>
-                        {{ residuo.registrado_por_nome }}<br><small>{{ residuo.dt_registro|date:'d/m/Y H:i' }}</small>
-                        {% if residuo.ultimo_editado_por_nome %}<br><small>Editado por {{ residuo.ultimo_editado_por_nome }} em {{ residuo.dt_ultima_edicao|date:'d/m/Y H:i' }}</small>{% else %}<br><small>Sem edições</small>{% endif %}
-                    </td>
-                    <td>
-                        {% for destinacao in residuo.destinacoes.all %}
-                            <span>{{ destinacao.get_tipo_display }}{% if destinacao.quantidade %} ({{ destinacao.quantidade }} {{ destinacao.get_unidade_display }}){% endif %}</span>
-                            {% if usuario.tipo == 'ADMIN' %}
-                            <a class="btn btn-outline btn-small" href="{% url 'editar_destinacao' acao.id_acao residuo.id_residuo destinacao.id_destinacao %}">Editar</a>
-                            <form method="post" action="{% url 'excluir_destinacao' acao.id_acao residuo.id_residuo destinacao.id_destinacao %}" style="display:inline" onsubmit="return confirm('Excluir esta destinação?');">{% csrf_token %}<button type="submit" class="btn btn-danger btn-small">Excluir</button></form>
-                            {% endif %}
-                            {% if not forloop.last %}<br>{% endif %}
-                        {% empty %}
-                            <span class="field-hint">Ainda não informada</span>
-                        {% endfor %}
-                    </td>
-                    {% if usuario.tipo == 'ADMIN' %}
-                    <td>
-                        <a class="btn btn-outline btn-small" href="{% url 'registrar_destinacao' acao.id_acao residuo.id_residuo %}">Adicionar destinação</a>
-                        <a class="btn btn-outline btn-small" href="{% url 'editar_residuo' acao.id_acao residuo.id_residuo %}">Editar resíduo</a>
-                        <form method="post" action="{% url 'excluir_residuo' acao.id_acao residuo.id_residuo %}" onsubmit="return confirm('Excluir este resíduo e suas destinações?');">{% csrf_token %}<button type="submit" class="btn btn-danger btn-small">Excluir resíduo</button></form>
-                    </td>
-                    {% endif %}
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-    {% else %}
-    <div class="empty-state table-empty">
-        <h3>Nenhum resíduo registrado</h3>
-        <p class="form-subtitle">Os registros desta ação aparecerão aqui.</p>
-    </div>
-    {% endif %}
-</section>
+        <p class="acao-topo__auditoria">
+            Cadastrada por
+            {% if acao.cadastrado_por_nome %}{{ acao.cadastrado_por_nome }}{% elif acao.cadastrado_por %}{{ acao.cadastrado_por.id_voluntario.nome }}{% else %}cadastro anterior{% endif %}{% if acao.dt_cadastro %} em {{ acao.dt_cadastro|date:'d/m/Y H:i' }}{% endif %}
+            · Última edição:
+            {% if acao.ultimo_editado_por_nome %}{{ acao.ultimo_editado_por_nome }}{% elif acao.ultimo_editado_por %}{{ acao.ultimo_editado_por.id_voluntario.nome }}{% else %}sem edições{% endif %}{% if acao.dt_ultima_edicao %} em {{ acao.dt_ultima_edicao|date:'d/m/Y H:i' }}{% endif %}
+        </p>
+    </section>
 
-<section class="card volunteer-control action-detail-section" id="materiais-utilizados">
-    <div class="section-heading">
-        <div>
-            <h2>Materiais utilizados <span class="section-count">{{ materiais_utilizados|length }}</span></h2>
-            <p class="form-subtitle">Cada registro cria uma saída no estoque e fica vinculado a esta ação.</p>
-        </div>
-    </div>
-    {% if usuario.tipo == 'ADMIN' %}
-    <div class="member-form-panel">
-        <h3>Registrar material utilizado</h3>
-        <form method="post" action="{% url 'adicionar_material_utilizado_acao' acao.id_acao %}">
-            {% csrf_token %}
-            <div class="form-grid">
-                <div class="form-group material-picker{% if material_utilizado_form.material.errors %} campo-invalido{% endif %}">
-                    <label for="material-utilizado-search">{{ material_utilizado_form.material.label }}</label>
-                    <div class="material-combobox" data-material-combobox>
-                        <input id="material-utilizado-search" data-material-search type="search" class="form-control" placeholder="Digite o nome ou código do material" autocomplete="off" role="combobox" aria-autocomplete="list" aria-controls="material-utilizado-options" aria-expanded="false">
-                        <div id="material-utilizado-options" data-material-options class="material-options" role="listbox" hidden></div>
-                        <div class="material-select-real">{{ material_utilizado_form.material }}</div>
-                    </div>
-                    <small class="form-help">Digite para pesquisar e selecione um material da lista.</small>
-                    {% if material_utilizado_form.material.help_text %}<small class="form-help">{{ material_utilizado_form.material.help_text }}</small>{% endif %}
-                    {% for error in material_utilizado_form.material.errors %}<small class="field-error">{{ error }}</small>{% endfor %}
-                </div>
-                <div class="form-group">
-                    {{ material_utilizado_form.quantidade.label_tag }}
-                    {{ material_utilizado_form.quantidade }}
-                    {% for error in material_utilizado_form.quantidade.errors %}<small class="field-error">{{ error }}</small>{% endfor %}
-                </div>
-            </div>
-            <div class="form-actions">
-                <button type="submit" class="btn btn-primary">Registrar uso e atualizar estoque</button>
-            </div>
-        </form>
-    </div>
-    {% endif %}
-    {% if materiais_utilizados %}
-    <div class="table-wrap">
-        <table class="data-table">
-            <thead>
-                <tr><th>Material</th><th>Quantidade utilizada</th><th>Registrado em</th><th>Responsável</th></tr>
-            </thead>
-            <tbody>
-                {% for movimentacao in materiais_utilizados %}
-                <tr>
-                    <td>
-                        {% if usuario.tipo == 'ADMIN' %}
-                        <a class="table-link" href="{% url 'materiais' %}?busca={{ movimentacao.material.codigo|urlencode }}" title="Ver este material no estoque">
-                            <strong>{{ movimentacao.material.nome }}</strong>
-                        </a>
-                        {% else %}
-                        <strong>{{ movimentacao.material.nome }}</strong>
-                        {% endif %}
-                        <br><small>{{ movimentacao.material.codigo }}</small>
-                    </td>
-                    <td>{{ movimentacao.quantidade }} {{ movimentacao.material.get_unidade_display }}</td>
-                    <td>{{ movimentacao.dt_cadastro|date:'d/m/Y H:i' }}</td>
-                    <td>{{ movimentacao.registrado_por_nome|default:'-' }}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-    {% else %}
-    <div class="empty-state table-empty">
-        <h3>Nenhum material utilizado registrado</h3>
-        <p class="form-subtitle">Registre aqui os materiais consumidos durante esta ação.</p>
-    </div>
-    {% endif %}
-</section>
+    <nav class="acao-nav" aria-label="Seções desta ação">
+        <a href="#residuos">Resíduos <b>{{ residuos|length }}</b></a>
+        <a href="#materiais-utilizados">Materiais <b>{{ materiais_utilizados|length }}</b></a>
+        <a href="#imagens">Imagens <b>{{ imagens_acao|length }}</b></a>
+        <a href="#responsaveis">Responsáveis <b>{{ responsaveis|length }}</b></a>
+        {% if equipes or acao.tipo == 'MUTIRAO' %}<a href="#equipes">Equipes <b>{{ equipes|length }}</b></a>{% endif %}
+        <a href="#chamada">Chamada <b>{{ participantes|length }}</b></a>
+        {% if historico_participantes %}<a href="#historico">Histórico</a>{% endif %}
+    </nav>
 
-<section class="card volunteer-control action-detail-section">
-    <div class="section-heading">
-        <div>
-            <h2>Imagens da ação <span class="section-count">{{ imagens_acao|length }}</span></h2>
-            <p class="form-subtitle">Adicione registros fotográficos da atividade. Até 10 imagens de 5 MB por envio.</p>
-        </div>
-    </div>
-    {% if usuario.tipo == 'ADMIN' %}
-    <div class="member-form-panel">
-        <h3>Adicionar imagens</h3>
-        <form method="post" action="{% url 'adicionar_imagens_acao' acao.id_acao %}" enctype="multipart/form-data">
-            {% csrf_token %}
-            {% if imagem_form.non_field_errors %}<div class="error-box">{{ imagem_form.non_field_errors|join:', ' }}</div>{% endif %}
-            <div class="form-grid">
-                <div class="form-group full">
-                    {{ imagem_form.imagens.label_tag }}
-                    {{ imagem_form.imagens }}
-                    {% if imagem_form.imagens.errors %}<small class="error-msg">{{ imagem_form.imagens.errors|join:', ' }}</small>{% endif %}
-                </div>
-                <div class="form-group full">
-                    {{ imagem_form.descricao.label_tag }}
-                    {{ imagem_form.descricao }}
-                    {% if imagem_form.descricao.errors %}<small class="error-msg">{{ imagem_form.descricao.errors|join:', ' }}</small>{% endif %}
-                </div>
+    <section class="acao-secao" id="residuos">
+        <div class="acao-secao__cabecalho">
+            <div>
+                <h2>Resíduos coletados <span class="section-count">{{ residuos|length }}</span></h2>
+                <p>Registre o tipo, a categoria e a quantidade coletada. Cada registro pode ter mais de uma destinação.</p>
             </div>
-            <div class="form-actions">
-                <button type="submit" class="btn btn-primary">Enviar imagens</button>
-            </div>
-        </form>
-    </div>
-    {% endif %}
-    {% if imagens_acao %}
-    <div class="action-image-grid">
-        {% for imagem in imagens_acao %}
-        <figure class="action-image-card">
-            <img src="{{ imagem.imagem.url }}" alt="{{ imagem.descricao|default:'Imagem da ação' }}" loading="lazy" decoding="async">
-            {% if imagem.descricao %}<figcaption>{{ imagem.descricao }}</figcaption>{% endif %}
             {% if usuario.tipo == 'ADMIN' %}
-            <form method="post" action="{% url 'excluir_imagem_acao' acao.id_acao imagem.id_acao_imagem %}">
-                {% csrf_token %}
-                <button type="submit" class="btn btn-outline btn-small">Excluir imagem</button>
-            </form>
+            <button type="button" class="btn btn-outline btn-small" data-abrir-painel="painel-residuo" data-texto-aberto="Fechar formulário" aria-expanded="false" aria-controls="painel-residuo">
+                <svg class="acao-icone" aria-hidden="true"><use href="#i-mais"></use></svg><span>Registrar resíduo</span>
+            </button>
             {% endif %}
-        </figure>
-        {% endfor %}
-    </div>
-    {% else %}
-    <div class="empty-state table-empty">
-        <h3>Nenhuma imagem cadastrada</h3>
-        <p class="form-subtitle">Adicione fotos para registrar esta ação.</p>
-    </div>
-    {% endif %}
-</section>
-
-<section class="card volunteer-control action-detail-section">
-    <div class="section-heading">
-        <div>
-            <h2>Responsáveis pela ação <span class="section-count">{{ responsaveis|length }}</span></h2>
-            <p class="form-subtitle">Voluntários responsáveis pela organização e acompanhamento desta atividade.</p>
         </div>
-    </div>
-    {% if usuario.tipo == 'ADMIN' %}
-    <div class="member-form-panel">
-        <h3>Adicionar responsável</h3>
-        <form method="post" action="{% url 'adicionar_responsavel_acao' acao.id_acao %}">
-            {% csrf_token %}
-            <div class="form-grid">
-                <div class="form-group">
-                    {{ responsavel_form.voluntario.label_tag }}
-                    <div class="searchable-select">
-                        <input type="search" class="form-control volunteer-search" placeholder="Pesquise por nome ou e-mail" autocomplete="off" aria-label="Pesquisar responsável">
-                        {{ responsavel_form.voluntario }}
+        {% if usuario.tipo == 'ADMIN' %}
+        <div class="member-form-panel" id="painel-residuo" hidden>
+            <h3>Registrar resíduo</h3>
+            <form method="post" action="{% url 'registrar_residuo' acao.id_acao %}">
+                {% csrf_token %}
+                {% if residuo_form.non_field_errors %}<div class="error-box">{{ residuo_form.non_field_errors|join:', ' }}</div>{% endif %}
+                <div class="form-grid">
+                    <div class="form-group">
+                        {{ residuo_form.tipo.label_tag }}
+                        {{ residuo_form.tipo }}
+                        {% if residuo_form.tipo.help_text %}<small class="form-help">{{ residuo_form.tipo.help_text }}</small>{% endif %}
+                        {% for error in residuo_form.tipo.errors %}<small class="field-error">{{ error }}</small>{% endfor %}
                     </div>
-                    {% if responsavel_form.voluntario.errors %}<small class="error-msg">{{ responsavel_form.voluntario.errors|join:', ' }}</small>{% endif %}
+                    <div class="form-group">
+                        {{ residuo_form.categoria.label_tag }}
+                        {{ residuo_form.categoria }}
+                        {% if residuo_form.categoria.help_text %}<small class="form-help">{{ residuo_form.categoria.help_text }}</small>{% endif %}
+                        {% for error in residuo_form.categoria.errors %}<small class="field-error">{{ error }}</small>{% endfor %}
+                    </div>
+                    <div class="form-group">
+                        {{ residuo_form.quantidade.label_tag }}
+                        {{ residuo_form.quantidade }}
+                        {% if residuo_form.quantidade.help_text %}<small class="form-help">{{ residuo_form.quantidade.help_text }}</small>{% endif %}
+                        {% for error in residuo_form.quantidade.errors %}<small class="field-error">{{ error }}</small>{% endfor %}
+                    </div>
+                    <div class="form-group">
+                        {{ residuo_form.unidade.label_tag }}
+                        {{ residuo_form.unidade }}
+                        {% if residuo_form.unidade.help_text %}<small class="form-help">{{ residuo_form.unidade.help_text }}</small>{% endif %}
+                        {% for error in residuo_form.unidade.errors %}<small class="field-error">{{ error }}</small>{% endfor %}
+                    </div>
+                    <div class="form-group full">
+                        {{ residuo_form.observacao.label_tag }}
+                        {{ residuo_form.observacao }}
+                        {% if residuo_form.observacao.help_text %}<small class="form-help">{{ residuo_form.observacao.help_text }}</small>{% endif %}
+                        {% for error in residuo_form.observacao.errors %}<small class="field-error">{{ error }}</small>{% endfor %}
+                    </div>
                 </div>
-                <div class="form-group">
-                    {{ responsavel_form.papel.label_tag }}
-                    {{ responsavel_form.papel }}
-                    {% if responsavel_form.papel.errors %}<small class="error-msg">{{ responsavel_form.papel.errors|join:', ' }}</small>{% endif %}
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Registrar resíduo</button>
                 </div>
+            </form>
+        </div>
+        {% endif %}
+        {% if residuos %}
+        <div class="table-wrap">
+            <table class="data-table" data-sem-cards>
+                <thead>
+                    <tr>
+                        <th>Tipo / categoria</th>
+                        <th>Quantidade</th>
+                        <th>Registro</th>
+                        <th>Destinações</th>
+                        {% if usuario.tipo == 'ADMIN' %}<th>Ação</th>{% endif %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for residuo in residuos %}
+                    <tr>
+                        <td>
+                            <a class="table-link" href="{% url 'residuos' %}?acao={{ acao.id_acao }}&amp;tipo={{ residuo.tipo|urlencode }}" title="Ver este tipo de resíduo na lista geral">
+                                <strong>{{ residuo.get_tipo_display }}</strong>
+                            </a>
+                            <br><small>{{ residuo.get_categoria_display }}</small>
+                        </td>
+                        <td>{{ residuo.quantidade }} {{ residuo.get_unidade_display }}</td>
+                        <td>
+                            {{ residuo.registrado_por_nome }}<br><small>{{ residuo.dt_registro|date:'d/m/Y H:i' }}</small>
+                            {% if residuo.ultimo_editado_por_nome %}<br><small>Editado por {{ residuo.ultimo_editado_por_nome }} em {{ residuo.dt_ultima_edicao|date:'d/m/Y H:i' }}</small>{% else %}<br><small>Sem edições</small>{% endif %}
+                        </td>
+                        <td>
+                            {% for destinacao in residuo.destinacoes.all %}
+                            <div class="acao-destinacao">
+                                <span>{{ destinacao.get_tipo_display }}{% if destinacao.quantidade %} ({{ destinacao.quantidade }} {{ destinacao.get_unidade_display }}){% endif %}</span>
+                                {% if usuario.tipo == 'ADMIN' %}
+                                <a class="btn btn-outline btn-small" href="{% url 'editar_destinacao' acao.id_acao residuo.id_residuo destinacao.id_destinacao %}">Editar</a>
+                                <form method="post" action="{% url 'excluir_destinacao' acao.id_acao residuo.id_residuo destinacao.id_destinacao %}" onsubmit="return confirm('Excluir esta destinação?');">{% csrf_token %}<button type="submit" class="btn btn-danger btn-small">Excluir</button></form>
+                                {% endif %}
+                            </div>
+                            {% empty %}
+                            <span class="field-hint">Ainda não informada</span>
+                            {% endfor %}
+                        </td>
+                        {% if usuario.tipo == 'ADMIN' %}
+                        <td>
+                            <div class="acao-celula-acoes">
+                                <a class="btn btn-outline btn-small" href="{% url 'registrar_destinacao' acao.id_acao residuo.id_residuo %}">Adicionar destinação</a>
+                                <a class="btn btn-outline btn-small" href="{% url 'editar_residuo' acao.id_acao residuo.id_residuo %}">Editar resíduo</a>
+                                <form method="post" action="{% url 'excluir_residuo' acao.id_acao residuo.id_residuo %}" onsubmit="return confirm('Excluir este resíduo e suas destinações?');">{% csrf_token %}<button type="submit" class="btn btn-danger btn-small">Excluir resíduo</button></form>
+                            </div>
+                        </td>
+                        {% endif %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="acao-vazio"><strong>Nenhum resíduo registrado.</strong> <span>Os registros desta ação aparecerão aqui.</span></div>
+        {% endif %}
+    </section>
+
+    <section class="acao-secao" id="materiais-utilizados">
+        <div class="acao-secao__cabecalho">
+            <div>
+                <h2>Materiais utilizados <span class="section-count">{{ materiais_utilizados|length }}</span></h2>
+                <p>Cada registro cria uma saída no estoque e fica vinculado a esta ação.</p>
             </div>
-            <div class="form-actions">
-                <button type="submit" class="btn btn-primary">Adicionar responsável</button>
+            {% if usuario.tipo == 'ADMIN' %}
+            <button type="button" class="btn btn-outline btn-small" data-abrir-painel="painel-material" data-texto-aberto="Fechar formulário" aria-expanded="{% if material_utilizado_form.errors %}true{% else %}false{% endif %}" aria-controls="painel-material">
+                <svg class="acao-icone" aria-hidden="true"><use href="#i-mais"></use></svg><span>Registrar material</span>
+            </button>
+            {% endif %}
+        </div>
+        {% if usuario.tipo == 'ADMIN' %}
+        <div class="member-form-panel" id="painel-material" {% if not material_utilizado_form.errors %}hidden{% endif %}>
+            <h3>Registrar material utilizado</h3>
+            <form method="post" action="{% url 'adicionar_material_utilizado_acao' acao.id_acao %}">
+                {% csrf_token %}
+                <div class="form-grid">
+                    <div class="form-group material-picker{% if material_utilizado_form.material.errors %} campo-invalido{% endif %}">
+                        <label for="material-utilizado-search">{{ material_utilizado_form.material.label }}</label>
+                        <div class="material-combobox" data-material-combobox>
+                            <input id="material-utilizado-search" data-material-search type="search" class="form-control" placeholder="Digite o nome ou código do material" autocomplete="off" role="combobox" aria-autocomplete="list" aria-controls="material-utilizado-options" aria-expanded="false">
+                            <div id="material-utilizado-options" data-material-options class="material-options" role="listbox" hidden></div>
+                            <div class="material-select-real">{{ material_utilizado_form.material }}</div>
+                        </div>
+                        <small class="form-help">Digite para pesquisar e selecione um material da lista. O saldo atual aparece ao lado de cada material.</small>
+                        {% if material_utilizado_form.material.help_text %}<small class="form-help">{{ material_utilizado_form.material.help_text }}</small>{% endif %}
+                        {% for error in material_utilizado_form.material.errors %}<small class="field-error">{{ error }}</small>{% endfor %}
+                    </div>
+                    <div class="form-group">
+                        {{ material_utilizado_form.quantidade.label_tag }}
+                        {{ material_utilizado_form.quantidade }}
+                        {% for error in material_utilizado_form.quantidade.errors %}<small class="field-error">{{ error }}</small>{% endfor %}
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Registrar uso e atualizar estoque</button>
+                </div>
+            </form>
+        </div>
+        {% endif %}
+        {% if materiais_utilizados %}
+        <div class="table-wrap">
+            <table class="data-table" data-sem-cards>
+                <thead>
+                    <tr><th>Material</th><th>Quantidade utilizada</th><th>Registrado em</th><th>Responsável</th></tr>
+                </thead>
+                <tbody>
+                    {% for movimentacao in materiais_utilizados %}
+                    <tr>
+                        <td>
+                            {% if usuario.tipo == 'ADMIN' %}
+                            <a class="table-link" href="{% url 'materiais' %}?busca={{ movimentacao.material.codigo|urlencode }}" title="Ver este material no estoque">
+                                <strong>{{ movimentacao.material.nome }}</strong>
+                            </a>
+                            {% else %}
+                            <strong>{{ movimentacao.material.nome }}</strong>
+                            {% endif %}
+                            <br><small>{{ movimentacao.material.codigo }}</small>
+                        </td>
+                        <td>{{ movimentacao.quantidade }} {{ movimentacao.material.get_unidade_display }}</td>
+                        <td>{{ movimentacao.dt_cadastro|date:'d/m/Y H:i' }}</td>
+                        <td>{{ movimentacao.registrado_por_nome|default:'-' }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="acao-vazio"><strong>Nenhum material utilizado registrado.</strong> <span>Registre aqui os materiais consumidos durante esta ação.</span></div>
+        {% endif %}
+    </section>
+
+    <section class="acao-secao" id="imagens">
+        <div class="acao-secao__cabecalho">
+            <div>
+                <h2>Imagens da ação <span class="section-count">{{ imagens_acao|length }}</span></h2>
+                <p>Adicione registros fotográficos da atividade. Até 10 imagens de 5 MB por envio.</p>
+            </div>
+            {% if usuario.tipo == 'ADMIN' %}
+            <button type="button" class="btn btn-outline btn-small" data-abrir-painel="painel-imagens" data-texto-aberto="Fechar formulário" aria-expanded="false" aria-controls="painel-imagens">
+                <svg class="acao-icone" aria-hidden="true"><use href="#i-mais"></use></svg><span>Adicionar imagens</span>
+            </button>
+            {% endif %}
+        </div>
+        {% if usuario.tipo == 'ADMIN' %}
+        <div class="member-form-panel" id="painel-imagens" hidden>
+            <h3>Adicionar imagens</h3>
+            <form method="post" action="{% url 'adicionar_imagens_acao' acao.id_acao %}" enctype="multipart/form-data">
+                {% csrf_token %}
+                {% if imagem_form.non_field_errors %}<div class="error-box">{{ imagem_form.non_field_errors|join:', ' }}</div>{% endif %}
+                <div class="form-grid">
+                    <div class="form-group full">
+                        {{ imagem_form.imagens.label_tag }}
+                        {{ imagem_form.imagens }}
+                        {% if imagem_form.imagens.errors %}<small class="error-msg">{{ imagem_form.imagens.errors|join:', ' }}</small>{% endif %}
+                    </div>
+                    <div class="form-group full">
+                        {{ imagem_form.descricao.label_tag }}
+                        {{ imagem_form.descricao }}
+                        {% if imagem_form.descricao.errors %}<small class="error-msg">{{ imagem_form.descricao.errors|join:', ' }}</small>{% endif %}
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Enviar imagens</button>
+                </div>
+            </form>
+        </div>
+        {% endif %}
+        {% if imagens_acao %}
+        <div class="action-image-grid">
+            {% for imagem in imagens_acao %}
+            <figure class="action-image-card">
+                <img src="{{ imagem.imagem.url }}" alt="{{ imagem.descricao|default:'Imagem da ação' }}" loading="lazy" decoding="async">
+                {% if imagem.descricao %}<figcaption>{{ imagem.descricao }}</figcaption>{% endif %}
+                {% if usuario.tipo == 'ADMIN' %}
+                <form method="post" action="{% url 'excluir_imagem_acao' acao.id_acao imagem.id_acao_imagem %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-outline btn-small">Excluir imagem</button>
+                </form>
+                {% endif %}
+            </figure>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="acao-vazio"><strong>Nenhuma imagem cadastrada.</strong> <span>Adicione fotos para registrar esta ação.</span></div>
+        {% endif %}
+    </section>
+
+    <section class="acao-secao" id="responsaveis">
+        <div class="acao-secao__cabecalho">
+            <div>
+                <h2>Responsáveis pela ação <span class="section-count">{{ responsaveis|length }}</span></h2>
+                <p>Voluntários responsáveis pela organização e acompanhamento desta atividade.</p>
+            </div>
+            {% if usuario.tipo == 'ADMIN' %}
+            <button type="button" class="btn btn-outline btn-small" data-abrir-painel="painel-responsavel" data-texto-aberto="Fechar formulário" aria-expanded="false" aria-controls="painel-responsavel">
+                <svg class="acao-icone" aria-hidden="true"><use href="#i-mais"></use></svg><span>Adicionar responsável</span>
+            </button>
+            {% endif %}
+        </div>
+        {% if usuario.tipo == 'ADMIN' %}
+        <div class="member-form-panel" id="painel-responsavel" hidden>
+            <h3>Adicionar responsável</h3>
+            <form method="post" action="{% url 'adicionar_responsavel_acao' acao.id_acao %}">
+                {% csrf_token %}
+                <div class="form-grid">
+                    <div class="form-group">
+                        {{ responsavel_form.voluntario.label_tag }}
+                        <div class="searchable-select">
+                            <input type="search" class="form-control volunteer-search" placeholder="Pesquise por nome ou e-mail" autocomplete="off" aria-label="Pesquisar responsável">
+                            {{ responsavel_form.voluntario }}
+                        </div>
+                        {% if responsavel_form.voluntario.errors %}<small class="error-msg">{{ responsavel_form.voluntario.errors|join:', ' }}</small>{% endif %}
+                    </div>
+                    <div class="form-group">
+                        {{ responsavel_form.papel.label_tag }}
+                        {{ responsavel_form.papel }}
+                        {% if responsavel_form.papel.errors %}<small class="error-msg">{{ responsavel_form.papel.errors|join:', ' }}</small>{% endif %}
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Adicionar responsável</button>
+                </div>
+            </form>
+        </div>
+        {% endif %}
+        <form method="get" action="#responsaveis" class="volunteer-filters team-member-filters responsible-filters">
+            <div class="form-group">
+                <label for="id_busca_responsavel">Buscar responsável</label>
+                <input id="id_busca_responsavel" name="busca_responsavel" type="search" value="{{ busca_responsavel }}" class="form-control" placeholder="Nome ou e-mail">
+            </div>
+            <div class="filter-actions">
+                <button type="submit" class="btn btn-primary">Filtrar</button>
+                {% if busca_responsavel %}<a href="{% url 'acao_detalhe' acao.id_acao %}#responsaveis" class="form-link">Limpar</a>{% endif %}
             </div>
         </form>
-    </div>
+        {% if responsaveis %}
+        <div class="table-wrap">
+            <table class="data-table" data-sem-cards>
+                <thead>
+                    <tr>
+                        <th>Voluntário</th>
+                        <th>Papel</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for responsavel in responsaveis %}
+                    <tr>
+                        <td>
+                            <div class="acao-pessoa">
+                                <span class="acao-avatar" aria-hidden="true">{{ responsavel.voluntario.nome|slice:":1"|upper }}</span>
+                                <div>
+                                    <a class="table-link" href="{% url 'voluntarios' %}?voluntario={{ responsavel.voluntario.id_voluntario }}"><strong>{{ responsavel.voluntario.nome }}</strong></a>
+                                    <small>{{ responsavel.voluntario.email }}</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td>{{ responsavel.get_papel_display }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="acao-vazio"><strong>Nenhum responsável cadastrado.</strong> <span>Adicione os responsáveis por esta ação.</span></div>
+        {% endif %}
+    </section>
+
+    {% if equipes or acao.tipo == 'MUTIRAO' %}
+    <section class="acao-secao" id="equipes">
+        <div class="acao-secao__cabecalho">
+            <div>
+                <h2>Equipes vinculadas <span class="section-count">{{ equipes|length }}</span></h2>
+                <p>Equipes associadas a este mutirão e à praia da ação.</p>
+            </div>
+        </div>
+        <form method="get" action="#equipes" class="volunteer-filters team-member-filters">
+            <div class="form-group">
+                <label for="id_busca_equipe">Buscar equipe</label>
+                <input id="id_busca_equipe" name="busca_equipe" type="search" value="{{ busca_equipe }}" class="form-control" placeholder="Nome da equipe, praia ou cidade">
+            </div>
+            <div class="filter-actions">
+                <button type="submit" class="btn btn-primary">Filtrar</button>
+                {% if busca_equipe %}<a href="{% url 'acao_detalhe' acao.id_acao %}#equipes" class="form-link">Limpar</a>{% endif %}
+            </div>
+        </form>
+        {% if equipes %}
+        <div class="table-wrap">
+            <table class="data-table" data-sem-cards>
+                <thead>
+                    <tr>
+                        <th>Equipe</th>
+                        <th>Praia</th>
+                        <th>Status</th>
+                        <th>Auditoria da ação</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for vinculada in equipes %}
+                    <tr>
+                        <td><a class="table-link" href="{% url 'equipe_detalhe' vinculada.equipe.id_equipe %}"><strong>{{ vinculada.equipe.nome }}</strong></a></td>
+                        <td>{{ vinculada.equipe.praia.nome }} - {{ vinculada.equipe.praia.cidade }}</td>
+                        <td><span class="status-select status-{{ vinculada.equipe.status|lower }}">{{ vinculada.equipe.get_status_display }}</span></td>
+                        <td class="audit-cell">
+                            <strong>{% if acao.cadastrado_por_nome %}Ação cadastrada por {{ acao.cadastrado_por_nome }}{% elif acao.cadastrado_por %}Ação cadastrada por {{ acao.cadastrado_por.id_voluntario.nome }}{% else %}Cadastro anterior{% endif %}</strong>
+                            <small>{{ acao.dt_cadastro|date:'d/m/Y H:i' }}</small>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="acao-vazio"><strong>Nenhuma equipe encontrada.</strong> <span>Esta ação não possui equipes vinculadas ou nenhum resultado corresponde ao filtro.</span></div>
+        {% endif %}
+    </section>
     {% endif %}
-    <form method="get" class="volunteer-filters team-member-filters responsible-filters">
-        <div class="form-group">
-            <label for="id_busca_responsavel">Buscar responsável</label>
-            <input id="id_busca_responsavel" name="busca_responsavel" type="search" value="{{ busca_responsavel }}" class="form-control" placeholder="Nome ou e-mail">
-        </div>
-        <div class="filter-actions">
-            <button type="submit" class="btn btn-primary">Filtrar</button>
-            {% if busca_responsavel %}<a href="{% url 'acao_detalhe' acao.id_acao %}" class="form-link">Limpar</a>{% endif %}
-        </div>
-    </form>
-    {% if responsaveis %}
-    <div class="table-wrap action-responsibles-list">
-        <table class="data-table">
-            <thead>
-                <tr>
-                    <th>Voluntário</th>
-                    <th>Papel</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for responsavel in responsaveis %}
-                <tr>
-                    <td>
-                        <a class="table-link" href="{% url 'voluntarios' %}?voluntario={{ responsavel.voluntario.id_voluntario }}">
-                            <strong>{{ responsavel.voluntario.nome }}</strong>
-                        </a>
-                        <br><small>{{ responsavel.voluntario.email }}</small>
-                    </td>
-                    <td>{{ responsavel.get_papel_display }}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-    {% else %}
-    <div class="empty-state table-empty">
-        <h3>Nenhum responsável cadastrado</h3>
-        <p class="form-subtitle">Edite a ação para adicionar os responsáveis.</p>
-    </div>
-    {% endif %}
-</section>
 
-{% if equipes or acao.tipo == 'MUTIRAO' %}
-<section class="card volunteer-control action-detail-section action-teams-section">
-    <div class="section-heading">
-        <div>
-            <h2>Equipes vinculadas</h2>
-            <p class="form-subtitle">Equipes associadas a este mutirão e à praia da ação.</p>
+    <section class="acao-secao" id="chamada">
+        <div class="acao-secao__cabecalho">
+            <div>
+                <h2>Chamada <span class="section-count">{{ participantes|length }}</span></h2>
+                <p>Adicione voluntários e acompanhe confirmação e comparecimento.</p>
+            </div>
+            {% if usuario.tipo == 'ADMIN' %}
+            <button type="button" class="btn btn-outline btn-small" data-abrir-painel="painel-participante" data-texto-aberto="Fechar formulário" aria-expanded="false" aria-controls="painel-participante">
+                <svg class="acao-icone" aria-hidden="true"><use href="#i-mais"></use></svg><span>Adicionar participante</span>
+            </button>
+            {% endif %}
         </div>
-    </div>
 
-    <form method="get" class="volunteer-filters team-member-filters">
-        <div class="form-group">
-            <label for="id_busca_equipe">Buscar equipe</label>
-            <input id="id_busca_equipe" name="busca_equipe" type="search" value="{{ busca_equipe }}" class="form-control" placeholder="Nome da equipe, praia ou cidade">
-        </div>
-        <div class="filter-actions">
-            <button type="submit" class="btn btn-primary">Filtrar</button>
-            {% if busca_equipe %}<a href="{% url 'acao_detalhe' acao.id_acao %}" class="form-link">Limpar</a>{% endif %}
-        </div>
-    </form>
-
-    {% if equipes %}
-    <div class="table-wrap action-teams-list">
-        <table class="data-table">
-            <thead>
-                <tr>
-                    <th>Equipe</th>
-                    <th>Praia</th>
-                    <th>Status</th>
-                    <th>Auditoria da ação</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for vinculada in equipes %}
-                <tr>
-                    <td><a class="table-link" href="{% url 'equipe_detalhe' vinculada.equipe.id_equipe %}"><strong>{{ vinculada.equipe.nome }}</strong></a></td>
-                    <td>{{ vinculada.equipe.praia.nome }} - {{ vinculada.equipe.praia.cidade }}</td>
-                    <td>{{ vinculada.equipe.get_status_display }}</td>
-                    <td class="audit-cell">
-                        <strong>{% if acao.cadastrado_por_nome %}Ação cadastrada por {{ acao.cadastrado_por_nome }}{% elif acao.cadastrado_por %}Ação cadastrada por {{ acao.cadastrado_por.id_voluntario.nome }}{% else %}Cadastro anterior{% endif %}</strong>
-                        <small>{{ acao.dt_cadastro|date:'d/m/Y H:i' }}</small>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-    {% else %}
-    <div class="empty-state table-empty">
-        <h3>Nenhuma equipe encontrada</h3>
-        <p class="form-subtitle">Esta ação não possui equipes vinculadas ou nenhum resultado corresponde ao filtro.</p>
-    </div>
-    {% endif %}
-</section>
-{% endif %}
-
-<section class="card volunteer-control action-detail-section action-participants-section" id="participantes">
-    <div class="section-heading">
-        <div>
-            <h2>Participantes <span class="section-count">{{ participantes|length }}</span></h2>
-            <p class="form-subtitle">Adicione voluntários e acompanhe confirmação e comparecimento.</p>
-        </div>
-    </div>
-
-    <form method="get" class="volunteer-filters team-member-filters action-participant-filters">
-        <div class="form-group">
-            <label for="id_busca_participante">Buscar participante</label>
-            <input id="id_busca_participante" name="busca_participante" type="search" value="{{ busca_participante }}" class="form-control" placeholder="Nome ou e-mail">
-        </div>
-        <div class="form-group">
-            <label for="id_status_participante">Status da participação</label>
-            <select id="id_status_participante" name="status_participante" class="form-control">
-                <option value="">Todos os status</option>
-                {% for valor, rotulo in status_participante_choices %}
-                    <option value="{{ valor }}" {% if status_participante == valor %}selected{% endif %}>{{ rotulo }}</option>
-                {% endfor %}
-            </select>
-        </div>
-        <div class="filter-actions">
-            <button type="submit" class="btn btn-primary">Filtrar</button>
-            {% if busca_participante or status_participante %}<a href="{% url 'acao_detalhe' acao.id_acao %}" class="form-link">Limpar</a>{% endif %}
-        </div>
-    </form>
-
-    {% if usuario.tipo == 'ADMIN' %}
-    <div class="member-form-panel">
-        <h3>Adicionar participante</h3>
-        <form method="post" action="{% url 'adicionar_participante_acao' acao.id_acao %}">
-            {% csrf_token %}
-            <div class="form-grid">
-                {% for field in form %}
-                <div class="form-group {% if field.name == 'observacao' %}full{% endif %}">
-                    {{ field.label_tag }}
-                    {% if field.name == 'voluntario' %}
-                    <div class="searchable-select">
-                        <input type="search" class="form-control volunteer-search" placeholder="Pesquise pelo nome ou e-mail" autocomplete="off" aria-label="Pesquisar voluntário">
+        {% if usuario.tipo == 'ADMIN' %}
+        <div class="member-form-panel" id="painel-participante" hidden>
+            <h3>Adicionar participante</h3>
+            <form method="post" action="{% url 'adicionar_participante_acao' acao.id_acao %}">
+                {% csrf_token %}
+                <div class="form-grid">
+                    {% for field in form %}
+                    <div class="form-group {% if field.name == 'observacao' %}full{% endif %}">
+                        {{ field.label_tag }}
+                        {% if field.name == 'voluntario' %}
+                        <div class="searchable-select">
+                            <input type="search" class="form-control volunteer-search" placeholder="Pesquise pelo nome ou e-mail" autocomplete="off" aria-label="Pesquisar voluntário">
+                            {{ field }}
+                        </div>
+                        <small class="field-hint">Digite para localizar o voluntário e selecione o nome.</small>
+                        {% else %}
                         {{ field }}
+                        {% endif %}
+                        {% if field.errors %}<small class="error-msg">{{ field.errors|join:', ' }}</small>{% endif %}
                     </div>
-                    <small class="field-hint">Digite para localizar o voluntário e selecione o nome.</small>
-                    {% else %}
-                    {{ field }}
-                    {% endif %}
-                    {% if field.errors %}<small class="error-msg">{{ field.errors|join:', ' }}</small>{% endif %}
+                    {% endfor %}
                 </div>
-                {% endfor %}
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Adicionar participante</button>
+                </div>
+            </form>
+        </div>
+        {% endif %}
+
+        <form method="get" action="#chamada" class="volunteer-filters team-member-filters action-participant-filters">
+            <div class="form-group">
+                <label for="id_busca_participante">Buscar participante</label>
+                <input id="id_busca_participante" name="busca_participante" type="search" value="{{ busca_participante }}" class="form-control" placeholder="Nome ou e-mail">
             </div>
-            <div class="form-actions">
-                <button type="submit" class="btn btn-primary">Adicionar participante</button>
+            <div class="form-group">
+                <label for="id_status_participante">Status da participação</label>
+                <select id="id_status_participante" name="status_participante" class="form-control">
+                    <option value="">Todos os status</option>
+                    {% for valor, rotulo in status_participante_choices %}
+                        <option value="{{ valor }}" {% if status_participante == valor %}selected{% endif %}>{{ rotulo }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="filter-actions">
+                <button type="submit" class="btn btn-primary">Filtrar</button>
+                {% if busca_participante or status_participante %}<a href="{% url 'acao_detalhe' acao.id_acao %}#chamada" class="form-link">Limpar</a>{% endif %}
             </div>
         </form>
-    </div>
-    {% endif %}
 
-    {% if participantes %}
-    <div class="table-wrap action-participants-list">
-        <table class="data-table">
-            <thead>
-                <tr>
-                    <th>Voluntário</th>
-                    <th>Status</th>
-                    <th>Compareceu</th>
-                    <th>Confirmação</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for participante in participantes %}
-                <tr>
-                    <td>
-                        <a class="table-link" href="{% url 'voluntarios' %}?voluntario={{ participante.voluntario.id_voluntario }}">
-                            <strong>{{ participante.voluntario.nome }}</strong>
-                        </a>
-                        <br><small>{{ participante.voluntario.email }}</small>
-                    </td>
-                    <td>
-                        {% if usuario.tipo == 'ADMIN' %}
-                        <form method="post" action="{% url 'confirmar_participacao_acao' acao.id_acao participante.id_acao_participante %}" class="inline-status-form">
-                            {% csrf_token %}
-                            <select name="status" class="status-select" onchange="this.form.submit()">
-                                {% for valor, rotulo in participante.STATUS_CHOICES %}
-                                    <option value="{{ valor }}" {% if participante.status == valor %}selected{% endif %}>{{ rotulo }}</option>
-                                {% endfor %}
-                            </select>
-                        </form>
-                        {% else %}
-                        <span class="status-select status-{{ participante.status|lower }}">{{ participante.get_status_display }}</span>
-                        {% endif %}
-                    </td>
-                    <td>
-                        {% if usuario.tipo == 'ADMIN' %}
-                        <form method="post" action="{% url 'registrar_comparecimento_acao' acao.id_acao participante.id_acao_participante %}" class="inline-status-form">
-                            {% csrf_token %}
-                            <label class="checkbox-inline">
-                                <input type="checkbox" name="compareceu" {% if participante.compareceu %}checked{% endif %} onchange="this.form.submit()">
-                                Presente
-                            </label>
-                        </form>
-                        {% else %}
-                        {% if participante.compareceu %}Sim{% else %}Não{% endif %}
-                        {% endif %}
-                    </td>
-                    <td>{{ participante.dt_confirmacao|date:'d/m/Y H:i'|default:'- ' }}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-    {% else %}
-    <div class="empty-state table-empty">
-        <h3>Nenhum participante vinculado</h3>
-        <p class="form-subtitle">Para mutirões, o sistema inclui automaticamente os voluntários das equipes da praia.</p>
-    </div>
-    {% endif %}
-</section>
-
-{% if historico_participantes %}
-<section class="card volunteer-control team-history-section">
-    <div class="section-heading">
-        <div>
-            <h2>Histórico de participantes</h2>
-            <p class="form-subtitle">Pessoas que recusaram ou não compareceram à ação.</p>
-        </div>
-    </div>
-    <div class="table-wrap">
-        <table class="data-table">
-            <thead>
-                <tr>
-                    <th>Voluntário</th>
-                    <th>Resultado</th>
-                    <th>Movimentado em</th>
-                    <th>Auditoria</th>
-                    <th>Observação</th>
-                    <th>Ação</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for historico in historico_participantes %}
-                <tr>
-                    <td>
-                        <a class="table-link" href="{% url 'voluntarios' %}?voluntario={{ historico.voluntario.id_voluntario }}">
-                            <strong>{{ historico.voluntario.nome }}</strong>
-                        </a>
-                        <br><small>{{ historico.voluntario.email }}</small>
-                    </td>
-                    <td>{{ historico.get_status_display }}</td>
-                    <td>{{ historico.dt_movimentacao|date:'d/m/Y H:i' }}</td>
-                    <td class="audit-cell">
-                        <strong>{% if historico.movido_por_nome %}Movido por {{ historico.movido_por_nome }}{% elif historico.movido_por %}Movido por {{ historico.movido_por.id_voluntario.nome }}{% else %}Registro anterior{% endif %}</strong>
-                        {% if historico.movido_por_tipo %}<small>{{ historico.movido_por_tipo }}</small>{% endif %}
-                        {% if historico.restaurado %}<small>Restaurado por {{ historico.restaurado_por_nome }} em {{ historico.restaurado_em|date:'d/m/Y H:i' }}</small>{% endif %}
-                    </td>
-                    <td>{{ historico.observacao|default:'-' }}</td>
-                    <td class="table-actions">
-                        {% if usuario.tipo == 'ADMIN' %}
-                        {% if historico.restaurado %}
-                            <span class="field-hint">Já restaurado</span>
-                        {% else %}
-                            <form method="post" action="{% url 'restaurar_participante_acao' acao.id_acao historico.id_historico %}" class="restore-participant-form">
+        {% if participantes %}
+        <div class="table-wrap acao-tabela--rolavel" id="participantes">
+            <table class="data-table" data-sem-cards>
+                <thead>
+                    <tr>
+                        <th>Voluntário</th>
+                        <th>Status</th>
+                        <th>Compareceu</th>
+                        <th>Confirmação</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for participante in participantes %}
+                    <tr>
+                        <td>
+                            <div class="acao-pessoa">
+                                <span class="acao-avatar" aria-hidden="true">{{ participante.voluntario.nome|slice:":1"|upper }}</span>
+                                <div>
+                                    <a class="table-link" href="{% url 'voluntarios' %}?voluntario={{ participante.voluntario.id_voluntario }}"><strong>{{ participante.voluntario.nome }}</strong></a>
+                                    <small>{{ participante.voluntario.email }}</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            {% if usuario.tipo == 'ADMIN' %}
+                            <form method="post" action="{% url 'confirmar_participacao_acao' acao.id_acao participante.id_acao_participante %}" class="inline-status-form">
                                 {% csrf_token %}
-                                <button type="button" class="btn btn-outline btn-small restore-participant-button" data-volunteer-name="{{ historico.voluntario.nome }}">Restaurar participante</button>
+                                <select name="status" class="status-select status-{{ participante.status|lower }}" aria-label="Status de {{ participante.voluntario.nome }}" onchange="this.form.submit()">
+                                    {% for valor, rotulo in participante.STATUS_CHOICES %}
+                                        <option value="{{ valor }}" {% if participante.status == valor %}selected{% endif %}>{{ rotulo }}</option>
+                                    {% endfor %}
+                                </select>
                             </form>
-                        {% endif %}
-                        {% else %}
-                        <span class="field-hint">Somente visualização</span>
-                        {% endif %}
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-</section>
-{% endif %}
+                            {% else %}
+                            <span class="status-select status-{{ participante.status|lower }}">{{ participante.get_status_display }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if usuario.tipo == 'ADMIN' %}
+                            <form method="post" action="{% url 'registrar_comparecimento_acao' acao.id_acao participante.id_acao_participante %}" class="inline-status-form">
+                                {% csrf_token %}
+                                <label class="checkbox-inline">
+                                    <input type="checkbox" name="compareceu" {% if participante.compareceu %}checked{% endif %} onchange="this.form.submit()">
+                                    Presente
+                                </label>
+                            </form>
+                            {% else %}
+                            {% if participante.compareceu %}Sim{% else %}Não{% endif %}
+                            {% endif %}
+                        </td>
+                        <td>{{ participante.dt_confirmacao|date:'d/m/Y H:i'|default:'-' }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="acao-vazio"><strong>Nenhum participante vinculado.</strong> <span>Para mutirões, o sistema inclui automaticamente os voluntários das equipes da praia.</span></div>
+        {% endif %}
+    </section>
+
+    {% if historico_participantes %}
+    <section class="acao-secao" id="historico">
+        <div class="acao-secao__cabecalho">
+            <div>
+                <h2>Histórico de participantes</h2>
+                <p>Pessoas que recusaram ou não compareceram à ação.</p>
+            </div>
+        </div>
+        <div class="table-wrap">
+            <table class="data-table" data-sem-cards>
+                <thead>
+                    <tr>
+                        <th>Voluntário</th>
+                        <th>Resultado</th>
+                        <th>Movimentado em</th>
+                        <th>Auditoria</th>
+                        <th>Observação</th>
+                        <th>Ação</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for historico in historico_participantes %}
+                    <tr>
+                        <td>
+                            <div class="acao-pessoa">
+                                <span class="acao-avatar" aria-hidden="true">{{ historico.voluntario.nome|slice:":1"|upper }}</span>
+                                <div>
+                                    <a class="table-link" href="{% url 'voluntarios' %}?voluntario={{ historico.voluntario.id_voluntario }}"><strong>{{ historico.voluntario.nome }}</strong></a>
+                                    <small>{{ historico.voluntario.email }}</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td>{{ historico.get_status_display }}</td>
+                        <td>{{ historico.dt_movimentacao|date:'d/m/Y H:i' }}</td>
+                        <td class="audit-cell">
+                            <strong>{% if historico.movido_por_nome %}Movido por {{ historico.movido_por_nome }}{% elif historico.movido_por %}Movido por {{ historico.movido_por.id_voluntario.nome }}{% else %}Registro anterior{% endif %}</strong>
+                            {% if historico.movido_por_tipo %}<small>{{ historico.movido_por_tipo }}</small>{% endif %}
+                            {% if historico.restaurado %}<small>Restaurado por {{ historico.restaurado_por_nome }} em {{ historico.restaurado_em|date:'d/m/Y H:i' }}</small>{% endif %}
+                        </td>
+                        <td>{{ historico.observacao|default:'-' }}</td>
+                        <td class="table-actions">
+                            {% if usuario.tipo == 'ADMIN' %}
+                            {% if historico.restaurado %}
+                                <span class="field-hint">Já restaurado</span>
+                            {% else %}
+                                <form method="post" action="{% url 'restaurar_participante_acao' acao.id_acao historico.id_historico %}" class="restore-participant-form">
+                                    {% csrf_token %}
+                                    <button type="button" class="btn btn-outline btn-small restore-participant-button" data-volunteer-name="{{ historico.voluntario.nome }}">Restaurar participante</button>
+                                </form>
+                            {% endif %}
+                            {% else %}
+                            <span class="field-hint">Somente visualização</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+    {% endif %}
+
+</div>
 
 <div class="confirmation-modal" id="restore-confirmation-modal" hidden>
     <div class="confirmation-modal-backdrop" data-close-restore-modal></div>
@@ -635,30 +660,132 @@
 </div>
 
 <script>
+   /* Modal de restaurar participante */
     (function () {
         var modal = document.getElementById('restore-confirmation-modal');
         var volunteerName = document.getElementById('restore-volunteer-name');
         var confirmButton = document.getElementById('confirm-restore-participant');
+        if (!modal || !volunteerName || !confirmButton) return;
+
         var selectedForm = null;
+        var botaoOrigem = null;
+
+        function abrir(button) {
+            selectedForm = button.closest('form');
+            botaoOrigem = button;
+            volunteerName.textContent = button.dataset.volunteerName;
+            confirmButton.disabled = false;
+            modal.hidden = false;
+            confirmButton.focus();
+        }
+
+        function fechar() {
+            modal.hidden = true;
+            selectedForm = null;
+            if (botaoOrigem) botaoOrigem.focus();
+            botaoOrigem = null;
+        }
 
         document.querySelectorAll('.restore-participant-button').forEach(function (button) {
-            button.addEventListener('click', function () {
-                selectedForm = button.closest('form');
-                volunteerName.textContent = button.dataset.volunteerName;
-                modal.hidden = false;
-            });
+            button.addEventListener('click', function () { abrir(button); });
         });
 
         document.querySelectorAll('[data-close-restore-modal]').forEach(function (element) {
-            element.addEventListener('click', function () {
-                modal.hidden = true;
-                selectedForm = null;
-            });
+            element.addEventListener('click', fechar);
+        });
+
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape' && !modal.hidden) fechar();
         });
 
         confirmButton.addEventListener('click', function () {
-            if (selectedForm) selectedForm.submit();
+            if (!selectedForm) return;
+            confirmButton.disabled = true; /* evita duplo envio */
+            selectedForm.requestSubmit();
         });
+    }());
+
+    /* Botões "Registrar..." / "Adicionar...": abrem e fecham o painel do formulário. */
+    (function () {
+        document.querySelectorAll('[data-abrir-painel]').forEach(function (botao) {
+            var painel = document.getElementById(botao.dataset.abrirPainel);
+            var rotulo = botao.querySelector('span');
+            if (!painel || !rotulo) return;
+            var textoFechado = rotulo.textContent.trim();
+            var textoAberto = botao.dataset.textoAberto || 'Fechar';
+
+            botao.setAttribute('aria-controls', painel.id);
+
+            function atualizar(aberto) {
+                painel.hidden = !aberto;
+                botao.setAttribute('aria-expanded', aberto ? 'true' : 'false');
+                rotulo.textContent = aberto ? textoAberto : textoFechado;
+            }
+
+            atualizar(!painel.hidden);
+            botao.addEventListener('click', function () {
+                var abrir = painel.hidden;
+                atualizar(abrir);
+                if (abrir) {
+                    var campo = painel.querySelector('input:not([type="hidden"]), select, textarea');
+                    if (campo) campo.focus({ preventScroll: true });
+                }
+            });
+        });
+    }());
+
+    /* Menu de seções: destaca o link da seção atual. */
+    (function () {
+        var itens = [];
+        document.querySelectorAll('.acao-nav a').forEach(function (link) {
+            var href = link.getAttribute('href');
+            if (!href || href.length < 2 || href.charAt(0) !== '#') return;
+            var secao = document.getElementById(href.slice(1));
+            if (secao) itens.push({ link: link, secao: secao });
+        });
+        if (!itens.length) return;
+
+        var DESLOCAMENTO = 120; /* ajuste: altura do header fixo + folga */
+        var travado = false;
+        var agendado = false;
+
+        function ativar(atual) {
+            itens.forEach(function (item) {
+                var ativo = item === atual;
+                item.link.classList.toggle('is-ativo', ativo);
+                if (ativo) item.link.setAttribute('aria-current', 'true');
+                else item.link.removeAttribute('aria-current');
+            });
+        }
+
+        function atualizar() {
+            agendado = false;
+            if (travado) return;
+            var atual = itens[0];
+            itens.forEach(function (item) {
+                if (item.secao.getBoundingClientRect().top <= DESLOCAMENTO) atual = item;
+            });
+            var fimDaPagina = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 2;
+            if (fimDaPagina) atual = itens[itens.length - 1];
+            ativar(atual);
+        }
+
+        window.addEventListener('scroll', function () {
+            if (agendado) return;
+            agendado = true;
+            requestAnimationFrame(atualizar);
+        }, { passive: true });
+
+        /* Ao clicar, o link clicado fica ativo na hora e o scroll é ignorado por um instante. */
+        itens.forEach(function (item) {
+            item.link.addEventListener('click', function () {
+                ativar(item);
+                travado = true;
+                setTimeout(function () { travado = false; atualizar(); }, 800);
+            });
+        });
+
+        atualizar();
     }());
 </script>
 {% endblock %}
