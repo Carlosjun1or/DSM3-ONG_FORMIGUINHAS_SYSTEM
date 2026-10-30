@@ -136,9 +136,14 @@ class AuditoriaUsuariosTests(TestCase):
             senha='senha',
         )
 
-        self.client.post(
+        resposta = self.client.post(
             reverse('atualizar_tipo_usuario', args=[usuario.pk]),
             {'tipo': 'ADMIN'},
+            follow=True,
+        )
+        self.assertContains(
+            resposta,
+            'Tipo de usuário de Usuário alvo atualizado para Administrador.',
         )
         usuario.refresh_from_db()
         self.assertEqual(usuario.tipo, 'ADMIN')
@@ -200,15 +205,23 @@ class AuditoriaUsuariosTests(TestCase):
             tipo='COORDENADOR',
             senha='senha',
         )
-        self.client.post(reverse('editar_usuario', args=[usuario.pk]), {
-            'tipo': 'ADMIN',
-            'nome': 'Usuário editado',
-            'dt_nascimento': '01/01/1990',
-            'endereco': 'Rua Atualizada, 4',
-            'telefone': '11999990003',
-            'email': 'editado@teste.org',
-            'status': 'ATIVO',
-        })
+        resposta = self.client.post(
+            reverse('editar_usuario', args=[usuario.pk]),
+            {
+                'tipo': 'ADMIN',
+                'nome': 'Usuário editado',
+                'dt_nascimento': '01/01/1990',
+                'endereco': 'Rua Atualizada, 4',
+                'telefone': '11999990003',
+                'email': 'editado@teste.org',
+                'status': 'ATIVO',
+            },
+            follow=True,
+        )
+        self.assertContains(
+            resposta,
+            'Dados de Usuário editado atualizados com sucesso.',
+        )
         voluntario.refresh_from_db()
         usuario.refresh_from_db()
         self.assertEqual(voluntario.endereco, 'Rua Atualizada, 4')
