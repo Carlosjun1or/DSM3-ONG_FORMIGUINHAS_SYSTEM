@@ -5,7 +5,8 @@
 {% block estilos %}<link rel="stylesheet" href="{% static 'estoque/estoque.css' %}?v=2">{% endblock %}
 
 {% block conteudo %}
-<section class="card donation-detail donation-detail-hero">
+<article class="donation-record-page">
+<section class="card donation-detail donation-detail-hero donation-record-hero">
     <div class="section-heading donation-detail-heading">
         <div>
             <p class="eyebrow">Registro #{{ doacao.id_doacao }} · {{ doacao.data_recebimento|date:"d/m/Y" }}</p>
@@ -47,7 +48,13 @@
     </div>
 </section>
 
-<section class="card donation-detail-content">
+<nav class="detail-section-nav donation-detail-nav" aria-label="Seções da doação">
+    <a href="#recebimento-doacao">Recebimento</a>
+    <a href="#status-doacao">Situação</a>
+    <a href="#auditoria-doacao">Auditoria <b>{{ auditorias|length }}</b></a>
+</nav>
+
+<section class="card donation-detail-content" id="recebimento-doacao">
     <div class="section-heading donation-content-heading">
         <div>
             <span class="section-kicker">Recebimento</span>
@@ -130,7 +137,7 @@
     </div>
 </section>
 
-<section class="card donation-status-card">
+<section class="card donation-status-card" id="status-doacao">
     <div>
         <h2>Atualizar situação</h2>
         <p class="form-subtitle">A alteração fica registrada no histórico de auditoria.</p>
@@ -155,7 +162,7 @@
     {% endif %}
 </section>
 
-<details class="card donation-audit">
+<details class="card donation-audit" id="auditoria-doacao">
     <summary class="donation-audit-summary">
         <span>
             <strong>Histórico de auditoria</strong>
@@ -192,4 +199,5 @@
         </div>
     </div>
 </details>
+</article>
 {% endblock %}

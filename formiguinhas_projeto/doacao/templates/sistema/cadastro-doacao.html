@@ -145,10 +145,10 @@
                                 <span>Sem ação específica</span>
                                 <small>Limpar seleção</small>
                             </button>
-                            {% for acao in form.acao.field.queryset %}
-                            <button type="button" class="volunteer-picker-option relationship-picker-option" data-id="{{ acao.pk }}" data-praia-id="{{ acao.praia_id }}" data-search="{{ acao.get_tipo_display|lower }} {{ acao.praia.nome|lower }} {{ acao.data|date:'d/m/Y' }} {{ acao.local|lower }}" data-display="{{ acao.get_tipo_display }} - {{ acao.praia.nome }} - {{ acao.data|date:'d/m/Y' }}" role="option" aria-selected="false">
+                            {% for acao in form.acoes %}
+                            <button type="button" class="volunteer-picker-option relationship-picker-option" data-id="{{ acao.pk }}" data-praia-id="{{ acao.praia_id }}" data-search="{{ acao.get_tipo_display|lower }} {{ acao.praia.nome|lower }} {{ acao.data_formatada }} {{ acao.local|lower }}" data-display="{{ acao.get_tipo_display }} - {{ acao.praia.nome }} - {{ acao.data_formatada }}" role="option" aria-selected="false">
                                 <span>{{ acao.get_tipo_display }} · {{ acao.praia.nome }}</span>
-                                <small>{{ acao.data|date:'d/m/Y' }}{% if acao.local %} · {{ acao.local }}{% endif %}</small>
+                                <small>{{ acao.data_formatada }}{% if acao.local %} · {{ acao.local }}{% endif %}</small>
                             </button>
                             {% endfor %}
                             <span class="volunteer-picker-empty" hidden>Nenhuma ação ou mutirão encontrado.</span>

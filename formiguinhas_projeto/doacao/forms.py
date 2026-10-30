@@ -271,20 +271,38 @@ class DoacaoForm(forms.ModelForm):
         self.fields['praia'].queryset = Praia.objects.filter(praia_ativa='ATIVA').order_by('nome')
         self.fields['praia'].empty_label = 'Sem praia específica'
         opcoes_acao = [('', 'Sem ação específica')]
+        self.acoes = []
         try:
             from acao.mongo_services import consultar_acoes_mongo
+            from config.mongodb import MongoAcaoProxy
+
             docs, _ = consultar_acoes_mongo(por_pagina=100)
             for d in docs:
-                p_nome = (d.get('praia') or {}).get('nome', '')
-                t = d.get('tipo', '')
-                dt = d.get('data', '')
-                opcoes_acao.append((str(d.get('id_sql')), f'{t} - {p_nome} ({dt})'.strip(' -')))
+                acao = MongoAcaoProxy(d)
+                if not acao.pk:
+                    continue
+                self.acoes.append(acao)
+                praia_nome = acao.praia.nome if acao.praia else ''
+                data = acao.data
+                data_label = data.strftime('%d/%m/%Y') if hasattr(data, 'strftime') else str(data or '')
+                detalhes = ' - '.join(
+                    parte for parte in (acao.get_tipo_display(), praia_nome) if parte
+                )
+                if data_label:
+                    detalhes = f'{detalhes} ({data_label})'
+                opcoes_acao.append((str(acao.pk), detalhes))
         except Exception:
             pass
-        if len(opcoes_acao) <= 1:
+        if not self.acoes:
             try:
-                for a in Acao.objects.select_related('praia').order_by('-data')[:50]:
-                    opcoes_acao.append((str(a.pk), str(a)))
+                self.acoes = list(
+                    Acao.objects.select_related('praia').order_by('-data')[:50]
+                )
+                for acao in self.acoes:
+                    opcoes_acao.append((
+                        str(acao.pk),
+                        f'{acao.get_tipo_display()} - {acao.praia.nome} ({acao.data:%d/%m/%Y})',
+                    ))
             except Exception:
                 pass
         self.fields['acao'].choices = opcoes_acao

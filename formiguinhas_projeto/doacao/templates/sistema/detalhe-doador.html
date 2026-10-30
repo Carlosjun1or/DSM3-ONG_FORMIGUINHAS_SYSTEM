@@ -4,6 +4,7 @@
 {% block page_title %}Detalhes do Doador(a) - {{ doador.nome }}{% endblock %}
 
 {% block conteudo %}
+<article class="donor-profile-page">
 <section class="card donation-detail donation-detail-hero donor-detail-hero">
     <div class="section-heading donation-detail-heading">
         <div>
@@ -63,7 +64,12 @@
     </div>
 </section>
 
-<section class="card donation-detail-content donor-associated-donations">
+<nav class="detail-section-nav donor-detail-nav" aria-label="Seções do perfil do doador">
+    <a href="#doacoes-associadas">Doações <b>{{ doador.doacoes.all|length }}</b></a>
+    <a href="#auditoria-doador">Auditoria <b>{{ auditorias|length }}</b></a>
+</nav>
+
+<section class="card donation-detail-content donor-associated-donations" id="doacoes-associadas">
     <div class="section-heading donation-content-heading">
         <div>
             <h2>Doações associadas <span class="section-count">{{ doador.doacoes.all|length }}</span></h2>
@@ -98,7 +104,7 @@
     {% endif %}
 </section>
 
-<details class="card donation-audit">
+<details class="card donation-audit" id="auditoria-doador">
     <summary class="donation-audit-summary">
         <span>
             <strong>Histórico de auditoria</strong>
@@ -135,4 +141,5 @@
         </div>
     </div>
 </details>
+</article>
 {% endblock %}

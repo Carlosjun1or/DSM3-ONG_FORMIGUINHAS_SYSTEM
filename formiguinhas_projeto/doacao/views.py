@@ -446,6 +446,9 @@ def atualizar_status_doacao_view(request, doacao_id):
         )
         return redirect(destino, **({'doacao_id': doacao.pk} if retornar_aos_detalhes else {}))
     status_alterado = novo_status != doacao.status
+    if not status_alterado:
+        messages.info(request, 'A doação já está com essa situação.')
+        return redirect(destino, **({'doacao_id': doacao.pk} if retornar_aos_detalhes else {}))
     valores_anteriores = _snapshot_doacao_completa(doacao)
     status_anterior = doacao.get_status_display()
     try:
@@ -462,16 +465,15 @@ def atualizar_status_doacao_view(request, doacao_id):
                 and not doacao.movimentacoes_estoque.exists()
             ):
                 registrar_entradas_doacao(doacao, usuario)
-            if status_alterado:
-                registrar_evento(
-                    entidade='DOACAO',
-                    instancia=doacao,
-                    acao='MUDANCA_STATUS',
-                    usuario=usuario,
-                    resumo=f'Doação #{doacao.pk}: {status_anterior} para {doacao.get_status_display()}.',
-                    valores_anteriores=valores_anteriores,
-                    valores_novos=_snapshot_doacao_completa(doacao),
-                )
+            registrar_evento(
+                entidade='DOACAO',
+                instancia=doacao,
+                acao='MUDANCA_STATUS',
+                usuario=usuario,
+                resumo=f'Doação #{doacao.pk}: {status_anterior} para {doacao.get_status_display()}.',
+                valores_anteriores=valores_anteriores,
+                valores_novos=_snapshot_doacao_completa(doacao),
+            )
     except ValidationError as erro:
         messages.error(request, 'Não foi possível confirmar a doação: ' + ' '.join(erro.messages))
         return redirect(destino, **({'doacao_id': doacao.pk} if retornar_aos_detalhes else {}))
@@ -557,6 +559,10 @@ def atualizar_status_doador_view(request, doador_id):
         messages.error(request, 'Situação de doador inválida.')
         return redirect(destino, **({'doador_id': doador.pk} if retornar_aos_detalhes else {}))
     if (novo_status == 'ATIVO') == doador.ativo:
+        messages.info(
+            request,
+            f'O doador já está {"ativo" if doador.ativo else "inativo"}.',
+        )
         return redirect(destino, **({'doador_id': doador.pk} if retornar_aos_detalhes else {}))
 
     valores_anteriores = snapshot(doador)
