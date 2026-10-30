@@ -4,7 +4,7 @@
 {% block page_title %}{{ equipe.nome }}{% endblock %}
 
 {% block conteudo %}
-<section class="team-detail volunteer-control">
+<section class="team-detail team-profile-detail volunteer-control">
     <div class="team-hero">
         <div>
             <span class="team-eyebrow">Equipe cadastrada</span>
@@ -19,17 +19,22 @@
         <div class="team-hero-side">
             <span class="status-select status-{{ equipe.status|lower }}">{{ equipe.get_status_display }}</span>
             <small>{{ membros|length }} membro{{ membros|length|pluralize }} ativo{{ membros|length|pluralize }}</small>
+            <div class="team-detail-hero-actions">
+                {% if pode_editar_equipe %}<a href="{% url 'editar_equipe' equipe.id_equipe %}" class="btn btn-outline">Editar equipe</a>{% endif %}
+                <a href="{% url 'equipes' %}" class="btn btn-outline">Voltar</a>
+            </div>
         </div>
     </div>
 
-    <div class="section-heading">
+    <nav class="detail-section-nav team-detail-nav" aria-label="Seções da equipe">
+        <a href="#membros-ativos">Membros ativos <b>{{ membros|length }}</b></a>
+        {% if historico_membros %}<a href="#historico-membros">Histórico <b>{{ historico_membros|length }}</b></a>{% endif %}
+    </nav>
+
+    <div class="section-heading" id="membros-ativos">
         <div>
             <h2>Membros ativos</h2>
             <p class="form-subtitle">Consulte e gerencie as pessoas vinculadas a esta equipe.</p>
-        </div>
-        <div class="table-actions">
-            {% if pode_editar_equipe %}<a href="{% url 'editar_equipe' equipe.id_equipe %}" class="btn btn-outline">Editar equipe</a>{% endif %}
-            <a href="{% url 'equipes' %}" class="btn btn-outline">Voltar</a>
         </div>
     </div>
 
@@ -152,7 +157,7 @@
 </section>
 
 {% if historico_membros %}
-<section class="card volunteer-control team-history-section">
+<section class="card volunteer-control team-history-section" id="historico-membros">
     <div class="section-heading">
         <div>
             <h2>Histórico de membros <span class="section-count">{{ historico_membros|length }}</span></h2>
