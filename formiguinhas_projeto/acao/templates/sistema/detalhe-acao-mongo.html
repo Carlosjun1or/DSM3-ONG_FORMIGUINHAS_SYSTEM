@@ -15,13 +15,17 @@
         <div class="team-hero-side">
             <span class="status-select status-{{ acao.status|lower }}">{{ acao.get_status_display }}</span>
             <small>{{ participantes|length }} participante{{ participantes|length|pluralize }}</small>
+            <div class="action-mongo-actions">
+                <a href="{% url 'acoes' %}" class="btn btn-outline">Voltar às ações</a>
+            </div>
         </div>
     </div>
     <p class="form-subtitle">Esta ação está disponível apenas no MongoDB. Os participantes podem ser consultados, mas não alterados por esta tela.</p>
-    <div class="table-actions">
-        <a href="{% url 'acoes' %}" class="btn btn-outline">Voltar às ações</a>
-    </div>
 </section>
+
+<nav class="detail-section-nav action-mongo-nav" aria-label="Seções da ação">
+    <a href="#participantes">Participantes <b>{{ participantes|length }}</b></a>
+</nav>
 
 <section class="card volunteer-control action-detail-section action-participants-section" id="participantes">
     <div class="section-heading">

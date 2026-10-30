@@ -265,6 +265,97 @@
     line-height: 1.45;
 }
 
+.acao-detalhe .acao-registros-scroll {
+    max-height: 280px;
+    overflow-y: auto;
+    overflow-x: auto;
+    scrollbar-color: #b8cec1 #f3f8f4;
+    scrollbar-width: thin;
+}
+
+.acao-detalhe .acao-registros-scroll .data-table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background: #fff;
+}
+
+.acao-detalhe .residuo-coletado-cards.has-record-table-cards .record-table-cards {
+    gap: 8px;
+}
+
+.acao-detalhe .residuo-coletado-cards.has-record-table-cards .record-table-card {
+    grid-template-columns: minmax(130px, 0.7fr) minmax(0, 2fr);
+    align-items: start;
+    gap: 12px 20px;
+    padding: 14px 16px;
+}
+
+.acao-detalhe .residuo-coletado-cards.has-record-table-cards .record-table-card-identity {
+    align-self: center;
+}
+
+.acao-detalhe .residuo-coletado-cards.has-record-table-cards .record-table-card-fields {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px 14px;
+}
+
+.acao-detalhe .residuo-coletado-cards.has-record-table-cards .record-table-card-field {
+    align-content: start;
+}
+
+.acao-detalhe .residuo-coletado-cards.has-record-table-cards .record-table-card-actions {
+    grid-column: 1 / -1;
+    justify-content: flex-start;
+    padding-top: 10px;
+    border-top: 1px solid var(--layout-border);
+}
+
+.acao-detalhe .residuo-coletado-cards .acao-destinacao {
+    gap: 6px 8px;
+}
+
+.acao-detalhe .residuo-coletado-cards .acao-destinacao + .acao-destinacao {
+    margin-top: 6px;
+    padding-top: 6px;
+    border-top: 1px solid var(--layout-border);
+}
+
+.acao-detalhe .residuo-coletado-cards .record-table-card .btn-small {
+    min-height: 32px;
+    padding: 5px 10px;
+}
+
+.acao-detalhe .acao-imagens-scroll {
+    min-width: 0;
+}
+
+.acao-detalhe .action-image-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr));
+    gap: 12px;
+    width: 100%;
+    min-width: 0;
+    padding: 2px 6px 2px 2px;
+}
+
+.acao-detalhe .action-image-card {
+    min-width: 0;
+    overflow: hidden;
+}
+
+.acao-detalhe .action-image-card img {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    height: 120px;
+    object-fit: cover;
+}
+
+.acao-detalhe .acao-imagens-scroll.acao-registros-scroll .action-image-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
 .acao-detalhe .acao-secao__cabecalho .btn svg.acao-icone {
     width: 16px;
     height: 16px;
@@ -490,7 +581,24 @@
         padding: 16px;
     }
 
+    .acao-detalhe .residuo-coletado-cards.has-record-table-cards .record-table-card {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 12px;
+    }
+
+    .acao-detalhe .residuo-coletado-cards.has-record-table-cards .record-table-card-fields {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .acao-detalhe .residuo-coletado-cards.has-record-table-cards .record-table-card-actions {
+        grid-column: 1;
+    }
+
     .system-page .acao-detalhe .acao-topo__titulo h2 {
         font-size: 1.5rem;
+    }
+
+    .acao-detalhe .acao-imagens-scroll.acao-registros-scroll .action-image-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 }

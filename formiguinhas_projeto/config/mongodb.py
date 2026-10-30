@@ -14,6 +14,8 @@ Este módulo centraliza:
 import logging
 import sys
 import time
+from datetime import date, datetime
+
 from django.conf import settings
 from pymongo import MongoClient
 from pymongo.errors import PyMongoError, ServerSelectionTimeoutError
@@ -265,10 +267,36 @@ class MongoAcaoProxy(MongoDictProxy):
             return MongoDictProxy(praia)
         return None
 
+    @property
+    def data(self):
+        """
+        Converte a string ISO armazenada no MongoDB em date, para que o
+        filtro |date dos templates (ex.: {{ acao.data|date:'d/m/Y' }})
+        formate corretamente. No MongoDB a data vem de acao.data.isoformat()
+        como 'YYYY-MM-DD'.
+        """
+        raw = self._data.get('data')
+        if not raw:
+            return None
+        if isinstance(raw, datetime):
+            return raw.date()
+        if isinstance(raw, date):
+            return raw
+        try:
+            return date.fromisoformat(str(raw)[:10])
+        except (ValueError, TypeError):
+            return raw
+
+    @property
+    def data_formatada(self):
+        data = self.data
+        return data.strftime('%d/%m/%Y') if hasattr(data, 'strftime') else str(data or '')
+
     def get_tipo_display(self):
         m = {
             'LIMPEZA': 'Limpeza de Praia',
             'MUTIRAO': 'Mutirão de Limpeza',
+            'COLETA_VOLUNTARIA': 'Coleta voluntária',
             'SENSIBILIZACAO': 'Sensibilização',
             'TRIAGEM': 'Triagem',
             'OUTRO': 'Outro',
@@ -345,6 +373,4 @@ class MongoBagProxy(MongoDictProxy):
 # (algumas partes do código importam get_db/get_client em vez de get_mongo_db/get_mongo_client)
 get_db = get_mongo_db
 get_client = get_mongo_client
-
-
 

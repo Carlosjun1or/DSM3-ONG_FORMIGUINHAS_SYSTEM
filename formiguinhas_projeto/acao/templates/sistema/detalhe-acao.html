@@ -2,10 +2,10 @@
 {% load static %}
 
 {% block titulo %}{{ acao.get_tipo_display }} | Sistema{% endblock %}
-{% block page_title %}{{ acao.get_tipo_display }}{% endblock %}
+{% block page_title %}{{ acao.get_tipo_display }} - {{ acao.praia.nome }} - {{ acao.data|date:'d/m/Y' }}{% endblock %}
 {% block estilos %}
 <link rel="stylesheet" href="{% static 'estoque/estoque.css' %}?v=11">
-<link rel="stylesheet" href="{% static 'acao/acao-detalhe.css' %}?v=1">
+<link rel="stylesheet" href="{% static 'acao/acao-detalhe.css' %}?v=5">
 {% endblock %}
 {% block scripts %}<script src="{% static 'estoque/material-combobox.js' %}?v=1" defer></script>{% endblock %}
 
@@ -93,8 +93,8 @@
                 <p>Registre o tipo, a categoria e a quantidade coletada. Cada registro pode ter mais de uma destinação.</p>
             </div>
             {% if usuario.tipo == 'ADMIN' %}
-            <button type="button" class="btn btn-outline btn-small" data-abrir-painel="painel-residuo" data-texto-aberto="Fechar formulário" aria-expanded="false" aria-controls="painel-residuo">
-                <svg class="acao-icone" aria-hidden="true"><use href="#i-mais"></use></svg><span>Registrar resíduo</span>
+            <button type="button" class="btn btn-outline btn-small detail-panel-toggle" data-abrir-painel="painel-residuo" data-texto-aberto="Fechar formulário" aria-expanded="false" aria-controls="painel-residuo">
+                <span aria-hidden="true"><svg class="acao-icone"><use href="#i-mais"></use></svg></span><span>Registrar resíduo</span>
             </button>
             {% endif %}
         </div>
@@ -143,7 +143,7 @@
         </div>
         {% endif %}
         {% if residuos %}
-        <div class="table-wrap">
+        <div class="table-wrap residuo-coletado-cards{% if residuos|length > 3 %} acao-registros-scroll{% endif %}">
             <table class="data-table" data-sem-cards>
                 <thead>
                     <tr>
@@ -207,8 +207,8 @@
                 <p>Cada registro cria uma saída no estoque e fica vinculado a esta ação.</p>
             </div>
             {% if usuario.tipo == 'ADMIN' %}
-            <button type="button" class="btn btn-outline btn-small" data-abrir-painel="painel-material" data-texto-aberto="Fechar formulário" aria-expanded="{% if material_utilizado_form.errors %}true{% else %}false{% endif %}" aria-controls="painel-material">
-                <svg class="acao-icone" aria-hidden="true"><use href="#i-mais"></use></svg><span>Registrar material</span>
+            <button type="button" class="btn btn-outline btn-small detail-panel-toggle" data-abrir-painel="painel-material" data-texto-aberto="Fechar formulário" aria-expanded="{% if material_utilizado_form.errors %}true{% else %}false{% endif %}" aria-controls="painel-material">
+                <span aria-hidden="true"><svg class="acao-icone"><use href="#i-mais"></use></svg></span><span>Registrar material</span>
             </button>
             {% endif %}
         </div>
@@ -242,7 +242,7 @@
         </div>
         {% endif %}
         {% if materiais_utilizados %}
-        <div class="table-wrap">
+        <div class="table-wrap{% if materiais_utilizados|length > 3 %} acao-registros-scroll{% endif %}">
             <table class="data-table" data-sem-cards>
                 <thead>
                     <tr><th>Material</th><th>Quantidade utilizada</th><th>Registrado em</th><th>Responsável</th></tr>
@@ -280,8 +280,8 @@
                 <p>Adicione registros fotográficos da atividade. Até 10 imagens de 5 MB por envio.</p>
             </div>
             {% if usuario.tipo == 'ADMIN' %}
-            <button type="button" class="btn btn-outline btn-small" data-abrir-painel="painel-imagens" data-texto-aberto="Fechar formulário" aria-expanded="false" aria-controls="painel-imagens">
-                <svg class="acao-icone" aria-hidden="true"><use href="#i-mais"></use></svg><span>Adicionar imagens</span>
+            <button type="button" class="btn btn-outline btn-small detail-panel-toggle" data-abrir-painel="painel-imagens" data-texto-aberto="Fechar formulário" aria-expanded="false" aria-controls="painel-imagens">
+                <span aria-hidden="true"><svg class="acao-icone"><use href="#i-mais"></use></svg></span><span>Adicionar imagens</span>
             </button>
             {% endif %}
         </div>
@@ -310,19 +310,21 @@
         </div>
         {% endif %}
         {% if imagens_acao %}
-        <div class="action-image-grid">
-            {% for imagem in imagens_acao %}
-            <figure class="action-image-card">
-                <img src="{{ imagem.imagem.url }}" alt="{{ imagem.descricao|default:'Imagem da ação' }}" loading="lazy" decoding="async">
-                {% if imagem.descricao %}<figcaption>{{ imagem.descricao }}</figcaption>{% endif %}
-                {% if usuario.tipo == 'ADMIN' %}
-                <form method="post" action="{% url 'excluir_imagem_acao' acao.id_acao imagem.id_acao_imagem %}">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-outline btn-small">Excluir imagem</button>
-                </form>
-                {% endif %}
-            </figure>
-            {% endfor %}
+        <div class="acao-imagens-scroll{% if imagens_acao|length > 3 %} acao-registros-scroll{% endif %}">
+            <div class="action-image-grid">
+                {% for imagem in imagens_acao %}
+                <figure class="action-image-card">
+                    <img src="{{ imagem.imagem.url }}" alt="{{ imagem.descricao|default:'Imagem da ação' }}" loading="lazy" decoding="async">
+                    {% if imagem.descricao %}<figcaption>{{ imagem.descricao }}</figcaption>{% endif %}
+                    {% if usuario.tipo == 'ADMIN' %}
+                    <form method="post" action="{% url 'excluir_imagem_acao' acao.id_acao imagem.id_acao_imagem %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-outline btn-small">Excluir imagem</button>
+                    </form>
+                    {% endif %}
+                </figure>
+                {% endfor %}
+            </div>
         </div>
         {% else %}
         <div class="acao-vazio"><strong>Nenhuma imagem cadastrada.</strong> <span>Adicione fotos para registrar esta ação.</span></div>
@@ -336,8 +338,8 @@
                 <p>Voluntários responsáveis pela organização e acompanhamento desta atividade.</p>
             </div>
             {% if usuario.tipo == 'ADMIN' %}
-            <button type="button" class="btn btn-outline btn-small" data-abrir-painel="painel-responsavel" data-texto-aberto="Fechar formulário" aria-expanded="false" aria-controls="painel-responsavel">
-                <svg class="acao-icone" aria-hidden="true"><use href="#i-mais"></use></svg><span>Adicionar responsável</span>
+            <button type="button" class="btn btn-outline btn-small detail-panel-toggle" data-abrir-painel="painel-responsavel" data-texto-aberto="Fechar formulário" aria-expanded="false" aria-controls="painel-responsavel">
+                <span aria-hidden="true"><svg class="acao-icone"><use href="#i-mais"></use></svg></span><span>Adicionar responsável</span>
             </button>
             {% endif %}
         </div>
@@ -466,8 +468,8 @@
                 <p>Adicione voluntários e acompanhe confirmação e comparecimento.</p>
             </div>
             {% if usuario.tipo == 'ADMIN' %}
-            <button type="button" class="btn btn-outline btn-small" data-abrir-painel="painel-participante" data-texto-aberto="Fechar formulário" aria-expanded="false" aria-controls="painel-participante">
-                <svg class="acao-icone" aria-hidden="true"><use href="#i-mais"></use></svg><span>Adicionar participante</span>
+            <button type="button" class="btn btn-outline btn-small detail-panel-toggle" data-abrir-painel="painel-participante" data-texto-aberto="Fechar formulário" aria-expanded="false" aria-controls="painel-participante">
+                <span aria-hidden="true"><svg class="acao-icone"><use href="#i-mais"></use></svg></span><span>Adicionar participante</span>
             </button>
             {% endif %}
         </div>
@@ -690,7 +692,7 @@
     (function () {
         document.querySelectorAll('[data-abrir-painel]').forEach(function (botao) {
             var painel = document.getElementById(botao.dataset.abrirPainel);
-            var rotulo = botao.querySelector('span');
+            var rotulo = botao.querySelector('span:last-child');
             if (!painel || !rotulo) return;
             var textoFechado = rotulo.textContent.trim();
             var textoAberto = botao.dataset.textoAberto || 'Fechar';

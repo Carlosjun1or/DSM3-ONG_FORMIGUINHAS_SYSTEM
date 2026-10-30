@@ -2,7 +2,7 @@
 {% load static %}
 
 {% block titulo %}{{ acao.get_tipo_display }} | Sistema{% endblock %}
-{% block page_title %}{{ acao.get_tipo_display }}{% endblock %}
+{% block page_title %}{{ acao.get_tipo_display }} - {{ acao.praia.nome }} - {{ acao.data|date:'d/m/Y' }}{% endblock %}
 {% block estilos %}<link rel="stylesheet" href="{% static 'estoque/estoque.css' %}?v=11">{% endblock %}
 {% block scripts %}<script src="{% static 'estoque/material-combobox.js' %}?v=1" defer></script>{% endblock %}
 
