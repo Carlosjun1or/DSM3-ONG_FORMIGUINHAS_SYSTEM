@@ -1,6 +1,8 @@
 {% extends 'sistema/template-sistema.html' %}
+{% load static %}
 {% block titulo %}{{ comunicado.titulo }} | Sistema{% endblock %}
 {% block page_title %}Detalhes do Comunicado - {{ comunicado.titulo }}{% endblock %}
+{% block estilos %}<link rel="stylesheet" href="{% static 'comunicado/comunicado.css' %}?v=3">{% endblock %}
 {% block conteudo %}
 <article class="communication-detail">
     <section class="card communication-detail-hero">
@@ -21,7 +23,14 @@
         {% endif %}
     </section>
 
-    <section class="card communication-detail-body">
+    <nav class="detail-section-nav communication-detail-nav" aria-label="Seções do comunicado">
+        <a href="#conteudo-comunicado">Conteúdo</a>
+        {% if comunicado.praias.all or comunicado.equipes.all or comunicado.acoes.all or comunicado.doacoes.all %}
+        <a href="#relacoes-comunicado">Relacionados</a>
+        {% endif %}
+    </nav>
+
+    <section class="card communication-detail-body" id="conteudo-comunicado">
         <div class="communication-detail-body-heading">
             <span class="section-kicker">Mensagem</span>
             <h3>Conteúdo do comunicado</h3>
@@ -30,7 +39,7 @@
     </section>
 
     {% if comunicado.praias.all or comunicado.equipes.all or comunicado.acoes.all or comunicado.doacoes.all %}
-    <section class="card communication-detail-relations">
+    <section class="card communication-detail-relations" id="relacoes-comunicado">
         <div class="communication-detail-body-heading">
             <span class="section-kicker">Contexto</span>
             <h3>Relacionado a</h3>

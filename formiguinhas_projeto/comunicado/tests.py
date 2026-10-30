@@ -99,12 +99,26 @@ class ComunicadoLeituraTests(TestCase):
         self.assertEqual(resposta_nao_lidos.status_code, 200)
         self.assertContains(resposta_nao_lidos, nao_lido.titulo)
         self.assertNotContains(resposta_nao_lidos, lido.titulo)
-        self.assertContains(resposta_nao_lidos, 'communication-item is-unread')
+        self.assertContains(resposta_nao_lidos, 'is-unread')
         self.assertContains(resposta_nao_lidos, 'Não lido')
         self.assertEqual(resposta_lidos.status_code, 200)
         self.assertContains(resposta_lidos, lido.titulo)
         self.assertNotContains(resposta_lidos, nao_lido.titulo)
-        self.assertNotContains(resposta_lidos, 'communication-item is-unread')
+        self.assertNotContains(resposta_lidos, 'is-unread')
+
+    def test_central_ordena_nao_lidos_antes_dos_lidos(self):
+        nao_lido = self.criar_comunicado('Primeiro não lido')
+        lido = self.criar_comunicado('Segundo já lido')
+        ComunicadoLeitura.objects.create(comunicado=lido, usuario=self.usuario)
+
+        response = self.client.get(reverse('central_comunicados'))
+
+        self.assertEqual(response.status_code, 200)
+        comunicados = response.context['comunicados']
+        self.assertEqual(
+            [comunicado.id_comunicado for comunicado in comunicados],
+            [nao_lido.id_comunicado, lido.id_comunicado],
+        )
 
     def test_central_filtra_comunicados_por_busca(self):
         self.criar_comunicado('Mutirão deste sábado')
@@ -270,6 +284,10 @@ class ComunicadoStatusAdminTests(TestCase):
             Comunicado.PUBLICADO,
             [str(mensagem) for mensagem in response.wsgi_request._messages],
         )
+        self.assertIn(
+            'Status do comunicado atualizado com sucesso.',
+            [str(mensagem) for mensagem in response.wsgi_request._messages],
+        )
         self.assertIsNotNone(self.comunicado.dt_publicacao)
         self.assertIsNotNone(self.comunicado.dt_expiracao)
         self.assertEqual(
@@ -283,6 +301,10 @@ class ComunicadoStatusAdminTests(TestCase):
         self.assertEqual(response.status_code, 302)
         self.comunicado.refresh_from_db()
         self.assertEqual(self.comunicado.status, Comunicado.ARQUIVADO)
+        self.assertIn(
+            'Status do comunicado atualizado com sucesso.',
+            [str(mensagem) for mensagem in response.wsgi_request._messages],
+        )
 
         response = self.alterar_status(Comunicado.RASCUNHO)
         self.assertEqual(response.status_code, 302)
@@ -303,6 +325,10 @@ class ComunicadoStatusAdminTests(TestCase):
         self.comunicado.refresh_from_db()
         self.assertEqual(response.status_code, 302)
         self.assertIsNone(self.comunicado.dt_ultima_edicao)
+        self.assertIn(
+            'O comunicado já está com esse status.',
+            [str(mensagem) for mensagem in response.wsgi_request._messages],
+        )
 
     def test_controle_exibe_seletor_de_status_e_mantem_edicao(self):
         response = self.client.get(reverse('comunicados_admin'))

@@ -1,9 +1,27 @@
 {% extends 'sistema/template-sistema.html' %}
+{% load static %}
 {% block titulo %}Central de comunicados | Sistema{% endblock %}
 {% block page_title %}Central de Comunicados{% endblock %}
+{% block estilos %}<link rel="stylesheet" href="{% static 'comunicado/comunicado.css' %}?v=3">{% endblock %}
+
 {% block conteudo %}
-<section class="card communication-center">
-    <div class="section-heading communication-center-heading">
+<section class="card-grid volunteer-metrics" aria-label="Resumo dos comunicados">
+    <article class="card">
+        <h3>Não lidos</h3>
+        <div class="metric">{{ total_nao_lidos }}</div>
+    </article>
+    <article class="card">
+        <h3>Lidos</h3>
+        <div class="metric">{{ total_lidos }}</div>
+    </article>
+    <article class="card">
+        <h3>Total vigente</h3>
+        <div class="metric">{{ total_comunicados }}</div>
+    </article>
+</section>
+
+<section class="card volunteer-control system-list notificacoes-list">
+    <div class="section-heading">
         <div>
             <span class="section-kicker">Central de notificações</span>
             <h2>Seus comunicados</h2>
@@ -13,29 +31,27 @@
             <span class="communication-total{% if total_nao_lidos %} has-unread{% endif %}">
                 {{ total_nao_lidos }} {% if total_nao_lidos == 1 %}não lido{% else %}não lidos{% endif %}
             </span>
-            {% if request.session.usuario_tipo == 'ADMIN' %}
+            {% if usuario.tipo == 'ADMIN' %}
             <a href="{% url 'comunicados_admin' %}" class="btn btn-outline">Gerenciar comunicados</a>
             {% endif %}
         </div>
     </div>
 
-    <form method="get" class="communication-filters">
+    <form method="get" class="volunteer-filters communication-admin-filters">
         <div class="form-group">
-            <label for="id_busca">Buscar comunicado</label>
-            <input id="id_busca" class="form-control" type="search" name="busca" value="{{ busca }}" placeholder="Título, resumo, conteúdo ou tema">
+            <label for="id_busca">Buscar</label>
+            <input id="id_busca" name="busca" type="search" value="{{ busca }}" class="form-control" placeholder="Título, resumo, conteúdo ou tema">
         </div>
         <div class="form-group">
             <label for="id_tipo">Tipo</label>
-            <select id="id_tipo" class="form-control" name="tipo">
+            <select id="id_tipo" name="tipo" class="form-control">
                 <option value="">Todos os tipos</option>
-                {% for valor, rotulo in tipos %}
-                <option value="{{ valor }}" {% if filtro_tipo == valor %}selected{% endif %}>{{ rotulo }}</option>
-                {% endfor %}
+                {% for valor, rotulo in tipos %}<option value="{{ valor }}" {% if filtro_tipo == valor %}selected{% endif %}>{{ rotulo }}</option>{% endfor %}
             </select>
         </div>
         <div class="form-group">
             <label for="id_leitura">Leitura</label>
-            <select id="id_leitura" class="form-control" name="leitura">
+            <select id="id_leitura" name="leitura" class="form-control">
                 <option value="">Todas</option>
                 <option value="nao_lidos" {% if filtro_leitura == 'nao_lidos' %}selected{% endif %}>Não lidas ({{ total_nao_lidos }})</option>
                 <option value="lidos" {% if filtro_leitura == 'lidos' %}selected{% endif %}>Lidas ({{ total_lidos }})</option>
@@ -48,35 +64,41 @@
     </form>
 
     {% if comunicados %}
-    <div class="communication-results">
-        <div class="communication-results-heading">
-            <h3>{% if busca or filtro_tipo or filtro_leitura %}Resultados{% else %}Mais recentes{% endif %}</h3>
-            <span>{{ total_filtrados }} {% if total_filtrados == 1 %}item{% else %}itens{% endif %}</span>
-        </div>
-        <div class="communication-list">
-            {% for comunicado in comunicados %}
-            <article class="communication-item{% if not comunicado.foi_lido %} is-unread{% endif %}">
-                <div class="communication-item-content">
-                    <div class="communication-item-meta">
-                        <span class="communication-type communication-type-{{ comunicado.tipo|lower }}">{{ comunicado.get_tipo_display }}</span>
-                        {% if comunicado.tema %}<span class="communication-topic">{{ comunicado.tema.nome }}</span>{% endif %}
-                        <time datetime="{{ comunicado.dt_publicacao|date:'c' }}">{{ comunicado.dt_publicacao|date:'d/m/Y · H:i' }}</time>
-                    </div>
-                    <h3>
-                        <a href="{% url 'comunicado_interno_detalhe' comunicado.id_comunicado %}">{{ comunicado.titulo }}</a>
-                        {% if not comunicado.foi_lido %}<span class="communication-unread-label">Não lido</span>{% endif %}
-                    </h3>
-                    <p>{{ comunicado.resumo|default:comunicado.conteudo|striptags|truncatechars:180 }}</p>
-                    <span class="communication-audience">Público: {{ comunicado.get_publico_display }}</span>
+    <div class="volunteer-card-grid">
+        {% for comunicado in comunicados %}
+        <article class="volunteer-card notificacao-card notificacao-card--{{ comunicado.tipo|lower }}{% if not comunicado.foi_lido %} is-unread{% endif %}">
+
+            <div class="volunteer-card-heading">
+                <div class="volunteer-card-identity">
+                    <span class="volunteer-card-label">
+                        <span class="notificacao-tipo notificacao-tipo--{{ comunicado.tipo|lower }}">{{ comunicado.get_tipo_display }}</span>{% if comunicado.tema %}<span class="comunicado-tema-label"> · {{ comunicado.tema.nome }}</span>{% endif %}
+                    </span>
+                    <h3><a href="{% url 'comunicado_interno_detalhe' comunicado.id_comunicado %}">{{ comunicado.titulo }}</a></h3>
                 </div>
-                <a href="{% url 'comunicado_interno_detalhe' comunicado.id_comunicado %}" class="btn btn-outline communication-read-link">Ler comunicado</a>
-            </article>
-            {% endfor %}
-        </div>
-        {% include 'sistema/includes/paginacao.html' %}
+                <div class="volunteer-card-status">
+                    {% if not comunicado.foi_lido %}<span class="notificacao-status notificacao-status--nao-lido">Não lido</span>{% else %}<span class="notificacao-status notificacao-status--lido">Lido</span>{% endif %}
+                </div>
+            </div>
+
+            <div class="notificacao-card-data">
+                <time datetime="{{ comunicado.dt_publicacao|date:'c' }}">{{ comunicado.dt_publicacao|date:'d/m/Y · H:i' }}</time>
+                <span class="notificacao-card-publico">Público: {{ comunicado.get_publico_display }}</span>
+            </div>
+
+            {% if comunicado.resumo or comunicado.conteudo %}
+            <p class="volunteer-card-summary">{{ comunicado.resumo|default:comunicado.conteudo|striptags|truncatechars:160 }}</p>
+            {% endif %}
+
+            <div class="volunteer-card-actions">
+                <a class="btn btn-outline btn-small" href="{% url 'comunicado_interno_detalhe' comunicado.id_comunicado %}">Ler comunicado</a>
+            </div>
+
+        </article>
+        {% endfor %}
     </div>
+    {% include 'sistema/includes/paginacao.html' %}
     {% else %}
-    <div class="empty-state table-empty communication-empty">
+    <div class="empty-state table-empty">
         {% if busca or filtro_tipo or filtro_leitura %}
         <h3>Nenhum resultado encontrado</h3>
         <p class="form-subtitle">{% if filtro_leitura == 'nao_lidos' %}Você já leu todos os comunicados vigentes.{% else %}Tente outros filtros para encontrar um comunicado.{% endif %}</p>

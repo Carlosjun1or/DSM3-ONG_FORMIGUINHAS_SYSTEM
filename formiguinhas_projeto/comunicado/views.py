@@ -119,6 +119,14 @@ def _vigentes_internos(usuario):
 
 def publicos(request):
     comunicados = _vigentes_publicos()
+    if not comunicados:
+        # Fallback SQL quando o MongoDB Atlas está indisponível ou vazio.
+        comunicados = list(
+            Comunicado.objects.filter(
+                status=Comunicado.PUBLICADO,
+                publico=Comunicado.TODOS,
+            ).order_by('-dt_publicacao', '-criado_em')
+        )
     tipo = request.GET.get('tipo')
     tema = request.GET.get('tema')
     if tipo in (Comunicado.AVISO, Comunicado.NOTICIA):
@@ -158,12 +166,27 @@ def internos(request):
         return redirect('home')
 
     lista_base = _vigentes_internos(usuario)
+    if not lista_base:
+        # Fallback SQL quando o MongoDB Atlas está indisponível ou sem
+        # documentos sincronizados — o modelo relacional é a fonte da verdade.
+        qs = Comunicado.objects.filter(status=Comunicado.PUBLICADO)
+        if usuario.tipo != 'ADMIN':
+            qs = qs.filter(publico__in=[Comunicado.TODOS, Comunicado.COORDENADORES])
+        lista_base = list(qs.order_by('-dt_publicacao', '-criado_em'))
+
+    lidos_ids = set(
+        ComunicadoLeitura.objects.filter(usuario=usuario)
+        .values_list('comunicado_id', flat=True)
+    )
     total_nao_lidos = 0
     total_lidos = 0
     comunicados_com_status = []
     for c in lista_base:
-        leituras = c.doc.get('leituras', []) if hasattr(c, 'doc') else []
-        c.foi_lido = any(l.get('usuario_id') == usuario.pk for l in leituras)
+        if hasattr(c, 'doc'):
+            leituras = c.doc.get('leituras', [])
+            c.foi_lido = any(l.get('usuario_id') == usuario.pk for l in leituras)
+        else:
+            c.foi_lido = c.id_comunicado in lidos_ids
         if c.foi_lido:
             total_lidos += 1
         else:
@@ -191,8 +214,10 @@ def internos(request):
             continue
         filtrados.append(c)
 
+    filtrados.sort(key=lambda comunicado: comunicado.foi_lido)
     pagina, filtros_query = paginar_queryset(request, filtrados)
     return render(request, 'sistema/comunicados-central.html', {
+        'usuario': usuario,
         'comunicados': pagina.object_list,
         'pagina': pagina,
         'filtros_query': filtros_query,
@@ -214,10 +239,18 @@ def interno_detalhe(request, comunicado_id):
         return redirect('login')
     if usuario.tipo not in ('ADMIN', 'COORDENADOR'):
         return redirect('home')
-    comunicado = get_object_or_404(
-        _vigentes_internos(usuario),
+
+    # O detalhe usa o modelo relacional, que possui as relações (praias,
+    # equipes, ações e doações) exibidas no template. O MongoDB só alimenta
+    # as listagens; buscar direto no SQL garante acesso mesmo quando o
+    # documento ainda não foi sincronizado no Atlas.
+    qs = Comunicado.objects.filter(
+        status=Comunicado.PUBLICADO,
         id_comunicado=comunicado_id,
     )
+    if usuario.tipo != 'ADMIN':
+        qs = qs.filter(publico__in=[Comunicado.TODOS, Comunicado.COORDENADORES])
+    comunicado = get_object_or_404(qs)
     leitura, criada = ComunicadoLeitura.objects.get_or_create(
         comunicado=comunicado,
         usuario=usuario,
@@ -394,6 +427,11 @@ def admin_form(request, comunicado_id=None):
         )
         # Persistência Poliglota: salvar no MongoDB Atlas
         salvar_comunicado_mongo(item)
+        messages.success(
+            request,
+            'Comunicado atualizado com sucesso.' if comunicado
+            else 'Comunicado criado com sucesso.',
+        )
         return redirect('comunicados_admin')
     return render(request, 'sistema/comunicado-form.html', {'form': form, 'comunicado': comunicado})
 
@@ -480,6 +518,7 @@ def admin_status(request, comunicado_id, acao):
         return resposta
     comunicado = get_object_or_404(Comunicado, id_comunicado=comunicado_id)
     if request.method != 'POST':
+        messages.error(request, 'Não foi possível alterar o status do comunicado.')
         return redirect('comunicados_admin')
 
     filtros = {
@@ -506,6 +545,7 @@ def admin_status(request, comunicado_id, acao):
             messages.error(request, 'Selecione um status válido para o comunicado.')
             return redirect(url_lista)
         if novo_status == comunicado.status:
+            messages.info(request, 'O comunicado já está com esse status.')
             return redirect(url_lista)
 
         operacao = {
@@ -567,5 +607,9 @@ def tema_form(request, tema_id=None):
         registrar_evento(entidade='TEMA_COMUNICADO', instancia=item, acao='EDICAO' if tema else 'CRIACAO',
                          usuario=usuario, resumo='Tema de comunicados salvo',
                          valores_anteriores=valores_anteriores)
+        messages.success(
+            request,
+            'Tema atualizado com sucesso.' if tema else 'Tema criado com sucesso.',
+        )
         return redirect('temas_comunicados')
     return render(request, 'sistema/tema-form.html', {'form': form, 'tema': tema})
