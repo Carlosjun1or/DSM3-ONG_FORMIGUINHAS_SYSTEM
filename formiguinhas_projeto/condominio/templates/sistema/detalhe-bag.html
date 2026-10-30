@@ -50,6 +50,12 @@
         </div>
     </section>
 
+    <nav class="detail-section-nav bag-detail-nav" aria-label="Seções da bag">
+        <a href="#coletas">Coletas <b>{{ coletas_residuos|length }}</b></a>
+        <a href="#movimentacoes">Movimentações</a>
+        <a href="#auditoria-bag">Auditoria <b>{{ auditorias|length }}</b></a>
+    </nav>
+
     <section class="card donation-detail-content bag-detail-section" id="coletas">
         <div class="section-heading donation-content-heading">
             <div>
@@ -57,9 +63,14 @@
                 <h2>Coletas de resíduos <span class="section-count">{{ coletas_residuos|length }}</span></h2>
                 <p class="form-subtitle">Coletas e itens registrados para esta bag.</p>
             </div>
+            {% if usuario.tipo == 'ADMIN' %}
+            <button type="button" class="btn btn-outline btn-small detail-panel-toggle" data-detail-panel-toggle="registrar-coleta" data-texto-aberto="Fechar formulário" aria-expanded="{% if coleta_form.errors or item_form.errors %}true{% else %}false{% endif %}" aria-controls="registrar-coleta">
+                <span aria-hidden="true">+</span><span>Registrar coleta</span>
+            </button>
+            {% endif %}
         </div>
         {% if usuario.tipo == 'ADMIN' %}
-        <div class="member-form-panel" id="registrar-coleta">
+        <div class="member-form-panel detail-form-panel" id="registrar-coleta"{% if not coleta_form.errors and not item_form.errors %} hidden{% endif %}>
             <h3>Registrar coleta</h3>
             <p class="form-subtitle">Registre o tipo, a categoria e a quantidade coletada. Você pode preencher a quantidade depois.</p>
             <form method="post" action="{% url 'detalhe_bag' bag.id_bag %}">
@@ -128,9 +139,14 @@
                 <h2>Movimentar bag</h2>
                 <p class="form-subtitle">Status atual: <strong>{{ bag.get_status_display }}</strong>. Registre o evento e o novo status da bag.</p>
             </div>
+            {% if usuario.tipo == 'ADMIN' %}
+            <button type="button" class="btn btn-outline btn-small detail-panel-toggle" data-detail-panel-toggle="registrar-movimentacao" data-texto-aberto="Fechar formulário" aria-expanded="{% if movimentacao_form.errors %}true{% else %}false{% endif %}" aria-controls="registrar-movimentacao">
+                <span aria-hidden="true">+</span><span>Registrar movimentação</span>
+            </button>
+            {% endif %}
         </div>
         {% if usuario.tipo == 'ADMIN' %}
-        <div class="member-form-panel" id="registrar-movimentacao">
+        <div class="member-form-panel detail-form-panel" id="registrar-movimentacao"{% if not movimentacao_form.errors %} hidden{% endif %}>
             <form method="post" action="{% url 'detalhe_bag' bag.id_bag %}">
                 {% csrf_token %}
                 <input type="hidden" name="formulario" value="registrar-movimentacao">
@@ -156,7 +172,7 @@
         {% endif %}
     </section>
 
-    <details class="card donation-audit bag-detail-section">
+    <details class="card donation-audit bag-detail-section" id="auditoria-bag">
         <summary class="donation-audit-summary">
             <span>
                 <strong>Histórico de movimentações</strong>

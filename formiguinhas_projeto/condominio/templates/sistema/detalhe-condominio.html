@@ -48,7 +48,13 @@
         </div>
     </section>
 
-    <section class="card donation-detail-content condominium-detail-section">
+    <nav class="detail-section-nav condominium-detail-nav" aria-label="Seções do condomínio">
+        <a href="#bags-condominio">Bags <b>{{ bags|length }}</b></a>
+        <a href="#movimentacoes-condominio">Movimentações <b>{{ movimentacoes|length }}</b></a>
+        <a href="#auditoria-condominio">Auditoria <b>{{ auditorias|length }}</b></a>
+    </nav>
+
+    <section class="card donation-detail-content condominium-detail-section" id="bags-condominio">
         <div class="section-heading donation-content-heading">
             <div>
                 <span class="section-kicker">Estrutura vinculada</span>
@@ -82,7 +88,7 @@
         </div>
     </section>
 
-    <details class="card donation-audit condominium-detail-section">
+    <details class="card donation-audit condominium-detail-section" id="movimentacoes-condominio">
         <summary class="donation-audit-summary">
             <span>
                 <strong>Movimentações recentes</strong>
@@ -115,7 +121,7 @@
         </div>
     </details>
 
-    <details class="card donation-audit condominium-detail-section">
+    <details class="card donation-audit condominium-detail-section" id="auditoria-condominio">
         <summary class="donation-audit-summary">
             <span>
                 <strong>Auditoria do condomínio</strong>

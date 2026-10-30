@@ -156,6 +156,15 @@ class ControleCondominioPermissoesTests(TestCase):
         detalhe = self.client.get(url_detalhe)
 
         self.assertContains(detalhe, 'id="registrar-coleta"')
+        self.assertContains(
+            detalhe,
+            'data-detail-panel-toggle="registrar-coleta"',
+        )
+        self.assertContains(
+            detalhe,
+            'aria-expanded="false" aria-controls="registrar-coleta"',
+        )
+        self.assertContains(detalhe, 'id="registrar-coleta" hidden')
         self.assertContains(detalhe, 'name="formulario" value="registrar-coleta"')
         self.assertContains(detalhe, 'Tipo de resíduo')
 
@@ -195,6 +204,11 @@ class ControleCondominioPermissoesTests(TestCase):
 
         self.assertEqual(resposta.status_code, 200)
         self.assertContains(resposta, 'Este campo é obrigatório.')
+        self.assertContains(
+            resposta,
+            'aria-expanded="true" aria-controls="registrar-coleta"',
+        )
+        self.assertContains(resposta, 'id="registrar-coleta">')
         self.assertFalse(ColetaResiduo.objects.filter(bag_id=self.bag.id_bag).exists())
         self.assertFalse(
             resposta.content.decode().count('href="#registrar-coleta"'),
@@ -211,6 +225,11 @@ class ControleCondominioPermissoesTests(TestCase):
             resposta,
             'name="formulario" value="registrar-movimentacao"',
         )
+        self.assertContains(
+            resposta,
+            'data-detail-panel-toggle="registrar-movimentacao"',
+        )
+        self.assertContains(resposta, 'id="registrar-movimentacao" hidden')
         self.assertContains(resposta, 'Tipo de movimentação')
         self.assertContains(resposta, 'Novo status')
 
@@ -286,6 +305,11 @@ class ControleCondominioPermissoesTests(TestCase):
 
         self.assertEqual(resposta.status_code, 200)
         self.assertContains(resposta, 'Este campo é obrigatório.')
+        self.assertContains(
+            resposta,
+            'aria-expanded="true" aria-controls="registrar-movimentacao"',
+        )
+        self.assertContains(resposta, 'id="registrar-movimentacao">')
         self.bag.refresh_from_db()
         self.assertEqual(self.bag.status, 'EM_USO')
         self.assertFalse(MovimentacaoBag.objects.filter(bag=self.bag).exists())
@@ -460,6 +484,10 @@ class ControleCondominioPermissoesTests(TestCase):
             },
         )
 
+        self.assertIn(
+            'Status da bag atualizado com movimentação registrada.',
+            [str(mensagem) for mensagem in response.wsgi_request._messages],
+        )
         self.assertRedirects(
             response,
             reverse('bags') + '?busca=BAG-TESTE&status=EM_USO',
