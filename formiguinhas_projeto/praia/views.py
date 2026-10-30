@@ -293,6 +293,7 @@ def editar_praia_view(request, praia_id):
             registrar_evento(entidade='PRAIA', instancia=praia, acao='EDICAO', usuario=usuario,
                              resumo=f'Praia "{praia.nome}" editada.',
                              valores_anteriores=valores_anteriores)
+            messages.success(request, f'{praia.nome} atualizada com sucesso.')
             return redirect('praias')
     else:
         form = PraiaForm(instance=praia)
@@ -317,7 +318,14 @@ def atualizar_status_praia_view(request, praia_id):
         praia = get_object_or_404(Praia, id_praia=praia_id)
         anterior = snapshot(praia)
         status = request.POST.get('praia_ativa')
-        if status in dict(Praia.STATUS_CHOICES):
+        if status not in dict(Praia.STATUS_CHOICES):
+            messages.error(request, 'Status de praia inválido.')
+        elif status == praia.praia_ativa:
+            messages.info(
+                request,
+                f'{praia.nome} já está com status {praia.get_praia_ativa_display()}.',
+            )
+        else:
             praia.praia_ativa = status
             praia.ultimo_editado_por = usuario
             praia.ultimo_editado_por_nome = usuario.id_voluntario.nome
@@ -327,6 +335,10 @@ def atualizar_status_praia_view(request, praia_id):
             registrar_evento(entidade='PRAIA', instancia=praia, acao='MUDANCA_STATUS', usuario=usuario,
                              resumo=f'Status da praia "{praia.nome}" alterado.',
                              valores_anteriores=anterior)
+            messages.success(
+                request,
+                f'Status de {praia.nome} atualizado para {praia.get_praia_ativa_display()}.',
+            )
 
     return redirect('praias')
 
