@@ -43,16 +43,25 @@
         </div>
     </section>
 
-    <section class="card donation-detail-content collection-detail-items">
+    <nav class="detail-section-nav collection-detail-nav" aria-label="Seções da coleta">
+        <a href="#itens-coleta">Itens registrados <b>{{ coleta.itens.all|length }}</b></a>
+    </nav>
+
+    <section class="card donation-detail-content collection-detail-items" id="itens-coleta">
         <div class="section-heading donation-content-heading">
             <div>
                 <span class="section-kicker">Composição</span>
                 <h2>Itens da coleta <span class="section-count">{{ coleta.itens.all|length }}</span></h2>
                 <p class="form-subtitle">Cada linha representa um tipo e uma categoria de resíduo registrados.</p>
             </div>
+            {% if usuario.tipo == 'ADMIN' %}
+            <button type="button" class="btn btn-outline btn-small detail-panel-toggle" data-detail-panel-toggle="adicionar-item-coleta" data-texto-aberto="Fechar formulário" aria-expanded="{% if item_form.errors %}true{% else %}false{% endif %}" aria-controls="adicionar-item-coleta">
+                <span aria-hidden="true">+</span><span>Adicionar item</span>
+            </button>
+            {% endif %}
         </div>
         {% if usuario.tipo == 'ADMIN' %}
-        <div class="member-form-panel collection-item-form">
+        <div class="member-form-panel collection-item-form detail-form-panel" id="adicionar-item-coleta"{% if not item_form.errors %} hidden{% endif %}>
             <h3>Adicionar item à coleta</h3>
             <form method="post" action="{% url 'adicionar_item_coleta' coleta.id_coleta %}">
                 {% csrf_token %}

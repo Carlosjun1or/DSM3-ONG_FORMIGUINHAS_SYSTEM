@@ -21,6 +21,37 @@
     }
 }
 
+.residuos-list .residuo-acao-destaque {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 8px;
+}
+
+.residuos-list .residuo-acao-link,
+.residuos-list .residuo-acao-link:visited {
+    font-family: var(--fonte-titulo);
+    font-size: 1.25rem;
+    font-weight: 700;
+    line-height: 1.2;
+    color: var(--azul-profundo);
+    text-decoration: none;
+}
+
+.system-page .main-panel .residuos-list .residuo-acao-link:hover,
+.system-page .main-panel .residuos-list .residuo-acao-link:focus-visible {
+    color: var(--azul-profundo);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+.residuos-list .residuo-acao-praia {
+    font-family: var(--fonte-corpo);
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--azul);
+}
+
 /* Coletas unificadas — tabela compacta */
 .unified-collections {
     padding: 14px 16px 12px;

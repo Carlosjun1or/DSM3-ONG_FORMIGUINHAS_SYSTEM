@@ -243,6 +243,7 @@ def registrar_destinacao_view(request, acao_id, residuo_id):
                 resumo=f'Destinação #{destinacao.pk} registrada para o resíduo #{residuo.pk}.',
             )
             messages.success(request, 'Destinação registrada com sucesso.')
+            return redirect('acao_detalhe', acao_id=acao_id)
         else:
             messages.error(request, 'Não foi possível registrar a destinação. Verifique os dados informados.')
             return redirect('acao_detalhe', acao_id=acao_id)

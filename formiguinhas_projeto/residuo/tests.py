@@ -1,15 +1,32 @@
 from datetime import date
 
-from django.test import TestCase
+from django.test import SimpleTestCase, TestCase
 from django.urls import reverse
 from django.utils import timezone
 
 from acao.models import Acao
+from config.mongodb import MongoAcaoProxy
 from praia.models import Praia
 from usuario.models import Usuario, Voluntario
 
 from .forms import ItemColetaResiduoForm, ResiduoColetadoForm
-from .models import ColetaResiduo, ItemColetaResiduo
+from .models import (
+    ColetaResiduo,
+    DestinacaoResiduo,
+    ItemColetaResiduo,
+    ResiduoColetado,
+)
+
+
+class MongoAcaoProxyTests(SimpleTestCase):
+    def test_coleta_voluntaria_usa_rotulo_legivel(self):
+        acao = MongoAcaoProxy({
+            'tipo': 'COLETA_VOLUNTARIA',
+            'praia': {'nome': 'Praia de Teste'},
+        })
+
+        self.assertEqual(acao.get_tipo_display(), 'Coleta voluntária')
+        self.assertEqual(acao.praia.nome, 'Praia de Teste')
 
 
 class DetalheColetaResiduoTests(TestCase):
@@ -139,6 +156,11 @@ class DetalheColetaResiduoTests(TestCase):
         self.assertContains(detalhe, 'Adicionar item à coleta')
         self.assertContains(
             detalhe,
+            'data-detail-panel-toggle="adicionar-item-coleta"',
+        )
+        self.assertContains(detalhe, 'id="adicionar-item-coleta" hidden')
+        self.assertContains(
+            detalhe,
             reverse('acao_detalhe', args=[self.acao.id_acao]),
         )
 
@@ -162,6 +184,36 @@ class DetalheColetaResiduoTests(TestCase):
                 coleta=self.coleta,
                 tipo='PAPEL',
                 quantidade='1.50',
+            ).exists(),
+        )
+
+    def test_registrar_destinacao_redireciona_para_detalhe_da_acao(self):
+        self.autenticar(self.admin)
+        residuo = ResiduoColetado.objects.create(
+            acao=self.acao,
+            tipo='PLASTICO',
+            categoria='RECICLAVEL',
+            registrado_por=self.admin,
+            registrado_por_nome='Admin',
+            registrado_por_tipo='ADMIN',
+        )
+
+        resposta = self.client.post(
+            reverse(
+                'registrar_destinacao',
+                args=[self.acao.id_acao, residuo.id_residuo],
+            ),
+            {'tipo': 'RECICLAGEM'},
+        )
+
+        self.assertRedirects(
+            resposta,
+            reverse('acao_detalhe', args=[self.acao.id_acao]),
+        )
+        self.assertTrue(
+            DestinacaoResiduo.objects.filter(
+                residuo=residuo,
+                tipo='RECICLAGEM',
             ).exists(),
         )
 
