@@ -365,6 +365,7 @@ def editar_voluntario_view(request, voluntario_id):
                     from equipe.services import encerrar_vinculos_voluntario
 
                     encerrar_vinculos_voluntario(voluntario, usuario)
+                messages.success(request, f'Dados de {voluntario.nome} atualizados com sucesso.')
                 return redirect('voluntarios')
     else:
         form = VoluntarioEdicaoForm(instance=voluntario)
@@ -431,6 +432,21 @@ def atualizar_status_voluntario_view(request, voluntario_id):
                 from equipe.services import encerrar_vinculos_voluntario
 
                 encerrar_vinculos_voluntario(voluntario, usuario)
+            messages.success(
+                request,
+                f'Status de {voluntario.nome} atualizado para {voluntario.get_status_display()}.',
+            )
+        elif status not in status_validos:
+            messages.error(request, 'Selecione um status válido para o voluntário.')
+        elif status_proibido_para_coordenador or status_proibido_para_admin:
+            messages.error(request, 'Você não tem permissão para alterar esse status.')
+        elif status == voluntario.status:
+            messages.info(
+                request,
+                f'{voluntario.nome} já está com status {voluntario.get_status_display()}.',
+            )
+        else:
+            messages.error(request, 'Não foi possível atualizar o status do voluntário.')
 
     return redirect('voluntarios')
 
@@ -548,7 +564,9 @@ def atualizar_tipo_usuario_view(request, usuario_id):
     if usuario_logado.tipo != 'ADMIN':
         return render_acesso_bloqueado(request)
 
-    if request.method == 'POST' and usuario_id != usuario_logado.id_usuario:
+    if request.method == 'POST' and usuario_id == usuario_logado.id_usuario:
+        messages.error(request, 'Não é permitido alterar o próprio tipo de usuário.')
+    elif request.method == 'POST':
         novo_tipo = request.POST.get('tipo')
         if novo_tipo in dict(Usuario.TIPO_CHOICES):
             usuario_editado = Usuario.objects.filter(id_usuario=usuario_id).first()
@@ -574,6 +592,21 @@ def atualizar_tipo_usuario_view(request, usuario_id):
                     resumo=f'Tipo de usuário de "{usuario_editado.id_voluntario.nome}" alterado.',
                     valores_anteriores=valores_anteriores,
                 )
+                messages.success(
+                    request,
+                    f'Tipo de usuário de {usuario_editado.id_voluntario.nome} atualizado para '
+                    f'{usuario_editado.get_tipo_display()}.',
+                )
+            elif usuario_editado:
+                messages.info(
+                    request,
+                    f'{usuario_editado.id_voluntario.nome} já possui o tipo '
+                    f'{usuario_editado.get_tipo_display()}.',
+                )
+            elif usuario_editado is None:
+                messages.error(request, 'Usuário não encontrado.')
+        else:
+            messages.error(request, 'Tipo de usuário inválido.')
 
     return redirect('usuarios')
 
@@ -653,6 +686,10 @@ def editar_usuario_view(request, usuario_id):
                     usuario=usuario_logado,
                     resumo=f'Usuário de "{voluntario.nome}" editado.',
                     valores_anteriores=usuario_anterior,
+                )
+                messages.success(
+                    request,
+                    f'Dados de {voluntario.nome} atualizados com sucesso.',
                 )
                 return redirect('usuarios')
     else:
@@ -795,10 +832,6 @@ def recuperar_senha_view(request):
                 )
             except (OSError, SMTPException):
                 logger.exception('Falha ao enviar e-mail de recuperação de senha.')
-                form.add_error(
-                    None,
-                    'Não foi possível enviar o e-mail agora. Tente novamente mais tarde.',
-                )
             else:
                 email_enviado = True
 
@@ -1039,10 +1072,10 @@ def perfil_view(request):
                     valores_anteriores=valores_anteriores,
                 )
                 usuario = Usuario.objects.get(id_usuario=usuario_id)
+                messages.success(request, 'Dados do perfil atualizados com sucesso!')
                 return render(request, 'sistema/perfil.html', {
                     'usuario': usuario,
                     'form': form,
-                    'mensagem': 'Dados do perfil atualizados com sucesso!'
                 })
     else:
         form = PerfilForm(instance=voluntario)
@@ -1068,16 +1101,20 @@ def alterar_senha_view(request):
         confirmar_nova_senha = request.POST.get('confirmar_nova_senha')
 
         if not senha_atual or not nova_senha or not confirmar_nova_senha:
-            return render(request, 'sistema/alterar-senha.html', {'mensagem': 'Preencha a senha atual, a nova senha e a confirmação.'})
+            messages.error(request, 'Preencha a senha atual, a nova senha e a confirmação.')
+            return render(request, 'sistema/alterar-senha.html')
 
         if not usuario.check_password(senha_atual):
-            return render(request, 'sistema/alterar-senha.html', {'mensagem': 'A senha atual está incorreta.'})
+            messages.error(request, 'A senha atual está incorreta.')
+            return render(request, 'sistema/alterar-senha.html')
 
         if nova_senha != confirmar_nova_senha:
-            return render(request, 'sistema/alterar-senha.html', {'mensagem': 'As novas senhas não coincidem.'})
+            messages.error(request, 'As novas senhas não coincidem.')
+            return render(request, 'sistema/alterar-senha.html')
 
         if nova_senha == senha_atual:
-            return render(request, 'sistema/alterar-senha.html', {'mensagem': 'A nova senha deve ser diferente da senha atual.'})
+            messages.error(request, 'A nova senha deve ser diferente da senha atual.')
+            return render(request, 'sistema/alterar-senha.html')
 
         usuario.set_password(nova_senha)
         usuario.save()

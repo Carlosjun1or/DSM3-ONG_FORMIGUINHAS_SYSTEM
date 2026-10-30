@@ -48,10 +48,6 @@
                 </div>
             </div>
 
-            {% if mensagem %}
-                <div class="alert-box alert-error" role="alert">{{ mensagem }}</div>
-            {% endif %}
-
             <div class="form-actions">
                 <button type="submit" class="btn profile-button profile-button--save">Salvar nova senha</button>
                 <a href="{% url 'perfil' %}" class="btn profile-button profile-button--cancel">Cancelar</a>

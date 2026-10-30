@@ -1,0 +1,824 @@
+.team-profile-detail,
+.action-detail-hero,
+.donation-record-page,
+.donor-profile-page,
+.collection-detail-page,
+.condominium-detail-page,
+.bag-detail-page,
+.communication-detail {
+    display: flex;
+    width: min(100%, 1240px);
+    flex-direction: column;
+    gap: 16px;
+    margin-inline: auto;
+}
+
+.team-profile-detail > *,
+.action-detail-hero > *,
+.donation-record-page > *,
+.donor-profile-page > *,
+.collection-detail-page > *,
+.condominium-detail-page > *,
+.bag-detail-page > *,
+.communication-detail > * {
+    width: 100%;
+    margin-inline: 0;
+}
+
+.detail-section-nav {
+    position: sticky;
+    top: 0;
+    z-index: 4;
+    display: flex;
+    gap: 8px;
+    padding: 10px 0;
+    overflow-x: auto;
+    background: var(--papel);
+    scrollbar-width: thin;
+}
+
+.detail-section-nav a {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    gap: 8px;
+    min-height: 40px;
+    padding: 0 16px;
+    border: 1px solid var(--layout-border);
+    border-radius: 999px;
+    background: #fff;
+    color: var(--azul-profundo);
+    font-size: 0.875rem;
+    font-weight: 700;
+    text-decoration: none;
+    transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.detail-section-nav a:hover,
+.detail-section-nav a:focus-visible {
+    border-color: var(--azul);
+    color: var(--azul);
+    outline: none;
+}
+
+.detail-section-nav b {
+    display: grid;
+    min-width: 22px;
+    height: 22px;
+    padding: 0 5px;
+    place-items: center;
+    border-radius: 999px;
+    background: var(--selecionado-fundo);
+    color: var(--roxo);
+    font-size: 0.75rem;
+}
+
+.team-profile-detail > .team-hero,
+.action-detail-hero > .team-hero,
+.donation-record-hero,
+.donor-profile-page .donor-detail-hero,
+.collection-detail-page .collection-detail-hero,
+.condominium-detail-page .condominium-detail-hero,
+.bag-detail-page .bag-detail-hero,
+.system-page .main-panel .communication-detail .communication-detail-hero {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 16px 24px;
+    align-items: start;
+    padding: 22px 24px;
+    border: 1px solid var(--layout-border);
+    border-radius: 16px;
+    background: #fff;
+    box-shadow: none;
+}
+
+.donation-record-page > .donation-detail-hero,
+.donation-record-page > .donation-detail-content,
+.donation-record-page > .donation-status-card,
+.donation-record-page > .donation-audit {
+    width: 100%;
+}
+
+.team-profile-detail > .team-hero {
+    border-bottom: 1px solid var(--layout-border);
+}
+
+.action-detail-hero {
+    width: min(100%, 1240px);
+    gap: 16px;
+    margin: 0 auto;
+    padding: 0;
+    overflow: visible;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+}
+
+.action-detail-hero > .team-hero {
+    border-bottom: 1px solid var(--layout-border);
+}
+
+.action-detail-hero > .team-hero .team-hero-side {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 10px;
+}
+
+.action-detail-hero .action-mongo-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.action-detail-hero > .form-subtitle,
+.action-detail-hero > .table-actions {
+    margin: 0;
+    padding: 14px 18px;
+    border: 1px solid var(--layout-border);
+    border-radius: 12px;
+    background: #fff;
+}
+
+.action-detail-section {
+    width: min(100%, 1240px);
+    margin: 0 auto;
+    border: 1px solid var(--layout-border);
+    border-radius: 16px;
+    box-shadow: none;
+}
+
+.system-page .main-panel .team-profile-detail .team-eyebrow,
+.system-page .main-panel .donation-record-hero .eyebrow,
+.system-page .main-panel .donor-profile-page .eyebrow,
+.system-page .main-panel .collection-detail-page .eyebrow,
+.system-page .main-panel .condominium-detail-page .eyebrow,
+.system-page .main-panel .bag-detail-page .eyebrow {
+    color: var(--roxo);
+    font-family: var(--fonte-corpo);
+    font-size: 0.8125rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.system-page .main-panel .team-profile-detail .team-hero h2,
+.system-page .main-panel .donation-record-hero h2,
+.system-page .main-panel .donor-profile-page .donor-detail-hero h2,
+.system-page .main-panel .collection-detail-page .collection-detail-hero h2,
+.system-page .main-panel .condominium-detail-page .condominium-detail-hero h2,
+.system-page .main-panel .bag-detail-page .bag-detail-hero h2,
+.system-page .main-panel .communication-detail .communication-detail-hero h2 {
+    margin: 4px 0 0;
+    color: var(--azul-profundo);
+    font-family: var(--fonte-titulo);
+    font-size: clamp(1.5rem, 3vw, 1.875rem);
+    font-weight: 700;
+    line-height: 1.2;
+    overflow-wrap: anywhere;
+}
+
+.system-page .main-panel .team-profile-detail .team-hero p,
+.system-page .main-panel .donation-record-hero .donation-detail-subtitle,
+.system-page .main-panel .donor-profile-page .donation-detail-subtitle,
+.system-page .main-panel .collection-detail-page .donation-detail-subtitle,
+.system-page .main-panel .condominium-detail-page .donation-detail-subtitle,
+.system-page .main-panel .bag-detail-page .donation-detail-subtitle {
+    max-width: 70ch;
+    margin: 10px 0 0;
+    color: #4c5663;
+    font-size: 0.9375rem;
+    line-height: 1.55;
+    overflow-wrap: anywhere;
+}
+
+.team-profile-detail > .team-hero .team-location,
+.team-profile-detail > .team-hero .team-location.table-link {
+    margin-top: 10px;
+    color: var(--azul-profundo);
+    font-weight: 700;
+}
+
+.team-profile-detail .team-hero-side {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 10px;
+}
+
+.team-profile-detail .team-detail-hero-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.team-profile-detail .team-hero-side small {
+    color: #4c5663;
+    font-weight: 700;
+}
+
+.donation-record-hero .donation-detail-heading,
+.donor-profile-page .donor-detail-heading,
+.collection-detail-page .donation-detail-heading,
+.condominium-detail-page .donation-detail-heading,
+.bag-detail-page .donation-detail-heading {
+    display: contents;
+}
+
+.donation-record-hero .donation-detail-heading > div:first-child,
+.donor-profile-page .donor-detail-heading > div:first-child,
+.collection-detail-page .donation-detail-heading > div:first-child,
+.condominium-detail-page .donation-detail-heading > div:first-child,
+.bag-detail-page .donation-detail-heading > div:first-child {
+    grid-column: 1;
+    grid-row: 1;
+    min-width: 0;
+}
+
+.donation-record-hero .donation-detail-actions,
+.donor-profile-page .donation-detail-actions,
+.collection-detail-page .donation-detail-actions,
+.condominium-detail-page .donation-detail-actions,
+.bag-detail-page .donation-detail-actions {
+    display: flex;
+    grid-column: 2;
+    grid-row: 1;
+    justify-self: end;
+    width: max-content;
+    max-width: 100%;
+    justify-content: flex-end;
+}
+
+.donation-record-hero .donation-detail-status-row,
+.condominium-detail-page .donation-detail-status-row,
+.bag-detail-page .donation-detail-status-row {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    margin: 0;
+    padding-top: 12px;
+    border-top: 1px solid var(--layout-border);
+}
+
+.donation-record-hero .donation-summary,
+.donor-profile-page .donor-profile-summary,
+.collection-detail-page .collection-detail-summary,
+.condominium-detail-page .condominium-summary,
+.bag-detail-page .bag-summary {
+    display: grid;
+    grid-column: 1 / -1;
+    grid-row: 3;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+    margin: 0;
+}
+
+.donation-record-hero .donation-summary > div,
+.donor-profile-page .donor-profile-summary > div,
+.collection-detail-page .collection-detail-summary > div,
+.condominium-detail-page .condominium-summary > div,
+.bag-detail-page .bag-summary > div {
+    min-width: 0;
+    min-height: 82px;
+    padding: 14px 15px;
+    border: 1px solid var(--layout-border);
+    border-radius: 12px;
+    background: var(--papel);
+    box-shadow: none;
+}
+
+.donation-record-hero .donation-summary > div > span,
+.donor-profile-page .donor-profile-summary > div > span,
+.collection-detail-page .collection-detail-summary > div > span,
+.condominium-detail-page .condominium-summary > div > span,
+.bag-detail-page .bag-summary > div > span {
+    display: block;
+    margin-bottom: 7px;
+    color: var(--roxo);
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.donation-record-hero .donation-summary p,
+.donor-profile-page .donor-profile-summary p,
+.collection-detail-page .collection-detail-summary p,
+.condominium-detail-page .condominium-summary p,
+.bag-detail-page .bag-summary p {
+    margin: 0;
+    color: var(--azul-profundo);
+    font-size: 0.9375rem;
+    font-weight: 700;
+    overflow-wrap: anywhere;
+}
+
+.donation-record-hero .donation-summary p small,
+.donor-profile-page .donor-profile-summary p small,
+.condominium-detail-page .condominium-summary > div > small {
+    display: block;
+    margin-top: 5px;
+    color: #4c5663;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    line-height: 1.4;
+}
+
+.donation-record-hero .donation-summary a,
+.donor-profile-page .donor-profile-summary a,
+.collection-detail-page .collection-detail-summary a,
+.condominium-detail-page .condominium-summary a,
+.bag-detail-page .bag-summary a {
+    color: var(--azul-profundo);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+.donor-profile-page .donor-profile-summary > div {
+    min-height: 92px;
+}
+
+.collection-detail-page .collection-detail-note {
+    grid-column: 1 / -1;
+    margin-top: 12px;
+    padding: 14px 16px;
+    border-left: 3px solid var(--roxo);
+    border-radius: 0 10px 10px 0;
+    background: var(--papel);
+}
+
+.collection-detail-page .collection-detail-note > span {
+    display: block;
+    margin-bottom: 5px;
+    color: var(--roxo);
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.collection-detail-page .collection-detail-note p {
+    margin: 0;
+    color: var(--azul-profundo);
+    line-height: 1.5;
+}
+
+.bag-detail-page .bag-occupancy-track {
+    overflow: hidden;
+    border-radius: 999px;
+}
+
+.detail-section-nav a[href="#conteudo-comunicado"],
+.detail-section-nav a[href="#relacoes-comunicado"] {
+    color: var(--azul-profundo);
+}
+
+.donation-record-hero .eyebrow {
+    margin: 0;
+}
+
+.donation-detail-nav,
+.donor-detail-nav,
+.team-detail-nav,
+.collection-detail-nav,
+.condominium-detail-nav,
+.bag-detail-nav,
+.communication-detail-nav {
+    align-self: stretch;
+}
+
+.donation-detail-content,
+.donation-status-card,
+.donation-audit,
+.collection-detail-items,
+.condominium-detail-section,
+.bag-detail-section,
+.team-profile-detail > .section-heading,
+.team-profile-detail > .member-form-panel,
+.team-profile-detail > .volunteer-filters,
+.team-profile-detail > .table-wrap,
+.team-profile-detail > .empty-state,
+.team-profile-detail > .team-history-section {
+    scroll-margin-top: 72px;
+}
+
+.donation-detail-content,
+.donation-status-card,
+.donation-audit,
+.collection-detail-items,
+.condominium-detail-section,
+.bag-detail-section,
+.team-profile-detail > .team-history-section {
+    border: 1px solid var(--layout-border);
+    border-radius: 16px;
+    box-shadow: none;
+}
+
+.system-page .main-panel .communication-detail .communication-detail-hero {
+    grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.communication-detail .communication-back-link {
+    grid-column: 2;
+    grid-row: 1;
+    justify-self: end;
+}
+
+.communication-detail .communication-detail-meta {
+    grid-column: 1;
+    grid-row: 1;
+    align-self: center;
+    margin: 0;
+}
+
+.system-page .main-panel .communication-detail .communication-detail-hero h2 {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    margin: 0;
+    color: var(--azul-profundo);
+    font-family: var(--fonte-titulo);
+    font-size: clamp(1.5rem, 3vw, 1.875rem);
+}
+
+.communication-detail .communication-detail-info {
+    display: flex;
+    grid-column: 1 / -1;
+    grid-row: 3;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 0;
+    color: #4c5663;
+}
+
+.communication-detail .communication-detail-info > span {
+    padding: 9px 12px;
+    border: 1px solid var(--layout-border);
+    border-radius: 10px;
+    background: var(--papel);
+}
+
+.communication-detail .communication-detail-summary {
+    grid-column: 1 / -1;
+    grid-row: 4;
+    margin: 0;
+    padding: 12px 15px;
+    border-left: 3px solid var(--roxo);
+    border-radius: 0 10px 10px 0;
+    background: var(--papel);
+    color: #4c5663;
+}
+
+.communication-detail .communication-detail-body,
+.communication-detail .communication-detail-relations {
+    border: 1px solid var(--layout-border);
+    border-radius: 16px;
+    box-shadow: none;
+}
+
+.communication-detail .communication-detail-body-heading h3 {
+    color: var(--azul-profundo);
+    font-family: var(--fonte-titulo);
+}
+
+.communication-detail .communication-detail-content {
+    color: #4c5663;
+    line-height: 1.7;
+}
+
+.system-page .main-panel .communication-detail .communication-detail-hero .communication-type {
+    border: 1px solid #c8d8ec;
+    background: #e8eef8;
+    color: var(--azul);
+}
+
+.communication-detail .communication-topic,
+.communication-detail .communication-read-label {
+    border: 1px solid var(--layout-border);
+    background: var(--papel);
+    color: var(--azul-profundo);
+}
+
+.bag-detail-page .donation-content-heading,
+.collection-detail-page .donation-content-heading {
+    align-items: flex-start;
+}
+
+.bag-detail-page .donation-content-heading > div:first-child,
+.collection-detail-page .donation-content-heading > div:first-child {
+    min-width: 0;
+}
+
+.detail-panel-toggle {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    gap: 8px;
+    min-height: 40px !important;
+    padding: 0 14px !important;
+    border: 1px solid var(--layout-border) !important;
+    border-radius: 999px !important;
+    background: #fff !important;
+    color: var(--azul-profundo) !important;
+    box-shadow: none !important;
+}
+
+.detail-panel-toggle:hover,
+.detail-panel-toggle:focus-visible {
+    border-color: var(--azul) !important;
+    background: #f2f6fb !important;
+    color: var(--azul) !important;
+}
+
+.detail-panel-toggle:focus-visible {
+    outline: 3px solid rgb(0 88 185 / 20%);
+    outline-offset: 2px;
+}
+
+.detail-panel-toggle > span:first-child {
+    display: grid;
+    width: 20px;
+    height: 20px;
+    place-items: center;
+    border-radius: 50%;
+    background: #e8eef8;
+    color: var(--azul);
+    font-size: 1rem;
+    line-height: 1;
+}
+
+.detail-panel-toggle > span:first-child svg {
+    transition: transform 0.18s ease;
+}
+
+.detail-panel-toggle[aria-expanded="true"] > span:first-child svg {
+    transform: rotate(45deg);
+}
+
+.detail-form-panel {
+    margin: 14px 0 18px !important;
+    padding: 18px !important;
+    border: 1px solid var(--layout-border) !important;
+    border-radius: 14px !important;
+    background: #fff !important;
+    box-shadow: none !important;
+}
+
+.detail-form-panel[hidden] {
+    display: none !important;
+}
+
+.detail-form-panel > h3 {
+    margin: 0 0 12px;
+    color: var(--azul-profundo);
+    font-family: var(--fonte-titulo);
+    font-size: 1.125rem;
+}
+
+.bag-detail-page .bag-detail-table,
+.collection-detail-page .collection-detail-table,
+.condominium-detail-page .condominium-detail-table {
+    border: 1px solid var(--layout-border);
+    border-collapse: separate;
+    border-spacing: 0;
+    border-radius: 12px;
+    background: #fff;
+}
+
+.bag-detail-page .bag-detail-table thead th,
+.collection-detail-page .collection-detail-table thead th,
+.condominium-detail-page .condominium-detail-table thead th {
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--layout-border);
+    background: #f2f4f8;
+    color: var(--azul-profundo);
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.bag-detail-page .bag-detail-table tbody td,
+.collection-detail-page .collection-detail-table tbody td,
+.condominium-detail-page .condominium-detail-table tbody td {
+    padding: 13px 14px;
+    border-bottom: 1px solid #e8eaf0;
+    color: #34445a;
+    line-height: 1.5;
+}
+
+.bag-detail-page .bag-detail-table tbody tr:last-child td,
+.collection-detail-page .collection-detail-table tbody tr:last-child td,
+.condominium-detail-page .condominium-detail-table tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+.bag-detail-page .bag-detail-table tbody tr:hover,
+.collection-detail-page .collection-detail-table tbody tr:hover,
+.condominium-detail-page .condominium-detail-table tbody tr:hover {
+    background: #f8faff;
+}
+
+.bag-detail-page .bag-detail-table td strong,
+.collection-detail-page .collection-detail-table td strong,
+.condominium-detail-page .condominium-detail-table td strong {
+    color: var(--azul-profundo);
+}
+
+.bag-detail-page .bag-detail-table .btn-small,
+.collection-detail-page .collection-detail-table .btn-small,
+.condominium-detail-page .condominium-detail-table .btn-small {
+    min-height: 36px;
+    padding: 0 12px;
+    border-width: 1px;
+    font-size: 0.8125rem;
+}
+
+.bag-detail-page .bag-collection-item {
+    margin: 2px 4px 4px 0;
+    border-color: #d7e2f0;
+    background: #f2f6fb;
+    color: var(--azul-profundo);
+}
+
+.bag-detail-page .record-table-card,
+.collection-detail-page .record-table-card,
+.condominium-detail-page .record-table-card {
+    border-left-color: var(--azul);
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgb(11 30 61 / 5%);
+}
+
+.bag-detail-page .record-table-card .record-table-card-label,
+.collection-detail-page .record-table-card .record-table-card-label,
+.condominium-detail-page .record-table-card .record-table-card-label {
+    color: var(--roxo);
+}
+
+.bag-detail-page .record-table-card-actions .btn,
+.collection-detail-page .record-table-card-actions .btn,
+.condominium-detail-page .record-table-card-actions .btn {
+    min-height: 36px;
+    padding: 0 12px;
+    border-width: 1px;
+    font-size: 0.8125rem;
+}
+
+@media (max-width: 900px) {
+    .donation-record-hero .donation-summary,
+    .donor-profile-page .donor-profile-summary,
+    .collection-detail-page .collection-detail-summary,
+    .condominium-detail-page .condominium-summary,
+    .bag-detail-page .bag-summary {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 700px) {
+    .team-profile-detail > .team-hero,
+    .action-detail-hero > .team-hero,
+    .donation-record-hero,
+    .donor-profile-page .donor-detail-hero,
+    .collection-detail-page .collection-detail-hero,
+    .condominium-detail-page .condominium-detail-hero,
+    .bag-detail-page .bag-detail-hero,
+    .system-page .main-panel .communication-detail .communication-detail-hero {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 14px;
+        padding: 18px 16px;
+    }
+
+    .team-profile-detail .team-hero-side {
+        align-items: flex-start;
+    }
+
+    .action-detail-hero > .team-hero .team-hero-side {
+        align-items: flex-start;
+    }
+
+    .action-detail-hero .action-mongo-actions {
+        justify-content: flex-start;
+    }
+
+    .team-profile-detail .team-detail-hero-actions {
+        justify-content: flex-start;
+    }
+
+    .donation-record-hero .donation-detail-heading > div:first-child,
+    .donor-profile-page .donor-detail-heading > div:first-child,
+    .collection-detail-page .donation-detail-heading > div:first-child,
+    .condominium-detail-page .donation-detail-heading > div:first-child,
+    .bag-detail-page .donation-detail-heading > div:first-child,
+    .donation-record-hero .donation-detail-actions,
+    .donor-profile-page .donation-detail-actions,
+    .collection-detail-page .donation-detail-actions,
+    .condominium-detail-page .donation-detail-actions,
+    .bag-detail-page .donation-detail-actions,
+    .donation-record-hero .donation-detail-status-row,
+    .condominium-detail-page .donation-detail-status-row,
+    .bag-detail-page .donation-detail-status-row,
+    .donation-record-hero .donation-summary,
+    .donor-profile-page .donor-profile-summary,
+    .collection-detail-page .collection-detail-summary,
+    .condominium-detail-page .condominium-summary,
+    .bag-detail-page .bag-summary {
+        grid-column: 1;
+    }
+
+    .donation-record-hero .donation-detail-heading > div:first-child,
+    .donor-profile-page .donor-detail-heading > div:first-child,
+    .collection-detail-page .donation-detail-heading > div:first-child,
+    .condominium-detail-page .donation-detail-heading > div:first-child,
+    .bag-detail-page .donation-detail-heading > div:first-child {
+        grid-row: 1;
+    }
+
+    .donation-record-hero .donation-detail-actions,
+    .donor-profile-page .donation-detail-actions,
+    .collection-detail-page .donation-detail-actions,
+    .condominium-detail-page .donation-detail-actions,
+    .bag-detail-page .donation-detail-actions {
+        grid-row: 2;
+        justify-self: start;
+        width: auto;
+        justify-content: flex-start;
+    }
+
+    .donation-record-hero .donation-detail-status-row,
+    .condominium-detail-page .donation-detail-status-row,
+    .bag-detail-page .donation-detail-status-row {
+        grid-row: 3;
+    }
+
+    .donation-record-hero .donation-summary,
+    .condominium-detail-page .condominium-summary,
+    .bag-detail-page .bag-summary {
+        grid-row: 4;
+    }
+
+    .donor-profile-page .donor-profile-summary,
+    .collection-detail-page .collection-detail-summary {
+        grid-row: 3;
+    }
+
+    .communication-detail .communication-back-link,
+    .communication-detail .communication-detail-meta,
+    .system-page .main-panel .communication-detail .communication-detail-hero h2,
+    .communication-detail .communication-detail-info,
+    .communication-detail .communication-detail-summary {
+        grid-column: 1;
+    }
+
+    .communication-detail .communication-detail-meta {
+        grid-row: 1;
+    }
+
+    .communication-detail .communication-back-link {
+        grid-row: 2;
+        justify-self: start;
+    }
+
+    .system-page .main-panel .communication-detail .communication-detail-hero h2 {
+        grid-row: 3;
+    }
+
+    .communication-detail .communication-detail-info {
+        grid-row: 4;
+    }
+
+    .communication-detail .communication-detail-summary {
+        grid-row: 5;
+    }
+
+    .bag-detail-page .donation-content-heading,
+    .collection-detail-page .donation-content-heading {
+        align-items: stretch;
+    }
+
+    .bag-detail-page .detail-panel-toggle,
+    .collection-detail-page .detail-panel-toggle {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .detail-form-panel {
+        padding: 14px !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .detail-section-nav {
+        margin-inline: -2px;
+    }
+
+    .detail-section-nav a {
+        min-height: 38px;
+        padding-inline: 12px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .detail-section-nav a,
+    .detail-panel-toggle > span:first-child svg {
+        transition: none;
+    }
+}
