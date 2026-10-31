@@ -30,7 +30,7 @@
         <div class="bag-occupancy-summary" aria-label="Ocupação atual da bag">
             <div class="bag-occupancy-label"><span>Ocupação</span><strong>{{ bag.percentual_ocupacao }}%</strong></div>
             <div class="bag-occupancy-track" role="meter" aria-label="Ocupação da bag {{ bag.codigo }}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ bag.percentual_ocupacao }}">
-                <span style="width: {{ bag.percentual_ocupacao }}%"></span>
+                <span style="width: {{ bag.percentual_ocupacao|default:0 }}%"></span>
             </div>
         </div>
 

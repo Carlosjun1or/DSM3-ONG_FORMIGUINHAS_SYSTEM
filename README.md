@@ -45,9 +45,9 @@ iniciar.bat
 ```
 
 O script prepara o ambiente virtual, instala as dependências, aplica as
-migrations e inicia o servidor local. Ele usa a porta 8000 ou procura a próxima
-porta livre. Quando aparecer o endereço no terminal, abra-o no navegador (por
-padrão, `http://127.0.0.1:8000/`).
+migrations, coleta os arquivos estáticos e inicia o servidor local. Ele usa a
+porta 8000 ou procura a próxima porta livre. Quando aparecer o endereço no
+terminal, abra-o no navegador (por padrão, `http://127.0.0.1:8000/`).
 
 ## Executar manualmente
 
@@ -59,6 +59,7 @@ python -m venv venv
 .\venv\Scripts\Activate.ps1
 pip install -r requirements.txt
 python manage.py migrate
+python manage.py collectstatic --noinput
 python manage.py runserver
 ```
 

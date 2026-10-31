@@ -25,16 +25,19 @@ python testar_atlas.py
 # 5. Cria o banco e as tabelas relacionais do SQLite (as migrations tambem criam os usuarios de teste: ver logins_teste.txt).
 python manage.py migrate
 
-# 6. (Opcional) Sincronizacao de dados com o MongoDB Atlas:
+# 6. Copia os arquivos estaticos para o diretorio servido pelo WhiteNoise.
+python manage.py collectstatic --noinput
+
+# 7. (Opcional) Sincronizacao de dados com o MongoDB Atlas:
 python manage.py sincronizar_condominios_mongo
 python manage.py sincronizar_acoes_mongo
 python manage.py sincronizar_comunicados_mongo
 python manage.py sincronizar_auditoria_mongo
 
-# 7. Inicia o servidor do projeto.
+# 8. Inicia o servidor do projeto.
 python manage.py runserver
 
-# 8. (Opcional) Roda os testes automatizados.
+# 9. (Opcional) Roda os testes automatizados.
 python manage.py test
 
 # Recuperacao de senha com Gmail:

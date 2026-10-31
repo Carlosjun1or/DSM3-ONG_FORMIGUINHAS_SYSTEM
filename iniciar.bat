@@ -54,6 +54,10 @@ echo Atualizando banco de dados relacional (SQLite)...
 "%CD%\venv\Scripts\python.exe" manage.py migrate
 if errorlevel 1 goto :erro
 
+echo Coletando arquivos estaticos...
+"%CD%\venv\Scripts\python.exe" manage.py collectstatic --noinput
+if errorlevel 1 goto :erro
+
 set "PORT=8000"
 :procurar_porta
 netstat -ano | findstr /R /C:":%PORT% .*LISTENING" >nul

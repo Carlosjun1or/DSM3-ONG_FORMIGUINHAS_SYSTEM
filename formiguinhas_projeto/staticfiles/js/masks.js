@@ -51,6 +51,65 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
+    var breadcrumb = document.querySelector('.topbar-breadcrumb');
+    if (breadcrumb) {
+        var dragStartX = 0;
+        var dragStartScrollLeft = 0;
+        var draggingBreadcrumb = false;
+        var suppressBreadcrumbClick = false;
+
+        breadcrumb.addEventListener('pointerdown', function (event) {
+            if (
+                event.pointerType !== 'mouse'
+                || event.button !== 0
+                || breadcrumb.scrollWidth <= breadcrumb.clientWidth
+            ) {
+                return;
+            }
+
+            dragStartX = event.clientX;
+            dragStartScrollLeft = breadcrumb.scrollLeft;
+            draggingBreadcrumb = true;
+        });
+
+        breadcrumb.addEventListener('pointermove', function (event) {
+            if (!draggingBreadcrumb) return;
+
+            var distance = event.clientX - dragStartX;
+            if (Math.abs(distance) < 4 && !breadcrumb.classList.contains('is-dragging')) {
+                return;
+            }
+
+            if (!breadcrumb.classList.contains('is-dragging')) {
+                breadcrumb.classList.add('is-dragging');
+                breadcrumb.setPointerCapture(event.pointerId);
+            }
+
+            event.preventDefault();
+            breadcrumb.scrollLeft = dragStartScrollLeft - distance;
+        });
+
+        function finishBreadcrumbDrag() {
+            if (!draggingBreadcrumb) return;
+
+            suppressBreadcrumbClick = breadcrumb.classList.contains('is-dragging');
+            draggingBreadcrumb = false;
+            breadcrumb.classList.remove('is-dragging');
+            window.setTimeout(function () {
+                suppressBreadcrumbClick = false;
+            }, 0);
+        }
+
+        breadcrumb.addEventListener('pointerup', finishBreadcrumbDrag);
+        breadcrumb.addEventListener('pointercancel', finishBreadcrumbDrag);
+        breadcrumb.addEventListener('click', function (event) {
+            if (!suppressBreadcrumbClick) return;
+
+            event.preventDefault();
+            event.stopImmediatePropagation();
+        }, true);
+    }
+
     var sidebarResizeHandle = document.querySelector('.sidebar-resize-handle');
     var sidebarWidthStorageKey = 'system-sidebar-width';
     var sidebarDefaultWidth = 300;

@@ -3868,6 +3868,17 @@ footer.site-footer {
         linear-gradient(145deg, rgb(0 163 224 / 30%), rgb(0 48 107 / 35%));
     color: #fff;
     text-align: center;
+    width: 100%;
+    overflow: hidden;
+}
+
+#inicio .inicio-imagem-placeholder img {
+    width: 100%;
+    margin-bottom: 0.5rem;
+    padding: 0.5rem;
+    border-radius: 12px;
+    background: rgb(255 255 255 / 18%);
+    
 }
 
 #inicio .inicio-imagem-placeholder span {

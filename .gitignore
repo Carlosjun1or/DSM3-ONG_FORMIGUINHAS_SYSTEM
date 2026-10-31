@@ -1,3 +1,6 @@
+# Gerado pelo collectstatic (volta a ser criado no deploy)
+staticfiles/
+
 # Ambiente virtual
 venv/
 .venv/
@@ -9,3 +12,7 @@ __pycache__/
 
 # Configuracoes locais e credenciais de teste
 .env
+
+# Arquivos do sistema operacional
+.DS_Store
+Thumbs.db

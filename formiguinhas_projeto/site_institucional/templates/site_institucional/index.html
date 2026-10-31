@@ -1,4 +1,5 @@
 {% extends "site_institucional/base.html" %}
+{% load static %}
 {% load l10n %}
 
 {% block conteudo %}
@@ -59,8 +60,7 @@
             </div>
             <figure class="inicio-imagem">
                 <div class="inicio-imagem-placeholder" role="img" aria-label="Espaço reservado para uma fotografia de voluntários em um mutirão na praia">
-                    <span>Fotografia de um mutirão</span>
-                    <small>Espaço reservado para uma foto real da ONG</small>
+                    <img src="{% static 'site_institucional/img/image04.jpg' %}" alt="" srcset="">
                 </div>
             </figure>
         </div>
