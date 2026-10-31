@@ -14,7 +14,7 @@
 
         {% include 'sistema/includes/mensagens-autenticacao.html' %}
 
-        <form method="post">
+        <form method="post" data-carregando-login data-carregando-destino="{% url 'home' %}">
             {% csrf_token %}
             {% if form.non_field_errors %}
                 <div class="error-box" role="alert">{{ form.non_field_errors|join:', ' }}</div>

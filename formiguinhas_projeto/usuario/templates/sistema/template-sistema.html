@@ -13,10 +13,12 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700&family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
     {% block estilos %}{% endblock %}
+    <link rel="stylesheet" href="{% static 'css/sistema/18-tela-carregando.css' %}?v=3">
     <link rel="stylesheet" href="{% static 'css/detail-pages.css' %}?v=8">
     <link rel="stylesheet" href="{% static 'css/responsive-filters.css' %}?v=3">
 </head>
 <body class="system-page {% block body_class %}{% endblock %}">
+    {% include 'sistema/includes/carregando.html' %}
     <div class="app-shell">
         {% if request.session.usuario_id and request.resolver_match.url_name != 'recuperar_senha' and request.resolver_match.url_name != 'redefinir_senha' %}
         <aside class="sidebar" id="system-sidebar">
@@ -75,7 +77,7 @@
                 </div>
             </nav>
             <div class="sidebar-footer">
-                <a href="{% url 'logout' %}" class="sidebar-link logout-link"><svg class="sidebar-link-icon" aria-hidden="true"><use href="{% static 'usuario/icons/sidebar-icons.svg' %}?v=6#logout"></use></svg><span>Sair</span></a>
+                <a href="{% url 'logout' %}" class="sidebar-link logout-link" data-carregando><svg class="sidebar-link-icon" aria-hidden="true"><use href="{% static 'usuario/icons/sidebar-icons.svg' %}?v=6#logout"></use></svg><span>Sair</span></a>
             </div>
         </aside>
         <div class="sidebar-resize-handle" role="separator" aria-label="Redimensionar menu lateral" aria-description="Arraste para ajustar. Use Ctrl+F5, dois cliques ou Home para restaurar o tamanho padrão de 300 por 560 pixels." aria-keyshortcuts="ArrowLeft ArrowRight Home End" aria-orientation="vertical" aria-valuemin="220" aria-valuemax="480" aria-valuenow="300" title="Arraste para ajustar; Ctrl+F5 restaura o padrão de 300 por 560 pixels" tabindex="0"></div>

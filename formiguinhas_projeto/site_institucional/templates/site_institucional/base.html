@@ -9,9 +9,11 @@
     <link rel="icon" type="image/svg+xml" href="{% static 'site_institucional/img/mascote-formiguinha.svg' %}?v=1">
     <link rel="shortcut icon" href="{% static 'site_institucional/img/mascote-formiguinha.svg' %}?v=1">
     <link rel="stylesheet" href="{% static 'css/template.css' %}?v=6">
+    <link rel="stylesheet" href="{% static 'css/sistema/18-tela-carregando.css' %}?v=3">
     {% block style %}    <link rel="stylesheet" href="{% static 'css/site-layout.css' %}?v=81">{% endblock %}
 </head>
 <body id="topo">
+    {% include 'sistema/includes/carregando.html' %}
     <header>
         <div class="logo">
             <a class="marca" href="{% url 'index' %}" aria-label="Formiguinhas da Praia — página inicial">

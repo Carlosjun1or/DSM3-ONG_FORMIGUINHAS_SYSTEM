@@ -31,7 +31,7 @@
         </div>
         <div class="estoque-acoes" data-live="exportar">
             <a href="{% url 'materiais' %}" class="btn btn-outline">Ver materiais</a>
-            <a href="{% url 'exportar_movimentacoes_estoque' %}{% if querystring %}?{{ querystring }}{% endif %}" class="btn btn-outline">Exportar CSV</a>
+            <a href="{% url 'exportar_movimentacoes_estoque' %}{% if querystring %}?{{ querystring }}{% endif %}" class="btn btn-outline" data-carregando data-carregando-download>Exportar CSV</a>
             <a href="{% url 'cadastrar_movimentacao_estoque' %}" class="btn btn-primary">Registrar movimentação</a>
         </div>
     </div>

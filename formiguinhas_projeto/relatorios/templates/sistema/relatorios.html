@@ -14,10 +14,10 @@
             <p class="form-subtitle">Escolha o relatório, aplique os filtros e exporte os dados atualizados.</p>
         </div>
         <div class="reports-export-actions">
-            <button type="submit" form="report-filters" name="formato" value="xlsx" class="btn btn-outline">Baixar Excel</button>
-            <button type="submit" form="report-filters" name="formato" value="pdf" class="btn btn-primary">Baixar PDF</button>
+            <button type="submit" form="report-filters" name="formato" value="xlsx" class="btn btn-outline" data-carregando-download>Baixar Excel</button>
+            <button type="submit" form="report-filters" name="formato" value="pdf" class="btn btn-primary" data-carregando-download>Baixar PDF</button>
             {% if form.relatorio.value == 'doacoes' %}
-            <button type="submit" form="report-filters" name="formato" value="csv" class="btn btn-outline">Baixar CSV</button>
+            <button type="submit" form="report-filters" name="formato" value="csv" class="btn btn-outline" data-carregando-download>Baixar CSV</button>
             {% endif %}
         </div>
     </div>

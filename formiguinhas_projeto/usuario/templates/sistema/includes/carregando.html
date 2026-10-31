@@ -1,0 +1,15 @@
+{% load static %}
+<noscript><style>.carregando { display: none !important; }</style></noscript>
+<div id="carregando" class="carregando" role="status" aria-live="polite" hidden>
+    <div class="carregando__conteudo">
+        <div class="carregando__cena" aria-hidden="true">
+            <span class="carregando__sombra"></span>
+            <img class="carregando__formiguinha" src="{% static 'site_institucional/img/mascote-formiguinha.svg' %}" alt="" width="63" height="69">
+            <svg class="carregando__trilha" viewBox="0 0 220 12" preserveAspectRatio="none" focusable="false">
+                <line x1="3" y1="6" x2="217" y2="6"></line>
+            </svg>
+        </div>
+        <p class="carregando__texto">Carregando<span class="carregando__ponto">.</span><span class="carregando__ponto">.</span><span class="carregando__ponto">.</span></p>
+    </div>
+</div>
+<script src="{% static 'js/carregando.js' %}?v=5" defer></script>
