@@ -21,17 +21,26 @@
                 <img class="marca-icone" src="{% static 'site_institucional/img/mascote-formiguinha.svg' %}" alt="">
                 <span>Formiguinhas<br><span id="destaque-title">DA PRAIA</span></span>
             </a>
-            <nav aria-label="Navegação principal">
+            <button type="button" class="menu-hamburguer" aria-label="Abrir menu de navegação" aria-expanded="false" aria-controls="menu-navegacao">
+                <span class="hamburguer-barra"></span>
+                <span class="hamburguer-barra"></span>
+                <span class="hamburguer-barra"></span>
+            </button>
+            <nav id="menu-navegacao" class="menu-navegacao" aria-label="Navegação principal">
                 <a href="{% url 'index' %}#historia">Nossa história</a>
                 <a href="{% url 'praias_atuacao' %}">Praias</a>
                 <a href="{% url 'multiroes' %}">Mutirões</a>
                 <a href="{% url 'calendario' %}">Calendário</a>
                 <a href="{% url 'comunicados_publicos' %}">Notícias</a>
                 <a href="{% url 'index' %}#apoie">Apoie</a>
+                <div class="acoes-cabecalho-mobile">
+                    <a class="btn btn--contorno" href="{% url 'login' %}">Entrar</a>
+                    <a class="btn" href="https://wa.me/5513997284132?text=Ol%C3%A1%21%20Quero%20ser%20volunt%C3%A1rio%28a%29%20da%20Formiguinhas%20da%20Praia.%20Gostaria%20de%20saber%20como%20posso%20participar." target="_blank" rel="noopener noreferrer" aria-label="Seja voluntário via WhatsApp (abre em nova aba)">Seja voluntário</a>
+                </div>
             </nav>
             <div class="acoes-cabecalho">
                 <a class="btn btn--contorno" href="{% url 'login' %}">Entrar</a>
-                <a class="btn" href="https://wa.me/5513997284132?text=Ol%C3%A1%21%20Quero%20ser%20volunt%C3%A1rio%28a%29%20da%20Formiguinhas%20da%20Praia.%20Gostaria%20de%20saber%20como%20posso%20participar." target="_blank" rel="noopener noreferrer">Seja voluntário</a>
+                <a class="btn" href="https://wa.me/5513997284132?text=Ol%C3%A1%21%20Quero%20ser%20volunt%C3%A1rio%28a%29%20da%20Formiguinhas%20da%20Praia.%20Gostaria%20de%20saber%20como%20posso%20participar." target="_blank" rel="noopener noreferrer" aria-label="Seja voluntário via WhatsApp (abre em nova aba)">Seja voluntário</a>
             </div>
         </div>
     </header>

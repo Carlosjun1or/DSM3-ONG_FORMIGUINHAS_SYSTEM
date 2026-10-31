@@ -1,4 +1,4 @@
-from django.db import transaction
+﻿from django.db import transaction
 from django.db.models import Q
 from django.core.exceptions import ValidationError
 from django.contrib import messages
@@ -104,8 +104,31 @@ class MongoAcaoAdapter:
         self.participantes = ParticipantesManager(doc.get('participantes', []))
         self.equipes_vinculadas = doc.get('equipes', [])
         self.responsaveis = doc.get('responsaveis', [])
-        self.imagens_acao = doc.get('imagens', [])
         self.residuos_coletados = doc.get('residuos_coletados', [])
+
+        # Imagens: adapta lista de dicts do Mongo para objetos com .imagem.url
+        # compativel com o que o template espera (imagem.imagem.url, imagem.descricao)
+        class _ImagemFile:
+            def __init__(self, url):
+                self.url = url
+            def __bool__(self):
+                return bool(self.url)
+
+        class ImagemAdapter:
+            def __init__(self, d):
+                self.id_acao_imagem = d.get('id')
+                self.descricao = d.get('descricao', '')
+                self.imagem = _ImagemFile(d.get('url', ''))
+
+        class ImagensManager(list):
+            def all(self):
+                return self
+            def count(self):
+                return len(self)
+
+        self.imagens_acao = ImagensManager(
+            ImagemAdapter(d) for d in doc.get('imagens', [])
+        )
 
     def get_tipo_display(self):
         return self._tipo_display or self.tipo
