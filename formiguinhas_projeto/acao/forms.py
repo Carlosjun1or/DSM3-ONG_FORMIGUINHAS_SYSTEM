@@ -1,4 +1,4 @@
-from django import forms
+﻿from django import forms
 from django.db.models import Q
 from PIL import Image
 
@@ -124,6 +124,12 @@ class AcaoForm(forms.ModelForm):
 
 class MultipleFileInput(forms.ClearableFileInput):
     allow_multiple_selected = True
+
+    def value_from_datadict(self, data, files, name):
+        # Garante que multiplos arquivos enviados no mesmo campo sejam retornados
+        # como lista (Django usa getlist para campos multi-arquivo)
+        upload = files.getlist(name)
+        return upload if upload else None
 
 
 class MultipleImageField(forms.FileField):
