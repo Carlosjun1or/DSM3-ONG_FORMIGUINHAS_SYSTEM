@@ -4258,3 +4258,44 @@ footer.site-footer {
         grid-template-columns: 1fr;
     }
 }
+
+
+/* ==========================================================================
+   responsive.css — correções de responsividade do site institucional.
+   Carregar DEPOIS do site-layout.css (base.html).
+   ========================================================================== */
+
+img,
+video,
+iframe {
+    max-width: 100%;
+}
+
+/* Cabeçalho entre 901px e 1100px: menu + botões somavam mais que a tela. */
+@media (min-width: 901px) and (max-width: 1100px) {
+    header {
+        padding-inline: 1rem;
+    }
+
+    header nav {
+        min-width: 0;
+        gap: 0.5rem 0.75rem;
+    }
+
+    header nav a {
+        font-size: 0.88rem;
+    }
+
+    header .logo > .marca {
+        font-size: 0.95rem;
+    }
+
+    header .acoes-cabecalho {
+        gap: 0.45rem;
+    }
+
+    header .acoes-cabecalho .btn {
+        padding-inline: 0.75rem;
+        font-size: 0.8rem;
+    }
+}
