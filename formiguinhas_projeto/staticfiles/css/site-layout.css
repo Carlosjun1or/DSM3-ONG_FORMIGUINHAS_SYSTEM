@@ -4173,8 +4173,22 @@ body.menu-aberto-trava {
 
 #historia .container .historia-conteudo > .historia-imagem {
     display: flex;
+    align-items: center;
+    justify-content: center;
     padding: 0.65rem;
     background: #f0f5f1;
+    overflow: hidden;
+}
+
+#historia .historia-foto {
+    width: 100%;
+    height: 100%;
+    max-height: 480px;
+    object-fit: cover;
+    object-position: 50% 18%;
+    border-radius: 16px;
+    display: block;
+    box-shadow: 0 4px 16px rgb(0 48 107 / 8%);
 }
 
 #historia .historia-imagem-placeholder {

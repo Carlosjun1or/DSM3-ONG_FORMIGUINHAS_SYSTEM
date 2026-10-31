@@ -1,4 +1,4 @@
-{% extends "site_institucional/base.html" %}
+﻿{% extends "site_institucional/base.html" %}
 {% load static %}
 {% load l10n %}
 
@@ -133,11 +133,13 @@
             <h2>Uma atitude simples que virou um movimento</h2>
         </div>
         <div class="historia-conteudo">
-            <article class="historia-imagem" aria-label="Espaço reservado para fotografia de Alessandra">
-                <div class="historia-imagem-placeholder" role="img" aria-label="Espaço reservado para uma fotografia de Alessandra">
-                    <span>Foto da Alessandra</span>
-                    <small>Espaço reservado para uma foto real</small>
-                </div>
+            <article class="historia-imagem" aria-label="Fotografia de Alessandra, fundadora da Formiguinhas da Praia">
+                <img
+                    class="historia-foto"
+                    src="{% static 'site_institucional/img/alessandra.png' %}"
+                    alt="Alessandra, fundadora da ONG Formiguinhas da Praia"
+                    loading="lazy"
+                >
             </article>
             <article>
                 <h3>Como tudo começou</h3>
