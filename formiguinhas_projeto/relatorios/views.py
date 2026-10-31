@@ -1,4 +1,4 @@
-"""
+﻿"""
 App de relatórios: gera tabelas e permite exportação em CSV, Excel e XML.
 
 Todos os dados de ações são lidos do MongoDB (via mongo_services). Os dados de
@@ -749,12 +749,18 @@ def _resposta_excel(relatorio, tipo, hoje):
 
 
 def _resposta_pdf(relatorio, tipo, hoje):
+    import os
+    from django.conf import settings
     from reportlab.lib import colors
-    from reportlab.lib.enums import TA_CENTER
-    from reportlab.lib.pagesizes import landscape, letter
+    from reportlab.lib.colors import HexColor
+    from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
+    from reportlab.lib.pagesizes import A4
     from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-    from reportlab.lib.units import inch
+    from reportlab.lib.units import cm, mm
+    from reportlab.pdfgen import canvas
     from reportlab.platypus import (
+        Image,
+        KeepTogether,
         LongTable,
         PageBreak,
         Paragraph,
@@ -764,94 +770,462 @@ def _resposta_pdf(relatorio, tipo, hoje):
         TableStyle,
     )
 
+    tem_capa = (tipo == 'geral')
+
+    # Caminho do mascote oficial da ONG extraído fielmente do SVG original do projeto
+    caminho_mascote = os.path.join(
+        settings.BASE_DIR,
+        'relatorios',
+        'static',
+        'relatorios',
+        'img',
+        'mascote-formiguinha-oficial.png',
+    )
+    tem_mascote = os.path.exists(caminho_mascote)
+
+    class DocumentoInstitucionalRetratoCanvas(canvas.Canvas):
+        """
+        Canvas oficial institucional em formato A4 Retrato (210 x 297 mm):
+        - Cálculo de numeração em duas fases ('Página X de Y').
+        - Na capa (página 1 de relatório geral), omite cabeçalho e rodapé repetitivos.
+        - Em todas as páginas internas de conteúdo, desenha cabeçalho corporativo compacto e rodapé com numeração.
+        """
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+            self._saved_page_states = []
+
+        def showPage(self):
+            self._saved_page_states.append(dict(self.__dict__))
+            self._startPage()
+
+        def save(self):
+            num_pages = len(self._saved_page_states)
+            for state in self._saved_page_states:
+                self.__dict__.update(state)
+                self.desenhar_moldura(num_pages)
+                canvas.Canvas.showPage(self)
+            canvas.Canvas.save(self)
+
+        def desenhar_moldura(self, page_count):
+            self.saveState()
+            w, h = A4  # 210 x 297 mm
+
+            # Na capa de relatório geral, não exibe cabeçalho/rodapé de página interna
+            if tem_capa and self._pageNumber == 1:
+                self.restoreState()
+                return
+
+            margem_x = 12 * mm
+
+            # --- CABEÇALHO COMPACTO DE PÁGINA INTERNA ---
+            y_linha = h - 17 * mm
+            # Linha institucional Azul Profundo com detalhe Amarelo Solar
+            self.setFillColor(HexColor('#00306b'))
+            self.rect(margem_x, y_linha, w - (2 * margem_x), 1.6, fill=True, stroke=False)
+            self.setFillColor(HexColor('#f4e01e'))
+            self.rect(margem_x, y_linha - 0.8, 32 * mm, 1.2, fill=True, stroke=False)
+
+            # Mini mascote oficial no cabeçalho interno
+            if tem_mascote:
+                try:
+                    self.drawImage(
+                        caminho_mascote,
+                        margem_x,
+                        h - 15.5 * mm,
+                        width=7.5 * mm,
+                        height=8.2 * mm,
+                        mask='auto',
+                        preserveAspectRatio=True,
+                    )
+                except Exception:
+                    pass
+
+            offset_logo = 10 * mm if tem_mascote else 0
+
+            self.setFont('Helvetica-Bold', 8.5)
+            self.setFillColor(HexColor('#00306b'))
+            self.drawString(margem_x + offset_logo, h - 11.5 * mm, 'ONG FORMIGUINHAS DA PRAIA')
+
+            self.setFont('Helvetica', 7)
+            self.setFillColor(HexColor('#536574'))
+            self.drawString(margem_x + offset_logo, h - 15 * mm, 'Sistema Integrado de Gestão Socioambiental')
+
+            # Metadados à direita
+            self.setFont('Helvetica-Bold', 7.5)
+            self.setFillColor(HexColor('#00306b'))
+            self.drawRightString(w - margem_x, h - 11.5 * mm, escape(relatorio['title']))
+
+            self.setFont('Helvetica', 7)
+            self.setFillColor(HexColor('#536574'))
+            self.drawRightString(
+                w - margem_x,
+                h - 15 * mm,
+                f'Emissão: {hoje.strftime("%d/%m/%Y")} • Período: {escape(relatorio["period"])}',
+            )
+
+            # --- RODAPÉ DISCRETO PADRONIZADO ---
+            y_rodape = 11 * mm
+            self.setStrokeColor(HexColor('#dbe4e7'))
+            self.setLineWidth(0.5)
+            self.line(margem_x, y_rodape, w - margem_x, y_rodape)
+
+            self.setFont('Helvetica', 7)
+            self.setFillColor(HexColor('#768b9a'))
+            self.drawString(
+                margem_x,
+                y_rodape - 4 * mm,
+                'ONG Formiguinhas da Praia • Documento oficial emitido eletronicamente',
+            )
+
+            pag_texto = f'Página {self._pageNumber} de {page_count}'
+            self.drawRightString(w - margem_x, y_rodape - 4 * mm, pag_texto)
+
+            self.restoreState()
+
+    def calcular_larguras_retrato(headers, largura_total):
+        """Distribui com precisão as colunas no espaço A4 Retrato (186 mm útil)."""
+        pesos = []
+        for h in headers:
+            h_lower = str(h).lower()
+            if any(k in h_lower for k in ['id', 'código', 'cod', '#', 'ano']):
+                pesos.append(0.5)
+            elif any(k in h_lower for k in ['data', 'mês', 'mes', 'unidade', 'frequência', 'presença']):
+                pesos.append(0.8)
+            elif any(k in h_lower for k in ['status', 'situação', 'tipo', 'categoria', 'papel']):
+                pesos.append(0.95)
+            elif any(k in h_lower for k in ['resíduo', 'quantidade', 'total', 'valor', 'saldo', 'kg', 'peso', 'mínimo', 'minimo', 'pontos']):
+                pesos.append(0.85)
+            elif any(k in h_lower for k in ['praia', 'local', 'equipe', 'responsável', 'responsavel']):
+                pesos.append(1.25)
+            elif any(k in h_lower for k in ['nome', 'voluntário', 'doador', 'material', 'descrição', 'descricao', 'observação', 'motivo']):
+                pesos.append(1.6)
+            else:
+                pesos.append(1.0)
+
+        soma = sum(pesos) if pesos else 1.0
+        return [(p / soma) * largura_total for p in pesos]
+
     buffer = io.BytesIO()
+
+    # Formato A4 Retrato (210 x 297 mm) com margens laterais de 12 mm
     documento = SimpleDocTemplate(
         buffer,
-        pagesize=landscape(letter),
-        leftMargin=0.45 * inch,
-        rightMargin=0.45 * inch,
-        topMargin=0.5 * inch,
-        bottomMargin=0.5 * inch,
+        pagesize=A4,
+        leftMargin=12 * mm,
+        rightMargin=12 * mm,
+        topMargin=22 * mm,
+        bottomMargin=16 * mm,
     )
+
+    largura_util = documento.width  # 186 mm
+
     estilos = getSampleStyleSheet()
-    titulo = ParagraphStyle(
-        'TituloRelatorio',
+
+    titulo_pagina_style = ParagraphStyle(
+        'DocTituloPagina',
         parent=estilos['Title'],
-        alignment=TA_CENTER,
-        textColor=colors.HexColor('#155E4B'),
+        fontName='Helvetica-Bold',
+        fontSize=13.5,
+        leading=16,
+        alignment=TA_LEFT,
+        textColor=HexColor('#00306b'),
+        spaceAfter=2,
     )
-    pequeno = ParagraphStyle(
-        'TabelaRelatorio',
-        parent=estilos['BodyText'],
+
+    subtitulo_pagina_style = ParagraphStyle(
+        'DocSubtituloPagina',
+        parent=estilos['Normal'],
         fontName='Helvetica',
-        fontSize=7,
-        leading=9,
+        fontSize=8,
+        leading=11,
+        alignment=TA_LEFT,
+        textColor=HexColor('#536574'),
     )
-    elementos = [
-        Paragraph(escape(relatorio['title']), titulo),
-        Paragraph(f'Período: {escape(relatorio["period"])}', estilos['Normal']),
-        Spacer(1, 12),
-    ]
-    if relatorio['attendance_action']:
-        elementos.extend([
-            Paragraph(f'Ação: {escape(str(relatorio["attendance_action"]))}', estilos['Heading2']),
-            Paragraph(
-                f'Data da ação: {relatorio["attendance_action"].data:%d/%m/%Y}',
-                estilos['Normal'],
-            ),
-            Spacer(1, 8),
-        ])
-    if relatorio['metrics']:
-        elementos.append(Paragraph('Resumo', estilos['Heading2']))
-        resumo = Table(
-            [
-                [Paragraph('Indicador', pequeno), Paragraph('Resultado', pequeno)],
-                *[
-                    [Paragraph(escape(str(rotulo)), pequeno), Paragraph(escape(str(valor)), pequeno)]
-                    for rotulo, valor in relatorio['metrics']
-                ],
-            ],
-            colWidths=[documento.width * 0.38, documento.width * 0.62],
-        )
-        resumo.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#155E4B')),
-            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
-            ('GRID', (0, 0), (-1, -1), 0.35, colors.HexColor('#CFD8D3')),
-            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-            ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#F2F7F4')]),
+
+    secao_titulo_style = ParagraphStyle(
+        'DocSecao',
+        parent=estilos['Heading2'],
+        fontName='Helvetica-Bold',
+        fontSize=9.5,
+        leading=12,
+        textColor=HexColor('#00306b'),
+        spaceBefore=7,
+        spaceAfter=4,
+    )
+
+    tabela_cabecalho_style = ParagraphStyle(
+        'DocTh',
+        parent=estilos['Normal'],
+        fontName='Helvetica-Bold',
+        fontSize=6.8,
+        leading=8.5,
+        textColor=colors.white,
+    )
+
+    tabela_celula_style = ParagraphStyle(
+        'DocTd',
+        parent=estilos['Normal'],
+        fontName='Helvetica',
+        fontSize=6.8,
+        leading=8.5,
+        textColor=HexColor('#1f2937'),
+    )
+
+    kpi_rotulo_style = ParagraphStyle(
+        'DocKpiRotulo',
+        parent=estilos['Normal'],
+        fontName='Helvetica-Bold',
+        fontSize=6.8,
+        leading=8.5,
+        textColor=HexColor('#536574'),
+        alignment=TA_CENTER,
+    )
+
+    kpi_valor_style = ParagraphStyle(
+        'DocKpiValor',
+        parent=estilos['Normal'],
+        fontName='Helvetica-Bold',
+        fontSize=11,
+        leading=13,
+        textColor=HexColor('#00306b'),
+        alignment=TA_CENTER,
+    )
+
+    elementos = []
+
+    # =========================================================
+    # 1. CAPA INSTITUCIONAL ELEGANTE (A4 RETRATO)
+    # =========================================================
+    if tem_capa:
+        elementos.append(Spacer(1, 8 * mm))
+
+        # Tarja superior decorativa
+        faixa_capa = Table([['']], colWidths=[largura_util], rowHeights=[4 * mm])
+        faixa_capa.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, -1), HexColor('#00306b')),
+            ('LINEBELOW', (0, 0), (-1, -1), 2, HexColor('#f4e01e')),
         ]))
-        elementos.extend([resumo, Spacer(1, 12)])
-    for indice, secao in enumerate(relatorio['sections']):
-        elementos.append(Paragraph(escape(secao['title']), estilos['Heading2']))
-        dados = [[Paragraph(escape(str(item)), pequeno) for item in secao['headers']]]
-        linhas = secao['rows'] or [['Nenhum registro encontrado.'] + [''] * (len(secao['headers']) - 1)]
-        dados.extend([
-            [Paragraph(escape(str(item)), pequeno) for item in linha]
-            for linha in linhas
-        ])
-        largura = documento.width / max(len(secao['headers']), 1)
-        tabela = LongTable(
-            dados,
-            colWidths=[largura] * len(secao['headers']),
+        elementos.append(faixa_capa)
+        elementos.append(Spacer(1, 14 * mm))
+
+        # Apresentação do Mascote Oficial e Cabeçalho da Entidade
+        col_mascote = [Image(caminho_mascote, width=28 * mm, height=30.6 * mm)] if tem_mascote else ['']
+        col_cabecalho_capa = [
+            Paragraph('ONG FORMIGUINHAS DA PRAIA', ParagraphStyle('CapaMarca', fontName='Helvetica-Bold', fontSize=17, leading=20, textColor=HexColor('#00306b'))),
+            Paragraph('Associação Comunitária e Socioambiental de Conservação Litorânea', ParagraphStyle('CapaSub', fontName='Helvetica', fontSize=9, leading=12, textColor=HexColor('#536574'))),
+            Spacer(1, 2.5 * mm),
+            Paragraph(escape(relatorio['title']).upper(), ParagraphStyle('CapaTituloDoc', fontName='Helvetica-Bold', fontSize=18, leading=22, textColor=HexColor('#00306b'))),
+            Paragraph(f'Demonstrativo Consolidado de Gestão • Período: {escape(relatorio["period"])}', ParagraphStyle('CapaDescDoc', fontName='Helvetica', fontSize=9.5, leading=13, textColor=HexColor('#0058b9'))),
+        ]
+
+        tabela_capa_marca = Table(
+            [[col_mascote, col_cabecalho_capa]],
+            colWidths=[33 * mm, largura_util - 33 * mm] if tem_mascote else [0, largura_util],
+        )
+        tabela_capa_marca.setStyle(TableStyle([
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('LEFTPADDING', (0, 0), (-1, -1), 0),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 0),
+        ]))
+        elementos.append(tabela_capa_marca)
+        elementos.append(Spacer(1, 14 * mm))
+
+        # Painel Institucional e Cadastral
+        estilo_label_cad = ParagraphStyle('CadLabel', fontName='Helvetica-Bold', fontSize=7.5, leading=9.5, textColor=HexColor('#00306b'))
+        estilo_val_cad = ParagraphStyle('CadVal', fontName='Helvetica', fontSize=7.5, leading=9.5, textColor=HexColor('#1f2937'))
+
+        col_w_label = 32 * mm
+        col_w_val = (largura_util / 2) - col_w_label
+
+        dados_cadastro = [
+            [
+                Paragraph('Razão Social / Entidade:', estilo_label_cad),
+                Paragraph('ONG Formiguinhas da Praia', estilo_val_cad),
+                Paragraph('Data de Emissão:', estilo_label_cad),
+                Paragraph(hoje.strftime('%d/%m/%Y'), estilo_val_cad),
+            ],
+            [
+                Paragraph('CNPJ:', estilo_label_cad),
+                Paragraph('[CNPJ A CONFIRMAR]', estilo_val_cad),
+                Paragraph('Período de Referência:', estilo_label_cad),
+                Paragraph(escape(relatorio['period']), estilo_val_cad),
+            ],
+            [
+                Paragraph('Endereço Institucional:', estilo_label_cad),
+                Paragraph('[ENDEREÇO A CONFIRMAR] - Litoral Paulista, SP', estilo_val_cad),
+                Paragraph('Finalidade do Relatório:', estilo_label_cad),
+                Paragraph('Prestação de Contas e Acompanhamento Socioambiental', estilo_val_cad),
+            ],
+            [
+                Paragraph('Contatos Oficiais:', estilo_label_cad),
+                Paragraph('(13) 99728-4132  •  contato@formiguinhasdapraia.org.br', estilo_val_cad),
+                Paragraph('Portal Institucional:', estilo_label_cad),
+                Paragraph('www.formiguinhasdapraia.org.br', estilo_val_cad),
+            ],
+        ]
+
+        tabela_cadastral = Table(
+            dados_cadastro,
+            colWidths=[col_w_label, col_w_val, col_w_label, col_w_val],
+        )
+        tabela_cadastral.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, -1), HexColor('#f9f6ee')),
+            ('BOX', (0, 0), (-1, -1), 0.8, HexColor('#dbe4e7')),
+            ('INNERGRID', (0, 0), (-1, -1), 0.4, HexColor('#eef2f5')),
+            ('LINELEFT', (0, 0), (0, -1), 3, HexColor('#00306b')),
+            ('TOPPADDING', (0, 0), (-1, -1), 3 * mm),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 3 * mm),
+            ('LEFTPADDING', (0, 0), (-1, -1), 2.5 * mm),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 2.5 * mm),
+        ]))
+        elementos.append(tabela_cadastral)
+        elementos.append(Spacer(1, 14 * mm))
+
+        # Nota Institucional da Capa
+        nota_capa = Paragraph(
+            '<i>Este documento oficial consolida informações operacionais, socioambientais e administrativas '
+            'apuradas no período referenciado, com finalidade de registro histórico, prestação de contas à diretoria, '
+            'conselhos comunitários, órgãos ambientais e parceiros institucionais.</i>',
+            ParagraphStyle('NotaCapa', fontName='Helvetica', fontSize=7.8, leading=11.5, textColor=HexColor('#768b9a'), alignment=TA_CENTER),
+        )
+        elementos.append(nota_capa)
+        elementos.append(PageBreak())
+
+    # =========================================================
+    # 2. CABEÇALHO DO CONTEÚDO (Páginas internas)
+    # =========================================================
+    elementos.append(Paragraph(escape(relatorio['title']), titulo_pagina_style))
+    elementos.append(
+        Paragraph(
+            f'<b>Período apurado:</b> {escape(relatorio["period"])} &nbsp;&nbsp;•&nbsp;&nbsp; '
+            f'<b>Emissão:</b> {hoje.strftime("%d/%m/%Y")} &nbsp;&nbsp;•&nbsp;&nbsp; '
+            f'<b>Entidade:</b> ONG Formiguinhas da Praia ([CNPJ A CONFIRMAR])',
+            subtitulo_pagina_style,
+        )
+    )
+    elementos.append(Spacer(1, 4))
+
+    # Caso especial para ação de presença
+    if relatorio.get('attendance_action'):
+        acao_obj = relatorio['attendance_action']
+        elementos.append(
+            Paragraph(
+                f'<b>Ação Selecionada:</b> {escape(str(acao_obj))} &nbsp;&nbsp;|&nbsp;&nbsp; '
+                f'<b>Data da Realização:</b> {acao_obj.data.strftime("%d/%m/%Y") if acao_obj.data else "-"}',
+                secao_titulo_style,
+            )
+        )
+        elementos.append(Spacer(1, 3))
+
+    # =========================================================
+    # 3. INDICADORES DO PERÍODO (Painel de KPIs em cards A4)
+    # =========================================================
+    if relatorio.get('metrics'):
+        elementos.append(Paragraph('Indicadores Sintéticos do Período', secao_titulo_style))
+
+        metricas = relatorio['metrics']
+        # No formato Retrato, 3 ou 4 colunas para não espremer os valores
+        qtd_colunas = 4 if len(metricas) >= 4 else len(metricas)
+        linhas_kpis = []
+        linha_atual = []
+
+        for rotulo, valor in metricas:
+            card_conteudo = [
+                [Paragraph(escape(str(rotulo)).upper(), kpi_rotulo_style)],
+                [Paragraph(escape(str(valor)), kpi_valor_style)],
+            ]
+            mini_card = Table(card_conteudo, colWidths=['100%'])
+            mini_card.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, -1), HexColor('#f9f6ee')),
+                ('BOX', (0, 0), (-1, -1), 0.7, HexColor('#dbe4e7')),
+                ('LINEBELOW', (0, 0), (-1, 0), 1.2, HexColor('#f4e01e')),
+                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                ('TOPPADDING', (0, 0), (-1, 0), 4),
+                ('BOTTOMPADDING', (0, 0), (-1, 0), 1.5),
+                ('TOPPADDING', (0, 1), (-1, 1), 1.5),
+                ('BOTTOMPADDING', (0, 1), (-1, 1), 4),
+                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ]))
+            linha_atual.append(mini_card)
+
+            if len(linha_atual) == qtd_colunas:
+                linhas_kpis.append(linha_atual)
+                linha_atual = []
+
+        if linha_atual:
+            while len(linha_atual) < qtd_colunas:
+                linha_atual.append('')
+            linhas_kpis.append(linha_atual)
+
+        largura_col_kpi = largura_util / max(qtd_colunas, 1)
+        kpi_table = Table(
+            linhas_kpis,
+            colWidths=[largura_col_kpi] * qtd_colunas,
+        )
+        kpi_table.setStyle(TableStyle([
+            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+            ('LEFTPADDING', (0, 0), (-1, -1), 2),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 2),
+            ('TOPPADDING', (0, 0), (-1, -1), 2),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 2),
+        ]))
+        elementos.extend([kpi_table, Spacer(1, 7)])
+
+    # =========================================================
+    # 4. TABELAS ANALÍTICAS (A4 RETRATO COM REPETIÇÃO DE CABEÇALHO)
+    # =========================================================
+    for indice, secao in enumerate(relatorio.get('sections', [])):
+        elementos.append(Paragraph(escape(secao['title']), secao_titulo_style))
+
+        headers = secao.get('headers', [])
+        rows = secao.get('rows') or []
+
+        cabecalho_formatado = [Paragraph(escape(str(item)), tabela_cabecalho_style) for item in headers]
+        dados_tabela = [cabecalho_formatado]
+
+        if not rows:
+            vazio_texto = [Paragraph('<i>Nenhum registro encontrado para os filtros selecionados.</i>', tabela_celula_style)]
+            vazio_texto.extend([''] * (len(headers) - 1))
+            dados_tabela.append(vazio_texto)
+        else:
+            for linha in rows:
+                dados_tabela.append([
+                    Paragraph(escape(str(item if item is not None else '-')), tabela_celula_style)
+                    for item in linha
+                ])
+
+        col_widths = calcular_larguras_retrato(headers, largura_util)
+
+        tabela_secao = LongTable(
+            dados_tabela,
+            colWidths=col_widths,
             repeatRows=1,
         )
-        tabela.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#155E4B')),
-            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
-            ('GRID', (0, 0), (-1, -1), 0.35, colors.HexColor('#CFD8D3')),
-            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-            ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#F2F7F4')]),
-            ('LEFTPADDING', (0, 0), (-1, -1), 4),
-            ('RIGHTPADDING', (0, 0), (-1, -1), 4),
+        tabela_secao.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), HexColor('#00306b')),
+            ('LINEBELOW', (0, 0), (-1, 0), 1.8, HexColor('#f4e01e')),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, HexColor('#f8fafc')]),
+            ('GRID', (0, 0), (-1, -1), 0.3, HexColor('#e5e7eb')),
+            ('BOX', (0, 0), (-1, -1), 0.6, HexColor('#d1d5db')),
+            ('TOPPADDING', (0, 0), (-1, 0), 3.5),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 3.5),
+            ('TOPPADDING', (0, 1), (-1, -1), 2.8),
+            ('BOTTOMPADDING', (0, 1), (-1, -1), 2.8),
+            ('LEFTPADDING', (0, 0), (-1, -1), 3),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 3),
         ]))
-        elementos.extend([tabela, Spacer(1, 12)])
-        if indice < len(relatorio['sections']) - 1 and len(secao['rows']) > 35:
+
+        elementos.extend([tabela_secao, Spacer(1, 8)])
+
+        # Quebra controlada quando houver seções longas consecutivas
+        if indice < len(relatorio['sections']) - 1 and len(rows) > 35:
             elementos.append(PageBreak())
-    documento.build(elementos)
+
+    documento.build(elementos, canvasmaker=DocumentoInstitucionalRetratoCanvas)
     resposta = HttpResponse(buffer.getvalue(), content_type='application/pdf')
     resposta['Content-Disposition'] = f'attachment; filename="{tipo}_{hoje.isoformat()}.pdf"'
     return resposta
-
 
 def _resposta_csv(relatorio, tipo, hoje):
     resposta = HttpResponse(content_type='text/csv; charset=utf-8')
