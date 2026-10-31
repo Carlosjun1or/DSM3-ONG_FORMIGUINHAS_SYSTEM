@@ -1,4 +1,4 @@
-/* Shared public-site layout layered over template.css. */
+﻿/* Shared public-site layout layered over template.css. */
 
 :root {
     /* Apelidos locais — apontam para os tokens canônicos de template.css.
@@ -88,7 +88,7 @@ header .logo > a span:first-child {
     font-size: 1.8rem;
 }
 
-header nav {
+header .menu-navegacao {
     display: flex;
     flex: 1 1 auto;
     align-items: center;
@@ -96,7 +96,7 @@ header nav {
     gap: clamp(0.65rem, 1.5vw, 1.35rem);
 }
 
-header nav a {
+header .menu-navegacao a {
     position: relative;
     display: inline-flex;
     align-items: center;
@@ -110,7 +110,7 @@ header nav a {
     transition: color 180ms ease, transform 180ms ease;
 }
 
-header nav a::after {
+header .menu-navegacao a::after {
     position: absolute;
     right: 0;
     bottom: 0.35rem;
@@ -124,14 +124,14 @@ header nav a::after {
     transition: transform 180ms ease;
 }
 
-header nav a:hover,
-header nav a:focus-visible {
+header .menu-navegacao a:hover,
+header .menu-navegacao a:focus-visible {
     color: var(--site-amarelo);
     transform: translateY(-2px);
 }
 
-header nav a:hover::after,
-header nav a:focus-visible::after {
+header .menu-navegacao a:hover::after,
+header .menu-navegacao a:focus-visible::after {
     transform: scaleX(1);
 }
 
@@ -486,9 +486,9 @@ header .acoes-cabecalho .btn:not(.btn--contorno) {
     --btn-cor: var(--site-azul-profundo);
 }
 
-header nav a[aria-current="page"],
-header nav a:hover,
-header nav a:focus-visible {
+header .menu-navegacao a[aria-current="page"],
+header .menu-navegacao a:hover,
+header .menu-navegacao a:focus-visible {
     color: var(--site-amarelo);
 }
 
@@ -1482,21 +1482,141 @@ footer.site-footer {
     text-decoration: none;
 }
 
-@media (max-width: 900px) {
-    header .logo {
-        flex-wrap: wrap;
-    }
 
-    header nav {
-        order: 3;
-        flex-basis: 100%;
-        flex-wrap: wrap;
-        justify-content: flex-start;
-        overflow: visible;
+/* ========================================
+   MENU HAMBURGUER - Base (escondido em desktop)
+   ======================================== */
+.menu-hamburguer {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    gap: 5px;
+    margin-left: auto;
+    order: 2;
+}
+
+.hamburguer-barra {
+    display: block;
+    width: 26px;
+    height: 3px;
+    border-radius: 2px;
+    background: #fff;
+    transition: transform 300ms ease, opacity 200ms ease;
+}
+
+.menu-hamburguer[aria-expanded="true"] .hamburguer-barra:nth-child(1) {
+    transform: translateY(8px) rotate(45deg);
+}
+.menu-hamburguer[aria-expanded="true"] .hamburguer-barra:nth-child(2) {
+    opacity: 0;
+}
+.menu-hamburguer[aria-expanded="true"] .hamburguer-barra:nth-child(3) {
+    transform: translateY(-8px) rotate(-45deg);
+}
+
+.acoes-cabecalho-mobile {
+    display: none;
+}
+
+body.menu-aberto-trava {
+    overflow: hidden;
+}
+
+@media (max-width: 900px) {
+    .menu-hamburguer {
+        display: flex;
     }
 
     header .acoes-cabecalho {
-        margin-left: auto;
+        display: none;
+    }
+
+    header .menu-navegacao {
+        display: none;
+        flex-direction: column;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: var(--site-azul-profundo, #00306b);
+        padding: 0;
+        z-index: 200;
+        box-shadow: 0 8px 24px rgb(0 0 0 / 25%);
+    }
+
+    header .menu-navegacao.menu-aberto {
+        display: flex;
+    }
+
+    header .menu-navegacao a {
+        display: block;
+        padding: 0.9rem 1.5rem;
+        color: #fff;
+        font-size: 1rem;
+        font-weight: 600;
+        text-decoration: none;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        white-space: normal;
+    }
+
+    header .menu-navegacao a::after {
+        display: none;
+    }
+
+    header .menu-navegacao a:hover,
+    header .menu-navegacao a:focus-visible {
+        background: rgba(255, 255, 255, 0.08);
+        color: var(--site-amarelo, #f4e01e);
+        transform: none;
+    }
+
+    .menu-navegacao.menu-aberto .acoes-cabecalho-mobile {
+        display: flex;
+        flex-direction: column;
+        gap: 0.6rem;
+        padding: 1rem 1.5rem 1.25rem;
+        border-top: 1px solid rgba(255, 255, 255, 0.15);
+    }
+
+    .acoes-cabecalho-mobile .btn {
+        text-align: center;
+        justify-content: center;
+        width: 100%;
+        min-height: 48px;
+        font-size: 1rem;
+        font-weight: 700;
+    }
+
+    .acoes-cabecalho-mobile .btn--contorno {
+        border: 2px solid #fff;
+        background: transparent;
+        color: #fff;
+        box-shadow: none;
+    }
+
+    .acoes-cabecalho-mobile .btn--contorno:hover,
+    .acoes-cabecalho-mobile .btn--contorno:focus-visible {
+        background: var(--site-amarelo, #f4e01e);
+        border-color: var(--site-amarelo, #f4e01e);
+        color: var(--site-azul-profundo, #00306b);
+    }
+
+    .acoes-cabecalho-mobile .btn:not(.btn--contorno) {
+        --btn-bg: var(--site-amarelo, #f4e01e);
+        --btn-base: #de8c1a;
+        --btn-cor: var(--site-azul-profundo, #00306b);
+        color: var(--site-azul-profundo, #00306b);
+    }
+
+    header .logo {
+        flex-wrap: nowrap;
     }
 
     #praias .praias-conteudo {
@@ -1528,22 +1648,9 @@ footer.site-footer {
         height: 2.2rem;
     }
 
-    header .acoes-cabecalho {
-        gap: 0.4rem;
-    }
-
-    header .acoes-cabecalho .btn {
-        min-height: 40px;
-        padding: 0.3rem 0.65rem;
-        font-size: 0.75rem;
-    }
-
-    header nav {
-        gap: 1rem;
-    }
-
-    header nav a {
-        font-size: 0.85rem;
+    header .menu-navegacao a {
+        font-size: 0.95rem;
+        padding: 0.8rem 1.25rem;
     }
 
     #praias .praias-conteudo {
@@ -1609,17 +1716,6 @@ footer.site-footer {
         min-height: 0;
     }
 
-    #multiroes .proximo-mutirao-data strong {
-        font-size: 1.8rem;
-    }
-
-    #multiroes .proximo-mutirao-conteudo {
-        padding: 0.55rem 0.65rem;
-    }
-
-    #multiroes .button-multiroes {
-        flex-direction: column;
-    }
 }
 
 .icone-inline {
@@ -2984,8 +3080,8 @@ footer.site-footer {
         transform: none;
     }
 
-    header nav a,
-    header nav a::after,
+    header .menu-navegacao a,
+    header .menu-navegacao a::after,
     header .marca-icone,
     header .marca > span {
         transition: none;
@@ -3000,8 +3096,8 @@ footer.site-footer {
         transition: none;
     }
 
-    header nav a:hover,
-    header nav a:focus-visible,
+    header .menu-navegacao a:hover,
+    header .menu-navegacao a:focus-visible,
     header .marca:hover .marca-icone,
     header .marca:focus-visible .marca-icone,
     #inicio .referencias .btn--contorno:hover,
