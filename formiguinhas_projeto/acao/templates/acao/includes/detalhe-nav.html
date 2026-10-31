@@ -1,0 +1,79 @@
+<script>
+(function () {
+    document.querySelectorAll('.acao-nav').forEach(function (nav) {
+        var itens = [];
+
+        nav.querySelectorAll('a[href^="#"]').forEach(function (link) {
+            var id = link.getAttribute('href').slice(1);
+            var secao = document.getElementById(id);
+            if (secao) itens.push({ link: link, secao: secao, id: id });
+        });
+
+        if (!itens.length) return;
+
+        function ativar(atual) {
+            itens.forEach(function (item) {
+                var ativo = item === atual;
+                item.link.classList.toggle('is-ativo', ativo);
+                if (ativo) item.link.setAttribute('aria-current', 'true');
+                else item.link.removeAttribute('aria-current');
+            });
+        }
+
+        function atualizar() {
+            if (travado) return;
+
+            var atual = itens[0];
+            itens.forEach(function (item) {
+                if (item.secao.getBoundingClientRect().top <= 120) atual = item;
+            });
+
+            if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 2) {
+                atual = itens[itens.length - 1];
+            }
+
+            ativar(atual);
+        }
+
+        var travado = false;
+        var tempoDesbloqueio;
+        function atualizarHash() {
+            var id = window.location.hash.slice(1);
+            var item = itens.find(function (candidato) {
+                return candidato.id === id;
+            });
+
+            if (item) ativar(item);
+            else atualizar();
+        }
+
+        itens.forEach(function (item) {
+            item.link.addEventListener('click', function () {
+                ativar(item);
+                travado = true;
+                window.clearTimeout(tempoDesbloqueio);
+                tempoDesbloqueio = window.setTimeout(function () {
+                    travado = false;
+                    atualizar();
+                }, 800);
+            });
+        });
+
+        var agendado = false;
+        window.addEventListener('scroll', function () {
+            if (agendado) return;
+            agendado = true;
+            window.requestAnimationFrame(function () {
+                agendado = false;
+                atualizar();
+            });
+        }, { passive: true });
+
+        window.addEventListener('popstate', atualizarHash);
+        window.addEventListener('hashchange', atualizarHash);
+
+        if (window.location.hash) atualizarHash();
+        else atualizar();
+    });
+}());
+</script>

@@ -1,68 +1,107 @@
 {% extends 'sistema/template-sistema.html' %}
+{% load static %}
 
-{% block titulo %}Participantes da ação | Sistema{% endblock %}
-{% block page_title %}{% if acao.tipo == 'COLETA_VOLUNTARIA' %}Detalhes da Coleta Voluntária - {{ acao.praia.nome }}{% else %}Detalhes do Mutirão - {{ acao.praia.nome }}{% endif %}{% endblock %}
+{% block titulo %}{{ acao.tipo_display|default:acao.tipo }} | Sistema{% endblock %}
+{% block page_title %}{{ acao.tipo_display|default:acao.tipo }}{% endblock %}
+{% block estilos %}<link rel="stylesheet" href="{% static 'acao/acao-detalhe.css' %}?v=2">{% endblock %}
 
 {% block conteudo %}
-<section class="team-detail volunteer-control action-detail-hero">
-    <div class="team-hero">
-        <div>
-            <span class="team-eyebrow">Ação em modo de leitura</span>
-            <h2>{{ acao.get_tipo_display }}</h2>
-            <p>{{ acao.praia.nome }} · {{ acao.praia.cidade }}</p>
-            <p>{{ acao.descricao|default:'Esta ação ainda não possui uma descrição detalhada.' }}</p>
+<div class="acao-detalhe">
+    <section class="acao-topo" id="resumo" aria-labelledby="acao-titulo">
+        <div class="acao-topo__principal">
+            <span class="acao-topo__eyebrow">Ação armazenada no MongoDB</span>
+            <div class="acao-topo__titulo">
+                <h2 id="acao-titulo">{{ acao.tipo_display|default:acao.tipo }}</h2>
+                <span class="status-select status-{{ acao.status|lower }}">{{ acao.status_display|default:acao.status }}</span>
+            </div>
+            <ul class="acao-info">
+                <li><span class="acao-leitor">Data:</span>{{ acao.data|default:'Data não informada' }}</li>
+                {% if acao.horario %}<li><span class="acao-leitor">Horário:</span>{{ acao.horario }}</li>{% endif %}
+                {% if acao.praia %}<li><span class="acao-leitor">Praia:</span>{{ acao.praia.nome }}{% if acao.praia.cidade %}<span>· {{ acao.praia.cidade }}</span>{% endif %}</li>{% endif %}
+                {% if acao.local %}<li><span class="acao-leitor">Local:</span>{{ acao.local }}</li>{% endif %}
+                {% if acao.id_sql %}<li><span class="acao-leitor">Identificador:</span>#{{ acao.id_sql }}</li>{% endif %}
+            </ul>
+            {% if acao.descricao %}<p class="acao-topo__descricao">{{ acao.descricao }}</p>{% endif %}
         </div>
-        <div class="team-hero-side">
-            <span class="status-select status-{{ acao.status|lower }}">{{ acao.get_status_display }}</span>
-            <small>{{ participantes|length }} participante{{ participantes|length|pluralize }}</small>
+        <div class="acao-topo__acoes"><a href="{% url 'acoes' %}" class="btn btn-outline">Voltar às ações</a></div>
+        <div class="acao-metricas">
+            <div class="acao-metrica"><span>Participantes</span><strong>{{ participantes|length }}</strong></div>
+            <div class="acao-metrica"><span>Equipes</span><strong>{{ acao.equipes|length }}</strong></div>
+            <div class="acao-metrica"><span>Responsáveis</span><strong>{{ acao.responsaveis|length }}</strong></div>
+            <div class="acao-metrica"><span>Resíduos</span><strong>{{ acao.residuos_coletados|length }}</strong></div>
         </div>
-    </div>
-    <p class="form-subtitle">Esta ação está disponível apenas no MongoDB. Os participantes podem ser consultados, mas não alterados por esta tela.</p>
-    <div class="table-actions">
-        <a href="{% url 'acoes' %}" class="btn btn-outline">Voltar às ações</a>
-    </div>
-</section>
+        {% if acao.cadastrado_por_nome or acao.dt_cadastro or acao.ultimo_editado_por_nome or acao.dt_ultima_edicao %}
+        <p class="acao-topo__auditoria">
+            Cadastro: {{ acao.cadastrado_por_nome|default:'Não informado' }}{% if acao.dt_cadastro %} · {{ acao.dt_cadastro }}{% endif %}
+            · Última edição: {{ acao.ultimo_editado_por_nome|default:'Sem edições' }}{% if acao.dt_ultima_edicao %} · {{ acao.dt_ultima_edicao }}{% endif %}
+        </p>
+        {% endif %}
+    </section>
 
-<section class="card volunteer-control action-detail-section action-participants-section" id="participantes">
-    <div class="section-heading">
-        <div>
-            <h2>Participantes <span class="section-count">{{ participantes|length }}</span></h2>
-        </div>
-    </div>
-    {% if participantes %}
-    <div class="table-wrap action-participants-list">
-        <table class="data-table">
-            <thead>
-                <tr>
-                    <th>Voluntário</th>
-                    <th>Status</th>
-                    <th>Compareceu</th>
-                    <th>Confirmação</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for participante in participantes %}
-                <tr>
-                    <td>
-                        {% if participante.voluntario_id %}
-                        <a class="table-link" href="{% url 'voluntarios' %}?voluntario={{ participante.voluntario_id }}"><strong>{{ participante.nome|default:'Voluntário' }}</strong></a>
-                        {% else %}
-                        <strong>{{ participante.nome|default:'Voluntário' }}</strong>
-                        {% endif %}
-                        {% if participante.email %}<br><small>{{ participante.email }}</small>{% endif %}
-                    </td>
-                    <td>{{ participante.status_display|default:participante.status|default:'-' }}</td>
-                    <td>{% if participante.compareceu %}Sim{% else %}Não{% endif %}</td>
-                    <td>{{ participante.dt_confirmacao|default:'-' }}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-    {% else %}
-    <div class="empty-state table-empty">
-        <h3>Nenhum participante vinculado</h3>
-    </div>
-    {% endif %}
-</section>
+    <nav class="acao-nav" aria-label="Seções desta ação">
+        <a href="#participantes">Participantes <b>{{ participantes|length }}</b></a>
+        <a href="#equipes">Equipes <b>{{ acao.equipes|length }}</b></a>
+        <a href="#responsaveis">Responsáveis <b>{{ acao.responsaveis|length }}</b></a>
+        <a href="#residuos">Resíduos <b>{{ acao.residuos_coletados|length }}</b></a>
+        <a href="#imagens">Imagens <b>{{ acao.imagens|length }}</b></a>
+        <a href="#historico">Histórico <b>{{ acao.historico_participantes|length }}</b></a>
+        <a href="#metadados">MongoDB</a>
+    </nav>
+
+    <section class="acao-secao" id="participantes">
+        <div class="acao-secao__cabecalho"><div><h2>Participantes <span class="section-count">{{ participantes|length }}</span></h2></div></div>
+        {% if participantes %}
+        <div class="table-wrap"><table class="data-table" data-sem-cards>
+            <thead><tr><th>Voluntário</th><th>Status</th><th>Compareceu</th><th>Confirmação</th><th>Observação</th></tr></thead>
+            <tbody>{% for participante in participantes %}<tr>
+                <td>{% if participante.voluntario_id %}<a class="table-link" href="{% url 'voluntarios' %}?voluntario={{ participante.voluntario_id }}"><strong>{{ participante.nome|default:'Voluntário' }}</strong></a>{% else %}<strong>{{ participante.nome|default:'Voluntário' }}</strong>{% endif %}{% if participante.email %}<br><small>{{ participante.email }}</small>{% endif %}{% if participante.telefone %}<br><small>{{ participante.telefone }}</small>{% endif %}</td>
+                <td>{{ participante.status_display|default:participante.status|default:'-' }}</td>
+                <td>{% if participante.compareceu %}Sim{% else %}Não{% endif %}</td>
+                <td>{{ participante.dt_confirmacao|default:'-' }}</td>
+                <td>{{ participante.observacao|default:'-' }}</td>
+            </tr>{% endfor %}</tbody>
+        </table></div>
+        {% else %}<div class="acao-vazio"><strong>Nenhum participante vinculado.</strong></div>{% endif %}
+    </section>
+
+    <section class="acao-secao" id="equipes">
+        <div class="acao-secao__cabecalho"><div><h2>Equipes <span class="section-count">{{ acao.equipes|length }}</span></h2></div></div>
+        {% if acao.equipes %}<div class="table-wrap"><table class="data-table" data-sem-cards><thead><tr><th>Equipe</th><th>Status</th><th>Praia</th></tr></thead><tbody>
+            {% for equipe in acao.equipes %}<tr><td><strong>{{ equipe.nome|default:'-' }}</strong></td><td>{{ equipe.status|default:'-' }}</td><td>{{ equipe.praia_nome|default:'-' }}</td></tr>{% endfor %}
+        </tbody></table></div>{% else %}<div class="acao-vazio"><strong>Nenhuma equipe vinculada.</strong></div>{% endif %}
+    </section>
+
+    <section class="acao-secao" id="responsaveis">
+        <div class="acao-secao__cabecalho"><div><h2>Responsáveis <span class="section-count">{{ acao.responsaveis|length }}</span></h2></div></div>
+        {% if acao.responsaveis %}<div class="table-wrap"><table class="data-table" data-sem-cards><thead><tr><th>Nome</th><th>Papel</th><th>Voluntário</th></tr></thead><tbody>
+            {% for responsavel in acao.responsaveis %}<tr><td><strong>{{ responsavel.nome|default:'-' }}</strong></td><td>{{ responsavel.papel_display|default:responsavel.papel|default:'-' }}</td><td>{{ responsavel.voluntario_id|default:'-' }}</td></tr>{% endfor %}
+        </tbody></table></div>{% else %}<div class="acao-vazio"><strong>Nenhum responsável vinculado.</strong></div>{% endif %}
+    </section>
+
+    <section class="acao-secao" id="residuos">
+        <div class="acao-secao__cabecalho"><div><h2>Resíduos coletados <span class="section-count">{{ acao.residuos_coletados|length }}</span></h2><p>Total registrado em kg: {{ acao.total_residuos_kg|default:'0' }}</p></div></div>
+        {% if acao.residuos_coletados %}<div class="table-wrap"><table class="data-table" data-sem-cards><thead><tr><th>Tipo / categoria</th><th>Quantidade</th><th>Observação</th><th>Destinações</th></tr></thead><tbody>
+            {% for residuo in acao.residuos_coletados %}<tr><td><strong>{{ residuo.tipo_display|default:residuo.tipo|default:'-' }}</strong><br><small>{{ residuo.categoria_display|default:residuo.categoria|default:'-' }}</small></td><td>{{ residuo.quantidade|default:'0' }} {{ residuo.unidade_display|default:residuo.unidade|default:'' }}</td><td>{{ residuo.observacao|default:'-' }}</td><td>{% for destinacao in residuo.destinacoes %}{{ destinacao.tipo_display|default:destinacao.tipo }}{% if destinacao.quantidade %}: {{ destinacao.quantidade }} {{ destinacao.unidade }}{% endif %}{% if not forloop.last %}<br>{% endif %}{% empty %}-{% endfor %}</td></tr>{% endfor %}
+        </tbody></table></div>{% else %}<div class="acao-vazio"><strong>Nenhum resíduo registrado.</strong></div>{% endif %}
+    </section>
+
+    <section class="acao-secao" id="imagens">
+        <div class="acao-secao__cabecalho"><div><h2>Imagens <span class="section-count">{{ acao.imagens|length }}</span></h2></div></div>
+        {% if acao.imagens %}<div class="table-wrap"><table class="data-table" data-sem-cards><thead><tr><th>Imagem</th><th>Descrição</th><th>Cadastro</th></tr></thead><tbody>
+            {% for imagem in acao.imagens %}<tr><td>{% if imagem.url %}<a href="{{ imagem.url }}" target="_blank" rel="noopener">Abrir imagem</a>{% else %}-{% endif %}</td><td>{{ imagem.descricao|default:'-' }}</td><td>{{ imagem.dt_cadastro|default:'-' }}</td></tr>{% endfor %}
+        </tbody></table></div>{% else %}<div class="acao-vazio"><strong>Nenhuma imagem registrada.</strong></div>{% endif %}
+    </section>
+
+    <section class="acao-secao" id="historico">
+        <div class="acao-secao__cabecalho"><div><h2>Histórico de participantes <span class="section-count">{{ acao.historico_participantes|length }}</span></h2></div></div>
+        {% if acao.historico_participantes %}<div class="table-wrap"><table class="data-table" data-sem-cards><thead><tr><th>Voluntário</th><th>Status</th><th>Compareceu</th><th>Movimentação</th><th>Responsável</th><th>Observação</th></tr></thead><tbody>
+            {% for registro in acao.historico_participantes %}<tr><td><strong>{{ registro.nome|default:'Voluntário' }}</strong></td><td>{{ registro.status|default:'-' }}</td><td>{% if registro.compareceu %}Sim{% else %}Não{% endif %}</td><td>{{ registro.dt_movimentacao|default:'-' }}</td><td>{{ registro.movido_por_nome|default:'-' }}</td><td>{{ registro.observacao|default:'-' }}</td></tr>{% endfor %}
+        </tbody></table></div>{% else %}<div class="acao-vazio"><strong>Nenhum histórico registrado.</strong></div>{% endif %}
+    </section>
+
+    <section class="acao-secao" id="metadados">
+        <div class="acao-secao__cabecalho"><div><h2>Metadados MongoDB</h2><p>Informações de armazenamento e sincronização presentes no documento.</p></div></div>
+        {% if acao.metadados %}<ul class="acao-info"><li><strong>Versão do schema:</strong> {{ acao.metadados.versao_schema|default:'-' }}</li><li><strong>Armazenamento:</strong> {{ acao.metadados.armazenamento|default:'-' }}</li><li><strong>Sincronizado em:</strong> {{ acao.metadados.sincronizado_em|default:'-' }}</li></ul>{% else %}<div class="acao-vazio"><strong>Metadados não disponíveis.</strong></div>{% endif %}
+    </section>
+</div>
 {% endblock %}

@@ -5,7 +5,7 @@
 {% block page_title %}{{ acao.get_tipo_display }}{% endblock %}
 {% block estilos %}
 <link rel="stylesheet" href="{% static 'estoque/estoque.css' %}?v=11">
-<link rel="stylesheet" href="{% static 'acao/acao-detalhe.css' %}?v=1">
+<link rel="stylesheet" href="{% static 'acao/acao-detalhe.css' %}?v=2">
 {% endblock %}
 {% block scripts %}<script src="{% static 'estoque/material-combobox.js' %}?v=1" defer></script>{% endblock %}
 
@@ -660,29 +660,48 @@
 </div>
 
 <script>
+   /* Modal de restaurar participante */
     (function () {
         var modal = document.getElementById('restore-confirmation-modal');
         var volunteerName = document.getElementById('restore-volunteer-name');
         var confirmButton = document.getElementById('confirm-restore-participant');
+        if (!modal || !volunteerName || !confirmButton) return;
+
         var selectedForm = null;
+        var botaoOrigem = null;
+
+        function abrir(button) {
+            selectedForm = button.closest('form');
+            botaoOrigem = button;
+            volunteerName.textContent = button.dataset.volunteerName;
+            confirmButton.disabled = false;
+            modal.hidden = false;
+            confirmButton.focus();
+        }
+
+        function fechar() {
+            modal.hidden = true;
+            selectedForm = null;
+            if (botaoOrigem) botaoOrigem.focus();
+            botaoOrigem = null;
+        }
 
         document.querySelectorAll('.restore-participant-button').forEach(function (button) {
-            button.addEventListener('click', function () {
-                selectedForm = button.closest('form');
-                volunteerName.textContent = button.dataset.volunteerName;
-                modal.hidden = false;
-            });
+            button.addEventListener('click', function () { abrir(button); });
         });
 
         document.querySelectorAll('[data-close-restore-modal]').forEach(function (element) {
-            element.addEventListener('click', function () {
-                modal.hidden = true;
-                selectedForm = null;
-            });
+            element.addEventListener('click', fechar);
+        });
+
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape' && !modal.hidden) fechar();
         });
 
         confirmButton.addEventListener('click', function () {
-            if (selectedForm) selectedForm.submit();
+            if (!selectedForm) return;
+            confirmButton.disabled = true; /* evita duplo envio */
+            selectedForm.requestSubmit();
         });
     }());
 
@@ -694,6 +713,8 @@
             if (!painel || !rotulo) return;
             var textoFechado = rotulo.textContent.trim();
             var textoAberto = botao.dataset.textoAberto || 'Fechar';
+
+            botao.setAttribute('aria-controls', painel.id);
 
             function atualizar(aberto) {
                 painel.hidden = !aberto;
@@ -713,22 +734,5 @@
         });
     }());
 
-    /* Menu de seções: destaca o link da seção que está na tela. */
-    (function () {
-        var links = document.querySelectorAll('.acao-nav a');
-        if (!links.length || !('IntersectionObserver' in window)) return;
-        var observador = new IntersectionObserver(function (entradas) {
-            entradas.forEach(function (entrada) {
-                if (!entrada.isIntersecting) return;
-                links.forEach(function (link) {
-                    link.classList.toggle('is-ativo', link.getAttribute('href') === '#' + entrada.target.id);
-                });
-            });
-        }, { rootMargin: '-20% 0px -70% 0px' });
-        links.forEach(function (link) {
-            var secao = document.querySelector(link.getAttribute('href'));
-            if (secao) observador.observe(secao);
-        });
-    }());
 </script>
 {% endblock %}

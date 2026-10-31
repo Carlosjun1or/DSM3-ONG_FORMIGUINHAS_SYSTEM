@@ -1,66 +1,67 @@
 {% extends 'sistema/template-sistema.html' %}
+{% load static %}
 {% block titulo %}{{ condominio.nome }} | Sistema{% endblock %}
-{% block page_title %}Detalhes de Condomínio - {{ condominio.nome }}{% endblock %}
+{% block page_title %}{{ condominio.nome }}{% endblock %}
+{% block estilos %}<link rel="stylesheet" href="{% static 'acao/acao-detalhe.css' %}?v=2">{% endblock %}
+{% block scripts %}<script src="{% static 'acao/acao-detalhe-paineis.js' %}?v=1" defer></script>{% endblock %}
 {% block conteudo %}
-<article class="condominium-detail-page">
-    <section class="card donation-detail-hero condominium-detail-hero">
-        <div class="section-heading donation-detail-heading">
-            <div>
-                <p class="eyebrow">Condomínio parceiro · Registro #{{ condominio.id_condominio }}</p>
-                <h2>{{ condominio.nome }}</h2>
-                <p class="donation-detail-subtitle">
-                    {{ condominio.endereco }}, {{ condominio.numero }}{% if condominio.complemento %} · {{ condominio.complemento }}{% endif %}
-                    · {{ condominio.bairro }}, {{ condominio.cidade }}/{{ condominio.estado }}
-                </p>
+<div class="acao-detalhe condominium-detail-page">
+    <section class="acao-topo" id="resumo" aria-labelledby="condominio-titulo">
+        <div class="acao-topo__principal">
+            <span class="acao-topo__eyebrow">Condomínio parceiro · Registro #{{ condominio.id_condominio }}</span>
+            <div class="acao-topo__titulo">
+                <h2 id="condominio-titulo">{{ condominio.nome }}</h2>
+                <span class="status-select status-{{ condominio.status|lower }}">{{ condominio.get_status_display }}</span>
+                {% if condominio.praia %}<span class="status-select">Praia de {{ condominio.praia.nome }}</span>{% endif %}
             </div>
-            <div class="button-group donation-detail-actions">
-                <a href="{% url 'condominios' %}" class="btn btn-outline">Voltar aos condomínios</a>
-                {% if usuario.tipo == 'ADMIN' %}
-                <a href="{% url 'editar_condominio' condominio.id_condominio %}" class="btn btn-outline">Editar condomínio</a>
-                {% endif %}
-            </div>
+            <ul class="acao-info">
+                <li><strong>Endereço:</strong> {{ condominio.endereco }}, {{ condominio.numero }}{% if condominio.complemento %} · {{ condominio.complemento }}{% endif %} · {{ condominio.bairro }}, {{ condominio.cidade }}/{{ condominio.estado }}</li>
+                {% if condominio.responsavel_nome %}<li><strong>Responsável:</strong> {{ condominio.responsavel_nome }} · <a href="tel:{{ condominio.responsavel_telefone }}">{{ condominio.responsavel_telefone }}</a></li>{% endif %}
+                <li><strong>E-mail:</strong> {% if condominio.responsavel_email %}<a href="mailto:{{ condominio.responsavel_email }}">{{ condominio.responsavel_email }}</a>{% else %}<span class="muted">Não informado</span>{% endif %}</li>
+                <li><strong>Porte:</strong> {{ condominio.get_porte_display }}</li>
+                <li><strong>Confiabilidade:</strong> {{ condominio.get_confiabilidade_display }}</li>
+            </ul>
         </div>
-
-        <div class="donation-detail-status-row">
-            <span class="detail-status-label">Status do parceiro</span>
-            <strong class="condominium-status condominium-status-{{ condominio.status|lower }}">{{ condominio.get_status_display }}</strong>
-            {% if condominio.praia %}<span class="condominium-location-tag">Praia de {{ condominio.praia.nome }}</span>{% endif %}
-        </div>
-
-        <div class="detail-grid donation-summary condominium-summary">
-            <div>
-                <span>Responsável</span>
-                <p><strong>{{ condominio.responsavel_nome }}</strong></p>
-                <small><a href="tel:{{ condominio.responsavel_telefone }}">{{ condominio.responsavel_telefone }}</a></small>
-            </div>
-            <div>
-                <span>E-mail</span>
-                <p>{% if condominio.responsavel_email %}<a href="mailto:{{ condominio.responsavel_email }}">{{ condominio.responsavel_email }}</a>{% else %}<span class="muted">Não informado</span>{% endif %}</p>
-            </div>
-            <div>
-                <span>Porte</span>
-                <p><strong>{{ condominio.get_porte_display }}</strong></p>
-            </div>
-            <div>
-                <span>Confiabilidade</span>
-                <p><strong>{{ condominio.get_confiabilidade_display }}</strong></p>
-            </div>
-        </div>
-    </section>
-
-    <section class="card donation-detail-content condominium-detail-section">
-        <div class="section-heading donation-content-heading">
-            <div>
-                <span class="section-kicker">Estrutura vinculada</span>
-                <h2>Bags cadastradas <span class="section-count">{{ bags|length }}</span></h2>
-                <p class="form-subtitle">Acompanhe o status e a capacidade atual das bags deste condomínio.</p>
-            </div>
+        <div class="acao-topo__acoes">
+            <a href="{% url 'condominios' %}" class="btn btn-outline">Voltar aos condomínios</a>
             {% if usuario.tipo == 'ADMIN' %}
-            <a href="{% url 'cadastrar_bag' %}" class="btn btn-primary">Cadastrar bag</a>
+            <a href="{% url 'editar_condominio' condominio.id_condominio %}" class="btn btn-outline">Editar condomínio</a>
             {% endif %}
         </div>
+
+        <div class="acao-metricas acao-metricas--compactas">
+            <div class="acao-metrica"><span>Bags cadastradas</span><strong>{{ bags|length }}</strong></div>
+            <div class="acao-metrica"><span>Movimentações</span><strong>{{ movimentacoes|length }}</strong></div>
+            <div class="acao-metrica"><span>Eventos de auditoria</span><strong>{{ auditorias|length }}</strong></div>
+        </div>
+
+        <p class="acao-topo__auditoria">
+            Cadastrado por
+            {% if condominio.cadastrado_por_nome %}{{ condominio.cadastrado_por_nome }}{% elif condominio.cadastrado_por %}{{ condominio.cadastrado_por.id_voluntario.nome }}{% else %}cadastro anterior{% endif %}{% if condominio.dt_cadastro %} em {{ condominio.dt_cadastro|date:'d/m/Y H:i' }}{% endif %}
+            · Última edição:
+            {% if condominio.ultimo_editado_por_nome %}{{ condominio.ultimo_editado_por_nome }}{% elif condominio.ultimo_editado_por %}{{ condominio.ultimo_editado_por.id_voluntario.nome }}{% else %}sem edições{% endif %}{% if condominio.dt_ultima_edicao %} em {{ condominio.dt_ultima_edicao|date:'d/m/Y H:i' }}{% endif %}
+        </p>
+    </section>
+
+    <nav class="acao-nav" aria-label="Seções deste condomínio">
+        <a href="#bags">Bags <b>{{ bags|length }}</b></a>
+        <a href="#movimentacoes">Movimentações <b>{{ movimentacoes|length }}</b></a>
+        <a href="#auditoria">Auditoria <b>{{ auditorias|length }}</b></a>
+    </nav>
+
+    <section class="acao-secao" id="bags">
+        <div class="acao-secao__cabecalho">
+            <div>
+                <h2>Bags cadastradas <span class="section-count">{{ bags|length }}</span></h2>
+                <p>Acompanhe o status e a capacidade atual das bags deste condomínio.</p>
+            </div>
+            {% if usuario.tipo == 'ADMIN' %}
+            <a href="{% url 'cadastrar_bag' %}" class="btn btn-outline btn-small">Cadastrar bag</a>
+            {% endif %}
+        </div>
+        {% if bags %}
         <div class="table-wrap">
-            <table class="data-table condominium-detail-table">
+            <table class="data-table" data-sem-cards>
                 <thead>
                     <tr><th>Bag</th><th>Status</th><th>Ocupação</th><th>Peso atual</th><th>Detalhes</th>{% if usuario.tipo == 'ADMIN' %}<th>Ações</th>{% endif %}</tr>
                 </thead>
@@ -74,83 +75,76 @@
                         <td><a href="{% url 'detalhe_bag' bag.id_bag %}" class="btn btn-outline btn-small">Ver bag</a></td>
                         {% if usuario.tipo == 'ADMIN' %}<td><a href="{% url 'detalhe_bag' bag.id_bag %}#movimentacoes" class="btn btn-outline btn-small">Movimentar</a></td>{% endif %}
                     </tr>
-                {% empty %}
-                    <tr><td colspan="{% if usuario.tipo == 'ADMIN' %}6{% else %}5{% endif %}">Nenhuma bag cadastrada para este condomínio.</td></tr>
                 {% endfor %}
                 </tbody>
             </table>
         </div>
+        {% else %}
+        <div class="acao-vazio"><strong>Nenhuma bag cadastrada.</strong> <span>As bags deste condomínio aparecerão aqui.</span></div>
+        {% endif %}
     </section>
 
-    <details class="card donation-audit condominium-detail-section">
-        <summary class="donation-audit-summary">
-            <span>
-                <strong>Movimentações recentes</strong>
-                <small>{{ movimentacoes|length }} registro{{ movimentacoes|length|pluralize }} mais recente{{ movimentacoes|length|pluralize }}</small>
-            </span>
-            <span class="donation-audit-toggle">Ver movimentações</span>
-        </summary>
-        <div class="donation-audit-content">
-            <div class="table-wrap">
-                <table class="data-table condominium-detail-table">
-                    <thead>
-                        <tr><th>Data</th><th>Bag</th><th>Tipo</th><th>Status</th><th>Registrado por</th><th>Observação</th></tr>
-                    </thead>
-                    <tbody>
-                    {% for movimentacao in movimentacoes %}
-                        <tr>
-                            <td>{{ movimentacao.data_movimentacao|date:'d/m/Y H:i' }}</td>
-                            <td><a class="table-link" href="{% url 'detalhe_bag' movimentacao.bag.id_bag %}">{{ movimentacao.bag.codigo }}</a></td>
-                            <td>{{ movimentacao.get_tipo_display }}</td>
-                            <td><span class="bag-status bag-status-{{ movimentacao.status_novo|lower }}">{{ movimentacao.get_status_anterior_display }} → {{ movimentacao.get_status_novo_display }}</span></td>
-                            <td>{{ movimentacao.registrado_por_nome }}</td>
-                            <td>{{ movimentacao.observacao|default:'-'|truncatechars:100 }}</td>
-                        </tr>
-                    {% empty %}
-                        <tr><td colspan="6">Nenhuma movimentação registrada para este condomínio.</td></tr>
-                    {% endfor %}
-                    </tbody>
-                </table>
+    <section class="acao-secao" id="movimentacoes">
+        <div class="acao-secao__cabecalho">
+            <div>
+                <h2>Movimentações recentes <span class="section-count">{{ movimentacoes|length }}</span></h2>
+                <p>Cada registro mostra a mudança de status e o responsável pelo movimento da bag.</p>
             </div>
         </div>
-    </details>
+        {% if movimentacoes %}
+        <div class="table-wrap">
+            <table class="data-table" data-sem-cards>
+                <thead>
+                    <tr><th>Data</th><th>Bag</th><th>Tipo</th><th>Status</th><th>Registrado por</th><th>Observação</th></tr>
+                </thead>
+                <tbody>
+                {% for movimentacao in movimentacoes %}
+                    <tr>
+                        <td>{{ movimentacao.data_movimentacao|date:'d/m/Y H:i' }}</td>
+                        <td><a class="table-link" href="{% url 'detalhe_bag' movimentacao.bag.id_bag %}">{{ movimentacao.bag.codigo }}</a></td>
+                        <td>{{ movimentacao.get_tipo_display }}</td>
+                        <td><span class="bag-status bag-status-{{ movimentacao.status_novo|lower }}">{{ movimentacao.get_status_anterior_display }} → {{ movimentacao.get_status_novo_display }}</span></td>
+                        <td>{{ movimentacao.registrado_por_nome }}</td>
+                        <td>{{ movimentacao.observacao|default:'-'|truncatechars:100 }}</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="acao-vazio"><strong>Nenhuma movimentação registrada.</strong> <span>As movimentações das bags deste condomínio aparecerão aqui.</span></div>
+        {% endif %}
+    </section>
 
-    <details class="card donation-audit condominium-detail-section">
-        <summary class="donation-audit-summary">
-            <span>
-                <strong>Auditoria do condomínio</strong>
-                <small>{{ auditorias|length }} evento{{ auditorias|length|pluralize }} disponível{{ auditorias|length|pluralize }}</small>
-            </span>
-            <span class="donation-audit-toggle">Ver auditoria</span>
-        </summary>
-        <div class="donation-audit-content">
-            <div class="section-heading donation-content-heading">
-                <div>
-                    <h2>Histórico do registro</h2>
-                    <p class="form-subtitle">Cadastro e alterações feitas neste condomínio.</p>
-                </div>
-                <a href="{% url 'auditorias' %}?entidade=CONDOMINIO" class="btn btn-outline">Ver auditoria completa</a>
+    <section class="acao-secao" id="auditoria">
+        <div class="acao-secao__cabecalho">
+            <div>
+                <h2>Auditoria do condomínio <span class="section-count">{{ auditorias|length }}</span></h2>
+                <p>Cadastro e alterações feitas neste condomínio.</p>
             </div>
-            <div class="table-wrap">
-                <table class="data-table condominium-detail-table">
-                    <thead>
-                        <tr><th>Data</th><th>Ação</th><th>Resumo</th><th>Usuário</th></tr>
-                    </thead>
-                    <tbody>
-                    {% for auditoria in auditorias %}
-                        <tr>
-                            <td>{{ auditoria.data_evento|date:'d/m/Y H:i' }}</td>
-                            <td>{{ auditoria.get_acao_display }}</td>
-                            <td>{{ auditoria.resumo }}</td>
-                            <td>{{ auditoria.usuario_nome }}</td>
-                        </tr>
-                    {% empty %}
-                        <tr><td colspan="4">Nenhum evento de auditoria registrado.</td></tr>
-                    {% endfor %}
-                    </tbody>
-                </table>
-            </div>
+            <a href="{% url 'auditorias' %}?entidade=CONDOMINIO" class="btn btn-outline btn-small">Ver auditoria completa</a>
         </div>
-    </details>
-</article>
+        {% if auditorias %}
+        <div class="table-wrap">
+            <table class="data-table" data-sem-cards>
+                <thead>
+                    <tr><th>Data</th><th>Ação</th><th>Resumo</th><th>Usuário</th></tr>
+                </thead>
+                <tbody>
+                {% for auditoria in auditorias %}
+                    <tr>
+                        <td>{{ auditoria.data_evento|date:'d/m/Y H:i' }}</td>
+                        <td><span class="audit-action audit-action-{{ auditoria.acao|lower }}">{{ auditoria.get_acao_display }}</span></td>
+                        <td>{{ auditoria.resumo }}</td>
+                        <td>{{ auditoria.usuario_nome }}</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="acao-vazio"><strong>Nenhum evento de auditoria registrado.</strong> <span>Os eventos aparecerão aqui.</span></div>
+        {% endif %}
+    </section>
+</div>
 {% endblock %}

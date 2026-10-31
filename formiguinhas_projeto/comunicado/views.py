@@ -214,8 +214,19 @@ def interno_detalhe(request, comunicado_id):
         return redirect('login')
     if usuario.tipo not in ('ADMIN', 'COORDENADOR'):
         return redirect('home')
+    agora = timezone.now()
+    comunicados = Comunicado.objects.filter(
+        status=Comunicado.PUBLICADO,
+        dt_publicacao__lte=agora,
+    ).filter(
+        Q(dt_expiracao__isnull=True) | Q(dt_expiracao__gt=agora),
+    )
+    if usuario.tipo != 'ADMIN':
+        comunicados = comunicados.filter(
+            publico__in=(Comunicado.TODOS, Comunicado.COORDENADORES),
+        )
     comunicado = get_object_or_404(
-        _vigentes_internos(usuario),
+        comunicados,
         id_comunicado=comunicado_id,
     )
     leitura, criada = ComunicadoLeitura.objects.get_or_create(

@@ -1,65 +1,74 @@
 {% extends 'sistema/template-sistema.html' %}
-{% block titulo %}Coleta de resíduos | Sistema{% endblock %}
-{% block page_title %}Detalhes da coleta{% endblock %}
+{% load static %}
+{% block titulo %}Coleta de resíduos #{{ coleta.id_coleta }} | Sistema{% endblock %}
+{% block page_title %}Coleta de resíduos{% endblock %}
+{% block estilos %}<link rel="stylesheet" href="{% static 'acao/acao-detalhe.css' %}?v=2">{% endblock %}
+{% block scripts %}<script src="{% static 'acao/acao-detalhe-paineis.js' %}?v=1" defer></script>{% endblock %}
 {% block conteudo %}
-<article class="collection-detail-page">
-    <section class="card donation-detail-hero collection-detail-hero">
-        <div class="section-heading donation-detail-heading">
-            <div>
-                <p class="eyebrow">Coleta de resíduos · Registro #{{ coleta.id_coleta }}</p>
-                <h2>Detalhes da coleta</h2>
-                <p class="donation-detail-subtitle">
-                    {% if coleta.origem == 'BAG' and coleta.bag %}
-                    Coleta da bag <a class="table-link" href="{% url 'detalhe_bag' coleta.bag.id_bag %}">{{ coleta.bag.codigo }}</a>
-                    · <a class="table-link" href="{% url 'detalhe_condominio' coleta.bag.condominio.id_condominio %}">{{ coleta.bag.condominio.nome }}</a>
-                    {% elif coleta.origem == 'BAG' %}
-                    Coleta de bag sem vínculo
-                    {% elif coleta.acao_id and coleta.acao %}
-                    Coleta da ação <a class="table-link" href="{% url 'acao_detalhe' coleta.acao.id_acao %}">{{ coleta.acao.get_tipo_display }} · {{ coleta.acao.data|date:'d/m/Y' }} · {{ coleta.acao.praia.nome }}</a>
-                    {% else %}
-                    Coleta de ação sem vínculo
-                    {% endif %}
-                </p>
+<div class="acao-detalhe collection-detail-page">
+    <section class="acao-topo" id="resumo" aria-labelledby="coleta-titulo">
+        <div class="acao-topo__principal">
+            <span class="acao-topo__eyebrow">Coleta de resíduos · Registro #{{ coleta.id_coleta }}</span>
+            <div class="acao-topo__titulo">
+                <h2 id="coleta-titulo">Detalhes da coleta</h2>
             </div>
-            <div class="button-group donation-detail-actions">
+            <ul class="acao-info">
+                <li><strong>Origem:</strong> {{ coleta.get_origem_display }}</li>
+                <li><strong>Data da coleta:</strong> {{ coleta.data_coleta|date:'d/m/Y H:i' }}</li>
+                <li><strong>Registrado por:</strong> {{ coleta.registrado_por_nome|default:'Não informado' }}</li>
                 {% if coleta.origem == 'BAG' and coleta.bag %}
-                <a href="{% url 'detalhe_bag' coleta.bag.id_bag %}" class="btn btn-outline">Voltar à bag</a>
-                {% elif coleta.origem == 'ACAO' and coleta.acao_id and coleta.acao %}
-                <a href="{% url 'acao_detalhe' coleta.acao.id_acao %}#residuos" class="btn btn-outline">Voltar à ação</a>
+                <li><strong>Bag:</strong> <a class="table-link" href="{% url 'detalhe_bag' coleta.bag.id_bag %}">{{ coleta.bag.codigo }}</a> · <a class="table-link" href="{% url 'detalhe_condominio' coleta.bag.condominio.id_condominio %}">{{ coleta.bag.condominio.nome }}</a></li>
+                {% elif coleta.acao_id and coleta.acao %}
+                <li><strong>Ação:</strong> <a class="table-link" href="{% url 'acao_detalhe' coleta.acao.id_acao %}">{{ coleta.acao.get_tipo_display }} · {{ coleta.acao.data|date:'d/m/Y' }} · {{ coleta.acao.praia.nome }}</a></li>
                 {% endif %}
-                <a href="{% url 'residuos' %}" class="btn btn-outline">Todos os resíduos</a>
-            </div>
+            </ul>
+            {% if coleta.observacao %}
+            <p class="acao-topo__descricao">{{ coleta.observacao }}</p>
+            {% endif %}
+        </div>
+        <div class="acao-topo__acoes">
+            {% if coleta.origem == 'BAG' and coleta.bag %}
+            <a href="{% url 'detalhe_bag' coleta.bag.id_bag %}" class="btn btn-outline">Voltar à bag</a>
+            {% elif coleta.origem == 'ACAO' and coleta.acao_id and coleta.acao %}
+            <a href="{% url 'acao_detalhe' coleta.acao.id_acao %}#residuos" class="btn btn-outline">Voltar à ação</a>
+            {% endif %}
+            <a href="{% url 'residuos' %}" class="btn btn-outline">Todos os resíduos</a>
         </div>
 
-        <div class="detail-grid donation-summary collection-detail-summary">
-            <div><span>Origem</span><p><strong>{{ coleta.get_origem_display }}</strong></p></div>
-            <div><span>Data da coleta</span><p><strong>{{ coleta.data_coleta|date:'d/m/Y H:i' }}</strong></p></div>
-            <div><span>Registrado por</span><p><strong>{{ coleta.registrado_por_nome|default:'Não informado' }}</strong></p></div>
-            <div><span>Itens registrados</span><p><strong>{{ coleta.itens.all|length }}</strong></p></div>
+        <div class="acao-metricas acao-metricas--compactas">
+            <div class="acao-metrica"><span>Itens registrados</span><strong>{{ coleta.itens.all|length }}</strong></div>
         </div>
-        <div class="collection-detail-note">
-            <span>Observação da coleta</span>
-            <p>{{ coleta.observacao|default:'Nenhuma observação registrada.' }}</p>
-        </div>
+
+        <p class="acao-topo__auditoria">
+            Registrada por {{ coleta.registrado_por_nome|default:'não informado' }} em {{ coleta.data_coleta|date:'d/m/Y H:i' }}
+        </p>
     </section>
 
-    <section class="card donation-detail-content collection-detail-items">
-        <div class="section-heading donation-content-heading">
+    <nav class="acao-nav" aria-label="Seções desta coleta">
+        <a href="#itens">Itens <b>{{ coleta.itens.all|length }}</b></a>
+    </nav>
+
+    <section class="acao-secao" id="itens">
+        <div class="acao-secao__cabecalho">
             <div>
-                <span class="section-kicker">Composição</span>
                 <h2>Itens da coleta <span class="section-count">{{ coleta.itens.all|length }}</span></h2>
-                <p class="form-subtitle">Cada linha representa um tipo e uma categoria de resíduo registrados.</p>
+                <p>Cada linha representa um tipo e uma categoria de resíduo registrados.</p>
             </div>
+            {% if usuario.tipo == 'ADMIN' %}
+            <button type="button" class="btn btn-outline btn-small" data-abrir-painel="painel-item-coleta" data-texto-aberto="Fechar formulário" aria-expanded="{% if item_form.errors %}true{% else %}false{% endif %}" aria-controls="painel-item-coleta">
+                <span>Adicionar item</span>
+            </button>
+            {% endif %}
         </div>
         {% if usuario.tipo == 'ADMIN' %}
-        <div class="member-form-panel collection-item-form">
-            <h3>Adicionar item à coleta</h3>
+        <div class="member-form-panel collection-item-form" id="painel-item-coleta" {% if not item_form.errors %}hidden{% endif %}>
+            <h3>Novo item da coleta</h3>
             <form method="post" action="{% url 'adicionar_item_coleta' coleta.id_coleta %}">
                 {% csrf_token %}
                 {% if item_form.non_field_errors %}<div class="error-box">{{ item_form.non_field_errors|join:', ' }}</div>{% endif %}
                 <div class="form-grid">
                     {% for field in item_form %}
-                    <div class="form-group{% if field.name == 'observacao' %} form-group-full{% endif %}">
+                    <div class="form-group{% if field.name == 'observacao' %} full{% endif %}">
                         <label for="{{ field.id_for_label }}">{{ field.label }}</label>
                         {{ field }}
                         {% if field.help_text %}<small class="form-help">{{ field.help_text }}</small>{% endif %}
@@ -71,8 +80,9 @@
             </form>
         </div>
         {% endif %}
+        {% if coleta.itens.all %}
         <div class="table-wrap">
-            <table class="data-table collection-detail-table">
+            <table class="data-table" data-sem-cards>
                 <thead><tr><th>Tipo</th><th>Categoria</th><th>Quantidade</th><th>Observação</th><th>Registrado por</th></tr></thead>
                 <tbody>
                 {% for item in coleta.itens.all %}
@@ -83,12 +93,13 @@
                         <td>{{ item.observacao|default:'-' }}</td>
                         <td>{{ item.registrado_por_nome|default:'Não informado' }}</td>
                     </tr>
-                {% empty %}
-                    <tr><td colspan="5">Nenhum item informado nesta coleta.</td></tr>
                 {% endfor %}
                 </tbody>
             </table>
         </div>
+        {% else %}
+        <div class="acao-vazio"><strong>Nenhum item informado.</strong> <span>Adicione os itens desta coleta.</span></div>
+        {% endif %}
     </section>
-</article>
+</div>
 {% endblock %}

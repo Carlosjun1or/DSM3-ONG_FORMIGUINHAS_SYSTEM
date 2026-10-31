@@ -1,8 +1,10 @@
 {% extends 'site_institucional/base.html' %}
+{% load static %}
+{% block style %}<link rel="stylesheet" href="{% static 'css/site-layout.css' %}?v=81"><link rel="stylesheet" href="{% static 'acao/acao-detalhe.css' %}?v=2">{% endblock %}
 {% block conteudo %}
-<article class="public-announcement-detail" aria-labelledby="public-announcement-title">
-    <a class="public-announcement-back" href="{% url 'comunicados_publicos' %}">← Todas as notícias e avisos</a>
-    <section class="public-announcement-header" aria-labelledby="public-announcement-title">
+<article class="public-announcement-detail acao-detalhe" aria-labelledby="public-announcement-title">
+    <section class="public-announcement-header acao-topo" id="resumo" aria-labelledby="public-announcement-title">
+        <div class="acao-topo__principal">
         <div class="public-announcement-meta">
             <span class="public-announcement-type public-announcement-type-{{ comunicado.tipo|lower }}">{{ comunicado.get_tipo_display }}</span>
             {% if comunicado.tema %}<span class="public-announcement-topic">{{ comunicado.tema.nome }}</span>{% endif %}
@@ -13,10 +15,16 @@
             <time datetime="{{ comunicado.dt_publicacao|date:'c' }}">{{ comunicado.dt_publicacao|date:'d/m/Y' }} às {{ comunicado.dt_publicacao|date:'H:i' }}</time>
         </p>
         {% if comunicado.resumo %}<p class="public-announcement-summary">{{ comunicado.resumo }}</p>{% endif %}
+        </div>
+        <div class="acao-topo__acoes"><a class="public-announcement-back btn--contorno" href="{% url 'comunicados_publicos' %}">Todas as notícias e avisos</a></div>
     </section>
-    <div class="public-announcement-content">{{ comunicado.conteudo|linebreaks }}</div>
+    <nav class="acao-nav" aria-label="Seções deste comunicado">
+        <a href="#mensagem">Mensagem</a>
+        {% if comunicado.praias.all or comunicado.equipes.all or comunicado.acoes.all %}<a href="#relacionados">Relacionado a</a>{% endif %}
+    </nav>
+    <div class="public-announcement-content acao-secao" id="mensagem">{{ comunicado.conteudo|linebreaks }}</div>
     {% if comunicado.praias.all or comunicado.equipes.all or comunicado.acoes.all %}
-    <section class="public-announcement-relations" aria-labelledby="public-announcement-relations-title">
+    <section class="public-announcement-relations acao-secao" id="relacionados" aria-labelledby="public-announcement-relations-title">
         <h2 id="public-announcement-relations-title">Relacionado a</h2>
         <ul>
             {% for item in comunicado.praias.all %}

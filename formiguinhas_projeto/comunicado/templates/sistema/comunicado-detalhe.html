@@ -1,40 +1,49 @@
 {% extends 'sistema/template-sistema.html' %}
+{% load static %}
 {% block titulo %}{{ comunicado.titulo }} | Sistema{% endblock %}
 {% block page_title %}Detalhes do Comunicado - {{ comunicado.titulo }}{% endblock %}
+{% block estilos %}<link rel="stylesheet" href="{% static 'acao/acao-detalhe.css' %}?v=3">{% endblock %}
 {% block conteudo %}
-<article class="communication-detail">
-    <section class="card communication-detail-hero">
-        <a href="{% url 'central_comunicados' %}" class="form-link communication-back-link">← Voltar às notificações</a>
+<div class="acao-detalhe communication-detail">
+    <section class="acao-topo communication-detail-hero" id="resumo" aria-labelledby="comunicado-titulo">
+        <div class="acao-topo__principal">
         <div class="communication-detail-meta">
             <span class="communication-type communication-type-{{ comunicado.tipo|lower }}">{{ comunicado.get_tipo_display }}</span>
             {% if comunicado.tema %}<span class="communication-topic">{{ comunicado.tema.nome }}</span>{% endif %}
             <span class="communication-read-label">Lido</span>
         </div>
-        <h2>{{ comunicado.titulo }}</h2>
+        <div class="acao-topo__titulo"><h2 id="comunicado-titulo">{{ comunicado.titulo }}</h2></div>
         <div class="communication-detail-info">
             <span>Publicado em <time datetime="{{ comunicado.dt_publicacao|date:'c' }}">{{ comunicado.dt_publicacao|date:'d/m/Y' }} às {{ comunicado.dt_publicacao|date:'H:i' }}</time></span>
             <span>Público: {{ comunicado.get_publico_display }}</span>
             {% if comunicado.dt_expiracao %}<span>Válido até {{ comunicado.dt_expiracao|date:'d/m/Y H:i' }}</span>{% endif %}
         </div>
         {% if comunicado.resumo %}
-        <p class="communication-detail-summary">{{ comunicado.resumo }}</p>
+        <p class="acao-topo__descricao communication-detail-summary">{{ comunicado.resumo }}</p>
         {% endif %}
+        </div>
+        <div class="acao-topo__acoes"><a href="{% url 'central_comunicados' %}" class="btn btn-outline communication-back-link">Voltar às notificações</a></div>
     </section>
 
-    <section class="card communication-detail-body">
-        <div class="communication-detail-body-heading">
-            <span class="section-kicker">Mensagem</span>
-            <h3>Conteúdo do comunicado</h3>
+    <nav class="acao-nav" aria-label="Seções deste comunicado">
+        <a href="#mensagem">Mensagem</a>
+        {% if comunicado.praias.all or comunicado.equipes.all or comunicado.acoes.all or comunicado.doacoes.all %}<a href="#relacionados">Relacionado a</a>{% endif %}
+    </nav>
+
+    <section class="acao-secao communication-detail-body" id="mensagem">
+        <div class="communication-detail-body-heading acao-secao__cabecalho">
+            <div><h2>Conteúdo do comunicado</h2></div>
         </div>
         <div class="communication-detail-content">{{ comunicado.conteudo|linebreaks }}</div>
     </section>
 
     {% if comunicado.praias.all or comunicado.equipes.all or comunicado.acoes.all or comunicado.doacoes.all %}
-    <section class="card communication-detail-relations">
-        <div class="communication-detail-body-heading">
-            <span class="section-kicker">Contexto</span>
-            <h3>Relacionado a</h3>
-            <p class="form-subtitle">Acesse os registros relacionados a este comunicado.</p>
+    <section class="acao-secao communication-detail-relations" id="relacionados">
+        <div class="communication-detail-body-heading acao-secao__cabecalho">
+            <div>
+                <h2>Relacionado a</h2>
+                <p>Acesse os registros relacionados a este comunicado.</p>
+            </div>
         </div>
         <div class="communication-relation-list">
             {% for item in comunicado.praias.all %}
@@ -97,5 +106,5 @@
         <span>Este comunicado foi marcado como lido.</span>
         <a href="{% url 'central_comunicados' %}" class="btn btn-primary">Voltar à central</a>
     </div>
-</article>
+</div>
 {% endblock %}

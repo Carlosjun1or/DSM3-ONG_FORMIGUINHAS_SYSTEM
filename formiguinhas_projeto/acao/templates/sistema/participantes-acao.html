@@ -3,16 +3,32 @@
 
 {% block titulo %}{{ acao.get_tipo_display }} | Sistema{% endblock %}
 {% block page_title %}{{ acao.get_tipo_display }}{% endblock %}
-{% block estilos %}<link rel="stylesheet" href="{% static 'estoque/estoque.css' %}?v=11">{% endblock %}
-{% block scripts %}<script src="{% static 'estoque/material-combobox.js' %}?v=1" defer></script>{% endblock %}
+{% block estilos %}<link rel="stylesheet" href="{% static 'estoque/estoque.css' %}?v=11"><link rel="stylesheet" href="{% static 'acao/acao-detalhe.css' %}?v=2">{% endblock %}
+{% block scripts %}<script src="{% static 'estoque/material-combobox.js' %}?v=1" defer></script><script src="{% static 'acao/acao-detalhe-paineis.js' %}?v=1" defer></script>{% endblock %}
 
 {% block conteudo %}
-<section class="card volunteer-control action-detail-section action-participants-section">
-    <div class="section-heading">
-        <div>
-            <h2>Participantes <span class="section-count">{{ participantes|length }}</span></h2>
-            <p class="form-subtitle">Adicione voluntários e acompanhe confirmação e comparecimento.</p>
-        </div>
+<div class="acao-detalhe">
+<section class="acao-topo" id="resumo" aria-labelledby="participantes-titulo">
+    <div class="acao-topo__principal">
+        <span class="acao-topo__eyebrow">Participantes da ação</span>
+        <div class="acao-topo__titulo"><h2 id="participantes-titulo">{{ acao.get_tipo_display }}</h2><span class="status-select status-{{ acao.status|lower }}">{{ acao.get_status_display }}</span></div>
+        <ul class="acao-info">
+            <li><span class="acao-leitor">Data:</span>{{ acao.data|date:'d/m/Y' }}</li>
+            {% if acao.horario %}<li><span class="acao-leitor">Horário:</span>{{ acao.horario|time:'H:i' }}</li>{% endif %}
+            {% if acao.praia %}<li><span class="acao-leitor">Praia:</span>{{ acao.praia.nome }}{% if acao.praia.cidade %}<span>· {{ acao.praia.cidade }}</span>{% endif %}</li>{% endif %}
+        </ul>
+        {% if acao.descricao %}<p class="acao-topo__descricao">{{ acao.descricao }}</p>{% endif %}
+    </div>
+    <div class="acao-topo__acoes"><a href="{% url 'acao_detalhe' acao.id_acao %}" class="btn btn-outline">Voltar à ação</a></div>
+    <div class="acao-metricas acao-metricas--compactas"><div class="acao-metrica"><span>Participantes</span><strong>{{ participantes|length }}</strong></div><div class="acao-metrica"><span>Histórico</span><strong>{{ historico_participantes|length }}</strong></div></div>
+</section>
+
+<nav class="acao-nav" aria-label="Seções dos participantes"><a href="#participantes">Participantes <b>{{ participantes|length }}</b></a>{% if historico_participantes %}<a href="#historico-participantes">Histórico <b>{{ historico_participantes|length }}</b></a>{% endif %}</nav>
+
+<section class="acao-secao volunteer-control action-detail-section action-participants-section" id="participantes">
+    <div class="acao-secao__cabecalho">
+        <div><h2>Participantes <span class="section-count">{{ participantes|length }}</span></h2><p>Adicione voluntários e acompanhe confirmação e comparecimento.</p></div>
+        {% if usuario.tipo == 'ADMIN' %}<button type="button" class="btn btn-outline btn-small" data-abrir-painel="painel-adicionar-participante" data-texto-aberto="Fechar formulário" aria-expanded="{% if form.errors %}true{% else %}false{% endif %}" aria-controls="painel-adicionar-participante"><span>Adicionar participante</span></button>{% endif %}
     </div>
 
     <form method="get" class="volunteer-filters team-member-filters action-participant-filters">
@@ -36,8 +52,8 @@
     </form>
 
     {% if usuario.tipo == 'ADMIN' %}
-    <div class="member-form-panel">
-        <h3>Adicionar participante</h3>
+    <div class="member-form-panel" id="painel-adicionar-participante" {% if not form.errors %}hidden{% endif %}>
+        <h3>Novo participante</h3>
         <form method="post" action="{% url 'adicionar_participante_acao' acao.id_acao %}">
             {% csrf_token %}
             <div class="form-grid">
@@ -65,7 +81,7 @@
     {% endif %}
 
     {% if participantes %}
-    <div class="table-wrap action-participants-list" id="participantes">
+    <div class="table-wrap action-participants-list" id="lista-participantes">
         <table class="data-table">
             <thead>
                 <tr>
@@ -126,8 +142,8 @@
 </section>
 
 {% if historico_participantes %}
-<section class="card volunteer-control team-history-section">
-    <div class="section-heading">
+<section class="acao-secao volunteer-control team-history-section" id="historico-participantes">
+    <div class="acao-secao__cabecalho">
         <div>
             <h2>Histórico de participantes</h2>
             <p class="form-subtitle">Pessoas que recusaram ou não compareceram à ação.</p>

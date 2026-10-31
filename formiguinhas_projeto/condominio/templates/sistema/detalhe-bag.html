@@ -1,66 +1,76 @@
 {% extends 'sistema/template-sistema.html' %}
+{% load static %}
 {% block titulo %}Bag {{ bag.codigo }} | Sistema{% endblock %}
-{% block page_title %}Detalhes da Bag {{ bag.codigo }} - {{ bag.condominio.nome }}{% endblock %}
+{% block page_title %}Bag {{ bag.codigo }}{% endblock %}
+{% block estilos %}<link rel="stylesheet" href="{% static 'acao/acao-detalhe.css' %}?v=2">{% endblock %}
+{% block scripts %}<script src="{% static 'acao/acao-detalhe-paineis.js' %}?v=1" defer></script>{% endblock %}
 {% block conteudo %}
-<article class="bag-detail-page">
-    <section class="card donation-detail-hero bag-detail-hero">
-        <div class="section-heading donation-detail-heading">
-            <div>
-                <p class="eyebrow">Bag grande · Registro #{{ bag.id_bag }}</p>
-                <h2>{{ bag.codigo }}</h2>
-                <p class="donation-detail-subtitle">
-                    Vinculada ao
-                    <a class="table-link" href="{% url 'detalhe_condominio' bag.condominio.id_condominio %}">{{ bag.condominio.nome }}</a>
-                    {% if bag.condominio.praia %} · {{ bag.condominio.praia.nome }}{% endif %}
-                </p>
+<div class="acao-detalhe bag-detail-page">
+    <section class="acao-topo" id="resumo" aria-labelledby="bag-titulo">
+        <div class="acao-topo__principal">
+            <span class="acao-topo__eyebrow">Bag grande · Registro #{{ bag.id_bag }}</span>
+            <div class="acao-topo__titulo">
+                <h2 id="bag-titulo">{{ bag.codigo }}</h2>
+                <span class="status-select bag-status bag-status-{{ bag.status|lower }}">{{ bag.get_status_display }}</span>
             </div>
-            <div class="button-group donation-detail-actions">
-                <a href="{% url 'bags' %}" class="btn btn-outline">Voltar às bags</a>
-                {% if usuario.tipo == 'ADMIN' %}
-                <a href="{% url 'editar_bag' bag.id_bag %}" class="btn btn-outline">Editar bag</a>
-                {% endif %}
+            <ul class="acao-info">
+                <li><span class="acao-leitor">Condomínio:</span><a class="table-link" href="{% url 'detalhe_condominio' bag.condominio.id_condominio %}">{{ bag.condominio.nome }}</a></li>
+                {% if bag.condominio.praia %}<li><span class="acao-leitor">Praia:</span>{{ bag.condominio.praia.nome }}</li>{% endif %}
+                <li><span class="acao-leitor">Cadastrada em:</span>{{ bag.dt_cadastro|date:'d/m/Y H:i' }}</li>
+                <li><span class="acao-leitor">Última edição:</span>{% if bag.dt_ultima_edicao %}{{ bag.dt_ultima_edicao|date:'d/m/Y H:i' }}{% else %}Sem edições{% endif %}</li>
+            </ul>
+        </div>
+        <div class="acao-topo__acoes">
+            <a href="{% url 'bags' %}" class="btn btn-outline">Voltar às bags</a>
+            {% if usuario.tipo == 'ADMIN' %}
+            <a href="{% url 'editar_bag' bag.id_bag %}" class="btn btn-outline">Editar bag</a>
+            {% endif %}
+        </div>
+
+        <div class="bag-occupancy-summary" aria-label="Ocupação atual da bag">
+            <div class="bag-occupancy-label"><span>Ocupação</span><strong>{{ bag.percentual_ocupacao }}%</strong></div>
+            <div class="bag-occupancy-track" role="meter" aria-label="Ocupação da bag {{ bag.codigo }}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ bag.percentual_ocupacao }}">
+                <span style="width: {{ bag.percentual_ocupacao }}%"></span>
             </div>
         </div>
 
-        <div class="donation-detail-status-row">
-            <span class="detail-status-label">Status atual</span>
-            <strong class="bag-status bag-status-{{ bag.status|lower }}">{{ bag.get_status_display }}</strong>
+        <div class="acao-metricas">
+            <div class="acao-metrica"><span>Peso atual</span><strong>{{ bag.peso_atual_kg|floatformat:2 }} kg</strong></div>
+            <div class="acao-metrica"><span>Coletas</span><strong>{{ coletas_residuos|length }}</strong></div>
+            <div class="acao-metrica"><span>Movimentações</span><strong>{{ movimentacoes|length }}</strong></div>
+            <div class="acao-metrica"><span>Eventos de auditoria</span><strong>{{ auditorias|length }}</strong></div>
         </div>
 
-        <div class="detail-grid donation-summary bag-summary">
-            <div>
-                <span>Ocupação</span>
-                <p><strong>{{ bag.percentual_ocupacao }}%</strong></p>
-                <div class="bag-occupancy-track" role="meter" aria-label="Ocupação da bag" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ bag.percentual_ocupacao }}">
-                    <span style="width: {{ bag.percentual_ocupacao }}%"></span>
-                </div>
-            </div>
-            <div>
-                <span>Peso atual</span>
-                <p><strong>{{ bag.peso_atual_kg|floatformat:2 }} kg</strong></p>
-            </div>
-            <div>
-                <span>Cadastrada em</span>
-                <p>{{ bag.dt_cadastro|date:'d/m/Y H:i' }}</p>
-            </div>
-            <div>
-                <span>Última edição</span>
-                <p>{% if bag.dt_ultima_edicao %}{{ bag.dt_ultima_edicao|date:'d/m/Y H:i' }}{% else %}Sem edições{% endif %}</p>
-            </div>
-        </div>
+        <p class="acao-topo__auditoria">
+            Cadastrada por
+            {% if bag.cadastrado_por_nome %}{{ bag.cadastrado_por_nome }}{% elif bag.cadastrado_por %}{{ bag.cadastrado_por.id_voluntario.nome }}{% else %}cadastro anterior{% endif %}{% if bag.dt_cadastro %} em {{ bag.dt_cadastro|date:'d/m/Y H:i' }}{% endif %}
+            · Última edição:
+            {% if bag.ultimo_editado_por_nome %}{{ bag.ultimo_editado_por_nome }}{% elif bag.ultimo_editado_por %}{{ bag.ultimo_editado_por.id_voluntario.nome }}{% else %}sem edições{% endif %}{% if bag.dt_ultima_edicao %} em {{ bag.dt_ultima_edicao|date:'d/m/Y H:i' }}{% endif %}
+        </p>
     </section>
 
-    <section class="card donation-detail-content bag-detail-section" id="coletas">
-        <div class="section-heading donation-content-heading">
+    <nav class="acao-nav" aria-label="Seções desta bag">
+        <a href="#coletas">Coletas <b>{{ coletas_residuos|length }}</b></a>
+        <a href="#movimentacoes">Movimentar bag</a>
+        <a href="#historico-movimentacoes">Histórico de movimentações <b>{{ movimentacoes|length }}</b></a>
+        <a href="#auditoria">Auditoria <b>{{ auditorias|length }}</b></a>
+    </nav>
+
+    <section class="acao-secao" id="coletas">
+        <div class="acao-secao__cabecalho">
             <div>
-                <span class="section-kicker">Registros</span>
                 <h2>Coletas de resíduos <span class="section-count">{{ coletas_residuos|length }}</span></h2>
-                <p class="form-subtitle">Coletas e itens registrados para esta bag.</p>
+                <p>Coletas e itens registrados para esta bag.</p>
             </div>
+            {% if usuario.tipo == 'ADMIN' %}
+            <button type="button" class="btn btn-outline btn-small" data-abrir-painel="registrar-coleta" data-texto-aberto="Fechar formulário" aria-expanded="{% if coleta_form.errors or item_form.errors %}true{% else %}false{% endif %}" aria-controls="registrar-coleta">
+                <span>Registrar coleta</span>
+            </button>
+            {% endif %}
         </div>
         {% if usuario.tipo == 'ADMIN' %}
-        <div class="member-form-panel" id="registrar-coleta">
-            <h3>Registrar coleta</h3>
+        <div class="member-form-panel" id="registrar-coleta" {% if not coleta_form.errors and not item_form.errors %}hidden{% endif %}>
+            <h3>Novo registro de coleta</h3>
             <p class="form-subtitle">Registre o tipo, a categoria e a quantidade coletada. Você pode preencher a quantidade depois.</p>
             <form method="post" action="{% url 'detalhe_bag' bag.id_bag %}">
                 {% csrf_token %}
@@ -70,7 +80,7 @@
                 <div class="form-grid">
                     {% for field in coleta_form %}
                     {% if field.name != 'observacao' %}
-                    <div class="form-group{% if field.name == 'observacao' %} full{% endif %}">
+                    <div class="form-group">
                         <label for="{{ field.id_for_label }}">{{ field.label }}</label>
                         {{ field }}
                         {% if field.help_text %}<small class="form-help">{{ field.help_text }}</small>{% endif %}
@@ -93,10 +103,11 @@
             </form>
         </div>
         {% endif %}
+        {% if coletas_residuos %}
         <div class="table-wrap">
-            <table class="data-table bag-detail-table">
+            <table class="data-table" data-sem-cards>
                 <thead>
-                    <tr><th>Data</th><th>Itens coletados</th><th>Observação</th><th>Ação</th></tr>
+                    <tr><th>Data</th><th>Itens coletados</th><th>Observação</th><th>Detalhes</th></tr>
                 </thead>
                 <tbody>
                 {% for coleta in coletas_residuos %}
@@ -104,33 +115,35 @@
                         <td>{{ coleta.data_coleta|date:'d/m/Y H:i' }}</td>
                         <td>
                             {% for item in coleta.itens.all %}
-                            <span class="bag-collection-item">
-                                {{ item.get_tipo_display|default:'Tipo não informado' }}
-                                {% if item.quantidade %} · {{ item.quantidade }} {{ item.get_unidade_display }}{% endif %}
-                            </span>
+                            <span class="bag-collection-item">{{ item.get_tipo_display|default:'Tipo não informado' }}{% if item.quantidade %} · {{ item.quantidade }} {{ item.get_unidade_display }}{% endif %}</span>
                             {% empty %}<span class="muted">Sem itens registrados</span>{% endfor %}
                         </td>
                         <td>{{ coleta.observacao|default:'-'|truncatechars:100 }}</td>
                         <td><a href="{% url 'detalhe_coleta_residuo' coleta.id_coleta %}" class="btn btn-outline btn-small">Ver coleta</a></td>
                     </tr>
-                {% empty %}
-                    <tr><td colspan="4">Nenhuma coleta de resíduo registrada para esta bag.</td></tr>
                 {% endfor %}
                 </tbody>
             </table>
         </div>
+        {% else %}
+        <div class="acao-vazio"><strong>Nenhuma coleta registrada.</strong> <span>As coletas desta bag aparecerão aqui.</span></div>
+        {% endif %}
     </section>
 
-    <section class="card donation-detail-content bag-detail-section" id="movimentacoes">
-        <div class="section-heading donation-content-heading">
+    <section class="acao-secao" id="movimentacoes">
+        <div class="acao-secao__cabecalho">
             <div>
-                <span class="section-kicker">Operação</span>
                 <h2>Movimentar bag</h2>
-                <p class="form-subtitle">Status atual: <strong>{{ bag.get_status_display }}</strong>. Registre o evento e o novo status da bag.</p>
+                <p>Status atual: <strong>{{ bag.get_status_display }}</strong>. Registre o evento e o novo status da bag.</p>
             </div>
+            {% if usuario.tipo == 'ADMIN' %}
+            <button type="button" class="btn btn-outline btn-small" data-abrir-painel="registrar-movimentacao" data-texto-aberto="Fechar formulário" aria-expanded="{% if movimentacao_form.errors %}true{% else %}false{% endif %}" aria-controls="registrar-movimentacao">
+                <span>Registrar movimentação</span>
+            </button>
+            {% endif %}
         </div>
         {% if usuario.tipo == 'ADMIN' %}
-        <div class="member-form-panel" id="registrar-movimentacao">
+        <div class="member-form-panel" id="registrar-movimentacao" {% if not movimentacao_form.errors %}hidden{% endif %}>
             <form method="post" action="{% url 'detalhe_bag' bag.id_bag %}">
                 {% csrf_token %}
                 <input type="hidden" name="formulario" value="registrar-movimentacao">
@@ -153,78 +166,72 @@
                 </div>
             </form>
         </div>
+        {% else %}
+        <div class="acao-vazio"><strong>Sem permissão para registrar movimentações.</strong> <span>Entre em contato com um administrador.</span></div>
         {% endif %}
     </section>
 
-    <details class="card donation-audit bag-detail-section">
-        <summary class="donation-audit-summary">
-            <span>
-                <strong>Histórico de movimentações</strong>
-                <small>{{ movimentacoes|length }} movimentação{{ movimentacoes|length|pluralize }} registrada{{ movimentacoes|length|pluralize }}</small>
-            </span>
-            <span class="donation-audit-toggle">Ver histórico</span>
-        </summary>
-        <div class="donation-audit-content">
-            <div class="table-wrap">
-                <table class="data-table bag-detail-table">
-                    <thead>
-                        <tr><th>Movimentação</th><th>Status</th><th>Data</th><th>Registrado por</th><th>Observação</th></tr>
-                    </thead>
-                    <tbody>
-                    {% for movimentacao in movimentacoes %}
-                        <tr>
-                            <td>{{ movimentacao.get_tipo_display }}</td>
-                            <td><span class="bag-status bag-status-{{ movimentacao.status_novo|lower }}">{{ movimentacao.get_status_anterior_display }} → {{ movimentacao.get_status_novo_display }}</span></td>
-                            <td>{{ movimentacao.data_movimentacao|date:'d/m/Y H:i' }}</td>
-                            <td>{{ movimentacao.registrado_por_nome }}</td>
-                            <td>{{ movimentacao.observacao|default:'-' }}</td>
-                        </tr>
-                    {% empty %}
-                        <tr><td colspan="5">Nenhuma movimentação registrada.</td></tr>
-                    {% endfor %}
-                    </tbody>
-                </table>
+    <section class="acao-secao" id="historico-movimentacoes">
+        <div class="acao-secao__cabecalho">
+            <div>
+                <h2>Histórico de movimentações <span class="section-count">{{ movimentacoes|length }}</span></h2>
+                <p>Cada movimento registra a mudança de status, a data e quem acompanhou a bag.</p>
             </div>
         </div>
-    </details>
+        {% if movimentacoes %}
+        <div class="table-wrap">
+            <table class="data-table" data-sem-cards>
+                <thead>
+                    <tr><th>Movimentação</th><th>Status</th><th>Data</th><th>Registrado por</th><th>Observação</th></tr>
+                </thead>
+                <tbody>
+                {% for movimentacao in movimentacoes %}
+                    <tr>
+                        <td>{{ movimentacao.get_tipo_display }}</td>
+                        <td><span class="bag-status bag-status-{{ movimentacao.status_novo|lower }}">{{ movimentacao.get_status_anterior_display }} → {{ movimentacao.get_status_novo_display }}</span></td>
+                        <td>{{ movimentacao.data_movimentacao|date:'d/m/Y H:i' }}</td>
+                        <td>{{ movimentacao.registrado_por_nome }}</td>
+                        <td>{{ movimentacao.observacao|default:'-' }}</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="acao-vazio"><strong>Nenhuma movimentação registrada.</strong> <span>As movimentações desta bag aparecerão aqui.</span></div>
+        {% endif %}
+    </section>
 
-    <details class="card donation-audit bag-detail-section">
-        <summary class="donation-audit-summary">
-            <span>
-                <strong>Auditoria da bag</strong>
-                <small>{{ auditorias|length }} evento{{ auditorias|length|pluralize }} disponível{{ auditorias|length|pluralize }}</small>
-            </span>
-            <span class="donation-audit-toggle">Ver auditoria</span>
-        </summary>
-        <div class="donation-audit-content">
-            <div class="section-heading donation-content-heading">
-                <div>
-                    <h2>Alterações e eventos registrados</h2>
-                    <p class="form-subtitle">Histórico da bag e das movimentações relacionadas.</p>
-                </div>
-                <a href="{% url 'auditorias' %}?entidade=BAG" class="btn btn-outline">Auditoria completa</a>
+    <section class="acao-secao" id="auditoria">
+        <div class="acao-secao__cabecalho">
+            <div>
+                <h2>Auditoria da bag <span class="section-count">{{ auditorias|length }}</span></h2>
+                <p>Histórico de alterações e eventos registrados nesta bag.</p>
             </div>
-            <div class="table-wrap">
-                <table class="data-table bag-detail-table">
-                    <thead>
-                        <tr><th>Data</th><th>Entidade</th><th>Ação</th><th>Resumo</th><th>Usuário</th></tr>
-                    </thead>
-                    <tbody>
-                    {% for auditoria in auditorias %}
-                        <tr>
-                            <td>{{ auditoria.data_evento|date:'d/m/Y H:i' }}</td>
-                            <td>{{ auditoria.get_entidade_display }}</td>
-                            <td>{{ auditoria.get_acao_display }}</td>
-                            <td>{{ auditoria.resumo }}</td>
-                            <td>{{ auditoria.usuario_nome }}</td>
-                        </tr>
-                    {% empty %}
-                        <tr><td colspan="5">Nenhum evento de auditoria registrado.</td></tr>
-                    {% endfor %}
-                    </tbody>
-                </table>
-            </div>
+            <a href="{% url 'auditorias' %}?entidade=BAG" class="btn btn-outline btn-small">Ver auditoria completa</a>
         </div>
-    </details>
-</article>
+        {% if auditorias %}
+        <div class="table-wrap">
+            <table class="data-table" data-sem-cards>
+                <thead>
+                    <tr><th>Data</th><th>Entidade</th><th>Ação</th><th>Resumo</th><th>Usuário</th></tr>
+                </thead>
+                <tbody>
+                {% for auditoria in auditorias %}
+                    <tr>
+                        <td>{{ auditoria.data_evento|date:'d/m/Y H:i' }}</td>
+                        <td>{{ auditoria.get_entidade_display }}</td>
+                        <td><span class="audit-action audit-action-{{ auditoria.acao|lower }}">{{ auditoria.get_acao_display }}</span></td>
+                        <td>{{ auditoria.resumo }}</td>
+                        <td>{{ auditoria.usuario_nome }}</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="acao-vazio"><strong>Nenhum evento de auditoria registrado.</strong> <span>Os eventos aparecerão aqui.</span></div>
+        {% endif %}
+    </section>
+</div>
 {% endblock %}

@@ -1,121 +1,115 @@
 {% extends 'sistema/template-sistema.html' %}
+{% load static %}
 
 {% block titulo %}{{ doador.nome }} | Sistema{% endblock %}
-{% block page_title %}Detalhes do Doador(a) - {{ doador.nome }}{% endblock %}
+{% block page_title %}{{ doador.nome }}{% endblock %}
+{% block estilos %}<link rel="stylesheet" href="{% static 'acao/acao-detalhe.css' %}?v=2">{% endblock %}
 
 {% block conteudo %}
-<section class="card donation-detail donation-detail-hero donor-detail-hero">
-    <div class="section-heading donation-detail-heading">
-        <div>
-            <h2>{{ doador.nome }}</h2>
-            <p class="donation-detail-subtitle">Doador #{{ doador.id_doador }} · {{ doador.get_tipo_display }}{% if doador.voluntario %} · Voluntário relacionado{% endif %}</p>
-        </div>
-        <div class="button-group donation-detail-actions">
-            <a class="btn btn-outline" href="{% url 'doadores' %}">Voltar</a>
-            {% if usuario.tipo == 'ADMIN' %}<a class="btn btn-primary" href="{% url 'editar_doador' doador.id_doador %}">Editar</a>{% endif %}
-        </div>
-    </div>
-
-    <div class="detail-grid donation-summary donor-profile-summary">
-        <div>
-            <span>Tipo</span>
-            <p>{{ doador.get_tipo_display }}</p>
-        </div>
-        <div>
-            <span>Documento</span>
-            <p>{{ doador.documento|default:'Não informado' }}</p>
-        </div>
-        <div>
-            <span>E-mail</span>
-            <p>{% if doador.email %}<a class="table-link" href="mailto:{{ doador.email }}">{{ doador.email }}</a>{% else %}Não informado{% endif %}</p>
-        </div>
-        <div>
-            <span>Telefone</span>
-            <p>{% if doador.telefone %}<a class="table-link" href="tel:{{ doador.telefone }}">{{ doador.telefone }}</a>{% else %}Não informado{% endif %}</p>
-        </div>
-        <div>
-            <span>Voluntário relacionado</span>
-            <p>{% if doador.voluntario %}<a class="table-link" href="{% url 'voluntarios' %}?voluntario={{ doador.voluntario.id_voluntario }}">{{ doador.voluntario.nome }}</a>{% else %}Não vinculado{% endif %}</p>
-        </div>
-        <div>
-            <span>Situação</span>
-            {% if usuario.tipo == 'ADMIN' %}
-            <form method="post" action="{% url 'atualizar_status_doador' doador.id_doador %}" class="inline-status-form donation-status-control">
-                {% csrf_token %}
-                <input type="hidden" name="retorno" value="detalhe">
-                <select name="status" class="status-select {% if doador.ativo %}status-ativo{% else %}status-inativo{% endif %}" aria-label="Situação do doador {{ doador.nome }}" onchange="this.form.submit()">
-                    <option value="ATIVO" {% if doador.ativo %}selected{% endif %}>Ativo</option>
-                    <option value="INATIVO" {% if not doador.ativo %}selected{% endif %}>Inativo</option>
-                </select>
-            </form>
-            {% else %}
-            <p><span class="status-badge {% if doador.ativo %}status-ativo{% else %}status-inativo{% endif %}">{% if doador.ativo %}Ativo{% else %}Inativo{% endif %}</span></p>
-            {% endif %}
-        </div>
-        <div>
-            <span>Cadastrado por</span>
-            <p>{{ doador.cadastrado_por_nome|default:'Sistema' }}<small>{{ doador.dt_cadastro|date:"d/m/Y H:i" }}</small></p>
-        </div>
-        <div>
-            <span>Última edição</span>
-            <p>{% if doador.dt_ultima_edicao %}{{ doador.ultimo_editado_por_nome|default:'Usuário do sistema' }}<small>{{ doador.dt_ultima_edicao|date:"d/m/Y H:i" }}</small>{% else %}Sem edições{% endif %}</p>
-        </div>
-    </div>
-</section>
-
-<section class="card donation-detail-content donor-associated-donations">
-    <div class="section-heading donation-content-heading">
-        <div>
-            <h2>Doações associadas <span class="section-count">{{ doador.doacoes.all|length }}</span></h2>
-            <p class="form-subtitle">Histórico de doações vinculadas a este cadastro.</p>
-        </div>
-    </div>
-    {% if doador.doacoes.all %}
-    <div class="table-wrap">
-        <table class="data-table">
-            <thead>
-                <tr><th>Recebimento</th><th>Tipo</th><th>Situação</th><th>Finalidade</th><th>Ação</th></tr>
-            </thead>
-            <tbody>
-                {% for doacao in doador.doacoes.all %}
-                <tr>
-                    <td><strong>{{ doacao.data_recebimento|date:"d/m/Y" }}</strong></td>
-                    <td>{{ doacao.get_tipo_display }}</td>
-                    <td><span class="status-badge status-{{ doacao.status|lower }}">{{ doacao.get_status_display }}</span></td>
-                    <td>{{ doacao.get_finalidade_display }}{% if doacao.descricao_finalidade %}<small class="table-secondary">{{ doacao.descricao_finalidade }}</small>{% endif %}</td>
-                    <td><a class="btn btn-outline btn-small" href="{% url 'doacao_detalhe' doacao.id_doacao %}">Ver doação</a></td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-    {% else %}
-    <div class="empty-state table-empty">
-        <h3>Nenhuma doação associada</h3>
-        <p class="form-subtitle">As doações vinculadas a este cadastro aparecerão aqui.</p>
-        <a class="btn btn-outline" href="{% url 'doacoes' %}">Consultar doações</a>
-    </div>
-    {% endif %}
-</section>
-
-<details class="card donation-audit">
-    <summary class="donation-audit-summary">
-        <span>
-            <strong>Histórico de auditoria</strong>
-            <small>{% if auditorias|length == 1 %}1 registro disponível{% else %}{{ auditorias|length }} registros disponíveis{% endif %}</small>
-        </span>
-        <span class="donation-audit-toggle">Ver histórico</span>
-    </summary>
-    <div class="donation-audit-content">
-        <div class="section-heading donation-content-heading">
-            <div>
-                <h2>Alterações deste doador</h2>
-                <p class="form-subtitle">Cadastro e mudanças realizadas neste registro.</p>
+<div class="acao-detalhe">
+    <section class="acao-topo" id="resumo" aria-labelledby="doador-titulo">
+        <div class="acao-topo__principal">
+            <span class="acao-topo__eyebrow">Doador #{{ doador.id_doador }}</span>
+            <div class="acao-topo__titulo">
+                <h2 id="doador-titulo">{{ doador.nome }}</h2>
+                <span class="status-select {% if doador.ativo %}status-ativo{% else %}status-inativo{% endif %}">{% if doador.ativo %}Ativo{% else %}Inativo{% endif %}</span>
             </div>
-            <a href="{% url 'auditorias' %}?entidade=DOADOR" class="btn btn-outline">Ver auditoria completa</a>
+            <ul class="acao-info">
+                <li><strong>Tipo:</strong> {{ doador.get_tipo_display }}</li>
+                <li><strong>Documento:</strong> {{ doador.documento|default:'Não informado' }}</li>
+                <li><strong>E-mail:</strong> {% if doador.email %}<a class="table-link" href="mailto:{{ doador.email }}">{{ doador.email }}</a>{% else %}Não informado{% endif %}</li>
+                <li><strong>Telefone:</strong> {% if doador.telefone %}<a class="table-link" href="tel:{{ doador.telefone }}">{{ doador.telefone }}</a>{% else %}Não informado{% endif %}</li>
+                {% if doador.voluntario %}<li><strong>Voluntário relacionado:</strong> <a class="table-link" href="{% url 'voluntarios' %}?voluntario={{ doador.voluntario.id_voluntario }}">{{ doador.voluntario.nome }}</a></li>{% endif %}
+            </ul>
         </div>
+        <div class="acao-topo__acoes">
+            <a class="btn btn-outline" href="{% url 'doadores' %}">Voltar</a>
+            {% if usuario.tipo == 'ADMIN' %}<a class="btn btn-outline" href="{% url 'editar_doador' doador.id_doador %}">Editar</a>{% endif %}
+        </div>
+
+        <div class="acao-metricas acao-metricas--compactas">
+            <div class="acao-metrica"><span>Doações associadas</span><strong>{{ doador.doacoes.all|length }}</strong></div>
+            <div class="acao-metrica"><span>Situação</span><strong>{% if doador.ativo %}Ativo{% else %}Inativo{% endif %}</strong></div>
+        </div>
+
+        <p class="acao-topo__auditoria">
+            Cadastrado por
+            {{ doador.cadastrado_por_nome|default:'Sistema' }} em {{ doador.dt_cadastro|date:"d/m/Y H:i" }}
+            · Última edição:
+            {% if doador.dt_ultima_edicao %}{{ doador.ultimo_editado_por_nome|default:'Usuário do sistema' }} em {{ doador.dt_ultima_edicao|date:"d/m/Y H:i" }}{% else %}sem edições{% endif %}
+        </p>
+    </section>
+
+    <nav class="acao-nav" aria-label="Seções deste doador">
+        <a href="#situacao">Situação</a>
+        <a href="#doacoes">Doações associadas <b>{{ doador.doacoes.all|length }}</b></a>
+        <a href="#auditoria">Auditoria <b>{{ auditorias|length }}</b></a>
+    </nav>
+
+    <section class="acao-secao" id="situacao">
+        <div class="acao-secao__cabecalho">
+            <div>
+                <h2>Situação do doador</h2>
+                <p>A alteração fica registrada no histórico de auditoria.</p>
+            </div>
+        </div>
+        {% if usuario.tipo == 'ADMIN' %}
+        <form method="post" action="{% url 'atualizar_status_doador' doador.id_doador %}" class="inline-status-form donation-status-control">
+            {% csrf_token %}
+            <input type="hidden" name="retorno" value="detalhe">
+            <label for="id_situacao_doador">Situação do doador</label>
+            <select id="id_situacao_doador" name="status" class="status-select {% if doador.ativo %}status-ativo{% else %}status-inativo{% endif %}" aria-label="Situação do doador {{ doador.nome }}" onchange="this.form.submit()">
+                <option value="ATIVO" {% if doador.ativo %}selected{% endif %}>Ativo</option>
+                <option value="INATIVO" {% if not doador.ativo %}selected{% endif %}>Inativo</option>
+            </select>
+        </form>
+        {% else %}
+        <div class="acao-vazio"><strong>Situação atual:</strong> <span>{% if doador.ativo %}Ativo{% else %}Inativo{% endif %}</span></div>
+        {% endif %}
+    </section>
+
+    <section class="acao-secao" id="doacoes">
+        <div class="acao-secao__cabecalho">
+            <div>
+                <h2>Doações associadas <span class="section-count">{{ doador.doacoes.all|length }}</span></h2>
+                <p>Histórico de doações vinculadas a este cadastro.</p>
+            </div>
+        </div>
+        {% if doador.doacoes.all %}
         <div class="table-wrap">
-            <table class="data-table">
+            <table class="data-table" data-sem-cards>
+                <thead>
+                    <tr><th>Recebimento</th><th>Tipo</th><th>Situação</th><th>Finalidade</th><th>Detalhes</th></tr>
+                </thead>
+                <tbody>
+                    {% for doacao in doador.doacoes.all %}
+                    <tr>
+                        <td><strong>{{ doacao.data_recebimento|date:"d/m/Y" }}</strong></td>
+                        <td>{{ doacao.get_tipo_display }}</td>
+                        <td><span class="audit-action audit-action-{{ doacao.status|lower }}">{{ doacao.get_status_display }}</span></td>
+                        <td>{{ doacao.get_finalidade_display }}{% if doacao.descricao_finalidade %}<small class="table-secondary">{{ doacao.descricao_finalidade }}</small>{% endif %}</td>
+                        <td><a class="btn btn-outline btn-small" href="{% url 'doacao_detalhe' doacao.id_doacao %}">Ver doação</a></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="acao-vazio"><strong>Nenhuma doação associada.</strong> <span>As doações vinculadas a este cadastro aparecerão aqui.</span></div>
+        {% endif %}
+    </section>
+
+    <section class="acao-secao" id="auditoria">
+        <div class="acao-secao__cabecalho">
+            <div>
+                <h2>Auditoria deste doador <span class="section-count">{{ auditorias|length }}</span></h2>
+                <p>Cadastro e mudanças realizadas neste registro.</p>
+            </div>
+            <a href="{% url 'auditorias' %}?entidade=DOADOR" class="btn btn-outline btn-small">Ver auditoria completa</a>
+        </div>
+        {% if auditorias %}
+        <div class="table-wrap">
+            <table class="data-table" data-sem-cards>
                 <thead>
                     <tr><th>Data</th><th>Ação</th><th>Resumo</th><th>Usuário</th></tr>
                 </thead>
@@ -127,12 +121,13 @@
                         <td>{{ auditoria.resumo }}</td>
                         <td>{{ auditoria.usuario_nome }}</td>
                     </tr>
-                    {% empty %}
-                    <tr><td colspan="4">Nenhum evento de auditoria registrado.</td></tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
-    </div>
-</details>
+        {% else %}
+        <div class="acao-vazio"><strong>Nenhum evento de auditoria registrado.</strong> <span>Os eventos aparecerão aqui.</span></div>
+        {% endif %}
+    </section>
+</div>
 {% endblock %}

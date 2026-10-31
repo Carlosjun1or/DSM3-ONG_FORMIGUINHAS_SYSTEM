@@ -1,10 +1,13 @@
 /* Shared public-site layout layered over template.css. */
 
 :root {
-    --site-azul-profundo: #00306b;
-    --site-azul: #0058b9;
-    --site-amarelo: #f4e01e;
-    --site-papel: #f9f6ee;
+    /* Apelidos locais — apontam para os tokens canônicos de template.css.
+       Não redeclare os valores aqui; altere apenas em template.css. */
+    --site-azul-profundo: var(--azul-profundo);
+    --site-azul: var(--azul);
+    --site-amarelo: var(--amarelo);
+    --site-papel: var(--papel);
+    /* As variáveis abaixo não têm equivalente em template.css */
     --site-borda: #dbe4e7;
     --site-texto: #536574;
 }
@@ -1645,6 +1648,12 @@ footer.site-footer {
     margin-inline: auto;
 }
 
+.public-announcement-detail.acao-detalhe {
+    --layout-border: var(--borda-neutra);
+    --borda-neutra-forte: var(--borda-neutra);
+    --selecionado-fundo: #edf3fb;
+}
+
 .praias-cabecalho,
 .multiroes-cabecalho,
 .calendario-cabecalho {
@@ -1705,34 +1714,10 @@ footer.site-footer {
     color: var(--papel);
 }
 
+/* .botao-participar em contextos de praias: overrides de margem e tamanho */
 .praias-cabecalho .botao-participar,
 #praias .botao-participar {
-    display: inline-flex;
-    min-height: var(--botao-altura);
-    align-items: center;
-    justify-content: center;
-    gap: 0.55rem;
     margin-top: 0.5rem;
-    padding: 0.6rem 1.5rem;
-    border: 0;
-    border-radius: var(--raio-botao);
-    background: var(--amarelo);
-    box-shadow: 0 var(--botao-relevo) 0 var(--amarelo-botao-base);
-    color: var(--azul-profundo);
-    font: 700 1rem var(--fonte-corpo);
-    cursor: pointer;
-    transition: filter 0.2s ease, transform 0.08s ease, box-shadow 0.08s ease;
-}
-
-.praias-cabecalho .botao-participar:hover,
-#praias .botao-participar:hover {
-    filter: brightness(1.05);
-}
-
-.praias-cabecalho .botao-participar:active,
-#praias .botao-participar:active {
-    transform: translateY(4px);
-    box-shadow: 0 calc(var(--botao-relevo) - 4px) 0 var(--amarelo-botao-base);
 }
 
 .praias-cabecalho .localizacao-status,
@@ -1873,9 +1858,14 @@ footer.site-footer {
     color: var(--papel);
 }
 
+/* .botao-whatsapp, .botao-voluntario, .botao-participar-mutirao e
+   .botao-participar foram migrados para .btn do template.css.
+   Mantidos apenas os overrides contextuais necessários. */
 .botao-whatsapp,
 .botao-voluntario,
-.botao-participar-mutirao {
+.botao-participar-mutirao,
+.botao-participar {
+    /* Garante retrocompatibilidade para eventuais usos ainda não migrados */
     display: inline-flex;
     min-height: var(--botao-altura);
     align-items: center;
@@ -1887,9 +1877,11 @@ footer.site-footer {
     background: var(--amarelo);
     box-shadow: 0 var(--botao-relevo) 0 var(--amarelo-botao-base);
     color: var(--azul-profundo) !important;
+    font-family: var(--fonte-corpo);
     font-weight: 700;
     text-align: center;
     text-decoration: none;
+    cursor: pointer;
     transition: filter 180ms ease, transform 180ms ease, box-shadow 180ms ease;
 }
 
@@ -1898,20 +1890,24 @@ footer.site-footer {
 .botao-voluntario:hover,
 .botao-voluntario:focus-visible,
 .botao-participar-mutirao:hover,
-.botao-participar-mutirao:focus-visible {
+.botao-participar-mutirao:focus-visible,
+.botao-participar:hover,
+.botao-participar:focus-visible {
     filter: brightness(1.05);
 }
 
 .botao-whatsapp:active,
 .botao-voluntario:active,
-.botao-participar-mutirao:active {
+.botao-participar-mutirao:active,
+.botao-participar:active {
     transform: translateY(4px);
     box-shadow: 0 3px 0 var(--amarelo-botao-base);
 }
 
 .botao-whatsapp:focus-visible,
 .botao-voluntario:focus-visible,
-.botao-participar-mutirao:focus-visible {
+.botao-participar-mutirao:focus-visible,
+.botao-participar:focus-visible {
     outline: 3px solid var(--papel);
     outline-offset: 3px;
 }
