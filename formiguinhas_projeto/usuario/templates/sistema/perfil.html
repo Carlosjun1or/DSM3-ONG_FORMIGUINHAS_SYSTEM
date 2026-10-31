@@ -16,10 +16,6 @@
     </div>
 
     <div class="form-card profile-card">
-        {% if mensagem %}
-            <div class="alert-box alert-success" role="status">{{ mensagem }}</div>
-        {% endif %}
-
         <form method="post">
             {% csrf_token %}
             {% if form.non_field_errors %}

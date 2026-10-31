@@ -191,12 +191,35 @@ class PraiaViewsTests(TestCase):
                 'praia_ativa': 'INATIVA',
                 'descricao': 'Praia atualizada',
             },
+            follow=True,
         )
 
-        self.assertEqual(response.status_code, 302)
+        self.assertContains(response, 'Praia Atualizada atualizada com sucesso.')
         self.assertEqual(Praia.objects.count(), 1)
         praia.refresh_from_db()
         self.assertEqual(praia.nome, 'Praia Atualizada')
+        self.assertEqual(praia.praia_ativa, 'INATIVA')
+
+    def test_alterar_status_exibe_feedback(self):
+        praia = Praia.objects.create(
+            nome='Praia Central',
+            cidade='Santos',
+            latitude=-23.967,
+            longitude=-46.328,
+            praia_ativa='ATIVA',
+        )
+
+        resposta = self.client.post(
+            reverse('atualizar_status_praia', args=[praia.id_praia]),
+            {'praia_ativa': 'INATIVA'},
+            follow=True,
+        )
+
+        self.assertContains(
+            resposta,
+            'Status de Praia Central atualizado para Inativa.',
+        )
+        praia.refresh_from_db()
         self.assertEqual(praia.praia_ativa, 'INATIVA')
 
     def test_coordenador_nao_pode_cadastrar_praia(self):

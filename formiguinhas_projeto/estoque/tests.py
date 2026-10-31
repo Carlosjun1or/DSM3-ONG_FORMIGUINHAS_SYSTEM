@@ -647,6 +647,14 @@ class ConsultaTests(EstoqueTestCase):
         self.assertContains(r, 'Tinta')
         self.assertContains(r, 'Luva')
 
+    def test_lista_prioriza_materiais_com_estoque_baixo(self):
+        response = self.client.get(reverse('materiais'))
+
+        self.assertEqual(
+            [material.nome for material in response.context['materiais']],
+            ['Tinta', 'Luva'],
+        )
+
     def test_busca_por_nome_e_codigo(self):
         self.assertNotContains(self.client.get(reverse('materiais'), {'busca': 'tinta'}), 'Luva')
         self.assertNotContains(self.client.get(reverse('materiais'), {'busca': 'L1'}), 'Tinta')
@@ -772,6 +780,24 @@ class HistoricoTests(EstoqueTestCase):
         self.assertEqual(len(r.context['page_obj']), 13)
         self.assertEqual(r.context['page_obj'].paginator.per_page, 20)
         self.assertEqual(r.context['page_obj'].paginator.num_pages, 1)
+
+    def test_historico_apresenta_movimentacoes_em_cartoes_proprios(self):
+        response = self.client.get(reverse('movimentacoes_estoque'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(
+            response,
+            'class="estoque-movimentacoes-cards"',
+        )
+        self.assertContains(response, 'class="estoque-movimentacao-card is-entrada"')
+        self.assertContains(response, 'class="estoque-movimentacao-card is-saida"')
+        self.assertContains(response, 'estoque-movimentacao-card__metadados')
+        self.assertContains(response, 'estoque-movimentacao-card__detalhes')
+        self.assertContains(
+            response,
+            f'href="{reverse("materiais")}?busca=T1"',
+            html=False,
+        )
 
     def test_resumo_mostra_contagem_de_movimentacoes_filtradas(self):
         r = self.client.get(reverse('movimentacoes_estoque'), {'tipo': 'ENTRADA'})

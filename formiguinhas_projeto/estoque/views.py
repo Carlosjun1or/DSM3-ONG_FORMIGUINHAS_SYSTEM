@@ -3,7 +3,7 @@ import csv
 from django.contrib import messages
 from django.core.exceptions import ValidationError
 from django.db import transaction
-from django.db.models import Count, F, Q, Sum
+from django.db.models import Case, Count, F, IntegerField, Q, Sum, Value, When
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
@@ -72,7 +72,14 @@ def materiais_view(request):
     origem = request.GET.get('origem', '').strip()
     inicio, fim = _periodo(request)
 
-    materiais = Material.objects.com_saldo().order_by('nome')
+    materiais = Material.objects.com_saldo().order_by(
+        Case(
+            When(_estoque_baixo(), then=Value(0)),
+            default=Value(1),
+            output_field=IntegerField(),
+        ),
+        'nome',
+    )
     if busca:
         materiais = materiais.filter(Q(nome__icontains=busca) | Q(codigo__icontains=busca))
     if categoria:

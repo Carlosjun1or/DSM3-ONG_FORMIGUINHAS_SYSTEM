@@ -325,6 +325,7 @@ def editar_acao_view(request, acao_id):
             if acao.tipo == Acao.TIPO_MUTIRAO:
                 sincronizar_relacionamentos_mutirao(acao, usuario)
             salvar_acao_mongo(acao)
+            messages.success(request, 'Ação atualizada com sucesso.')
             return redirect('acao_detalhe', acao_id=acao.id_acao)
     else:
         form = AcaoForm(instance=acao)
@@ -565,6 +566,10 @@ def adicionar_participante_view(request, acao_id):
                 resumo=f'{participante.voluntario.nome} vinculado à ação #{acao.pk}.',
             )
             salvar_acao_mongo(acao)
+            messages.success(
+                request,
+                f'{participante.voluntario.nome} vinculado à ação com sucesso.',
+            )
         else:
             erros = '; '.join(
                 f'{campo}: {", ".join(msgs)}'
@@ -598,6 +603,12 @@ def adicionar_responsavel_view(request, acao_id):
                 resumo=f'{responsavel.voluntario.nome} vinculado como responsável pela ação #{acao.pk}.',
             )
             salvar_acao_mongo(acao)
+            messages.success(
+                request,
+                f'{responsavel.voluntario.nome} vinculado como responsável com sucesso.',
+            )
+        else:
+            messages.error(request, 'Não foi possível vincular o responsável. Verifique os dados informados.')
     return redirect('acao_detalhe', acao_id=acao.id_acao)
 
 
@@ -703,8 +714,10 @@ def atualizar_status_acao_view(request, acao_id):
                 request,
                 f'Status da ação atualizado de {status_anterior} para {acao.get_status_display()}.',
             )
-        else:
+        elif novo_status not in dict(Acao.STATUS_CHOICES):
             messages.error(request, 'Status de ação inválido.')
+        else:
+            messages.info(request, 'A ação já está com esse status.')
     else:
         messages.error(request, 'Atualização de status inválida.')
     return redirect('acoes')
@@ -745,6 +758,12 @@ def confirmar_participacao_view(request, acao_id, participante_id):
                     valores_anteriores=valores_anteriores,
                 )
                 salvar_acao_mongo(participante.acao)
+            messages.success(
+                request,
+                f'Situação de {participante.voluntario.nome} atualizada na ação.',
+            )
+        else:
+            messages.error(request, 'Selecione uma situação válida para o participante.')
 
     return redirecionar_apos_acao_participante(request, acao_id)
 
@@ -784,6 +803,10 @@ def registrar_comparecimento_view(request, acao_id, participante_id):
             salvar_acao_mongo(participante.acao)
         else:
             mover_participante_para_historico(participante, usuario, novo_status)
+        messages.success(
+            request,
+            f'Situação de presença de {participante.voluntario.nome} atualizada.',
+        )
 
     return redirecionar_apos_acao_participante(request, acao_id)
 
@@ -840,6 +863,12 @@ def restaurar_participante_view(request, acao_id, historico_id):
             valores_anteriores=valores_anteriores,
         )
         salvar_acao_mongo(participante.acao)
+        messages.success(
+            request,
+            f'{participante.voluntario.nome} restaurado na ação com sucesso.',
+        )
+    elif historico.restaurado:
+        messages.info(request, 'Esse participante já foi restaurado na ação.')
 
     return redirecionar_apos_acao_participante(request, acao_id)
 

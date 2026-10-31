@@ -8,11 +8,13 @@
     <link rel="icon" type="image/svg+xml" href="{% static 'site_institucional/img/mascote-formiguinha.svg' %}?v=1">
     <link rel="shortcut icon" href="{% static 'site_institucional/img/mascote-formiguinha.svg' %}?v=1">
     <link rel="stylesheet" href="{% static 'css/tokens.css' %}?v=1">
-    <link rel="stylesheet" href="{% static 'css/style.css' %}?v=131">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}?v=136">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700&family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
     {% block estilos %}{% endblock %}
+    <link rel="stylesheet" href="{% static 'css/detail-pages.css' %}?v=8">
+    <link rel="stylesheet" href="{% static 'css/responsive-filters.css' %}?v=3">
 </head>
 <body class="system-page {% block body_class %}{% endblock %}">
     <div class="app-shell">
@@ -88,7 +90,7 @@
                     <span></span>
                     <span></span>
                 </button>
-                <nav class="topbar-breadcrumb" aria-label="Navegação estrutural">
+                <nav class="topbar-breadcrumb" aria-label="Navegação estrutural" tabindex="0">
                     <a href="{% url 'home' %}">Início</a>
                     <svg class="breadcrumb-separator" viewBox="0 0 7 8" aria-hidden="true"><path d="M1 1l5 3-5 3" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
                     {% if request.resolver_match.url_name == 'cadastro_voluntario' %}
@@ -221,21 +223,35 @@
             </header>
             {% endif %}
             <div class="main-content">
-            {% if mensagem and request.resolver_match.url_name != 'login' and request.resolver_match.url_name != 'recuperar_senha' and request.resolver_match.url_name != 'redefinir_senha' %}
-                <div class="alert-box alert-info" role="status">{{ mensagem }}</div>
-            {% endif %}
-            {% if messages and request.resolver_match.url_name != 'login' and request.resolver_match.url_name != 'recuperar_senha' and request.resolver_match.url_name != 'redefinir_senha' %}
-                {% for message in messages %}
-                    <div class="alert-box{% if message.tags %} alert-{{ message.tags }}{% endif %}" role="{% if message.tags == 'error' %}alert{% else %}status{% endif %}" data-toast>{{ message }}</div>
-                {% endfor %}
-            {% endif %}
             {% block conteudo %}
 
             {% endblock %}
             </div>
         </main>
     </div>
-    <script src="{% static 'js/masks.js' %}?v=22"></script>
+    {% if request.resolver_match.url_name != 'login' and request.resolver_match.url_name != 'recuperar_senha' and request.resolver_match.url_name != 'redefinir_senha' %}
+        {% if mensagem or messages %}
+        <div class="system-feedback-stack" role="region" aria-label="Notificações do sistema">
+            {% if mensagem %}
+                <div class="alert-box alert-info system-feedback-toast" role="status" data-system-feedback-toast>
+                    <span>{{ mensagem }}</span>
+                    <button class="system-feedback-close" type="button" aria-label="Fechar notificação">×</button>
+                </div>
+            {% endif %}
+            {% for message in messages %}
+                {% if message.message != mensagem %}
+                    <div class="alert-box{% if message.tags %} alert-{{ message.tags }}{% endif %} system-feedback-toast" role="{% if message.tags == 'error' %}alert{% else %}status{% endif %}" data-system-feedback-toast data-toast>
+                        <span>{{ message }}</span>
+                        <button class="system-feedback-close" type="button" aria-label="Fechar notificação">×</button>
+                    </div>
+                {% endif %}
+            {% endfor %}
+        </div>
+        {% endif %}
+    {% endif %}
+    <script src="{% static 'js/masks.js' %}?v=23"></script>
+    <script src="{% static 'js/responsive-filters.js' %}?v=3"></script>
+    <script src="{% static 'js/system-feedback.js' %}?v=1"></script>
     <script src="{% static 'js/table-cards.js' %}?v=6"></script>
     {% include 'acao/includes/detalhe-nav.html' %}
     {% block scripts %}{% endblock %}

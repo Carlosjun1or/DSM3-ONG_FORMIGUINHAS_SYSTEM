@@ -1,5 +1,6 @@
 from datetime import timedelta
 from decimal import Decimal
+from unittest.mock import patch
 
 from django.test import TestCase
 from django.urls import reverse
@@ -137,6 +138,29 @@ class DoacaoTestCase(TestCase):
         self.assertContains(response, 'data-categoria-combobox')
         self.assertContains(response, 'data-categoria-options')
         self.assertContains(response, 'data-value="Bebidas"')
+
+    @patch(
+        'acao.mongo_services.consultar_acoes_mongo',
+        return_value=([{
+            'id_sql': 987,
+            'tipo': 'COLETA_VOLUNTARIA',
+            'data': '2026-10-30',
+            'local': 'Orla',
+            'praia': {'id': 321, 'nome': 'Praia Central', 'cidade': 'Santos'},
+        }], 1),
+    )
+    def test_formulario_exibe_acoes_na_lista_de_busca(self, consultar_acoes):
+        response = self.client.get(reverse('cadastro_doacao'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'data-id="987"')
+        self.assertContains(response, 'data-praia-id="321"')
+        self.assertContains(
+            response,
+            'data-search="coleta voluntária praia central 30/10/2026 orla"',
+        )
+        self.assertContains(response, 'Coleta voluntária · Praia Central')
+        consultar_acoes.assert_called_once_with(por_pagina=100)
 
     def test_cadastro_doacao_exibe_breadcrumb_hierarquico(self):
         response = self.client.get(reverse('cadastro_doacao'))
@@ -568,6 +592,10 @@ class DoacaoTestCase(TestCase):
 
         doacao.refresh_from_db()
         self.assertEqual(doacao.status, Doacao.CONFIRMADA)
+        self.assertIn(
+            'Situação da doação atualizada.',
+            [str(mensagem) for mensagem in response.wsgi_request._messages],
+        )
         self.assertEqual(MovimentacaoEstoque.objects.filter(item_doacao=item).count(), 1)
         self.assertContains(response, 'Não é possível retirar a confirmação')
 
@@ -630,6 +658,10 @@ class DoacaoTestCase(TestCase):
         )
         doacao.refresh_from_db()
         self.assertEqual(doacao.status, Doacao.CONFIRMADA)
+        self.assertIn(
+            'Situação da doação atualizada.',
+            [str(mensagem) for mensagem in response.wsgi_request._messages],
+        )
 
     def test_detalhes_da_doacao_linkam_para_praia_e_acao_vinculadas(self):
         praia = Praia.objects.create(
@@ -679,6 +711,10 @@ class DoacaoTestCase(TestCase):
         )
         self.doador.refresh_from_db()
         self.assertFalse(self.doador.ativo)
+        self.assertIn(
+            'Situação do doador atualizada.',
+            [str(mensagem) for mensagem in response.wsgi_request._messages],
+        )
 
     def test_detalhe_doador_exibe_breadcrumb_com_nome(self):
         response = self.client.get(

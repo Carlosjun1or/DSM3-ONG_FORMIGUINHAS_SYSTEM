@@ -6,10 +6,13 @@ from smtplib import SMTPServerDisconnected
 from tempfile import TemporaryDirectory
 from unittest.mock import Mock, patch
 
+from django.contrib.auth.models import AnonymousUser
+from django.contrib.messages.storage.base import Message
 from django.core import mail
 from django.db.models import Sum
+from django.template.loader import render_to_string
 from django.test import RequestFactory, SimpleTestCase, TestCase, override_settings
-from django.urls import reverse
+from django.urls import resolve, reverse
 from django.utils import timezone
 
 from acao.models import Acao
@@ -19,6 +22,34 @@ from praia.models import Praia
 from .paginacao import paginar_queryset
 from .models import Usuario, Voluntario
 from .tokens import password_reset_token
+
+
+class FeedbackTemplateTests(SimpleTestCase):
+    def test_template_base_nao_repete_mensagem_identica(self):
+        request = RequestFactory().get('/usuario/home/')
+        request.session = {}
+        request.user = AnonymousUser()
+        request.resolver_match = resolve('/usuario/home/')
+        mensagem_repetida = 'Feedback duplicado de teste'
+        mensagem_distinta = 'Feedback independente de teste'
+
+        html = render_to_string(
+            'sistema/template-sistema.html',
+            {
+                'mensagem': mensagem_repetida,
+                'messages': [
+                    Message(25, mensagem_repetida),
+                    Message(25, mensagem_distinta),
+                ],
+            },
+            request=request,
+        )
+
+        self.assertEqual(html.count(mensagem_repetida), 1)
+        self.assertEqual(html.count(mensagem_distinta), 1)
+        self.assertIn('class="system-feedback-stack"', html)
+        self.assertIn('data-system-feedback-toast', html)
+        self.assertIn('aria-label="Fechar notificação"', html)
 
 
 class LocalEnvironmentSettingsTests(SimpleTestCase):
@@ -266,6 +297,24 @@ class PermissoesStatusVoluntarioTests(TestCase):
         self.assertRedirects(resposta, reverse('voluntarios'))
         self.voluntario.refresh_from_db()
         self.assertEqual(self.voluntario.status, 'ATIVO')
+
+    def test_admin_altera_status_e_recebe_feedback(self):
+        self.autenticar_como_admin()
+        resposta = self.client.post(
+            reverse(
+                'atualizar_status_voluntario',
+                args=[self.voluntario.id_voluntario],
+            ),
+            {'status': 'INATIVO'},
+            follow=True,
+        )
+
+        self.assertContains(
+            resposta,
+            'Status de Voluntário atualizado para Inativo.',
+        )
+        self.voluntario.refresh_from_db()
+        self.assertEqual(self.voluntario.status, 'INATIVO')
 
     def test_coordenador_nao_altera_status_pela_edicao(self):
         resposta = self.client.post(
@@ -530,7 +579,7 @@ class PermissoesStatusVoluntarioTests(TestCase):
         })
 
         self.assertEqual(resposta.status_code, 200)
-        self.assertContains(resposta, 'class="alert-box alert-error" role="alert"')
+        self.assertContains(resposta, 'class="alert-box alert-error system-feedback-toast" role="alert"')
         self.assertContains(resposta, 'A senha atual está incorreta.')
 
     def test_alteracao_senha_exibe_sucesso_na_mesma_tela(self):
@@ -546,7 +595,10 @@ class PermissoesStatusVoluntarioTests(TestCase):
         self.coordenador.refresh_from_db()
         self.assertTrue(self.coordenador.check_password('NovaSenhaSegura2026!'))
         self.assertEqual(resposta.redirect_chain, [(reverse('alterar_senha'), 302)])
-        self.assertContains(resposta, 'class="alert-box alert-success"')
+        self.assertContains(
+            resposta,
+            'class="alert-box alert-success system-feedback-toast" role="status"',
+        )
         self.assertContains(resposta, 'Senha alterada com sucesso!')
 
 
@@ -636,6 +688,13 @@ class RecuperacaoSenhaTests(TestCase):
 
         self.assertContains(resposta, 'Este e-mail está cadastrado, mas não foi possível enviar')
         self.assertContains(resposta, 'class="auth-feedback auth-feedback--error" role="alert"')
+        self.assertEqual(
+            resposta.content.decode().count(
+                'Este e-mail está cadastrado, mas não foi possível enviar'
+            ),
+            1,
+        )
+        self.assertNotContains(resposta, 'Não foi possível enviar o e-mail agora.')
         send_mail.assert_called_once()
 
     def test_solicitacao_nao_revela_email_inexistente(self):

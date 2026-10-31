@@ -620,6 +620,8 @@ def atualizar_status_bag_view(request, bag_id):
         # Persistencia Poliglota: salvar no MongoDB Atlas
         salvar_condominio_por_bag(bag)
         messages.success(request, 'Status da bag atualizado com movimentação registrada.')
+    else:
+        messages.info(request, f'A bag {bag.codigo} já está com esse status.')
     return redirect(f'{reverse("bags")}?{urlencode(filtros)}' if filtros else destino)
 
 

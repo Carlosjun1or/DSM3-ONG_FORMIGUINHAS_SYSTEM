@@ -1,0 +1,340 @@
+/* ── Controle de Comunicados ───────────────────────────────────── */
+
+.communication-type {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 8px;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.communication-type-aviso {
+    background: #fff3d5;
+    color: #8b6415;
+}
+
+.communication-type-noticia {
+    background: #e4eef8;
+    color: #245d8c;
+}
+
+.communication-type-urgente {
+    background: #fde3e3;
+    color: #a23737;
+}
+
+.communication-type-evento {
+    background: #dff3e7;
+    color: #176146;
+}
+
+/* Filtros da listagem */
+.communication-admin-filters {
+    grid-template-columns: minmax(200px, 1.5fr) minmax(140px, 1fr) minmax(140px, 1fr) auto;
+}
+
+@media (max-width: 900px) {
+    .communication-admin-filters {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .communication-admin-filters .form-group:first-child,
+    .communication-admin-filters .filter-actions {
+        grid-column: 1 / -1;
+    }
+}
+
+/* Resumo no card */
+.volunteer-card-summary {
+    margin: 12px 0;
+    color: #5b6f68;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+}
+
+/* Temas */
+.communication-topic-metrics {
+    grid-template-columns: repeat(2, minmax(180px, 240px));
+}
+
+/* Parágrafo de resumo — cresce para empurrar ações para o fundo */
+.system-page .comunicados-list .volunteer-card-summary {
+    flex: 1;
+    font-family: var(--fonte-corpo);
+    font-size: 0.875rem;
+    line-height: 1.55;
+    color: var(--texto);
+    opacity: 0.75;
+}
+
+/* ── Card próprio de comunicado ─────────────────────────────────── */
+
+/* Faixa de topo muda por tipo — identidade visual imediata */
+.system-page .comunicados-list .comunicado-card {
+    border-top-color: var(--roxo);
+}
+
+.system-page .comunicados-list .comunicado-card--aviso {
+    border-top-color: #c07b20;
+}
+
+.system-page .comunicados-list .comunicado-card--noticia {
+    border-top-color: var(--azul);
+}
+
+.system-page .comunicados-list .comunicado-card--urgente {
+    border-top-color: var(--erro, #d64545);
+}
+
+.system-page .comunicados-list .comunicado-card--evento {
+    border-top-color: var(--sucesso, #2e8b57);
+}
+
+/* Separador do heading alinhado à cor do tipo */
+.system-page .comunicados-list .comunicado-card--aviso .volunteer-card-heading {
+    border-bottom-color: #f5ddb0;
+}
+
+.system-page .comunicados-list .comunicado-card--noticia .volunteer-card-heading {
+    border-bottom-color: #c2d8f0;
+}
+
+.system-page .comunicados-list .comunicado-card--urgente .volunteer-card-heading {
+    border-bottom-color: #f5bfbf;
+}
+
+.system-page .comunicados-list .comunicado-card--evento .volunteer-card-heading {
+    border-bottom-color: #b8dfc9;
+}
+
+/* Tema — discreta, não compete com o badge de tipo */
+.comunicado-tema-label {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--cinza, #6b7d76);
+    opacity: 0.85;
+}
+
+/* ── Bloco de destaque: data de publicação (mesmo padrão dos outros módulos) */
+.comunicado-card-publicacao {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    padding: 10px 0 8px;
+    border-bottom: 1px solid var(--layout-border);
+}
+
+.comunicado-card-publicacao-data {
+    font-family: var(--fonte-titulo);
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: var(--azul-profundo);
+    line-height: 1;
+}
+
+.comunicado-card-publicacao-data--vazio {
+    color: var(--borda-neutra-forte);
+}
+
+.comunicado-card-publicacao-label {
+    font-size: 0.875rem;
+    font-family: var(--fonte-corpo);
+    color: var(--azul);
+    font-weight: 600;
+}
+
+/* Resumo — ocupa o espaço disponível e empurra ações para o fundo */
+.system-page .comunicados-list .volunteer-card-summary {
+    flex: 1;
+    margin: 12px 0 0;
+    font-family: var(--fonte-corpo);
+    font-size: 0.875rem;
+    line-height: 1.55;
+    color: var(--texto);
+    opacity: 0.8;
+    overflow-wrap: anywhere;
+}
+
+
+/* ── Central de notificações (padrão de controle) ────────────────── */
+
+/* Faixa de topo do card por tipo */
+.system-page .main-panel .notificacoes-list .notificacao-card--aviso {
+    border-top-color: #c07b20;
+}
+
+.system-page .main-panel .notificacoes-list .notificacao-card--noticia {
+    border-top-color: var(--azul);
+}
+
+.system-page .main-panel .notificacoes-list .notificacao-card:not(.is-unread) {
+    border-top-color: var(--azul);
+}
+
+/* Card não lido: fundo levemente tingido + título em negrito */
+.system-page .main-panel .notificacoes-list .notificacao-card.is-unread {
+    background: #fffdf5;
+    border-top-color: #c07b20;
+}
+
+.system-page .main-panel .notificacoes-list .notificacao-card.is-unread .volunteer-card-identity h3 {
+    font-weight: 800;
+}
+
+/* Badge de tipo (pastel — classes próprias, imunes às sobreposições antigas) */
+.system-page .main-panel .notificacoes-list .notificacao-tipo {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 8px;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.system-page .main-panel .notificacoes-list .notificacao-tipo--aviso {
+    background: #fff3d5;
+    color: #8b6415;
+}
+
+.system-page .main-panel .notificacoes-list .notificacao-tipo--noticia {
+    background: #e4eef8;
+    color: #245d8c;
+}
+
+/* Pill de status de leitura */
+.system-page .main-panel .notificacoes-list .notificacao-status {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 0.68rem;
+    font-weight: 750;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.system-page .main-panel .notificacoes-list .notificacao-status--nao-lido {
+    background: #fff1e8;
+    color: #a44e1c;
+}
+
+.system-page .main-panel .notificacoes-list .notificacao-status--lido {
+    background: #edf0f2;
+    color: #5d7069;
+}
+
+/* Linha de data + público */
+.system-page .main-panel .notificacoes-list .notificacao-card-data {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 14px;
+    align-items: baseline;
+    margin-top: 12px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--layout-border);
+}
+
+.system-page .main-panel .notificacoes-list .notificacao-card-data time {
+    font-family: var(--fonte-titulo);
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--azul-profundo);
+    line-height: 1;
+}
+
+.system-page .main-panel .notificacoes-list .notificacao-card-publico {
+    font-size: 0.8rem;
+    font-family: var(--fonte-corpo);
+    color: var(--azul);
+    font-weight: 600;
+}
+
+/* Resumo cresce para empurrar a ação para o fundo do card */
+.system-page .main-panel .notificacoes-list .volunteer-card-summary {
+    flex: 1;
+    margin-top: 12px;
+}
+
+
+/* ── Detalhe do comunicado (identidade visual da marca) ───────────── */
+/* Sobrepõe os tons verdes do 11-comunicados.css pelos tokens da marca. */
+
+.system-page .main-panel .communication-detail-hero {
+    border-top-color: var(--azul);
+}
+
+.system-page .main-panel .communication-detail-hero h2 {
+    color: var(--azul-profundo);
+}
+
+.system-page .main-panel .communication-detail-info {
+    color: #5d6b73;
+}
+
+.system-page .main-panel .communication-detail-summary {
+    border-left-color: var(--roxo);
+    background: var(--papel);
+    color: var(--azul-profundo);
+}
+
+.system-page .main-panel .communication-detail-body-heading h3 {
+    color: var(--azul-profundo);
+}
+
+.system-page .main-panel .communication-detail-content {
+    color: #2c3a44;
+}
+
+.system-page .main-panel .communication-read-label {
+    background: #e8eef8;
+    color: var(--azul);
+}
+
+/* Badge de tipo no detalhe — pastel, igual ao da central */
+.system-page .main-panel .communication-detail .communication-type {
+    background: #e4eef8;
+    color: #245d8c;
+}
+
+.system-page .main-panel .communication-detail .communication-type-aviso {
+    background: #fff3d5;
+    color: #8b6415;
+}
+
+/* Relacionamentos (praias/equipes/ações/doações) */
+.system-page .main-panel .communication-relation {
+    border-color: #e6e2d6;
+    background: #fbfaf4;
+}
+
+.system-page .main-panel .communication-relation:hover {
+    border-color: #c8d8ec;
+    background: #edf2fa;
+}
+
+.system-page .main-panel .communication-relation-kind {
+    color: var(--roxo);
+}
+
+.system-page .main-panel .communication-relation strong {
+    color: var(--azul-profundo);
+}
+
+.system-page .main-panel .communication-relation small {
+    color: #6b7280;
+}
+
+.system-page .main-panel .communication-related-residue span {
+    color: var(--azul);
+}
+
+.system-page .main-panel .communication-detail-footer {
+    color: #6b7280;
+}

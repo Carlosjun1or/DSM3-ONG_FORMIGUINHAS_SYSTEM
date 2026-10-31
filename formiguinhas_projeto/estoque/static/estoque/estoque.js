@@ -220,7 +220,7 @@
 
     document.addEventListener('DOMContentLoaded', function () {
         document.querySelectorAll('form[data-filtro-vivo]').forEach(iniciarFiltroVivo);
-        document.querySelectorAll('[data-toast]').forEach(iniciarToast);
+        document.querySelectorAll('[data-toast]:not([data-system-feedback-toast])').forEach(iniciarToast);
         iniciarCategorias();
     });
 }());

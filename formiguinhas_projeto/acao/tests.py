@@ -1,4 +1,5 @@
 from datetime import date
+from unittest.mock import patch
 
 from django.test import TestCase
 from django.urls import reverse
@@ -37,10 +38,10 @@ class AcaoDetalheBreadcrumbTests(TestCase):
 
     def test_breadcrumb_inclui_tipo_e_praia_da_acao(self):
         tipos_e_titulos = (
-            (Acao.TIPO_MUTIRAO, 'Detalhes do Mutirão - Praia Central'),
+            (Acao.TIPO_MUTIRAO, 'Mutirão - Praia Central - 25/10/2026'),
             (
                 Acao.TIPO_COLETA_VOLUNTARIA,
-                'Detalhes da Coleta Voluntária - Praia Central',
+                'Coleta voluntária - Praia Central - 25/10/2026',
             ),
         )
 
@@ -70,12 +71,45 @@ class AcaoDetalheBreadcrumbTests(TestCase):
                     f'<span aria-current="page">{titulo}</span>',
                 )
 
+    def test_botoes_expansiveis_do_detalhe_seguem_estilo_dos_outros_detalhes(self):
+        acao = Acao.objects.create(
+            tipo=Acao.TIPO_MUTIRAO,
+            data=date(2026, 10, 25),
+            local='Praia Central',
+            praia=self.praia,
+        )
+
+        resposta = self.client.get(
+            reverse('acao_detalhe', args=[acao.id_acao]),
+        )
+
+        self.assertEqual(resposta.status_code, 200)
+        for painel in (
+            'painel-residuo',
+            'painel-material',
+            'painel-imagens',
+            'painel-responsavel',
+            'painel-participante',
+        ):
+            with self.subTest(painel=painel):
+                self.assertContains(
+                    resposta,
+                    f'class="btn btn-outline btn-small detail-panel-toggle" data-abrir-painel="{painel}"',
+                )
+                self.assertContains(
+                    resposta,
+                    f'<span aria-hidden="true"><svg class="acao-icone"><use href="#i-mais"></use></svg></span>',
+                )
+
     def test_breadcrumb_edicao_inclui_tipo_e_praia_da_acao(self):
         tipos_e_titulos = (
-            (Acao.TIPO_MUTIRAO, 'Edição da Ação - Mutirão - Praia Central'),
+            (
+                Acao.TIPO_MUTIRAO,
+                'Edição da Ação - Mutirão - Praia Central - 25/10/2026',
+            ),
             (
                 Acao.TIPO_COLETA_VOLUNTARIA,
-                'Edição da Ação - Coleta voluntária - Praia Central',
+                'Edição da Ação - Coleta voluntária - Praia Central - 25/10/2026',
             ),
         )
 
@@ -104,3 +138,25 @@ class AcaoDetalheBreadcrumbTests(TestCase):
                     resposta,
                     f'<span aria-current="page">{titulo}</span>',
                 )
+
+    @patch('acao.views.salvar_acao_mongo')
+    def test_alterar_status_exibe_feedback(self, _salvar_acao_mongo):
+        acao = Acao.objects.create(
+            tipo=Acao.TIPO_MUTIRAO,
+            data=date(2026, 10, 25),
+            local='Praia Central',
+            praia=self.praia,
+        )
+
+        resposta = self.client.post(
+            reverse('atualizar_status_acao', args=[acao.id_acao]),
+            {'status': Acao.STATUS_CANCELADA},
+            follow=True,
+        )
+
+        self.assertContains(
+            resposta,
+            'Status da ação atualizado de Planejada para Cancelada.',
+        )
+        acao.refresh_from_db()
+        self.assertEqual(acao.status, Acao.STATUS_CANCELADA)
