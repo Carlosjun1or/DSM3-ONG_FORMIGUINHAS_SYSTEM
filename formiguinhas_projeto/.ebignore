@@ -21,6 +21,12 @@ __pycache__/
 # Arquivos de mídia (não incluir no deploy — usar S3 em produção)
 media/
 
+# Staticfiles (regenerados pelo collectstatic no servidor)
+staticfiles/
+
+# Scripts de diagnóstico/desenvolvimento
+testar_atlas.py
+
 # IDEs
 .vscode/
 .idea/

@@ -12,6 +12,17 @@ __pycache__/
 
 # Configuracoes locais e credenciais de teste
 .env
+logins_teste.txt
+
+# Bancos de dados locais (SQLite)
+*.sqlite3
+*.sqlite3.*
+
+# Uploads de midia (producao usa S3)
+media/
+
+# Outputs de scripts e diagnosticos
+*_output.txt
 
 # Arquivos do sistema operacional
 .DS_Store
