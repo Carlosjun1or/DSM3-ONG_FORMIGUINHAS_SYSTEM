@@ -18,6 +18,7 @@ from django.utils import timezone
 from acao.models import Acao
 from config.settings import load_local_environment
 from doacao.models import Doacao, DoacaoFinanceira
+from equipe.models import Equipe, EquipeMembro
 from praia.models import Praia
 from .paginacao import paginar_queryset
 from .models import Usuario, Voluntario
@@ -315,6 +316,70 @@ class PermissoesStatusVoluntarioTests(TestCase):
         )
         self.voluntario.refresh_from_db()
         self.assertEqual(self.voluntario.status, 'INATIVO')
+
+    def test_admin_recebe_feedback_ao_excluir_voluntario_com_vinculo_protegido(self):
+        equipe = Equipe.objects.create(nome='Equipe com histórico')
+        EquipeMembro.objects.create(equipe=equipe, voluntario=self.voluntario)
+        self.autenticar_como_admin()
+
+        resposta = self.client.post(
+            reverse('excluir_voluntario', args=[self.voluntario.id_voluntario]),
+            follow=True,
+        )
+
+        self.assertContains(
+            resposta,
+            'existem vínculos ou registros históricos protegidos',
+        )
+        self.assertTrue(
+            Voluntario.objects.filter(pk=self.voluntario.pk).exists(),
+        )
+        self.assertTrue(
+            EquipeMembro.objects.filter(voluntario=self.voluntario).exists(),
+        )
+
+    def test_admin_nao_pode_excluir_o_proprio_voluntario(self):
+        self.autenticar_como_admin()
+
+        resposta = self.client.post(
+            reverse(
+                'excluir_voluntario',
+                args=[self.coordenador_voluntario.id_voluntario],
+            ),
+            follow=True,
+        )
+
+        self.assertContains(
+            resposta,
+            'Não é possível excluir o voluntário vinculado à sua própria conta.',
+        )
+        self.assertTrue(
+            Voluntario.objects.filter(pk=self.coordenador_voluntario.pk).exists(),
+        )
+        self.assertTrue(
+            Usuario.objects.filter(pk=self.coordenador.pk).exists(),
+        )
+
+    def test_admin_exclui_voluntario_e_usuario_vinculado(self):
+        usuario_vinculado = Usuario.objects.create(
+            id_voluntario=self.voluntario,
+            tipo='COORDENADOR',
+            senha='senha',
+        )
+        self.autenticar_como_admin()
+
+        resposta = self.client.post(
+            reverse('excluir_voluntario', args=[self.voluntario.id_voluntario]),
+            follow=True,
+        )
+
+        self.assertContains(resposta, 'excluído com sucesso')
+        self.assertFalse(
+            Voluntario.objects.filter(pk=self.voluntario.pk).exists(),
+        )
+        self.assertFalse(
+            Usuario.objects.filter(pk=usuario_vinculado.pk).exists(),
+        )
 
     def test_coordenador_nao_altera_status_pela_edicao(self):
         resposta = self.client.post(

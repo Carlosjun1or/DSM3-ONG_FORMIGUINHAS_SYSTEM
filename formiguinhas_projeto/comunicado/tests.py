@@ -20,7 +20,6 @@ from .models import (
     Tema,
 )
 from .services import desarquivar
-from .views import interno_detalhe
 
 
 class ComunicadoLeituraTests(TestCase):
@@ -175,11 +174,12 @@ class ComunicadoLeituraTests(TestCase):
         comunicado = self.criar_comunicado('Aviso detalhado')
         outro = self.criar_comunicado('Outro aviso')
 
-        request = RequestFactory().get(
-            reverse('comunicado_interno_detalhe', args=[comunicado.id_comunicado])
+        response = self.client.get(
+            reverse(
+                'comunicado_interno_detalhe',
+                args=[comunicado.id_comunicado],
+            ),
         )
-        request.session = self.session
-        response = interno_detalhe(request, comunicado.id_comunicado)
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'communication-read-label">Lido')

@@ -7,6 +7,7 @@ from django.conf import settings
 from django.contrib import messages
 from django.core.mail import get_connection, send_mail
 from django.db import transaction
+from django.db.models.deletion import ProtectedError
 from django.db.models import Prefetch, Q, Sum
 from django.shortcuts import render, redirect
 from django.urls import reverse
@@ -468,13 +469,30 @@ def excluir_voluntario_view(request, voluntario_id):
         return redirect('voluntarios')
 
     if request.method == 'POST':
+        if voluntario.pk == usuario.id_voluntario_id:
+            messages.error(
+                request,
+                'Não é possível excluir o voluntário vinculado à sua própria conta.',
+            )
+            return redirect('voluntarios')
+
         valores_anteriores = snapshot(voluntario)
         usuario_vinculado = Usuario.objects.filter(id_voluntario=voluntario).first()
         valores_usuario_vinculado = (
             snapshot(usuario_vinculado) if usuario_vinculado else None
         )
         usuario_vinculado_id = usuario_vinculado.pk if usuario_vinculado else None
-        voluntario.delete()
+        try:
+            voluntario.delete()
+        except ProtectedError:
+            messages.error(
+                request,
+                f'Não foi possível excluir {voluntario.nome}: existem vínculos ou '
+                'registros históricos protegidos. Inative o voluntário para '
+                'preservar esse histórico.',
+            )
+            return redirect('voluntarios')
+
         registrar_evento(entidade='VOLUNTARIO', id_registro=voluntario_id, acao='EXCLUSAO',
                          usuario=usuario, resumo=f'Voluntário "{valores_anteriores.get("nome", voluntario_id)}" excluído.',
                          valores_anteriores=valores_anteriores)
@@ -487,6 +505,10 @@ def excluir_voluntario_view(request, voluntario_id):
                 resumo=f'Usuário de "{valores_anteriores.get("nome", voluntario_id)}" excluído junto com o voluntário.',
                 valores_anteriores=valores_usuario_vinculado,
             )
+        messages.success(
+            request,
+            f'Voluntário "{valores_anteriores.get("nome", voluntario_id)}" excluído com sucesso.',
+        )
 
     return redirect('voluntarios')
 

@@ -254,9 +254,6 @@ def interno_detalhe(request, comunicado_id):
         comunicados,
         id_comunicado=comunicado_id,
     )
-    if usuario.tipo != 'ADMIN':
-        qs = qs.filter(publico__in=[Comunicado.TODOS, Comunicado.COORDENADORES])
-    comunicado = get_object_or_404(qs)
     leitura, criada = ComunicadoLeitura.objects.get_or_create(
         comunicado=comunicado,
         usuario=usuario,
