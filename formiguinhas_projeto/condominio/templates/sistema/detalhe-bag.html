@@ -2,8 +2,8 @@
 {% load static %}
 {% block titulo %}Bag {{ bag.codigo }} | Sistema{% endblock %}
 {% block page_title %}Bag {{ bag.codigo }}{% endblock %}
-{% block estilos %}<link rel="stylesheet" href="{% static 'acao/acao-detalhe.css' %}?v=2">{% endblock %}
-{% block scripts %}<script src="{% static 'acao/acao-detalhe-paineis.js' %}?v=1" defer></script>{% endblock %}
+{% block estilos %}<link rel="stylesheet" href="{% static 'acao/acao-detalhe.css' %}?v=3">{% endblock %}
+{% block scripts %}<script src="{% static 'js/detail-page-panels.js' %}?v=2" defer></script>{% endblock %}
 {% block conteudo %}
 <div class="acao-detalhe bag-detail-page">
     <section class="acao-topo" id="resumo" aria-labelledby="bag-titulo">
@@ -29,9 +29,7 @@
 
         <div class="bag-occupancy-summary" aria-label="Ocupação atual da bag">
             <div class="bag-occupancy-label"><span>Ocupação</span><strong>{{ bag.percentual_ocupacao }}%</strong></div>
-            <div class="bag-occupancy-track" role="meter" aria-label="Ocupação da bag {{ bag.codigo }}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ bag.percentual_ocupacao }}">
-                <span style="width: {{ bag.percentual_ocupacao|default:0 }}%"></span>
-            </div>
+            <progress class="bag-occupancy-progress" value="{{ bag.percentual_ocupacao|default:0 }}" max="100" aria-label="Ocupação da bag {{ bag.codigo }}"></progress>
         </div>
 
         <div class="acao-metricas">
@@ -63,7 +61,7 @@
                 <p>Coletas e itens registrados para esta bag.</p>
             </div>
             {% if usuario.tipo == 'ADMIN' %}
-            <button type="button" class="btn btn-outline btn-small" data-abrir-painel="registrar-coleta" data-texto-aberto="Fechar formulário" aria-expanded="{% if coleta_form.errors or item_form.errors %}true{% else %}false{% endif %}" aria-controls="registrar-coleta">
+            <button type="button" class="btn btn-outline btn-small" data-detail-panel-toggle="registrar-coleta" data-texto-aberto="Fechar formulário" aria-expanded="{% if coleta_form.errors or item_form.errors %}true{% else %}false{% endif %}" aria-controls="registrar-coleta">
                 <span>Registrar coleta</span>
             </button>
             {% endif %}
@@ -137,7 +135,7 @@
                 <p>Status atual: <strong>{{ bag.get_status_display }}</strong>. Registre o evento e o novo status da bag.</p>
             </div>
             {% if usuario.tipo == 'ADMIN' %}
-            <button type="button" class="btn btn-outline btn-small" data-abrir-painel="registrar-movimentacao" data-texto-aberto="Fechar formulário" aria-expanded="{% if movimentacao_form.errors %}true{% else %}false{% endif %}" aria-controls="registrar-movimentacao">
+            <button type="button" class="btn btn-outline btn-small" data-detail-panel-toggle="registrar-movimentacao" data-detail-panel-fragment="movimentacoes" data-texto-aberto="Fechar formulário" aria-expanded="{% if movimentacao_form.errors %}true{% else %}false{% endif %}" aria-controls="registrar-movimentacao">
                 <span>Registrar movimentação</span>
             </button>
             {% endif %}

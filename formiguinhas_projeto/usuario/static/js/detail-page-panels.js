@@ -20,7 +20,8 @@
             }
         }
 
-        setExpanded(!panel.hidden);
+        const openFromFragment = button.dataset.detailPanelFragment === window.location.hash.slice(1);
+        setExpanded(!panel.hidden || openFromFragment);
         button.addEventListener('click', () => {
             const expanded = panel.hidden;
             setExpanded(expanded);

@@ -229,7 +229,15 @@ class ControleCondominioPermissoesTests(TestCase):
             resposta,
             'data-detail-panel-toggle="registrar-movimentacao"',
         )
+        self.assertContains(
+            resposta,
+            'data-detail-panel-fragment="movimentacoes"',
+        )
         self.assertContains(resposta, 'id="registrar-movimentacao" hidden')
+        self.assertContains(
+            resposta,
+            '<progress class="bag-occupancy-progress" value="50" max="100"',
+        )
         self.assertContains(resposta, 'Tipo de movimentação')
         self.assertContains(resposta, 'Novo status')
 
@@ -253,6 +261,7 @@ class ControleCondominioPermissoesTests(TestCase):
         destino = self.client.get(f'{url_detalhe}#movimentacoes')
         self.assertEqual(destino.status_code, 200)
         self.assertContains(destino, 'name="formulario" value="registrar-movimentacao"')
+        self.assertContains(destino, 'data-detail-panel-fragment="movimentacoes"')
 
     def test_rotas_externas_de_coleta_e_movimentacao_de_bag_foram_removidas(self):
         self.autenticar(self.admin)
