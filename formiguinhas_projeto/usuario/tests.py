@@ -582,6 +582,40 @@ class PermissoesStatusVoluntarioTests(TestCase):
         self.assertIn('Perfil > Alterar senha', mail.outbox[0].body)
         self.assertContains(resposta, 'e-mail de acesso enviado')
 
+    def test_cadastro_completo_rejeita_email_ja_utilizado(self):
+        self.autenticar_como_admin()
+        quantidade_voluntarios_antes = Voluntario.objects.count()
+        email_existente = self.voluntario.email.upper()
+        dados = {
+            'nome': 'Outro Voluntário',
+            'dt_nascimento': '01/01/1994',
+            'endereco': 'Rua Nova',
+            'telefone': '11977776666',
+            'email': email_existente,
+            'tipo': 'COORDENADOR',
+            'senha': 'SenhaInicialSegura2026!',
+            'confirmar_senha': 'SenhaInicialSegura2026!',
+        }
+        request = RequestFactory().post(reverse('cadastro'), dados)
+        request.session = {'usuario_id': self.coordenador.id_usuario}
+
+        with patch('usuario.views.render') as render:
+            resposta = resolve(reverse('cadastro')).func(request)
+
+        form = render.call_args.args[2]['form']
+        self.assertIs(resposta, render.return_value)
+        self.assertIn('email', form.errors)
+        self.assertIn(
+            'já existe um voluntário',
+            str(form.errors['email']).casefold(),
+        )
+        self.assertEqual(
+            Voluntario.objects.count(),
+            quantidade_voluntarios_antes,
+        )
+        self.assertFalse(Usuario.objects.filter(id_voluntario=self.voluntario).exists())
+        self.assertEqual(mail.outbox, [])
+
     @patch('usuario.views.send_mail', side_effect=SMTPServerDisconnected('SMTP indisponível'))
     def test_cadastro_usuario_e_cancelado_se_email_nao_puder_ser_enviado(
         self,

@@ -6,7 +6,7 @@ from smtplib import SMTPException, SMTPServerDisconnected
 from django.conf import settings
 from django.contrib import messages
 from django.core.mail import get_connection, send_mail
-from django.db import transaction
+from django.db import IntegrityError, transaction
 from django.db.models.deletion import ProtectedError
 from django.db.models import Prefetch, Q, Sum
 from django.shortcuts import render, redirect
@@ -985,6 +985,16 @@ def cadastro_usuario_view(request):
                     'Não foi possível enviar o e-mail de acesso; o cadastro não foi concluído. '
                     'Tente novamente mais tarde.',
                 )
+            except IntegrityError:
+                if Voluntario.objects.filter(
+                    email__iexact=form.cleaned_data['email'],
+                ).exists():
+                    form.add_error(
+                        'email',
+                        'Já existe um voluntário cadastrado com este e-mail.',
+                    )
+                else:
+                    raise
             else:
                 messages.success(
                     request,

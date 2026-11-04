@@ -330,6 +330,14 @@ class CadastroForm(forms.Form):
     def clean_dt_nascimento(self):
         return validar_maioridade(self.cleaned_data['dt_nascimento'])
 
+    def clean_email(self):
+        email = self.cleaned_data['email']
+        if Voluntario.objects.filter(email__iexact=email).exists():
+            raise forms.ValidationError(
+                'Já existe um voluntário cadastrado com este e-mail.'
+            )
+        return email
+
     def clean(self):
         cleaned = super().clean()
         senha = cleaned.get('senha')
