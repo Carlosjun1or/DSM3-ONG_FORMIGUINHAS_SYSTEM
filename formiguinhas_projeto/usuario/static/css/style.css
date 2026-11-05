@@ -2679,7 +2679,10 @@ select.select-control:disabled {
 }
 
 .dashboard-page .topbar {
-    margin: -12px -24px 14px;
+    width: 100%;
+    min-height: 73px;
+    margin: 0;
+    padding: 12px 28px;
 }
 
 .system-page .card-grid {
@@ -3058,7 +3061,8 @@ select.select-control:disabled {
     }
 
     .system-page.dashboard-page .topbar {
-        margin: -12px -24px 14px;
+        width: 100%;
+        margin: 0;
     }
 }
 
@@ -3120,7 +3124,8 @@ select.select-control:disabled {
     }
 
     .system-page.dashboard-page .topbar {
-        margin: -18px -14px 14px;
+        width: 100%;
+        margin: 0;
         padding-inline: 14px;
     }
 

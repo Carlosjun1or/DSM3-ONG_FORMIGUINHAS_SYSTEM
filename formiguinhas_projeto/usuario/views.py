@@ -1,5 +1,5 @@
 import logging
-from datetime import date, time as dt_time
+from datetime import date, time as dt_time, timedelta
 from decimal import Decimal
 from smtplib import SMTPException, SMTPServerDisconnected
 
@@ -7,8 +7,8 @@ from django.conf import settings
 from django.contrib import messages
 from django.core.mail import get_connection, send_mail
 from django.db import IntegrityError, transaction
+from django.db.models import F, Prefetch, Q, Sum
 from django.db.models.deletion import ProtectedError
-from django.db.models import Prefetch, Q, Sum
 from django.shortcuts import render, redirect
 from django.urls import reverse
 from django.utils import timezone
@@ -17,6 +17,8 @@ from acao.models import Acao
 from acao.services import calcular_frequencias_voluntarios
 from doacao.models import Doacao, DoacaoFinanceira
 from equipe.models import EquipeMembro
+from estoque.models import Material
+from residuo.models import ItemColetaResiduo, ResiduoColetado
 
 from .forms import (
     LoginForm,
@@ -214,17 +216,39 @@ def home_view(request):
     total_doacoes_confirmadas = DoacaoFinanceira.objects.filter(
         doacao__status=Doacao.CONFIRMADA,
     ).aggregate(total=Sum('valor'))['total'] or Decimal('0.00')
+    primeiro_dia_mes = hoje.replace(day=1)
+    residuos_kg_mes = (
+        ResiduoColetado.objects.filter(
+            unidade='KG',
+            dt_registro__date__gte=primeiro_dia_mes,
+            dt_registro__date__lte=hoje,
+        ).aggregate(total=Sum('quantidade'))['total'] or Decimal('0.00')
+    )
+    residuos_kg_mes += (
+        ItemColetaResiduo.objects.filter(
+            unidade='KG',
+            coleta__data_coleta__date__gte=primeiro_dia_mes,
+            coleta__data_coleta__date__lte=hoje,
+        ).aggregate(total=Sum('quantidade'))['total'] or Decimal('0.00')
+    )
 
     # --- Buscar ações do MongoDB (tabela acao é managed=False) ---
     atividades_hoje = 0
+    atividades_proximos_dias = 0
     acoes_proximas = []
+    acoes_mongo_disponiveis = False
     try:
         from acao.mongo_services import get_acoes_collection
         col = get_acoes_collection()
         if col is not None:
             hoje_str = hoje.isoformat()
+            amanha_str = (hoje + timedelta(days=1)).isoformat()
             atividades_hoje = col.count_documents({
                 'data': hoje_str,
+                'status': {'$ne': 'CANCELADA'},
+            })
+            atividades_proximos_dias = col.count_documents({
+                'data': {'$gte': amanha_str},
                 'status': {'$ne': 'CANCELADA'},
             })
             docs = list(col.find({
@@ -232,17 +256,51 @@ def home_view(request):
                 'status': {'$ne': 'CANCELADA'},
             }).sort([('data', 1), ('horario', 1), ('id_sql', 1)]).limit(3))
             acoes_proximas = [_AcaoProxy(d) for d in docs]
+            acoes_mongo_disponiveis = True
     except Exception as e:
         logger.warning('Erro ao buscar ações do MongoDB para home: %s', e)
+
+    if not acoes_mongo_disponiveis:
+        acoes_ativas = Acao.objects.exclude(status=Acao.STATUS_CANCELADA)
+        atividades_hoje = acoes_ativas.filter(data=hoje).count()
+        atividades_proximos_dias = acoes_ativas.filter(
+            data__gt=hoje,
+        ).count()
+        acoes_proximas = list(
+            acoes_ativas.filter(data__gte=hoje)
+            .select_related('praia')
+            .order_by('data', 'horario', 'id_acao')[:3]
+        )
+
+    is_admin = usuario.tipo == 'ADMIN'
+    is_coordinator = usuario.tipo == 'COORDENADOR'
+    total_materiais_baixo_estoque = 0
+    if is_admin:
+        total_materiais_baixo_estoque = Material.objects.com_saldo().filter(
+            Q(saldo_db__lte=0) | Q(saldo_db__lt=F('estoque_minimo')),
+        ).count()
+    total_doacoes_pendentes = Doacao.objects.filter(
+        status=Doacao.PENDENTE,
+    ).count()
 
     return render(request, 'sistema/home.html', {
         'usuario': usuario,
         'hoje': hoje,
+        'is_admin': is_admin,
+        'is_coordinator': is_coordinator,
         'total_voluntarios_ativos': Voluntario.objects.filter(
             status='ATIVO',
         ).count(),
         'atividades_hoje': atividades_hoje,
+        'atividades_proximos_dias': atividades_proximos_dias,
         'total_doacoes_confirmadas': total_doacoes_confirmadas,
+        'total_doacoes_pendentes': total_doacoes_pendentes,
+        'residuos_kg_mes': residuos_kg_mes,
+        'total_materiais_baixo_estoque': total_materiais_baixo_estoque,
+        'ha_alertas_dashboard': (
+            total_doacoes_pendentes > 0
+            or is_admin and total_materiais_baixo_estoque > 0
+        ),
         'acoes_proximas': acoes_proximas,
     })
 

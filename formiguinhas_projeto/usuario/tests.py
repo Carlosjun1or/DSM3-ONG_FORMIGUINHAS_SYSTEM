@@ -19,7 +19,9 @@ from acao.models import Acao
 from config.settings import load_local_environment
 from doacao.models import Doacao, DoacaoFinanceira
 from equipe.models import Equipe, EquipeMembro
+from estoque.models import Material
 from praia.models import Praia
+from residuo.models import ColetaResiduo, ItemColetaResiduo, ResiduoColetado
 from .paginacao import paginar_queryset
 from .models import Usuario, Voluntario
 from .tokens import password_reset_token
@@ -185,7 +187,8 @@ class HomeDashboardTests(TestCase):
         session['usuario_tipo'] = usuario.tipo
         session.save()
 
-        resposta = self.client.get(reverse('home'))
+        with patch('acao.mongo_services.get_acoes_collection', return_value=None):
+            resposta = self.client.get(reverse('home'))
 
         self.assertEqual(resposta.status_code, 200)
         self.assertEqual(
@@ -210,8 +213,161 @@ class HomeDashboardTests(TestCase):
             acoes_proximas_ids.index(acao_futura.id_acao),
         )
         self.assertContains(resposta, 'Bem-vindo, Administradora!')
-        self.assertContains(resposta, 'css/template.css')
+        self.assertContains(resposta, 'css/style.css')
         self.assertNotContains(resposta, inativo.nome)
+
+    def test_home_exibe_indicadores_de_residuos_e_alertas_com_links_validos(self):
+        voluntario = Voluntario.objects.create(
+            nome='Administradora',
+            dt_nascimento=date(1990, 1, 1),
+            endereco='Rua A',
+            telefone='11999999999',
+            email='dashboard@teste.org',
+        )
+        usuario = Usuario.objects.create(
+            id_voluntario=voluntario,
+            tipo='ADMIN',
+            senha='senha',
+        )
+        ResiduoColetado.objects.create(
+            unidade='KG',
+            quantidade=Decimal('3.25'),
+            registrado_por=usuario,
+            registrado_por_nome=voluntario.nome,
+            registrado_por_tipo=usuario.tipo,
+        )
+        ResiduoColetado.objects.create(
+            unidade='LITRO',
+            quantidade=Decimal('11.00'),
+            registrado_por=usuario,
+            registrado_por_nome=voluntario.nome,
+            registrado_por_tipo=usuario.tipo,
+        )
+        coleta = ColetaResiduo.objects.create(
+            origem='BAG',
+            registrado_por=usuario,
+            registrado_por_nome=voluntario.nome,
+            registrado_por_tipo=usuario.tipo,
+        )
+        ItemColetaResiduo.objects.create(
+            coleta=coleta,
+            unidade='KG',
+            quantidade=Decimal('2.50'),
+            registrado_por=usuario,
+            registrado_por_nome=voluntario.nome,
+            registrado_por_tipo=usuario.tipo,
+        )
+        ItemColetaResiduo.objects.create(
+            coleta=coleta,
+            unidade='UNIDADE',
+            quantidade=Decimal('7.00'),
+            registrado_por=usuario,
+            registrado_por_nome=voluntario.nome,
+            registrado_por_tipo=usuario.tipo,
+        )
+        Material.objects.create(
+            nome='Material abaixo do mínimo',
+            codigo='DASH-LOW',
+            categoria='Teste',
+            unidade='UNIDADE',
+            quantidade_inicial=1,
+            estoque_minimo=3,
+        )
+        Material.objects.create(
+            nome='Material suficiente',
+            codigo='DASH-OK',
+            categoria='Teste',
+            unidade='UNIDADE',
+            quantidade_inicial=5,
+            estoque_minimo=3,
+        )
+        Doacao.objects.create(
+            tipo=Doacao.MATERIAL,
+            status=Doacao.PENDENTE,
+            registrado_por_nome=voluntario.nome,
+            registrado_por_tipo=usuario.tipo,
+        )
+
+        session = self.client.session
+        session['usuario_id'] = usuario.id_usuario
+        session['usuario_tipo'] = usuario.tipo
+        session['usuario_nome'] = voluntario.nome
+        session.save()
+
+        with patch('acao.mongo_services.get_acoes_collection', return_value=None):
+            resposta = self.client.get(reverse('home'))
+
+        self.assertEqual(resposta.status_code, 200)
+        self.assertEqual(resposta.context['residuos_kg_mes'], Decimal('5.75'))
+        self.assertEqual(resposta.context['total_materiais_baixo_estoque'], 1)
+        self.assertEqual(resposta.context['total_doacoes_pendentes'], 1)
+        self.assertContains(resposta, '5,8 kg')
+        self.assertContains(resposta, 'materiais abaixo do estoque mínimo')
+        self.assertContains(resposta, 'doações pendentes de confirmação')
+        self.assertContains(resposta, f'href="{reverse("materiais")}"')
+        self.assertContains(resposta, f'href="{reverse("doacoes")}"')
+        self.assertContains(resposta, f'href="{reverse("cadastro_acao")}"')
+        self.assertContains(resposta, f'href="{reverse("cadastro_doacao")}"')
+        self.assertContains(
+            resposta,
+            f'href="{reverse("cadastrar_movimentacao_estoque")}"',
+        )
+
+    def test_home_oculta_atalhos_administrativos_de_coordenador(self):
+        voluntario = Voluntario.objects.create(
+            nome='Coordenadora',
+            dt_nascimento=date(1990, 1, 1),
+            endereco='Rua B',
+            telefone='11988888888',
+            email='coordenadora-dashboard@teste.org',
+        )
+        usuario = Usuario.objects.create(
+            id_voluntario=voluntario,
+            tipo='COORDENADOR',
+            senha='senha',
+        )
+        session = self.client.session
+        session['usuario_id'] = usuario.id_usuario
+        session['usuario_tipo'] = usuario.tipo
+        session['usuario_nome'] = voluntario.nome
+        session.save()
+
+        with patch('acao.mongo_services.get_acoes_collection', return_value=None):
+            resposta = self.client.get(reverse('home'))
+
+        self.assertEqual(resposta.status_code, 200)
+        self.assertFalse(resposta.context['is_admin'])
+        self.assertTrue(resposta.context['is_coordinator'])
+        self.assertContains(resposta, 'Acompanhe suas equipes')
+        self.assertContains(resposta, 'Minhas equipes')
+        self.assertContains(
+            resposta,
+            f'href="{reverse("equipes")}?participacao=MINHAS"',
+        )
+        self.assertContains(
+            resposta,
+            f'href="{reverse("cadastro_voluntario")}"',
+        )
+        self.assertNotContains(
+            resposta,
+            f'href="{reverse("cadastro_acao")}"',
+        )
+        self.assertNotContains(
+            resposta,
+            f'href="{reverse("cadastro_doacao")}"',
+        )
+        self.assertContains(
+            resposta,
+            f'href="{reverse("doacoes")}"',
+        )
+        self.assertNotContains(
+            resposta,
+            f'href="{reverse("cadastrar_movimentacao_estoque")}"',
+        )
+        self.assertNotContains(
+            resposta,
+            f'href="{reverse("relatorios")}"',
+        )
 
 
 class LoginPageTests(TestCase):

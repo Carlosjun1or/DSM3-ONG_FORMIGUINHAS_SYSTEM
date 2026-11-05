@@ -1,51 +1,162 @@
 {% extends 'sistema/template-sistema.html' %}
-{% load l10n %}
+{% load l10n static %}
 
 {% block titulo %}Home | Sistema{% endblock %}
 {% block body_class %}dashboard-page{% endblock %}
 {% block page_title %}Bem-vindo, {{ usuario.id_voluntario.nome }}!{% endblock %}
 
+{% block estilos %}
+<link rel="stylesheet" href="{% static 'css/sistema/19-dashboard-home.css' %}?v=11">
+{% endblock %}
+
 {% block conteudo %}
-<section class="alerta alerta--sucesso dashboard-welcome" role="status">
-    Bem-vindo ao sistema das FORMIGUINHAS! Hoje temos {{ atividades_hoje }} atividade{{ atividades_hoje|pluralize }} programada{{ atividades_hoje|pluralize }}.
-</section>
+<div class="home-dashboard">
+    <section class="home-hero" aria-labelledby="home-hero-title">
+        <div class="home-hero-copy">
+            <p class="home-hero-date">{{ hoje|date:"l, j \d\e F \d\e Y" }}</p>
+            <h1 id="home-hero-title">Olá, {{ usuario.id_voluntario.nome }}!</h1>
+            <p class="home-hero-summary">
+                {% if is_coordinator %}Acompanhe suas equipes e as atividades da ONG.{% endif %}
+                Hoje temos {{ atividades_hoje }} atividade{% if atividades_hoje != 1 %}s{% endif %}
+                programada{% if atividades_hoje != 1 %}s{% endif %}.
+                {% if acoes_proximas.0.data == hoje %}
+                    {% if acoes_proximas.0.horario %}A próxima começa às {{ acoes_proximas.0.horario|time:"H:i" }}.{% else %}A próxima ação está marcada para hoje.{% endif %}
+                {% elif acoes_proximas %}
+                    A próxima ação será em {{ acoes_proximas.0.data|date:"d/m" }}.
+                {% endif %}
+            </p>
+        </div>
+        {% if is_admin %}
+        <div class="home-hero-actions">
+            <a class="btn home-button--primary" href="{% url 'cadastro_acao' %}">Cadastrar ação</a>
+            <a class="btn btn-outline btn-small home-button--secondary" href="{% url 'acoes' %}">Ver agenda</a>
+        </div>
+        {% elif is_coordinator %}
+        <div class="home-hero-actions">
+            <a class="btn home-button--primary" href="{% url 'acoes' %}">Ver agenda</a>
+            <a class="btn btn-outline btn-small home-button--secondary" href="{% url 'equipes' %}?participacao=MINHAS">Minhas equipes</a>
+        </div>
+        {% endif %}
+    </section>
 
-<section class="card-grid dashboard-metrics" aria-label="Resumo do sistema">
-    <article class="card dashboard-metric-card">
-        <h2>Voluntários ativos</h2>
-        <p class="metric">{{ total_voluntarios_ativos }}</p>
-    </article>
-    <article class="card dashboard-metric-card">
-        <h2>Atividades hoje</h2>
-        <p class="metric">{{ atividades_hoje|stringformat:"02d" }}</p>
-    </article>
-    <article class="card dashboard-metric-card">
-        <h2>Doações confirmadas</h2>
-        <p class="metric">R$ {{ total_doacoes_confirmadas|floatformat:2|localize }}</p>
-    </article>
-</section>
+    <section class="home-metrics" aria-label="Indicadores do sistema">
+        <a class="home-metric-card" href="{% url 'voluntarios' %}">
+            <span class="home-metric-heading">
+                <span class="home-metric-icon" aria-hidden="true"><svg><use href="{% static 'usuario/icons/sidebar-icons.svg' %}#volunteers"></use></svg></span>
+                <span>Voluntários ativos</span>
+            </span>
+            <strong class="home-metric-value">{{ total_voluntarios_ativos }}</strong>
+            <span class="home-metric-link">Ver voluntários <span aria-hidden="true">→</span></span>
+        </a>
+        <a class="home-metric-card" href="{% url 'acoes' %}">
+            <span class="home-metric-heading">
+                <span class="home-metric-icon" aria-hidden="true"><svg><use href="{% static 'usuario/icons/sidebar-icons.svg' %}#actions"></use></svg></span>
+                <span>Ações hoje</span>
+            </span>
+            <strong class="home-metric-value">{{ atividades_hoje|stringformat:"02d" }}</strong>
+            <span class="home-metric-link">
+                {% if atividades_proximos_dias %}+ {{ atividades_proximos_dias }} nos próximos dias{% else %}Ver agenda{% endif %}
+                <span aria-hidden="true">→</span>
+            </span>
+        </a>
+        <a class="home-metric-card" href="{% url 'doacoes' %}">
+            <span class="home-metric-heading">
+                <span class="home-metric-icon" aria-hidden="true"><svg><use href="{% static 'usuario/icons/sidebar-icons.svg' %}#gift"></use></svg></span>
+                <span>Doações confirmadas</span>
+            </span>
+            <strong class="home-metric-value">R$ {{ total_doacoes_confirmadas|floatformat:2|localize }}</strong>
+            <span class="home-metric-link">Ver doações <span aria-hidden="true">→</span></span>
+        </a>
+        <a class="home-metric-card" href="{% url 'residuos' %}">
+            <span class="home-metric-heading">
+                <span class="home-metric-icon" aria-hidden="true"><svg><use href="{% static 'usuario/icons/sidebar-icons.svg' %}#residue"></use></svg></span>
+                <span>Resíduos no mês</span>
+            </span>
+            <strong class="home-metric-value">{{ residuos_kg_mes|floatformat:1|localize }} kg</strong>
+            <span class="home-metric-link">Somente itens em kg <span aria-hidden="true">→</span></span>
+        </a>
+    </section>
 
-<section class="dashboard-upcoming" aria-labelledby="dashboard-upcoming-title">
-    <h2 class="dashboard-section-title" id="dashboard-upcoming-title">Próximas ações</h2>
-    <ul class="card-list dashboard-action-list">
-        {% for acao in acoes_proximas %}
-        <li>
-            <time class="dashboard-action-time" datetime="{{ acao.data|date:'Y-m-d' }}{% if acao.horario %}T{{ acao.horario|time:'H:i' }}{% endif %}">
-                {% if acao.data == hoje %}Hoje{% else %}{{ acao.data|date:"d/m" }}{% endif %}
-                {% if acao.horario %} · {{ acao.horario|time:"H:i" }}{% else %} · Horário a definir{% endif %}
-            </time>
-            <div class="dashboard-action-details">
-                <strong>{{ acao.get_tipo_display }}</strong>
-                <span>
-                    {% if acao.local %}{{ acao.local }}{% else %}{{ acao.praia.nome }}{% endif %}
-                    {% if acao.local %} · {{ acao.praia.nome }}{% endif %}
-                </span>
+    <section class="home-panel home-quick-links" aria-labelledby="home-quick-links-title">
+        <div class="home-section-heading">
+            <h2 id="home-quick-links-title">Atalhos rápidos</h2>
+        </div>
+        <div class="home-quick-link-list">
+            {% if is_admin %}
+            <a href="{% url 'cadastro_acao' %}"><svg aria-hidden="true"><use href="{% static 'usuario/icons/sidebar-icons.svg' %}#actions"></use></svg><span>Nova ação</span></a>
+            <a href="{% url 'cadastro_doacao' %}"><svg aria-hidden="true"><use href="{% static 'usuario/icons/sidebar-icons.svg' %}#gift"></use></svg><span>Registrar doação</span></a>
+            <a href="{% url 'residuos' %}"><svg aria-hidden="true"><use href="{% static 'usuario/icons/sidebar-icons.svg' %}#residue"></use></svg><span>Registrar resíduo</span></a>
+            <a href="{% url 'cadastro_voluntario' %}"><svg aria-hidden="true"><use href="{% static 'usuario/icons/sidebar-icons.svg' %}#volunteers"></use></svg><span>Novo voluntário</span></a>
+            {% elif is_coordinator %}
+            <a href="{% url 'voluntarios' %}"><svg aria-hidden="true"><use href="{% static 'usuario/icons/sidebar-icons.svg' %}#volunteers"></use></svg><span>Ver voluntários</span></a>
+            <a href="{% url 'cadastro_voluntario' %}"><svg aria-hidden="true"><use href="{% static 'usuario/icons/sidebar-icons.svg' %}#volunteers"></use></svg><span>Cadastrar voluntário</span></a>
+            <a href="{% url 'equipes' %}?participacao=MINHAS"><svg aria-hidden="true"><use href="{% static 'usuario/icons/sidebar-icons.svg' %}?v=2#teams"></use></svg><span>Minhas equipes</span></a>
+            <a href="{% url 'acoes' %}"><svg aria-hidden="true"><use href="{% static 'usuario/icons/sidebar-icons.svg' %}#actions"></use></svg><span>Consultar ações</span></a>
+            <a href="{% url 'doacoes' %}"><svg aria-hidden="true"><use href="{% static 'usuario/icons/sidebar-icons.svg' %}#gift"></use></svg><span>Consultar doações</span></a>
+            <a href="{% url 'residuos' %}"><svg aria-hidden="true"><use href="{% static 'usuario/icons/sidebar-icons.svg' %}#residue"></use></svg><span>Consultar resíduos</span></a>
+            {% endif %}
+            {% if is_admin %}
+            <a href="{% url 'cadastrar_movimentacao_estoque' %}"><svg aria-hidden="true"><use href="{% static 'usuario/icons/sidebar-icons.svg' %}#movement"></use></svg><span>Movimentar estoque</span></a>
+            <a href="{% url 'relatorios' %}"><svg aria-hidden="true"><use href="{% static 'usuario/icons/sidebar-icons.svg' %}#reports"></use></svg><span>Relatórios</span></a>
+            {% endif %}
+        </div>
+    </section>
+
+    <div class="home-dashboard-columns">
+        <section class="home-panel home-upcoming" aria-labelledby="home-upcoming-title">
+            <div class="home-section-heading">
+                <h2 id="home-upcoming-title">Próximas ações</h2>
+                <a href="{% url 'acoes' %}">Ver todas <span aria-hidden="true">→</span></a>
             </div>
-            <span class="dashboard-action-status dashboard-action-status--{{ acao.status|lower }}">{{ acao.get_status_display }}</span>
-        </li>
-        {% empty %}
-        <li class="dashboard-action-empty">Não há ações programadas para hoje ou para os próximos dias.</li>
-        {% endfor %}
-    </ul>
-</section>
+            <ul class="home-action-list">
+                {% for acao in acoes_proximas %}
+                <li>
+                    <a class="home-action-row" href="{% url 'acoes' %}">
+                        <span class="home-action-time">
+                            {% if acao.data == hoje %}Hoje{% else %}{{ acao.data|date:"d/m" }}{% endif %}
+                            <span>{% if acao.horario %}{{ acao.horario|time:"H:i" }}{% else %}Horário a definir{% endif %}</span>
+                        </span>
+                        <span class="home-action-details">
+                            <strong>{{ acao.get_tipo_display }}</strong>
+                            <span>
+                                {% if acao.local %}{{ acao.local }}{% endif %}
+                                {% if acao.local and acao.praia.nome %} · {% endif %}
+                                {{ acao.praia.nome }}
+                            </span>
+                        </span>
+                        <span class="home-action-status home-action-status--{{ acao.status|lower }}">{{ acao.get_status_display }}</span>
+                    </a>
+                </li>
+                {% empty %}
+                <li class="home-action-empty">Não há ações programadas para hoje ou para os próximos dias.</li>
+                {% endfor %}
+            </ul>
+        </section>
+
+        <section class="home-panel home-attention" aria-labelledby="home-attention-title">
+            <div class="home-section-heading">
+                <h2 id="home-attention-title">Atenção</h2>
+            </div>
+            <div class="home-alert-list">
+                {% if is_admin and total_materiais_baixo_estoque %}
+                <a class="home-alert home-alert--warning" href="{% url 'materiais' %}">
+                    <span class="home-alert-count">{{ total_materiais_baixo_estoque }}</span>
+                    <span><strong>materiais abaixo do estoque mínimo</strong><span>Abrir estoque <span aria-hidden="true">→</span></span></span>
+                </a>
+                {% endif %}
+                {% if total_doacoes_pendentes %}
+                <a class="home-alert home-alert--info" href="{% url 'doacoes' %}">
+                    <span class="home-alert-count">{{ total_doacoes_pendentes }}</span>
+                    <span><strong>doações pendentes de confirmação</strong><span>Revisar doações <span aria-hidden="true">→</span></span></span>
+                </a>
+                {% endif %}
+                {% if not ha_alertas_dashboard %}
+                <p class="home-alert home-alert--success">Tudo certo com as pendências do sistema.</p>
+                {% endif %}
+            </div>
+        </section>
+    </div>
+
+    <p class="home-data-note">Indicadores calculados com os dados registrados no sistema.</p>
+</div>
 {% endblock %}
