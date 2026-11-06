@@ -3,37 +3,49 @@
 
 {% block titulo %}Relatórios | Sistema{% endblock %}
 {% block page_title %}Central de Relatórios{% endblock %}
-{% block estilos %}<link rel="stylesheet" href="{% static 'relatorios/relatorios.css' %}?v=7">{% endblock %}
+{% block estilos %}<link rel="stylesheet" href="{% static 'relatorios/relatorios.css' %}?v=13">{% endblock %}
 
 {% block conteudo %}
 <section class="card volunteer-control reports-page">
-    <div class="section-heading reports-heading">
-        <div>
-            <span class="section-kicker">Gestão da ONG</span>
-            <h2>Central de relatórios</h2>
-            <p class="form-subtitle">Escolha o relatório, aplique os filtros e exporte os dados atualizados.</p>
+    <nav class="reports-switcher" aria-label="Tipos de relatório">
+        {% for grupo, itens in report_groups %}
+        <div class="reports-switch-group">
+            <span class="reports-switch-group-title">{{ grupo }}</span>
+            <div class="reports-switch-options">
+                {% for valor, rotulo, icone in itens %}
+                <a href="{% url 'relatorios' %}?relatorio={{ valor }}" class="reports-switch-link{% if form.relatorio.value == valor %} is-active{% endif %}"{% if form.relatorio.value == valor %} aria-current="page"{% endif %}>
+                    <svg aria-hidden="true" focusable="false"><use href="{% static 'usuario/icons/sidebar-icons.svg' %}#{{ icone }}"></use></svg>
+                    <span>{{ rotulo }}</span>
+                </a>
+                {% endfor %}
+            </div>
         </div>
-        <div class="reports-export-actions">
-            <button type="submit" form="report-filters" name="formato" value="xlsx" class="btn btn-outline" data-carregando-download>Baixar Excel</button>
-            <button type="submit" form="report-filters" name="formato" value="pdf" class="btn btn-primary" data-carregando-download>Baixar PDF</button>
-            {% if form.relatorio.value == 'doacoes' %}
-            <button type="submit" form="report-filters" name="formato" value="csv" class="btn btn-outline" data-carregando-download>Baixar CSV</button>
-            {% endif %}
-        </div>
-    </div>
-
-    <nav class="reports-switcher" aria-label="Alternar tipo de relatório">
-        {% for valor, rotulo in report_types %}
-        <a href="{% url 'relatorios' %}?relatorio={{ valor }}" class="reports-switch-link{% if form.relatorio.value == valor %} is-active{% endif %}"{% if form.relatorio.value == valor %} aria-current="page"{% endif %}>{{ rotulo }}</a>
         {% endfor %}
     </nav>
 
-    <form id="report-filters" method="get" class="volunteer-filters reports-filters">
-        <div class="form-group report-filter" data-report-filter="selector">
-            <label for="{{ form.relatorio.id_for_label }}">{{ form.relatorio.label }}</label>
-            {{ form.relatorio }}
-            {% for error in form.relatorio.errors %}<small class="field-error">{{ error }}</small>{% endfor %}
+    <header class="card report-result-heading">
+        <div class="report-title">
+            <span class="report-title-icon-wrap">
+                <svg class="report-title-icon" aria-hidden="true" focusable="false">
+                    <use href="{% static 'usuario/icons/sidebar-icons.svg' %}#{% if report %}{{ report_icon }}{% else %}reports{% endif %}"></use>
+                </svg>
+            </span>
+            <div>
+                <span class="section-kicker">Gestão da ONG · Central de relatórios</span>
+                <h2>{% if report %}{{ report.title }}{% else %}Central de relatórios{% endif %}</h2>
+                {% if report %}<p class="form-subtitle">Período: {{ report.period }}</p>{% endif %}
+            </div>
         </div>
+        {% if report %}
+        <div class="reports-export-actions" aria-label="Exportar relatório">
+            <button type="submit" form="report-filters" name="formato" value="xlsx" class="btn btn-outline" data-carregando-download>Baixar Excel</button>
+            <button type="submit" form="report-filters" name="formato" value="pdf" class="btn btn-primary" data-carregando-download>Baixar PDF</button>
+        </div>
+        {% endif %}
+    </header>
+
+    <form id="report-filters" method="get" class="volunteer-filters reports-filters">
+        {{ form.relatorio.as_hidden }}
         <div class="form-group report-filter" data-report-filter="start">
             <label for="{{ form.data_inicio.id_for_label }}">{{ form.data_inicio.label }}</label>
             {{ form.data_inicio }}
@@ -67,7 +79,7 @@
         {% for error in form.non_field_errors %}<div class="error-box report-form-error">{{ error }}</div>{% endfor %}
         <div class="filter-actions report-filter-actions">
             <button type="submit" class="btn btn-primary">Aplicar filtros</button>
-            <a href="{% url 'relatorios' %}?relatorio={{ form.relatorio.value|default:'indicadores' }}" class="form-link">Limpar filtros</a>
+            <a href="{% url 'relatorios' %}?relatorio={{ form.relatorio.value|default:'geral' }}" class="form-link">Limpar filtros</a>
         </div>
     </form>
 
@@ -77,13 +89,6 @@
 
     {% if report %}
     <div class="report-result">
-        <div class="report-result-heading">
-            <div>
-                <span class="section-kicker">Resultado</span>
-                <h2>{{ report.title }}</h2>
-                <p class="form-subtitle">Período: {{ report.period }}</p>
-            </div>
-        </div>
         {% if report.attendance_action %}
         <div class="attendance-report-heading">
             <strong>{{ report.attendance_action }}</strong>
@@ -91,15 +96,68 @@
         </div>
         {% endif %}
 
-        {% if report.metrics %}
-        <div class="card-grid volunteer-metrics reports-metrics{% if form.relatorio.value == 'geral' %} reports-metrics-general{% endif %}">
+        {% if form.relatorio.value == 'geral' and report.metric_groups %}
+        <div class="report-metric-groups">
+            {% for group in report.metric_groups %}
+            <section class="card report-metric-group" aria-labelledby="metric-group-{{ forloop.counter }}">
+                <header class="report-metric-group-heading">
+                    <span class="report-group-icon-wrap">
+                        <svg aria-hidden="true" focusable="false"><use href="{% static 'usuario/icons/sidebar-icons.svg' %}#{{ group.icon }}"></use></svg>
+                    </span>
+                    <h3 id="metric-group-{{ forloop.counter }}">{{ group.title }}</h3>
+                </header>
+                <dl class="report-metric-list">
+                    {% for label, value in group.metrics %}
+                    <div class="report-metric-row">
+                        <dt>{{ label }}</dt>
+                        <dd class="metric">{{ value }}</dd>
+                    </div>
+                    {% endfor %}
+                </dl>
+            </section>
+            {% endfor %}
+        </div>
+        {% elif report.metrics %}
+        <div class="card-grid volunteer-metrics reports-metrics">
             {% for label, value in report.metrics %}
-            <article class="card report-metric-card{% if form.relatorio.value == 'geral' %} report-metric-card--general{% endif %}{% if form.relatorio.value == 'geral' and label == 'Resíduos coletados' or form.relatorio.value == 'geral' and label == 'Saldo atual em estoque' %} report-metric-card--detail{% endif %}">
+            <article class="card report-metric-card">
                 <span class="section-kicker">{{ label }}</span>
                 <div class="metric">{{ value }}</div>
             </article>
             {% endfor %}
         </div>
+        {% endif %}
+
+        {% if form.relatorio.value == 'presenca' %}
+        <p class="attendance-print-notice">Esta lista foi preparada para impressão e assinatura dos participantes.</p>
+        {% elif report.charts %}
+        <section class="reports-charts" aria-label="Gráficos do relatório">
+            {% for chart in report.charts %}
+            <article class="card report-chart-card">
+                <h3>{{ chart.titulo }}</h3>
+                {% if chart.has_data %}
+                <div class="report-chart-canvas">
+                    <canvas id="{{ chart.id }}" role="img" aria-label="{{ chart.titulo }}. Os dados também estão disponíveis na tabela abaixo."></canvas>
+                </div>
+                <div class="table-wrap reports-table-wrap report-chart-table-wrap">
+                    <table class="data-table reports-table" aria-label="Dados do gráfico: {{ chart.titulo }}">
+                        <thead><tr>{% for header in chart.table_headers %}<th scope="col">{{ header }}</th>{% endfor %}</tr></thead>
+                        <tbody>
+                            {% for row in chart.table_rows %}
+                            <tr>{% for value in row %}<td>{{ value|default:'-' }}</td>{% endfor %}</tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="empty-state chart-empty" role="status">
+                    <h3>Nenhum dado encontrado neste período</h3>
+                    <p class="form-subtitle">O gráfico será exibido quando houver registros para os filtros selecionados.</p>
+                </div>
+                {% endif %}
+            </article>
+            {% endfor %}
+        </section>
         {% endif %}
 
         {% for section in report.sections %}
@@ -108,10 +166,20 @@
             {% if section.rows %}
             <div class="table-wrap reports-table-wrap">
                 <table class="data-table reports-table">
-                    <thead><tr>{% for header in section.headers %}<th>{{ header }}</th>{% endfor %}</tr></thead>
+                    <thead><tr>{% for header in section.headers %}<th scope="col">{{ header }}</th>{% endfor %}</tr></thead>
                     <tbody>
                         {% for row in section.rows %}
-                        <tr>{% for value in row %}<td>{{ value|default:'-' }}</td>{% endfor %}</tr>
+                        <tr>
+                            {% for value in row %}
+                            <td>
+                                {% if form.relatorio.value == 'presenca' and forloop.last %}
+                                <span class="attendance-signature-line" aria-label="Espaço para assinatura"></span>
+                                {% else %}
+                                {{ value|default:'-' }}
+                                {% endif %}
+                            </td>
+                            {% endfor %}
+                        </tr>
                         {% endfor %}
                     </tbody>
                 </table>
@@ -123,30 +191,10 @@
         {% endfor %}
         <p class="reports-freshness">Dados consultados no momento da geração do relatório.</p>
     </div>
+    {{ report.charts|json_script:"report-charts" }}
     {% endif %}
 </section>
 
-<script>
-    (function () {
-        var seletor = document.getElementById('{{ form.relatorio.id_for_label }}');
-        var camposPorRelatorio = {
-            geral: ['selector', 'start', 'end', 'beach'],
-            indicadores: ['selector', 'period', 'beach'],
-            acoes: ['selector', 'start', 'end', 'beach', 'action', 'action-type'],
-            voluntarios: ['selector', 'start', 'end', 'action-type'],
-            presenca: ['selector', 'start', 'end', 'beach', 'action', 'action-type'],
-            residuos: ['selector', 'start', 'end', 'beach', 'action', 'waste-type'],
-            estoque: ['selector', 'start', 'end'],
-            doacoes: ['selector', 'start', 'end']
-        };
-        function atualizarFiltros() {
-            var visiveis = camposPorRelatorio[seletor.value] || camposPorRelatorio.indicadores;
-            document.querySelectorAll('[data-report-filter]').forEach(function (campo) {
-                campo.hidden = visiveis.indexOf(campo.getAttribute('data-report-filter')) === -1;
-            });
-        }
-        seletor.addEventListener('change', atualizarFiltros);
-        atualizarFiltros();
-    }());
-</script>
+{% if report %}<script src="{% static 'relatorios/vendor/chart.umd.min.js' %}" defer></script>{% endif %}
+<script src="{% static 'relatorios/relatorios.js' %}?v=2" defer></script>
 {% endblock %}

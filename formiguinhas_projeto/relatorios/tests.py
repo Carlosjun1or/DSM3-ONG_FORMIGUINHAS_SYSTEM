@@ -1,4 +1,5 @@
-from datetime import date
+from calendar import monthrange
+from datetime import date, timedelta
 from decimal import Decimal
 from io import BytesIO
 from zipfile import ZipFile
@@ -60,6 +61,11 @@ class RelatoriosTestCase(TestCase):
 
 
 class AcessoRelatoriosTests(RelatoriosTestCase):
+    def test_administrador_pode_acessar_relatorios(self):
+        resposta = self.client.get(reverse('relatorios'))
+
+        self.assertEqual(resposta.status_code, 200)
+
     def test_relatorios_exibem_breadcrumb_central_de_relatorios(self):
         resposta = self.client.get(reverse('relatorios'))
 
@@ -110,7 +116,8 @@ class RenderizacaoRelatoriosTests(RelatoriosTestCase):
         self.assertEqual(resposta.status_code, 200)
         self.assertContains(resposta, '<h2>Relatório geral</h2>')
         self.assertContains(resposta, 'name="relatorio"')
-        self.assertContains(resposta, '<option value="geral" selected')
+        self.assertContains(resposta, 'aria-current="page"')
+        self.assertContains(resposta, '<span>Geral</span>')
 
     def test_renderiza_os_oito_tipos_de_relatorio(self):
         tipos = ('geral', 'indicadores', 'acoes', 'voluntarios', 'presenca', 'residuos', 'estoque', 'doacoes')
@@ -122,6 +129,129 @@ class RenderizacaoRelatoriosTests(RelatoriosTestCase):
                 )
                 self.assertEqual(resposta.status_code, 200)
                 self.assertContains(resposta, 'Central de relatórios')
+
+    def test_datas_padrao_sao_adequadas_a_cada_relatorio(self):
+        hoje = date.today()
+        inicio_mes = hoje.replace(day=1)
+        inicio_mes_anterior = (inicio_mes - timedelta(days=1)).replace(day=1)
+        ultimo_dia_mes = hoje.replace(day=monthrange(hoje.year, hoje.month)[1])
+        datas_esperadas = {
+            'geral': (inicio_mes, hoje),
+            'indicadores': (inicio_mes, hoje),
+            'acoes': (inicio_mes_anterior, ultimo_dia_mes),
+            'voluntarios': (hoje - timedelta(days=90), hoje),
+            'presenca': (hoje - timedelta(days=90), hoje),
+            'residuos': (inicio_mes_anterior, hoje),
+            'estoque': (inicio_mes_anterior, hoje),
+            'doacoes': (inicio_mes_anterior, hoje),
+        }
+
+        for tipo, (inicio_esperado, fim_esperado) in datas_esperadas.items():
+            with self.subTest(tipo=tipo):
+                resposta = self.client.get(reverse('relatorios'), {'relatorio': tipo})
+
+                self.assertEqual(resposta.status_code, 200)
+                self.assertEqual(
+                    resposta.context['form']['data_inicio'].value(),
+                    inicio_esperado.isoformat(),
+                )
+                self.assertEqual(
+                    resposta.context['form']['data_fim'].value(),
+                    fim_esperado.isoformat(),
+                )
+
+    def test_graficos_tem_estrutura_e_tipos_esperados_por_relatorio(self):
+        tipos_esperados = {
+            'geral': {'bar', 'doughnut'},
+            'indicadores': {'bar'},
+            'acoes': {'bar'},
+            'voluntarios': {'bar'},
+            'presenca': set(),
+            'residuos': {'bar'},
+            'estoque': {'bar'},
+            'doacoes': {'bar', 'doughnut'},
+        }
+        for tipo, tipos_grafico in tipos_esperados.items():
+            with self.subTest(tipo=tipo):
+                resposta = self.client.get(
+                    reverse('relatorios'),
+                    {'relatorio': tipo, **self.filtros()},
+                )
+
+                self.assertEqual(resposta.status_code, 200)
+                graficos = resposta.context['report']['charts']
+                self.assertEqual({grafico['tipo'] for grafico in graficos}, tipos_grafico)
+                for grafico in graficos:
+                    self.assertTrue({
+                        'id', 'tipo', 'titulo', 'labels', 'datasets',
+                        'table_headers', 'table_rows', 'has_data',
+                    }.issubset(grafico))
+
+    def test_relatorio_geral_calcula_voluntarios_presentes(self):
+        participante = Voluntario.objects.create(
+            nome='Presente no geral',
+            dt_nascimento=date(1995, 5, 10),
+            endereco='Rua Praia, 10',
+            telefone='13988887777',
+            email='presente-geral@teste.org',
+        )
+        AcaoParticipante.objects.create(
+            acao=self.acao,
+            voluntario=participante,
+            status=AcaoParticipante.STATUS_PRESENTE,
+            compareceu=True,
+        )
+
+        resposta = self.client.get(
+            reverse('relatorios'),
+            {'relatorio': 'geral', **self.filtros()},
+        )
+
+        metricas = dict(resposta.context['report']['metrics'])
+        self.assertEqual(metricas['Voluntários presentes'], 1)
+
+    def test_graficos_de_residuos_separam_unidades(self):
+        coleta = ColetaResiduo.objects.create(
+            origem='ACAO',
+            acao=self.acao,
+            registrado_por=self.admin,
+            registrado_por_nome='Admin Teste',
+            registrado_por_tipo='ADMIN',
+        )
+        ItemColetaResiduo.objects.create(
+            coleta=coleta,
+            tipo='PLASTICO',
+            categoria='RECICLAVEL',
+            quantidade=Decimal('2.00'),
+            unidade='KG',
+            registrado_por=self.admin,
+            registrado_por_nome='Admin Teste',
+            registrado_por_tipo='ADMIN',
+        )
+        ResiduoColetado.objects.create(
+            acao=self.acao,
+            tipo='VIDRO',
+            categoria='RECICLAVEL',
+            quantidade=Decimal('3.00'),
+            unidade='LITRO',
+            registrado_por=self.admin,
+            registrado_por_nome='Admin Teste',
+            registrado_por_tipo='ADMIN',
+        )
+
+        resposta = self.client.get(
+            reverse('relatorios'),
+            {'relatorio': 'residuos', **self.filtros()},
+        )
+
+        graficos = resposta.context['report']['charts']
+        rotulos_datasets = {
+            dataset['label']
+            for grafico in graficos
+            for dataset in grafico['datasets']
+        }
+        self.assertEqual(rotulos_datasets, {'Quilograma (kg)', 'Litro (L)'})
+        self.assertEqual(len(graficos), 4)
 
     def test_relatorio_geral_reune_indicadores_e_resumos_dos_modulos(self):
         resposta = self.client.get(
@@ -187,6 +317,59 @@ class RenderizacaoRelatoriosTests(RelatoriosTestCase):
         self.assertContains(resposta, 'Voluntária Presente')
         self.assertContains(resposta, 'Assinatura')
         self.assertContains(resposta, self.acao.data.strftime('%d/%m/%Y'))
+
+    def test_relatorio_de_acoes_inclui_acoes_planejadas_no_periodo(self):
+        acao_planejada = Acao.objects.create(
+            tipo=Acao.TIPO_MUTIRAO,
+            data=date.today(),
+            local='Ponto de encontro',
+            status=Acao.STATUS_PLANEJADA,
+            praia=self.praia,
+        )
+
+        resposta = self.client.get(
+            reverse('relatorios'),
+            {'relatorio': 'acoes', **self.filtros()},
+        )
+
+        self.assertEqual(resposta.status_code, 200)
+        relatorio = resposta.context['report']
+        self.assertEqual(relatorio['metrics'][0], ('Ações no período', 2))
+        self.assertEqual(len(relatorio['sections'][0]['rows']), 2)
+        self.assertIn(
+            ['Praia Teste', 2],
+            relatorio['charts'][0]['table_rows'],
+        )
+        self.assertTrue(any(
+            linha[2] == 'Praia Teste'
+            and linha[3] == 'Ponto de encontro'
+            and linha[4] == 'Planejada'
+            for linha in relatorio['sections'][0]['rows']
+        ))
+
+    def test_presenca_padrao_inclui_dados_dos_ultimos_90_dias(self):
+        participante = Voluntario.objects.create(
+            nome='Presença no período padrão',
+            dt_nascimento=date(1995, 5, 10),
+            endereco='Rua Praia, 11',
+            telefone='13988887776',
+            email='presenca-periodo@teste.org',
+        )
+        AcaoParticipante.objects.create(
+            acao=self.acao,
+            voluntario=participante,
+            status=AcaoParticipante.STATUS_PRESENTE,
+            compareceu=True,
+        )
+
+        resposta = self.client.get(reverse('relatorios'), {'relatorio': 'presenca'})
+
+        self.assertEqual(resposta.status_code, 200)
+        self.assertContains(resposta, 'Presença no período padrão')
+        self.assertEqual(resposta.context['report']['metrics'], [
+            ('Ações no período', 1),
+            ('Presenças registradas', 1),
+        ])
 
     def test_relatorio_de_residuos_inclui_itens_de_coletas_e_acoes(self):
         coleta = ColetaResiduo.objects.create(
@@ -340,6 +523,33 @@ class MateriaisUtilizadosTests(RelatoriosTestCase):
 
 
 class DoacoesRelatorioTests(RelatoriosTestCase):
+    def test_doacoes_padrao_inclui_confirmadas_do_mes_anterior(self):
+        doador = Doador.objects.create(
+            tipo=Doador.PESSOA_FISICA,
+            nome='Doador no período padrão',
+            telefone='13999990003',
+            cadastrado_por_nome='Admin Teste',
+        )
+        doacao = Doacao.objects.create(
+            tipo=Doacao.FINANCEIRA,
+            doador=doador,
+            data_recebimento=date.today() - timedelta(days=10),
+            status=Doacao.CONFIRMADA,
+            registrado_por_nome='Admin Teste',
+            registrado_por_tipo='ADMIN',
+        )
+        DoacaoFinanceira.objects.create(
+            doacao=doacao,
+            valor=Decimal('15.00'),
+            forma_recebimento=DoacaoFinanceira.PIX,
+        )
+
+        resposta = self.client.get(reverse('relatorios'), {'relatorio': 'doacoes'})
+
+        self.assertEqual(resposta.status_code, 200)
+        self.assertContains(resposta, 'Doador no período padrão')
+        self.assertEqual(resposta.context['report']['metrics'][0], ('Doações confirmadas', 1))
+
     def test_doacoes_canceladas_sao_excluidas_e_csv_e_exportado(self):
         doador = Doador.objects.create(
             tipo=Doador.PESSOA_FISICA,

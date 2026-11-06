@@ -8,8 +8,10 @@ que o template usa tanto para exibição em tela quanto para exportação.
 """
 import csv
 import io
+import logging
 from collections import defaultdict
-from datetime import date, datetime
+from calendar import monthrange
+from datetime import date, datetime, timedelta
 from decimal import Decimal
 from xml.sax.saxutils import escape
 
@@ -29,6 +31,8 @@ from usuario.models import Usuario, Voluntario
 from usuario.views import render_acesso_bloqueado
 
 
+logger = logging.getLogger(__name__)
+
 RELATORIOS = [
     ('geral', 'Relatório geral'),
     ('indicadores', 'Indicadores por período / praia'),
@@ -39,6 +43,39 @@ RELATORIOS = [
     ('estoque', 'Relatório de estoque'),
     ('doacoes', 'Relatório de doações'),
 ]
+GRUPOS_RELATORIOS = [
+    ('Visão geral', [
+        ('geral', 'Geral', 'reports'),
+        ('indicadores', 'Indicadores por praia', 'beach'),
+    ]),
+    ('Operação', [
+        ('acoes', 'Ações', 'actions'),
+        ('voluntarios', 'Voluntários', 'volunteers'),
+        ('presenca', 'Presença', 'audit'),
+    ]),
+    ('Recursos', [
+        ('residuos', 'Resíduos', 'residue'),
+        ('estoque', 'Estoque', 'package'),
+        ('doacoes', 'Doações', 'gift'),
+    ]),
+]
+ICONES_GRUPOS_METRICAS = {
+    'Voluntários': 'volunteers',
+    'Ações': 'actions',
+    'Resíduos': 'residue',
+    'Estoque': 'package',
+    'Doações': 'gift',
+}
+ICONES_RELATORIOS = {
+    'geral': 'reports',
+    'indicadores': 'beach',
+    'acoes': 'actions',
+    'voluntarios': 'volunteers',
+    'presenca': 'audit',
+    'residuos': 'residue',
+    'estoque': 'package',
+    'doacoes': 'gift',
+}
 PERIODOS = [('MES', 'Mês atual'), ('TRIMESTRE', 'Trimestre atual'), ('ANO', 'Ano atual')]
 
 
@@ -95,8 +132,8 @@ class RelatorioFiltroForm(forms.Form):
                     praia_nome = doc.get('praia', {}).get('nome', '') if isinstance(doc.get('praia'), dict) else ''
                     label = f"{doc.get('tipo_display') or doc.get('tipo', 'Ação')} ({doc.get('data', '')}) - {praia_nome}".strip(' - ')
                     acoes_choices.append((str(doc.get('id_sql')), label))
-        except Exception:
-            pass
+        except Exception as erro:
+            logger.warning('Não foi possível carregar ações do MongoDB para os filtros: %s', erro)
         self.fields['acao'].choices = acoes_choices
         for field in self.fields.values():
             field.widget.attrs.setdefault('class', 'form-control')
@@ -122,6 +159,18 @@ def _periodo_efetivo(dados):
         mes_inicial = ((hoje.month - 1) // 3) * 3 + 1
         return hoje.replace(month=mes_inicial, day=1), hoje
     return hoje.replace(day=1), hoje
+
+
+def _periodo_padrao_relatorio(tipo, hoje):
+    inicio_mes = hoje.replace(day=1)
+    inicio_mes_anterior = (inicio_mes - timedelta(days=1)).replace(day=1)
+    if tipo == 'acoes':
+        return inicio_mes_anterior, hoje.replace(day=monthrange(hoje.year, hoje.month)[1])
+    if tipo in ('presenca', 'voluntarios'):
+        return hoje - timedelta(days=90), hoje
+    if tipo in ('residuos', 'estoque', 'doacoes'):
+        return inicio_mes_anterior, hoje
+    return inicio_mes, hoje
 
 
 def _presenca_filter():
@@ -151,7 +200,12 @@ def _residuos_no_periodo(inicio, fim, tipo='', praia_id=None, acao_id=None):
             col = get_acoes_collection()
             if col is not None:
                 acoes_p = [d['id_sql'] for d in col.find({'praia.id': int(praia_id)}, {'id_sql': 1})]
-        except Exception:
+        except Exception as erro:
+            logger.warning(
+                'Não foi possível consultar ações da praia %s no MongoDB ao consolidar resíduos: %s',
+                praia_id,
+                erro,
+            )
             acoes_p = []
         try:
             from condominio.mongo_services import get_condominios_collection
@@ -162,7 +216,12 @@ def _residuos_no_periodo(inicio, fim, tipo='', praia_id=None, acao_id=None):
                         bid = b.get('id') or b.get('id_bag')
                         if bid:
                             bags_p.append(bid)
-        except Exception:
+        except Exception as erro:
+            logger.warning(
+                'Não foi possível consultar bags da praia %s no MongoDB ao consolidar resíduos: %s',
+                praia_id,
+                erro,
+            )
             bags_p = []
         itens_registrados = itens_registrados.filter(
             Q(coleta__acao_id__in=acoes_p) | Q(coleta__bag_id__in=bags_p)
@@ -231,6 +290,30 @@ def _resumo_saldos(materiais):
     return ', '.join(f'{quantidade} {unidade}' for unidade, quantidade in sorted(totais.items())) or '0'
 
 
+def _grafico(
+    identificador,
+    tipo,
+    titulo,
+    labels,
+    datasets,
+    cabecalhos,
+    linhas,
+    tem_dados=None,
+):
+    if tem_dados is None:
+        tem_dados = bool(labels and any(dados for dados in datasets))
+    return {
+        'id': identificador,
+        'tipo': tipo,
+        'titulo': titulo,
+        'labels': labels,
+        'datasets': datasets,
+        'table_headers': cabecalhos,
+        'table_rows': linhas,
+        'has_data': tem_dados,
+    }
+
+
 
 def _criar_relatorio(dados, inicio, fim):
     tipo = dados['relatorio']
@@ -246,7 +329,13 @@ def _criar_relatorio(dados, inicio, fim):
         'period': periodo_label,
         'metrics': [],
         'sections': [],
-        'attendance_action': dados.get('acao') if tipo == 'presenca' else None,
+        'charts': [],
+        'metric_groups': [],
+        'attendance_action': (
+            Acao.objects.filter(pk=acao_id).select_related('praia').first()
+            if tipo == 'presenca' and acao_id
+            else None
+        ),
     }
 
     if tipo == 'geral':
@@ -268,9 +357,13 @@ def _criar_relatorio(dados, inicio, fim):
                     total_acoes += 1
                     if st == 'CONCLUIDA':
                         acoes_concluidas += 1
-                    acoes_p.append(doc.get('id_sql'))
-        except Exception:
-            pass
+                    if doc.get('id_sql') is not None:
+                        acoes_p.append(doc['id_sql'])
+        except Exception as erro:
+            logger.warning(
+                'Não foi possível carregar ações do MongoDB para o relatório geral: %s',
+                erro,
+            )
 
         try:
             from condominio.mongo_services import get_condominios_collection
@@ -282,8 +375,11 @@ def _criar_relatorio(dados, inicio, fim):
                         bid = b.get('id') or b.get('id_bag')
                         if bid:
                             bags_p.append(bid)
-        except Exception:
-            pass
+        except Exception as erro:
+            logger.warning(
+                'Não foi possível carregar bags do MongoDB para o relatório geral: %s',
+                erro,
+            )
 
         linhas_status_acoes = [
             [dict(Acao.STATUS_CHOICES).get(item[0], item[0]), item[1]]
@@ -327,13 +423,18 @@ def _criar_relatorio(dados, inicio, fim):
         q_bags = {'origem': 'BAG', 'data_coleta__date__range': (inicio, fim)}
         if praia_id:
             q_bags['bag_id__in'] = bags_p
+        presencas = AcaoParticipante.objects.filter(
+            acao__data__range=(inicio, fim),
+        ).filter(_presenca_filter())
+        if praia_id:
+            presencas = presencas.filter(acao__praia_id=praia_id)
 
         relatorio['metrics'] = [
             ('Voluntários cadastrados', Voluntario.objects.count()),
             ('Voluntários ativos', Voluntario.objects.filter(status='ATIVO').count()),
             ('Ações no período', total_acoes),
             ('Ações concluídas', acoes_concluidas),
-            ('Voluntários presentes', 0),
+            ('Voluntários presentes', presencas.values('voluntario_id').distinct().count()),
             ('Resíduos coletados', _resumo_quantidades_por_unidade(linhas_residuos)),
             ('Bags coletadas', ColetaResiduo.objects.filter(**q_bags).count()),
             ('Itens com estoque baixo', sum(material.baixo_estoque for material in materiais)),
@@ -370,11 +471,77 @@ def _criar_relatorio(dados, inicio, fim):
                 ] for material in materiais],
             },
         ]
+        metricas_por_assunto = {
+            'Voluntários': {'Voluntários cadastrados', 'Voluntários ativos', 'Voluntários presentes'},
+            'Ações': {'Ações no período', 'Ações concluídas', 'Bags coletadas'},
+            'Resíduos': {'Resíduos coletados'},
+            'Estoque': {'Itens com estoque baixo', 'Saldo atual em estoque'},
+            'Doações': {'Doações confirmadas', 'Total financeiro doado'},
+        }
+        relatorio['metric_groups'] = [
+            {
+                'title': assunto,
+                'icon': ICONES_GRUPOS_METRICAS[assunto],
+                'metrics': [
+                    item for item in relatorio['metrics']
+                    if item[0] in rotulos
+                ],
+            }
+            for assunto, rotulos in metricas_por_assunto.items()
+        ]
+        relatorio['metric_groups'] = [
+            grupo for grupo in relatorio['metric_groups'] if grupo['metrics']
+        ]
+
+        status_labels = [linha[0] for linha in linhas_status_acoes]
+        status_values = [linha[1] for linha in linhas_status_acoes]
+        relatorio['charts'].append(_grafico(
+            'geral-acoes-status',
+            'doughnut',
+            'Ações por situação',
+            status_labels,
+            [{'label': 'Ações', 'data': status_values}],
+            ['Situação', 'Quantidade'],
+            [[label, value] for label, value in zip(status_labels, status_values)],
+            tem_dados=total_acoes > 0,
+        ))
+
+        residuos_por_unidade = defaultdict(dict)
+        meses_residuos = sorted(
+            {linha[0] for linha in linhas_residuos_mes},
+            key=lambda valor: datetime.strptime(valor, '%m/%Y'),
+        )
+        for mes_label, unidade, quantidade in linhas_residuos_mes:
+            residuos_por_unidade[unidade][mes_label] = float(Decimal(quantidade))
+        for indice, (unidade, quantidades) in enumerate(sorted(residuos_por_unidade.items())):
+            valores = [quantidades.get(mes, 0) for mes in meses_residuos]
+            relatorio['charts'].append(_grafico(
+                f'geral-residuos-{indice}',
+                'bar',
+                f'Resíduos coletados por mês ({unidade})',
+                meses_residuos,
+                [{'label': unidade, 'data': valores}],
+                ['Mês/ano', unidade],
+                [[mes, valor] for mes, valor in zip(meses_residuos, valores)],
+                tem_dados=any(valores),
+            ))
+        if not residuos_por_unidade:
+            relatorio['charts'].append(_grafico(
+                'geral-residuos-vazio',
+                'bar',
+                'Resíduos coletados por mês',
+                [],
+                [],
+                ['Mês/ano', 'Quantidade'],
+                [],
+                tem_dados=False,
+            ))
 
     elif tipo == 'acoes':
         acoes = Acao.objects.filter(
             data__range=(inicio, fim),
-            status=Acao.STATUS_CONCLUIDA,
+        ).exclude(
+            status=Acao.STATUS_CANCELADA,
         ).select_related('praia').order_by('-data', 'id_acao')
         if acao_id:
             acoes = acoes.filter(pk=acao_id)
@@ -386,7 +553,9 @@ def _criar_relatorio(dados, inicio, fim):
         linhas = []
         total_participantes = 0
         total_material = 0
+        acoes_por_praia = defaultdict(int)
         for acao in acoes:
+            acoes_por_praia[acao.praia.nome] += 1
             participantes = list(
                 acao.participantes.filter(_presenca_filter()).select_related('voluntario')
                 .order_by('voluntario__nome')
@@ -415,7 +584,7 @@ def _criar_relatorio(dados, inicio, fim):
                 _resumo_quantidades_por_unidade(residuos),
             ])
         relatorio['metrics'] = [
-            ('Ações concluídas', len(linhas)),
+            ('Ações no período', len(linhas)),
             ('Participações', total_participantes),
             ('Saídas de materiais vinculadas', total_material),
         ]
@@ -424,6 +593,17 @@ def _criar_relatorio(dados, inicio, fim):
             'headers': ['Data', 'Tipo', 'Praia', 'Local', 'Status', 'Participantes e telefones', 'Materiais utilizados', 'Resíduos coletados'],
             'rows': linhas,
         }]
+        labels_praias = sorted(acoes_por_praia)
+        valores_praias = [acoes_por_praia[praia] for praia in labels_praias]
+        relatorio['charts'].append(_grafico(
+            'acoes-por-praia',
+            'bar',
+            'Ações por praia',
+            labels_praias,
+            [{'label': 'Ações', 'data': valores_praias}],
+            ['Praia', 'Ações'],
+            [[praia, quantidade] for praia, quantidade in zip(labels_praias, valores_praias)],
+        ))
 
     elif tipo == 'voluntarios':
         filtro_presenca = Q(acoes_participadas__compareceu=True) | Q(
@@ -435,17 +615,17 @@ def _criar_relatorio(dados, inicio, fim):
         ) & filtro_presenca
         if tipo_acao:
             acoes_filtro &= Q(acoes_participadas__acao__tipo=tipo_acao)
-        voluntarios = Voluntario.objects.annotate(
+        voluntarios = list(Voluntario.objects.annotate(
             participacoes=Count(
                 'acoes_participadas',
                 filter=acoes_filtro,
                 distinct=True,
             )
-        ).order_by('-participacoes', 'nome')
+        ).order_by('-participacoes', 'nome'))
         total_cadastrados = Voluntario.objects.count()
         relatorio['metrics'] = [
             ('Voluntários cadastrados', total_cadastrados),
-            ('Voluntários participantes no período', voluntarios.filter(participacoes__gt=0).count()),
+            ('Voluntários participantes no período', sum(v.participacoes > 0 for v in voluntarios)),
             ('Participações no período', sum(v.participacoes for v in voluntarios)),
         ]
         relatorio['sections'] = [{
@@ -453,6 +633,18 @@ def _criar_relatorio(dados, inicio, fim):
             'headers': ['Nome', 'Telefone', 'Status cadastral', 'Ações frequentadas no período'],
             'rows': [[v.nome, v.telefone, v.get_status_display(), v.participacoes] for v in voluntarios],
         }]
+        mais_participativos = [v for v in voluntarios if v.participacoes > 0][:10]
+        labels_voluntarios = [v.nome for v in mais_participativos]
+        valores_participacoes = [v.participacoes for v in mais_participativos]
+        relatorio['charts'].append(_grafico(
+            'voluntarios-participacoes',
+            'bar',
+            'Ações frequentadas por voluntário',
+            labels_voluntarios,
+            [{'label': 'Ações frequentadas', 'data': valores_participacoes}],
+            ['Voluntário', 'Ações frequentadas'],
+            [[nome, quantidade] for nome, quantidade in zip(labels_voluntarios, valores_participacoes)],
+        ))
 
     elif tipo == 'presenca':
         participantes = AcaoParticipante.objects.filter(
@@ -492,15 +684,19 @@ def _criar_relatorio(dados, inicio, fim):
 
     elif tipo == 'residuos':
         linhas = _residuos_no_periodo(inicio, fim, tipo_residuo, praia_id, acao_id)
-        por_mes = defaultdict(list)
+        por_mes_unidade = defaultdict(lambda: defaultdict(Decimal))
+        por_tipo_unidade = defaultdict(lambda: defaultdict(Decimal))
         for linha in linhas:
             partes = linha[0].split('/')
-            chave = f'{partes[2]}-{partes[1]}'
-            por_mes[chave].append(linha)
+            chave = (partes[2], partes[1])
+            unidade = linha[8]
+            quantidade = Decimal(linha[7] or 0)
+            por_mes_unidade[unidade][chave] += quantidade
+            por_tipo_unidade[unidade][linha[5]] += quantidade
         resumo_mensal = [
-            [f'{mes[5:7]}/{mes[:4]}', unidade, f'{sum(Decimal(l[7] or 0) for l in itens if l[8] == unidade):g}']
-            for mes, itens in sorted(por_mes.items())
-            for unidade in sorted({l[8] for l in itens})
+            [f'{mes}/{ano}', unidade, f'{quantidade:g}']
+            for unidade, meses in sorted(por_mes_unidade.items())
+            for (ano, mes), quantidade in sorted(meses.items())
         ]
         relatorio['metrics'] = [
             ('Registros de coleta', len(linhas)),
@@ -518,6 +714,55 @@ def _criar_relatorio(dados, inicio, fim):
                 'rows': linhas,
             },
         ]
+        for indice, unidade in enumerate(sorted(por_mes_unidade)):
+            meses = por_mes_unidade[unidade]
+            chaves_mes = sorted(meses)
+            labels_mes = [f'{mes}/{ano}' for ano, mes in chaves_mes]
+            valores_mes = [float(meses[chave]) for chave in chaves_mes]
+            relatorio['charts'].append(_grafico(
+                f'residuos-mes-{indice}',
+                'bar',
+                f'Quantidade coletada por mês ({unidade})',
+                labels_mes,
+                [{'label': unidade, 'data': valores_mes}],
+                ['Mês/ano', unidade],
+                [[mes, valor] for mes, valor in zip(labels_mes, valores_mes)],
+            ))
+            tipos = por_tipo_unidade[unidade]
+            labels_tipos = sorted(tipos)
+            valores_tipos = [float(tipos[tipo_nome]) for tipo_nome in labels_tipos]
+            relatorio['charts'].append(_grafico(
+                f'residuos-tipo-{indice}',
+                'bar',
+                f'Quantidade coletada por tipo ({unidade})',
+                labels_tipos,
+                [{'label': unidade, 'data': valores_tipos}],
+                ['Tipo de resíduo', unidade],
+                [[nome, valor] for nome, valor in zip(labels_tipos, valores_tipos)],
+            ))
+        if not por_mes_unidade:
+            relatorio['charts'].extend([
+                _grafico(
+                    'residuos-mes-vazio',
+                    'bar',
+                    'Quantidade coletada por mês',
+                    [],
+                    [],
+                    ['Mês/ano', 'Quantidade'],
+                    [],
+                    tem_dados=False,
+                ),
+                _grafico(
+                    'residuos-tipo-vazio',
+                    'bar',
+                    'Quantidade coletada por tipo',
+                    [],
+                    [],
+                    ['Tipo de resíduo', 'Quantidade'],
+                    [],
+                    tem_dados=False,
+                ),
+            ])
 
     elif tipo == 'estoque':
         materiais = list(Material.objects.com_saldo().order_by('nome'))
@@ -561,6 +806,42 @@ def _criar_relatorio(dados, inicio, fim):
                 'rows': linhas_movimentos,
             },
         ]
+        materiais_com_minimo = [m for m in materiais if m.estoque_minimo > 0]
+        labels_materiais = [m.nome for m in materiais_com_minimo]
+        percentuais = [
+            round(m.saldo / m.estoque_minimo * 100, 1)
+            for m in materiais_com_minimo
+        ]
+        relatorio['charts'].append(_grafico(
+            'estoque-percentual-minimo',
+            'bar',
+            'Saldo atual em relação ao estoque mínimo',
+            labels_materiais,
+            [
+                {
+                    'label': 'Saldo em relação ao mínimo (%)',
+                    'data': percentuais,
+                    'backgroundColor': [
+                        '#f4e01e' if percentual < 100 else '#0058b9'
+                        for percentual in percentuais
+                    ],
+                    'borderColor': '#00306b',
+                    'borderWidth': 2,
+                },
+                {
+                    'label': 'Mínimo (100%)',
+                    'type': 'line',
+                    'data': [100] * len(labels_materiais),
+                    'borderColor': '#6b7280',
+                    'borderDash': [6, 4],
+                    'pointRadius': 0,
+                    'borderWidth': 2,
+                },
+            ],
+            ['Material', 'Saldo do mínimo (%)'],
+            [[nome, f'{percentual:g}%'] for nome, percentual in zip(labels_materiais, percentuais)],
+            tem_dados=bool(labels_materiais),
+        ))
 
     elif tipo == 'indicadores':
         acoes = Acao.objects.filter(
@@ -605,6 +886,28 @@ def _criar_relatorio(dados, inicio, fim):
             'headers': ['Praia', 'Ações concluídas', 'Voluntários ativos', 'Registros de resíduo', 'Quantidade coletada por unidade'],
             'rows': linhas_praia,
         }]
+        labels_praias = [linha[0] for linha in linhas_praia]
+        valores_acoes = [linha[1] for linha in linhas_praia]
+        valores_voluntarios = [linha[2] for linha in linhas_praia]
+        valores_residuos = [linha[3] for linha in linhas_praia]
+        relatorio['charts'].append(_grafico(
+            'indicadores-por-praia',
+            'bar',
+            'Comparativo por praia',
+            labels_praias,
+            [
+                {'label': 'Ações concluídas', 'data': valores_acoes},
+                {'label': 'Voluntários ativos', 'data': valores_voluntarios},
+                {'label': 'Registros de resíduo', 'data': valores_residuos},
+            ],
+            ['Praia', 'Ações concluídas', 'Voluntários ativos', 'Registros de resíduo'],
+            [
+                [praia, acoes, voluntarios, residuos]
+                for praia, acoes, voluntarios, residuos
+                in zip(labels_praias, valores_acoes, valores_voluntarios, valores_residuos)
+            ],
+            tem_dados=any(valores_acoes + valores_voluntarios + valores_residuos),
+        ))
 
     elif tipo == 'doacoes':
         doacoes = Doacao.objects.filter(
@@ -634,9 +937,11 @@ def _criar_relatorio(dados, inicio, fim):
             materiais_por_doador[doador][item.unidade] += item.quantidade
         linhas_doacoes = []
         contribuicoes = defaultdict(lambda: {'count': 0, 'financeiro': Decimal('0'), 'materiais': defaultdict(Decimal)})
+        doacoes_por_tipo = defaultdict(int)
         for doacao in doacoes:
             doador = doacao.doador.nome if doacao.doador_id else 'Anônimo'
             valor = valores_financeiros.get(doacao.pk, Decimal('0'))
+            doacoes_por_tipo[doacao.get_tipo_display()] += 1
             linhas_doacoes.append([
                 doacao.data_recebimento.strftime('%d/%m/%Y'),
                 doacao.get_tipo_display(),
@@ -689,6 +994,37 @@ def _criar_relatorio(dados, inicio, fim):
                 'rows': linhas_doadores,
             },
         ]
+        maiores_doadores = [
+            (nome, resumo['financeiro'])
+            for nome, resumo in sorted(
+                contribuicoes.items(),
+                key=lambda item: (-item[1]['financeiro'], item[0]),
+            )
+            if resumo['financeiro'] > 0
+        ][:10]
+        labels_doadores = [nome for nome, _ in maiores_doadores]
+        valores_doadores = [float(valor) for _, valor in maiores_doadores]
+        relatorio['charts'].extend([
+            _grafico(
+                'doacoes-financeiro-por-doador',
+                'bar',
+                'Total financeiro por doador',
+                labels_doadores,
+                [{'label': 'Total financeiro (R$)', 'data': valores_doadores}],
+                ['Doador', 'Total financeiro (R$)'],
+                [[nome, f'R$ {valor:.2f}'] for nome, valor in maiores_doadores],
+            ),
+            _grafico(
+                'doacoes-por-tipo',
+                'doughnut',
+                'Doações por tipo',
+                list(doacoes_por_tipo),
+                [{'label': 'Doações', 'data': list(doacoes_por_tipo.values())}],
+                ['Tipo', 'Quantidade'],
+                [[nome, quantidade] for nome, quantidade in doacoes_por_tipo.items()],
+                tem_dados=bool(doacoes_por_tipo),
+            ),
+        ])
 
     return relatorio
 
@@ -1262,8 +1598,9 @@ def relatorios_view(request):
     hoje = timezone.localdate()
     parametros.setdefault('relatorio', 'geral')
     parametros.setdefault('periodo', 'MES')
-    parametros.setdefault('data_inicio', hoje.replace(day=1).isoformat())
-    parametros.setdefault('data_fim', hoje.isoformat())
+    inicio_padrao, fim_padrao = _periodo_padrao_relatorio(parametros['relatorio'], hoje)
+    parametros.setdefault('data_inicio', inicio_padrao.isoformat())
+    parametros.setdefault('data_fim', fim_padrao.isoformat())
     form = RelatorioFiltroForm(parametros)
     if not form.is_valid():
         return render(request, 'sistema/relatorios.html', {
@@ -1271,6 +1608,8 @@ def relatorios_view(request):
             'form': form,
             'report': None,
             'report_types': RELATORIOS,
+            'report_groups': GRUPOS_RELATORIOS,
+            'report_icon': ICONES_RELATORIOS.get(parametros.get('relatorio'), 'reports'),
         }, status=400)
 
     dados = form.cleaned_data
@@ -1291,5 +1630,7 @@ def relatorios_view(request):
         'form': form,
         'report': report,
         'report_types': RELATORIOS,
+        'report_groups': GRUPOS_RELATORIOS,
+        'report_icon': ICONES_RELATORIOS.get(tipo, 'reports'),
         'is_dashboard': tipo == 'indicadores',
     })

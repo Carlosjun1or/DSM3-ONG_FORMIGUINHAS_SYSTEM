@@ -28,8 +28,11 @@
             return;
         }
 
-        // A tabela da auditoria global continua como tabela (não vira cards).
-        if (table.classList.contains('audit-history-table')) {
+        // Auditoria e relatórios mantêm o formato tabular em todos os tamanhos.
+        if (
+            table.classList.contains('audit-history-table')
+            || table.classList.contains('reports-table')
+        ) {
             return;
         }
 
