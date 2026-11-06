@@ -36,6 +36,15 @@ class LocalizacaoPraiasTests(TestCase):
 
 
 class GaleriaMutiroesTests(TestCase):
+    def test_cabecalho_exibe_area_restrita_com_icone_de_cadeado(self):
+        resposta = self.client.get(reverse('index'))
+
+        self.assertEqual(resposta.status_code, 200)
+        self.assertContains(resposta, 'Área restrita', count=2)
+        self.assertContains(resposta, 'href="/usuario/login/"', count=2)
+        self.assertContains(resposta, '<rect x="4" y="10" width="16" height="11" rx="2"></rect>', count=2)
+        self.assertNotContains(resposta, '>Entrar</a>')
+
     def test_home_segue_a_ordem_de_abertura_acao_historia_impacto_e_apoio(self):
         resposta = self.client.get(reverse('index'))
         conteudo = resposta.content.decode()
