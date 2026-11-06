@@ -81,13 +81,6 @@
 
     <form method="post" novalidate action="{% if modo_edicao %}{% url 'editar_praia' praia.id_praia %}{% else %}{% url 'cadastrar_praia' %}{% endif %}">
         {% csrf_token %}
-        {% if messages %}
-            <div class="alert-box alert-error" role="alert">
-                {% for message in messages %}
-                    {{ message }}
-                {% endfor %}
-            </div>
-        {% endif %}
         {% if form.non_field_errors %}
             <div class="error-box" role="alert">{{ form.non_field_errors }}</div>
         {% endif %}

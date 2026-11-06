@@ -1,4 +1,5 @@
 from datetime import date
+from urllib.error import URLError
 from unittest.mock import MagicMock, patch
 
 from django import forms
@@ -7,6 +8,8 @@ from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 
+from acao.models import Acao
+from equipe.models import Equipe
 from usuario.models import Usuario, Voluntario
 
 from .forms import PraiaForm
@@ -70,6 +73,69 @@ class PraiaViewsTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'sistema/praias.html')
 
+    def test_excluir_praia_sem_vinculos_exibe_sucesso(self):
+        praia = Praia.objects.create(
+            nome='Praia para excluir',
+            cidade='Santos',
+            latitude=-23.967,
+            longitude=-46.328,
+        )
+
+        response = self.client.post(
+            reverse('excluir_praia', args=[praia.id_praia]),
+            follow=True,
+        )
+
+        self.assertRedirects(response, reverse('praias'))
+        self.assertFalse(Praia.objects.filter(pk=praia.pk).exists())
+        self.assertContains(response, 'Praia para excluir excluída com sucesso.')
+
+    def test_nao_exclui_praia_vinculada_a_acao(self):
+        praia = Praia.objects.create(
+            nome='Praia com ação',
+            cidade='Santos',
+            latitude=-23.967,
+            longitude=-46.328,
+        )
+        Acao.objects.create(
+            tipo=Acao.TIPO_MUTIRAO,
+            data=date(2026, 1, 1),
+            praia=praia,
+        )
+
+        response = self.client.post(
+            reverse('excluir_praia', args=[praia.id_praia]),
+            follow=True,
+        )
+
+        self.assertRedirects(response, reverse('praias'))
+        self.assertTrue(Praia.objects.filter(pk=praia.pk).exists())
+        self.assertContains(
+            response,
+            'Não é possível excluir Praia com ação: ela está vinculada a ações ou equipes.',
+        )
+
+    def test_nao_exclui_praia_vinculada_a_equipe(self):
+        praia = Praia.objects.create(
+            nome='Praia com equipe',
+            cidade='Santos',
+            latitude=-23.967,
+            longitude=-46.328,
+        )
+        Equipe.objects.create(nome='Equipe de teste', praia=praia)
+
+        response = self.client.post(
+            reverse('excluir_praia', args=[praia.id_praia]),
+            follow=True,
+        )
+
+        self.assertRedirects(response, reverse('praias'))
+        self.assertTrue(Praia.objects.filter(pk=praia.pk).exists())
+        self.assertContains(
+            response,
+            'Não é possível excluir Praia com equipe: ela está vinculada a ações ou equipes.',
+        )
+
     def test_filtro_de_cidade_ignora_case_e_nao_repete_opcoes(self):
         Praia.objects.create(
             nome='Praia Central', cidade='Santos', latitude=-23.967,
@@ -110,6 +176,74 @@ class PraiaViewsTests(TestCase):
             ['Praia Central'],
         )
 
+    def test_listagem_sem_resultados_exibe_estado_vazio(self):
+        response = self.client.get(reverse('praias'), {'busca': 'Praia inexistente'})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(list(response.context['praias']), [])
+        self.assertContains(response, 'Nenhuma praia encontrada')
+        self.assertContains(response, 'Ajuste os filtros ou cadastre uma nova praia.')
+        self.assertNotContains(response, 'record-pagination')
+
+    def test_paginacao_preserva_filtros_ao_navegar_entre_paginas(self):
+        Praia.objects.bulk_create([
+            Praia(
+                nome=f'Praia Filtrada {indice:02d}',
+                cidade='Santos',
+                latitude=-23.967,
+                longitude=-46.328,
+                praia_ativa='ATIVA',
+            )
+            for indice in range(23)
+        ])
+        Praia.objects.create(
+            nome='Praia Filtrada de outra cidade',
+            cidade='Guarujá',
+            latitude=-23.967,
+            longitude=-46.328,
+            praia_ativa='ATIVA',
+        )
+        Praia.objects.create(
+            nome='Praia Filtrada inativa',
+            cidade='Santos',
+            latitude=-23.967,
+            longitude=-46.328,
+            praia_ativa='INATIVA',
+        )
+        filtros = {
+            'busca': 'Filtrada',
+            'cidade': 'Santos',
+            'status': 'ATIVA',
+        }
+
+        primeira_pagina = self.client.get(reverse('praias'), filtros)
+
+        self.assertEqual(primeira_pagina.status_code, 200)
+        self.assertEqual(primeira_pagina.context['pagina'].number, 1)
+        self.assertEqual(primeira_pagina.context['pagina'].paginator.count, 23)
+        self.assertEqual(len(primeira_pagina.context['praias']), 20)
+        self.assertContains(
+            primeira_pagina,
+            '?busca=Filtrada&amp;cidade=Santos&amp;status=ATIVA&amp;page=2',
+        )
+
+        segunda_pagina = self.client.get(
+            reverse('praias'),
+            {**filtros, 'page': '2'},
+        )
+
+        self.assertEqual(segunda_pagina.status_code, 200)
+        self.assertEqual(segunda_pagina.context['pagina'].number, 2)
+        self.assertEqual(segunda_pagina.context['pagina'].paginator.count, 23)
+        self.assertEqual(len(segunda_pagina.context['praias']), 3)
+        self.assertEqual(segunda_pagina.context['busca'], 'Filtrada')
+        self.assertEqual(segunda_pagina.context['cidade_selecionada'], 'Santos')
+        self.assertEqual(segunda_pagina.context['status_selecionado'], 'ATIVA')
+        self.assertContains(
+            segunda_pagina,
+            '?busca=Filtrada&amp;cidade=Santos&amp;status=ATIVA&amp;page=1',
+        )
+
     def test_usuario_autenticado_cadastra_praia(self):
         response = self.client.post(reverse('cadastrar_praia'), {
             'nome': 'Praia Central',
@@ -146,7 +280,11 @@ class PraiaViewsTests(TestCase):
         })
 
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'Já existe uma praia cadastrada com esse nome e cidade')
+        self.assertContains(
+            response,
+            'Praia não cadastrada. Já existe uma praia cadastrada com esse nome e cidade.',
+            count=1,
+        )
         self.assertEqual(Praia.objects.filter(nome='Praia Central', cidade='Santos').count(), 1)
 
     def test_praia_exibe_auditoria_na_listagem(self):
@@ -199,6 +337,44 @@ class PraiaViewsTests(TestCase):
         praia.refresh_from_db()
         self.assertEqual(praia.nome, 'Praia Atualizada')
         self.assertEqual(praia.praia_ativa, 'INATIVA')
+
+    def test_editar_praia_rejeita_nome_e_cidade_duplicados_ignorando_case(self):
+        praia_original = Praia.objects.create(
+            nome='Praia Original',
+            cidade='Santos',
+            latitude=-23.967,
+            longitude=-46.328,
+            praia_ativa='ATIVA',
+        )
+        Praia.objects.create(
+            nome='Praia Central',
+            cidade='Santos',
+            latitude=-23.968,
+            longitude=-46.327,
+            praia_ativa='ATIVA',
+        )
+
+        response = self.client.post(
+            reverse('editar_praia', args=[praia_original.id_praia]),
+            {
+                'nome': 'praia central',
+                'cidade': 'SANTOS',
+                'latitude': '-23.967000',
+                'longitude': '-46.328000',
+                'praia_ativa': 'ATIVA',
+                'descricao': '',
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(
+            response,
+            'Praia não atualizada. Já existe uma praia cadastrada com esse nome e cidade.',
+            count=1,
+        )
+        self.assertEqual(Praia.objects.count(), 2)
+        praia_original.refresh_from_db()
+        self.assertEqual(praia_original.nome, 'Praia Original')
 
     def test_alterar_status_exibe_feedback(self):
         praia = Praia.objects.create(
@@ -339,6 +515,15 @@ class PraiaViewsTests(TestCase):
             'Informe o nome da praia e a cidade para localizar.',
         )
 
+    def test_localizacao_rejeita_metodo_diferente_de_get(self):
+        response = self.client.post(reverse('localizar_praia'), {
+            'nome': 'Praia Central',
+            'cidade': 'Santos',
+        })
+
+        self.assertEqual(response.status_code, 405)
+        self.assertEqual(response.json(), {'erro': 'Método não permitido.'})
+
     @patch('praia.views.urlopen')
     def test_localizacao_retorna_coordenadas_do_nominatim(self, mock_urlopen):
         resposta_nominatim = MagicMock()
@@ -374,3 +559,20 @@ class PraiaViewsTests(TestCase):
             response.json()['erro'],
             'Localização não encontrada para essa praia e cidade.',
         )
+
+    @patch('praia.views.urlopen', side_effect=URLError('serviço indisponível'))
+    def test_localizacao_retorna_502_quando_servico_esta_indisponivel(
+        self,
+        mock_urlopen,
+    ):
+        response = self.client.get(reverse('localizar_praia'), {
+            'nome': 'Praia Central',
+            'cidade': 'Santos',
+        })
+
+        self.assertEqual(response.status_code, 502)
+        self.assertEqual(
+            response.json(),
+            {'erro': 'Não foi possível consultar o serviço de localização agora.'},
+        )
+        self.assertTrue(mock_urlopen.called)

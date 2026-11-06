@@ -6,6 +6,7 @@ from urllib.request import Request, urlopen
 
 from django.contrib import messages
 from django.db import transaction
+from django.db.models.deletion import ProtectedError
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
@@ -284,6 +285,25 @@ def editar_praia_view(request, praia_id):
     if request.method == 'POST':
         form = PraiaForm(request.POST, instance=praia)
         if form.is_valid():
+            nome = (form.cleaned_data['nome'] or '').strip()
+            cidade = (form.cleaned_data['cidade'] or '').strip()
+            praia_duplicada = Praia.objects.filter(
+                nome__iexact=nome,
+                cidade__iexact=cidade,
+            ).exclude(pk=praia.pk).exists()
+
+            if praia_duplicada:
+                messages.error(
+                    request,
+                    'Praia não atualizada. Já existe uma praia cadastrada com esse nome e cidade.',
+                )
+                return render(request, 'sistema/cadastro-praia.html', {
+                    'usuario': usuario,
+                    'form': form,
+                    'praia': praia,
+                    'modo_edicao': True,
+                })
+
             praia = form.save(commit=False)
             praia.ultimo_editado_por = usuario
             praia.ultimo_editado_por_nome = usuario.id_voluntario.nome
@@ -353,10 +373,24 @@ def excluir_praia_view(request, praia_id):
 
     if request.method == 'POST':
         praia = get_object_or_404(Praia, id_praia=praia_id)
-        anterior = snapshot(praia)
-        praia.delete()
-        registrar_evento(entidade='PRAIA', id_registro=praia_id, acao='EXCLUSAO', usuario=usuario,
-                          resumo=f'Praia "{anterior.get("nome", praia_id)}" excluída.',
-                          valores_anteriores=anterior)
+        if praia.acoes.exists() or praia.equipes.exists():
+            messages.error(
+                request,
+                f'Não é possível excluir {praia.nome}: ela está vinculada a ações ou equipes.',
+            )
+        else:
+            anterior = snapshot(praia)
+            try:
+                praia.delete()
+            except ProtectedError:
+                messages.error(
+                    request,
+                    f'Não é possível excluir {praia.nome}: ela está vinculada a ações ou equipes.',
+                )
+            else:
+                registrar_evento(entidade='PRAIA', id_registro=praia_id, acao='EXCLUSAO', usuario=usuario,
+                                  resumo=f'Praia "{anterior.get("nome", praia_id)}" excluída.',
+                                  valores_anteriores=anterior)
+                messages.success(request, f'{praia.nome} excluída com sucesso.')
 
     return redirect('praias')
