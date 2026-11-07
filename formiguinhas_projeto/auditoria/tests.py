@@ -143,7 +143,7 @@ class AuditoriaUsuariosTests(TestCase):
         )
         self.assertContains(
             resposta,
-            'Tipo de usuário de Usuário alvo atualizado para Administrador.',
+            'O tipo de acesso de &quot;Usuário alvo&quot; foi atualizado para Administrador.',
         )
         usuario.refresh_from_db()
         self.assertEqual(usuario.tipo, 'ADMIN')
@@ -220,7 +220,7 @@ class AuditoriaUsuariosTests(TestCase):
         )
         self.assertContains(
             resposta,
-            'Dados de Usuário editado atualizados com sucesso.',
+            'Os dados de acesso de &quot;Usuário editado&quot; foram atualizados com sucesso.',
         )
         voluntario.refresh_from_db()
         usuario.refresh_from_db()
