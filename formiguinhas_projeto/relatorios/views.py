@@ -1584,7 +1584,7 @@ def _resposta_csv(relatorio, tipo, hoje):
 def relatorios_view(request):
     usuario_id = request.session.get('usuario_id')
     if not usuario_id:
-        messages.error(request, 'Acesso restrito: faça login para acessar os relatórios.')
+        messages.error(request, 'Entre na sua conta para acessar os relatórios.')
         return redirect('login')
     try:
         usuario = Usuario.objects.select_related('id_voluntario').get(id_usuario=usuario_id)
