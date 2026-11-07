@@ -502,7 +502,7 @@ class MovimentacaoViewTests(EstoqueTestCase):
             'material': self.material.pk, 'tipo': 'ENTRADA', 'quantidade': 5, 'origem': 'COMPRA',
         }, follow=True)
         self.assertRedirects(r, reverse('movimentacoes_estoque'))
-        self.assertContains(r, 'Movimentação registrada')
+        self.assertContains(r, 'foi registrada com sucesso.')
         mov = MovimentacaoEstoque.objects.get()
         self.assertEqual(mov.registrado_por, self.admin)
         self.assertEqual(mov.registrado_por_nome, 'Administrador')
@@ -946,7 +946,10 @@ class FiltroOrigemELiveTests(EstoqueTestCase):
 
     def test_cadastro_de_material_exibe_confirmacao(self):
         r = self.client.post(reverse('cadastrar_material'), dados_material(), follow=True)
-        self.assertContains(r, 'Material cadastrado com sucesso.')
+        self.assertContains(
+            r,
+            'O material &quot;Luva de Proteção M&quot; foi cadastrado com sucesso.',
+        )
         self.assertContains(r, 'data-toast')
 
     def test_material_e_movimentacao_exibem_links_de_navegacao_relacionada(self):
