@@ -285,7 +285,7 @@ class ComunicadoStatusAdminTests(TestCase):
             [str(mensagem) for mensagem in response.wsgi_request._messages],
         )
         self.assertIn(
-            'Status do comunicado atualizado com sucesso.',
+            f'O status do comunicado "{self.comunicado.titulo}" foi atualizado para Publicado.',
             [str(mensagem) for mensagem in response.wsgi_request._messages],
         )
         self.assertIsNotNone(self.comunicado.dt_publicacao)
@@ -302,7 +302,7 @@ class ComunicadoStatusAdminTests(TestCase):
         self.comunicado.refresh_from_db()
         self.assertEqual(self.comunicado.status, Comunicado.ARQUIVADO)
         self.assertIn(
-            'Status do comunicado atualizado com sucesso.',
+            f'O status do comunicado "{self.comunicado.titulo}" foi atualizado para Arquivado.',
             [str(mensagem) for mensagem in response.wsgi_request._messages],
         )
 
@@ -326,7 +326,7 @@ class ComunicadoStatusAdminTests(TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertIsNone(self.comunicado.dt_ultima_edicao)
         self.assertIn(
-            'O comunicado já está com esse status.',
+            f'O comunicado "{self.comunicado.titulo}" já está com status Rascunho.',
             [str(mensagem) for mensagem in response.wsgi_request._messages],
         )
 
