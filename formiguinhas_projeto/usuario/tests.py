@@ -853,6 +853,59 @@ class PermissoesStatusVoluntarioTests(TestCase):
         self.assertContains(resposta, 'href="/usuario/home/">Início</a>')
         self.assertContains(resposta, 'class="breadcrumb-separator"')
 
+    def test_alterar_nome_no_perfil_atualiza_nome_do_botao_de_perfil(self):
+        session = self.client.session
+        session['usuario_nome'] = self.coordenador_voluntario.nome
+        session.save()
+
+        resposta = self.client.post(reverse('perfil'), {
+            'nome': 'Novo Coordenador',
+            'dt_nascimento': '01/01/1990',
+            'endereco': 'Rua A',
+            'telefone': '11999999999',
+            'email': 'coordenador@teste.org',
+        })
+
+        self.assertEqual(resposta.status_code, 200)
+        self.coordenador_voluntario.refresh_from_db()
+        self.assertEqual(self.coordenador_voluntario.nome, 'Novo Coordenador')
+        self.assertEqual(
+            self.client.session['usuario_nome'],
+            'Novo Coordenador',
+        )
+        self.assertContains(
+            resposta,
+            '<span class="topbar-user-name">Novo Coordenador</span>',
+        )
+        self.assertContains(
+            resposta,
+            '<span class="topbar-user-initial" aria-hidden="true">N</span>',
+        )
+
+    def test_perfil_rejeita_data_de_nascimento_que_resulta_em_menos_de_18_anos(self):
+        data_menor_de_18 = timezone.localdate().replace(
+            year=timezone.localdate().year - 17,
+        )
+
+        resposta = self.client.post(reverse('perfil'), {
+            'nome': self.coordenador_voluntario.nome,
+            'dt_nascimento': data_menor_de_18.strftime('%d/%m/%Y'),
+            'endereco': 'Rua A',
+            'telefone': '11999999999',
+            'email': 'coordenador@teste.org',
+        })
+
+        self.assertEqual(resposta.status_code, 200)
+        self.coordenador_voluntario.refresh_from_db()
+        self.assertEqual(
+            self.coordenador_voluntario.dt_nascimento,
+            date(1990, 1, 1),
+        )
+        self.assertContains(
+            resposta,
+            'O voluntário precisa ter 18 anos ou mais para ser responsável.',
+        )
+
     def test_alteracao_senha_usa_identidade_visual_e_preserva_controles(self):
         resposta = self.client.get(reverse('alterar_senha'))
 

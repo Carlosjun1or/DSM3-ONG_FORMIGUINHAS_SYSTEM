@@ -1181,6 +1181,7 @@ def perfil_view(request):
                 voluntario.ultimo_editado_por_tipo = usuario.tipo
                 voluntario.dt_ultima_edicao = timezone.now()
                 voluntario.save()
+                request.session['usuario_nome'] = voluntario.nome
                 registrar_evento(
                     entidade='VOLUNTARIO',
                     instancia=voluntario,
