@@ -47,3 +47,41 @@
     color: var(--azul);
     font-weight: 600;
 }
+
+/* Destaque dos coordenadores na lista de membros da equipe */
+.acao-detalhe .data-table tr.equipe-membro--coordenador td {
+    background: #fff8e6;
+}
+
+.acao-detalhe .data-table tr.equipe-membro--atual-coordenador td {
+    background: #fff0c2;
+}
+
+.acao-detalhe .data-table tr.equipe-membro--coordenador td:first-child {
+    border-left: 4px solid #d69e18;
+}
+
+.equipe-papel-badge {
+    display: inline-block;
+    margin-top: 4px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: #fff0c2;
+    color: #704b00;
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+.equipe-remocao-bloqueada {
+    display: inline-flex;
+    align-items: center;
+    padding: 8px 10px;
+    border: 1px solid #e8d8a8;
+    border-radius: 8px;
+    background: #fff8e6;
+    color: #704b00;
+    font-size: 0.78rem;
+    font-weight: 700;
+    line-height: 1.2;
+    white-space: nowrap;
+}
