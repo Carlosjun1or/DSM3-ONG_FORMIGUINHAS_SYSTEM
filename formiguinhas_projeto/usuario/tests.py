@@ -468,7 +468,7 @@ class PermissoesStatusVoluntarioTests(TestCase):
 
         self.assertContains(
             resposta,
-            'Status de Voluntário atualizado para Inativo.',
+            f'O status do voluntário &quot;{self.voluntario.nome}&quot; foi atualizado para Inativo.',
         )
         self.voluntario.refresh_from_db()
         self.assertEqual(self.voluntario.status, 'INATIVO')
@@ -507,7 +507,8 @@ class PermissoesStatusVoluntarioTests(TestCase):
 
         self.assertContains(
             resposta,
-            'Não é possível excluir o voluntário vinculado à sua própria conta.',
+            f'Não é possível excluir o voluntário &quot;{self.coordenador_voluntario.nome}&quot;, '
+            'pois ele está vinculado à sua própria conta de acesso.',
         )
         self.assertTrue(
             Voluntario.objects.filter(pk=self.coordenador_voluntario.pk).exists(),
@@ -562,6 +563,50 @@ class PermissoesStatusVoluntarioTests(TestCase):
             resposta,
             f'/voluntarios/{self.voluntario.id_voluntario}/status/',
         )
+
+    def test_usuario_coordenador_nao_aparece_vinculado_a_praia_de_equipe_inativa(self):
+        praia = Praia.objects.create(
+            nome='Praia de equipe inativa',
+            cidade='Santos',
+            latitude=-23.9,
+            longitude=-46.3,
+        )
+        equipe = Equipe.objects.create(
+            nome='Equipe inativa',
+            praia=praia,
+            status='INATIVA',
+        )
+        coordenador_voluntario = Voluntario.objects.create(
+            nome='Coordenador de equipe inativa',
+            dt_nascimento=date(1991, 1, 1),
+            endereco='Rua C',
+            telefone='11977777777',
+            email='coord-equipe-inativa@teste.org',
+        )
+        Usuario.objects.create(
+            id_voluntario=coordenador_voluntario,
+            tipo='COORDENADOR',
+            senha='senha',
+        )
+        EquipeMembro.objects.create(
+            equipe=equipe,
+            voluntario=coordenador_voluntario,
+            papel=EquipeMembro.PAPEL_COORDENADOR,
+            status='ATIVO',
+        )
+        self.autenticar_como_admin()
+
+        resposta = self.client.get(reverse('usuarios'))
+
+        self.assertEqual(resposta.status_code, 200)
+        coordenador_exibido = next(
+            usuario_item
+            for usuario_item in resposta.context['usuarios']
+            if usuario_item.id_voluntario_id == coordenador_voluntario.id_voluntario
+        )
+        self.assertEqual(coordenador_exibido.praias_coordenador, [])
+        self.assertContains(resposta, 'Sem equipe ativa')
+        self.assertNotContains(resposta, praia.nome)
 
     def test_menu_lateral_usa_identidade_visual_e_preserva_permissoes(self):
         resposta = self.client.get(reverse('voluntarios'))
@@ -706,7 +751,7 @@ class PermissoesStatusVoluntarioTests(TestCase):
         self.assertIn(f'E-mail de acesso: {self.voluntario.email}', mail.outbox[0].body)
         self.assertIn(f'Senha temporária: {senha}', mail.outbox[0].body)
         self.assertIn('Perfil > Alterar senha', mail.outbox[0].body)
-        self.assertContains(resposta, 'e-mail de acesso enviado')
+        self.assertContains(resposta, 'os dados de acesso foram enviados para')
 
     def test_cadastro_completo_envia_credenciais_por_email(self):
         self.autenticar_como_admin()
@@ -736,7 +781,7 @@ class PermissoesStatusVoluntarioTests(TestCase):
         self.assertEqual(mail.outbox[0].to, [email])
         self.assertIn(f'Senha temporária: {senha}', mail.outbox[0].body)
         self.assertIn('Perfil > Alterar senha', mail.outbox[0].body)
-        self.assertContains(resposta, 'e-mail de acesso enviado')
+        self.assertContains(resposta, 'os dados de acesso foram enviados para')
 
     def test_cadastro_completo_rejeita_email_ja_utilizado(self):
         self.autenticar_como_admin()
@@ -835,7 +880,10 @@ class PermissoesStatusVoluntarioTests(TestCase):
 
         self.assertEqual(resposta.status_code, 200)
         self.assertContains(resposta, 'class="alert-box alert-error system-feedback-toast" role="alert"')
-        self.assertContains(resposta, 'A senha atual está incorreta.')
+        self.assertContains(
+            resposta,
+            'Não foi possível alterar a senha porque a senha atual está incorreta.',
+        )
 
     def test_alteracao_senha_exibe_sucesso_na_mesma_tela(self):
         self.coordenador.set_password('SenhaAtualSegura2026!')
@@ -854,7 +902,7 @@ class PermissoesStatusVoluntarioTests(TestCase):
             resposta,
             'class="alert-box alert-success system-feedback-toast" role="status"',
         )
-        self.assertContains(resposta, 'Senha alterada com sucesso!')
+        self.assertContains(resposta, 'A senha da sua conta foi alterada com sucesso.')
 
 
 @override_settings(EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend')
