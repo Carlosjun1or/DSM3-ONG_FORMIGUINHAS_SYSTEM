@@ -549,7 +549,7 @@ class DoacaoTestCase(TestCase):
 
             doacao.refresh_from_db()
             self.assertEqual(doacao.status, Doacao.PENDENTE)
-            self.assertContains(response, 'Não foi possível confirmar a doação')
+            self.assertContains(response, 'Não foi possível atualizar a situação da doação #')
 
         self.assertEqual(MovimentacaoEstoque.objects.count(), 0)
         self.assertEqual(material.calcular_saldo(), 0)
@@ -593,7 +593,7 @@ class DoacaoTestCase(TestCase):
         doacao.refresh_from_db()
         self.assertEqual(doacao.status, Doacao.CONFIRMADA)
         self.assertIn(
-            'Situação da doação atualizada.',
+            f'A situação da doação #{doacao.pk} foi atualizada para Confirmada.',
             [str(mensagem) for mensagem in response.wsgi_request._messages],
         )
         self.assertEqual(MovimentacaoEstoque.objects.filter(item_doacao=item).count(), 1)
@@ -659,7 +659,7 @@ class DoacaoTestCase(TestCase):
         doacao.refresh_from_db()
         self.assertEqual(doacao.status, Doacao.CONFIRMADA)
         self.assertIn(
-            'Situação da doação atualizada.',
+            f'A situação da doação #{doacao.pk} foi atualizada para Confirmada.',
             [str(mensagem) for mensagem in response.wsgi_request._messages],
         )
 
@@ -712,7 +712,7 @@ class DoacaoTestCase(TestCase):
         self.doador.refresh_from_db()
         self.assertFalse(self.doador.ativo)
         self.assertIn(
-            'Situação do doador atualizada.',
+            f'A situação do doador "{self.doador.nome}" foi atualizada para inativo.',
             [str(mensagem) for mensagem in response.wsgi_request._messages],
         )
 
@@ -902,5 +902,5 @@ class DoacaoTestCase(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(
             response,
-            'Não foi possível cadastrar o doador. Verifique os erros informados.',
+            'Não foi possível cadastrar o doador. Confira os erros informados e tente novamente.',
         )
