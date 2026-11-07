@@ -1,6 +1,8 @@
 {% extends 'sistema/template-sistema.html' %}
+{% load static %}
 {% block titulo %}Temas de notícias | Sistema{% endblock %}
 {% block page_title %}Controle de Temas de Comunicados{% endblock %}
+{% block estilos %}<link rel="stylesheet" href="{% static 'comunicado/comunicado.css' %}?v=3">{% endblock %}
 {% block conteudo %}
 <section class="card-grid volunteer-metrics communication-topic-metrics" aria-label="Resumo dos temas">
     <article class="card"><h3>Total de temas</h3><div class="metric">{{ total_temas }}</div></article>

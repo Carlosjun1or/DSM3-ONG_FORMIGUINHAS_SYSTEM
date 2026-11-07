@@ -250,33 +250,6 @@
     width: 152px;
 }
 
-.system-page .form-shell .form-actions .btn-primary,
-.system-page .system-form .form-actions .btn-primary,
-.system-page .donation-form-actions .btn-primary,
-.system-page .communication-form .btn-primary,
-.system-page .communication-topic-form .btn-primary {
-    border: 0;
-    background: #ffdf00;
-    box-shadow: 0 6px 0 #e9a51a;
-    color: var(--layout-navy);
-}
-
-.system-page .form-shell .form-actions .btn-primary:hover,
-.system-page .system-form .form-actions .btn-primary:hover,
-.system-page .donation-form-actions .btn-primary:hover,
-.system-page .communication-form .btn-primary:hover,
-.system-page .communication-topic-form .btn-primary:hover {
-    background: #f4cf00;
-}
-
-.system-page .form-shell .form-actions .btn-primary:active,
-.system-page .system-form .form-actions .btn-primary:active,
-.system-page .donation-form-actions .btn-primary:active,
-.system-page .communication-form .btn-primary:active,
-.system-page .communication-topic-form .btn-primary:active {
-    box-shadow: 0 2px 0 #e9a51a;
-}
-
 @media (max-width: 700px) {
     .system-page .form-shell > .form-card,
     .system-page .main-panel > .form-card,
@@ -314,22 +287,6 @@
     .system-page .form-actions .btn,
     .system-page .donation-form-actions .btn {
         width: 100%;
-    }
-}
-
-@media (prefers-reduced-motion: reduce) {
-    .auth-login-actions .btn,
-    .auth-submit-button {
-        transition: none;
-    }
-
-    .auth-login-actions .btn:hover,
-    .auth-login-actions .btn:focus-visible,
-    .auth-login-actions .btn:active,
-    .auth-submit-button:hover,
-    .auth-submit-button:focus-visible,
-    .auth-submit-button:active {
-        transform: none;
     }
 }
 
@@ -544,54 +501,6 @@
 .system-page .main-content .member-form-panel form .form-actions > .btn-primary,
 .system-page .main-content .member-form-panel form .form-actions > button[type="submit"] {
     order: 2;
-}
-
-.system-page .main-content .form-shell form .form-actions > .btn-primary,
-.system-page .main-content .form-shell form .form-actions > button[type="submit"],
-.system-page .main-content .form-card:not(.profile-card):not(.password-card) form .form-actions > .btn-primary,
-.system-page .main-content .form-card:not(.profile-card):not(.password-card) form .form-actions > button[type="submit"],
-.system-page .main-content form.form-card .form-actions > .btn-primary,
-.system-page .main-content form.form-card .form-actions > button[type="submit"],
-.system-page .main-content .communication-form-card form .form-actions > .btn-primary,
-.system-page .main-content .communication-form-card form .form-actions > button[type="submit"],
-.system-page .main-content .communication-topic-form-card form .form-actions > .btn-primary,
-.system-page .main-content .communication-topic-form-card form .form-actions > button[type="submit"],
-.system-page .main-content .member-form-panel form .form-actions > .btn-primary,
-.system-page .main-content .member-form-panel form .form-actions > button[type="submit"] {
-    border: 0;
-    background: #ffdf00;
-    box-shadow: 0 6px 0 #e9a51a;
-    color: var(--layout-navy);
-}
-
-.system-page .main-content .form-shell form .form-actions > .btn-primary:hover,
-.system-page .main-content .form-shell form .form-actions > button[type="submit"]:hover,
-.system-page .main-content .form-card:not(.profile-card):not(.password-card) form .form-actions > .btn-primary:hover,
-.system-page .main-content .form-card:not(.profile-card):not(.password-card) form .form-actions > button[type="submit"]:hover,
-.system-page .main-content form.form-card .form-actions > .btn-primary:hover,
-.system-page .main-content form.form-card .form-actions > button[type="submit"]:hover,
-.system-page .main-content .communication-form-card form .form-actions > .btn-primary:hover,
-.system-page .main-content .communication-form-card form .form-actions > button[type="submit"]:hover,
-.system-page .main-content .communication-topic-form-card form .form-actions > .btn-primary:hover,
-.system-page .main-content .communication-topic-form-card form .form-actions > button[type="submit"]:hover,
-.system-page .main-content .member-form-panel form .form-actions > .btn-primary:hover,
-.system-page .main-content .member-form-panel form .form-actions > button[type="submit"]:hover {
-    background: #f4cf00;
-}
-
-.system-page .main-content .form-shell form .form-actions > .btn-primary:active,
-.system-page .main-content .form-shell form .form-actions > button[type="submit"]:active,
-.system-page .main-content .form-card:not(.profile-card):not(.password-card) form .form-actions > .btn-primary:active,
-.system-page .main-content .form-card:not(.profile-card):not(.password-card) form .form-actions > button[type="submit"]:active,
-.system-page .main-content form.form-card .form-actions > .btn-primary:active,
-.system-page .main-content form.form-card .form-actions > button[type="submit"]:active,
-.system-page .main-content .communication-form-card form .form-actions > .btn-primary:active,
-.system-page .main-content .communication-form-card form .form-actions > button[type="submit"]:active,
-.system-page .main-content .communication-topic-form-card form .form-actions > .btn-primary:active,
-.system-page .main-content .communication-topic-form-card form .form-actions > button[type="submit"]:active,
-.system-page .main-content .member-form-panel form .form-actions > .btn-primary:active,
-.system-page .main-content .member-form-panel form .form-actions > button[type="submit"]:active {
-    box-shadow: 0 2px 0 #e9a51a;
 }
 
 @media (max-width: 700px) {

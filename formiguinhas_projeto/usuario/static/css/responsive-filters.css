@@ -84,8 +84,6 @@
 
     .system-page .volunteer-filters.responsive-filter-form > .responsive-filter-actions .btn {
         width: auto;
-        min-height: 42px;
-        padding-inline: 14px;
         white-space: nowrap;
     }
 

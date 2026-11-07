@@ -2,7 +2,7 @@
 {% load static %}
 
 {% block page_title %}{% if modo == 'edicao' %}Edição de Doação {{ doacao.get_tipo_display }}{% if doacao.doador %} - {{ doacao.doador.nome }}{% endif %}{% else %}Cadastro de Doação{% endif %}{% endblock %}
-{% block estilos %}<link rel="stylesheet" href="{% static 'estoque/estoque.css' %}?v=11">{% endblock %}
+{% block estilos %}<link rel="stylesheet" href="{% static 'estoque/estoque.css' %}?v=12">{% endblock %}
 
 {% block conteudo %}
 <section class="page-section donation-page donation-form-shell">

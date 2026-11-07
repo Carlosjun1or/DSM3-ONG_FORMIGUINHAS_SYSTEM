@@ -386,11 +386,6 @@
     border-top: 1px solid var(--layout-border);
 }
 
-.acao-detalhe .residuo-coletado-cards .record-table-card .btn-small {
-    min-height: 32px;
-    padding: 5px 10px;
-}
-
 .acao-detalhe .acao-imagens-scroll {
     min-width: 0;
 }

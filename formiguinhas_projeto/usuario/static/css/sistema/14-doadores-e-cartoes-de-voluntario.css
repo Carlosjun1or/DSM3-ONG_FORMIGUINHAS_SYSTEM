@@ -27,11 +27,6 @@
     color: #6f7075;
 }
 
-.donor-detail-hero .donation-detail-actions .btn {
-    min-height: 40px;
-    padding-inline: 18px;
-}
-
 .donor-detail-hero .donor-profile-summary {
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 10px;
@@ -86,11 +81,6 @@
     color: #6f7075;
 }
 
-.system-page .system-list > .section-heading .btn {
-    min-height: 44px;
-    padding-inline: 20px;
-}
-
 .system-page .system-list .volunteer-filters {
     display: flex;
     flex-wrap: wrap;
@@ -132,11 +122,6 @@
     justify-content: flex-start;
     gap: 12px;
     padding: 0;
-}
-
-.system-page .system-list .volunteer-filters .filter-actions .btn {
-    min-height: 44px;
-    padding-inline: 22px;
 }
 
 .system-page .volunteer-card-grid {
@@ -350,8 +335,3 @@
 .system-page .volunteer-card-actions form {
     margin: 0;
 }
-
-.system-page .volunteer-card-actions .btn {
-    min-height: 40px;
-}
-

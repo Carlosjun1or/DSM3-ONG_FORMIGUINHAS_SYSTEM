@@ -141,7 +141,7 @@
 }
 
 .action-image-card form { padding: 0 8px 8px; }
-.action-image-card .btn-small { width: 100%; padding: 7px 8px; font-size: 0.75rem; }
+.action-image-card .btn-small { width: 100%; }
 
 @media (max-width: 720px) {
     .action-detail-section { padding: 20px; }

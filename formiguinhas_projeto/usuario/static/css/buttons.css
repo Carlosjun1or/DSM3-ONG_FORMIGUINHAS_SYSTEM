@@ -1,0 +1,433 @@
+/* =========================================================
+   BUTTONS — BASE
+   Estrutura compartilhada por todos os botões
+========================================================= */
+
+.btn,
+.btn-secondary,
+.btn-link,
+.auth-submit-button,
+.profile-button,
+.home-button,
+.botao-whatsapp,
+.botao-voluntario,
+.botao-participar-mutirao,
+.botao-participar,
+.public-announcement-back,
+.comunicado-modal-mais-tarde {
+    --button-height: 44px;
+    --button-padding: 20px;
+    --button-background: transparent;
+    --button-color: var(--azul-profundo, #00306b);
+    --button-border: var(--button-background);
+    --button-relief: transparent;
+
+    display: inline-flex;
+    position: relative;
+    isolation: isolate;
+
+    min-width: 44px;
+    min-height: var(--button-height);
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+
+    padding: 0 var(--button-padding);
+    border: 2px solid var(--button-border);
+    border-radius: 999px;
+
+    background: var(--button-background);
+    box-shadow: inset 0 -5px 0 var(--button-relief);
+    color: var(--button-color);
+
+    font-family: var(--fonte-corpo, "Quicksand", system-ui, sans-serif);
+    font-size: 0.9375rem;
+    font-weight: 700;
+    line-height: 1.2;
+    text-align: center;
+    text-decoration: none;
+
+    cursor: pointer;
+    transition:
+        background-color 0.18s ease,
+        border-color 0.18s ease,
+        color 0.18s ease,
+        box-shadow 0.18s ease,
+        filter 0.18s ease,
+        transform 0.18s ease;
+}
+
+/* =========================================================
+   BUTTONS — SIZES
+========================================================= */
+
+.btn-small,
+.btn--compact {
+    --button-padding: 12px;
+
+    min-height: 44px;
+    font-size: 0.875rem;
+}
+
+/* =========================================================
+   BUTTONS — STATES
+========================================================= */
+
+/* Focus */
+
+.btn:focus-visible,
+.btn-secondary:focus-visible,
+.btn-link:focus-visible,
+.auth-submit-button:focus-visible,
+.profile-button:focus-visible,
+.home-button:focus-visible,
+.botao-whatsapp:focus-visible,
+.botao-voluntario:focus-visible,
+.botao-participar-mutirao:focus-visible,
+.botao-participar:focus-visible,
+.public-announcement-back:focus-visible,
+.comunicado-modal-mais-tarde:focus-visible {
+    outline: 3px solid rgba(0, 88, 185, 0.32);
+    outline-offset: 3px;
+}
+
+/* Disabled */
+
+.btn:disabled,
+.btn-secondary:disabled,
+.btn-link:disabled,
+.auth-submit-button:disabled,
+.profile-button:disabled,
+.home-button:disabled,
+.botao-whatsapp:disabled,
+.botao-voluntario:disabled,
+.botao-participar-mutirao:disabled,
+.botao-participar:disabled,
+.public-announcement-back:disabled,
+.comunicado-modal-mais-tarde:disabled,
+.btn[aria-disabled="true"],
+.btn-secondary[aria-disabled="true"],
+.btn-link[aria-disabled="true"],
+.auth-submit-button[aria-disabled="true"],
+.profile-button[aria-disabled="true"],
+.home-button[aria-disabled="true"],
+.botao-whatsapp[aria-disabled="true"],
+.botao-voluntario[aria-disabled="true"],
+.botao-participar-mutirao[aria-disabled="true"],
+.botao-participar[aria-disabled="true"],
+.public-announcement-back[aria-disabled="true"],
+.comunicado-modal-mais-tarde[aria-disabled="true"] {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+/* Active */
+
+.btn:active,
+.btn-secondary:active,
+.btn-link:active,
+.auth-submit-button:active,
+.profile-button:active,
+.home-button:active,
+.botao-whatsapp:active,
+.botao-voluntario:active,
+.botao-participar-mutirao:active,
+.botao-participar:active,
+.public-announcement-back:active,
+.comunicado-modal-mais-tarde:active {
+    transform: translateY(2px);
+}
+
+/* =========================================================
+   BUTTONS — PUBLIC PAGES
+========================================================= */
+
+/* Primary yellow buttons */
+
+body:not(.system-page) .btn,
+body:not(.system-page) .botao-whatsapp,
+body:not(.system-page) .botao-voluntario,
+body:not(.system-page) .botao-participar-mutirao,
+body:not(.system-page) .botao-participar,
+body:not(.system-page) .comunicado-modal-mais-tarde {
+    --button-background: var(--amarelo, #f4e01e);
+    --button-color: var(--azul-profundo, #00306b);
+    --button-relief: var(--amarelo-botao-base, #de8c1a);
+}
+
+/* Blue buttons */
+
+body:not(.system-page) .btn--azul {
+    --button-background: var(--azul, #0058b9);
+    --button-color: #fff;
+    --button-relief: var(--azul-profundo, #00306b);
+}
+
+/* Purple buttons */
+
+body:not(.system-page) .btn--roxo {
+    --button-background: var(--roxo, #7657cb);
+    --button-color: #fff;
+    --button-relief: var(--roxo-botao-base, #5934be);
+}
+
+/* Outline buttons */
+
+body:not(.system-page) .btn--contorno,
+body:not(.system-page) .btn--contorno-branco,
+body:not(.system-page) .public-announcement-back.btn--contorno {
+    --button-background: transparent;
+    --button-color: var(--azul, #0058b9);
+    --button-border: var(--azul, #0058b9);
+    --button-relief: transparent;
+}
+
+body:not(.system-page) .btn--contorno-branco {
+    --button-color: var(--papel, #f9f6ee);
+    --button-border: var(--papel, #f9f6ee);
+}
+
+/* Public hover */
+
+body:not(.system-page) .btn:not(.btn--contorno):not(.btn--contorno-branco):not(:disabled):not([aria-disabled="true"]):hover,
+body:not(.system-page) .botao-whatsapp:not(:disabled):not([aria-disabled="true"]):hover,
+body:not(.system-page) .botao-voluntario:not(:disabled):not([aria-disabled="true"]):hover,
+body:not(.system-page) .botao-participar-mutirao:not(:disabled):not([aria-disabled="true"]):hover,
+body:not(.system-page) .botao-participar:not(:disabled):not([aria-disabled="true"]):hover,
+body:not(.system-page) .comunicado-modal-mais-tarde:not(:disabled):not([aria-disabled="true"]):hover {
+    filter: brightness(1.05);
+}
+
+body:not(.system-page) .btn--contorno:not(:disabled):not([aria-disabled="true"]):hover,
+body:not(.system-page) .public-announcement-back.btn--contorno:not(:disabled):not([aria-disabled="true"]):hover {
+    --button-background: #f0f6ff;
+    --button-border: var(--azul-profundo, #00306b);
+    --button-color: var(--azul-profundo, #00306b);
+}
+
+body:not(.system-page) .btn--contorno-branco:not(:disabled):not([aria-disabled="true"]):hover {
+    --button-background: var(--amarelo, #f4e01e);
+    --button-border: var(--amarelo, #f4e01e);
+    --button-color: var(--azul-profundo, #00306b);
+}
+
+body:not(.system-page) header .acoes-cabecalho .btn--contorno,
+body:not(.system-page) header .acoes-cabecalho-mobile .btn--contorno {
+    --button-color: #fff;
+    --button-border: #fff;
+}
+
+body:not(.system-page) header .acoes-cabecalho .btn--contorno:hover,
+body:not(.system-page) header .acoes-cabecalho-mobile .btn--contorno:hover {
+    --button-background: rgb(255 255 255 / 12%);
+    --button-color: #fff;
+    --button-border: #fff;
+}
+
+body:not(.system-page) :where(.btn--contorno, .btn--contorno-branco):active {
+    --button-background: var(--selecionado-fundo, #efe9fb);
+}
+
+/* =========================================================
+   BUTTONS — SYSTEM PAGES
+========================================================= */
+
+/* Primary */
+
+body.system-page .btn-primary,
+body.system-page .auth-submit-button {
+    --button-background: var(--azul, #0058b9);
+    --button-color: #fff;
+    --button-relief: var(--azul-profundo, #00306b);
+}
+
+/* Home primary */
+
+body.system-page .home-button--primary {
+    --button-background: var(--amarelo, #f4e01e);
+    --button-color: var(--azul-profundo, #00306b);
+    --button-relief: var(--amarelo-botao-base, #de8c1a);
+}
+
+/* Home secondary */
+
+body.system-page .home-button--secondary {
+    --button-background: transparent;
+    --button-color: #fff;
+    --button-border: #fff;
+    --button-relief: transparent;
+}
+
+/* Outline */
+
+body.system-page .btn-outline,
+body.system-page .profile-button--cancel {
+    --button-background: transparent;
+    --button-color: var(--azul, #0058b9);
+    --button-border: var(--azul, #0058b9);
+    --button-relief: transparent;
+}
+
+/* Secondary */
+
+body.system-page .btn-secondary {
+    --button-background: #eaf6ef;
+    --button-color: #176146;
+    --button-border: #a4c5b3;
+    --button-relief: transparent;
+}
+
+/* Link */
+
+body.system-page .btn-link {
+    --button-background: transparent;
+    --button-color: #176146;
+    --button-border: transparent;
+    --button-relief: transparent;
+}
+
+/* Danger */
+
+body.system-page .btn-danger {
+    --button-background: #b42318;
+    --button-color: #fff;
+    --button-relief: #7f1d16;
+}
+
+/* =========================================================
+   BUTTONS — SYSTEM SPECIAL ACTIONS
+========================================================= */
+
+/* Form submissions */
+
+body.system-page .form-actions .btn-primary,
+body.system-page .donation-form-actions .btn-primary,
+body.system-page .communication-form .btn-primary,
+body.system-page .communication-topic-form .btn-primary,
+body.system-page .form-actions button[type="submit"],
+body.system-page .donation-form-actions button[type="submit"],
+body.system-page .communication-form button[type="submit"],
+body.system-page .communication-topic-form button[type="submit"] {
+    --button-background: var(--amarelo, #f4e01e);
+    --button-color: var(--azul-profundo, #00306b);
+    --button-relief: var(--amarelo-botao-base, #de8c1a);
+}
+
+/* Profile */
+
+body.system-page .profile-button--save {
+    --button-background: var(--amarelo, #f4e01e);
+    --button-color: var(--azul-profundo, #00306b);
+    --button-relief: var(--amarelo-botao-base, #de8c1c);
+}
+
+body.system-page .profile-button--password {
+    --button-background: var(--azul, #0058b9);
+    --button-color: #fff;
+    --button-relief: var(--azul-profundo, #00306b);
+}
+
+/* =========================================================
+   BUTTONS — SYSTEM HOVER
+========================================================= */
+
+body.system-page .btn-primary:hover,
+body.system-page .auth-submit-button:hover {
+    --button-background: var(--azul-profundo, #00306b);
+}
+
+body.system-page .home-button--primary:hover,
+body.system-page .profile-button--save:hover,
+body.system-page .form-actions .btn-primary:hover,
+body.system-page .donation-form-actions .btn-primary:hover,
+body.system-page .communication-form .btn-primary:hover,
+body.system-page .communication-topic-form .btn-primary:hover,
+body.system-page .form-actions button[type="submit"]:hover,
+body.system-page .donation-form-actions button[type="submit"]:hover,
+body.system-page .communication-form button[type="submit"]:hover,
+body.system-page .communication-topic-form button[type="submit"]:hover {
+    --button-background: #f7e949;
+}
+
+body.system-page .home-button--secondary:hover {
+    --button-background: rgb(255 255 255 / 12%);
+}
+
+body.system-page .btn-secondary:hover {
+    --button-background: #dcefe4;
+}
+
+body.system-page .btn-link:hover {
+    text-decoration: underline;
+    text-underline-offset: 0.15em;
+}
+
+body.system-page .btn-outline:hover,
+body.system-page .profile-button--cancel:hover {
+    --button-background: #f0f6ff;
+    --button-border: var(--azul-profundo, #00306b);
+    --button-color: var(--azul-profundo, #00306b);
+}
+
+body.system-page .btn-outline.home-button--secondary {
+    --button-background: transparent;
+    --button-color: #fff;
+    --button-border: #fff;
+}
+
+body.system-page .btn-outline.home-button--secondary:hover {
+    --button-background: rgb(255 255 255 / 12%);
+    --button-color: #fff;
+    --button-border: #fff;
+}
+
+body.system-page .btn-danger:hover {
+    --button-background: #8f1c13;
+}
+
+body.system-page .profile-button--password:hover {
+    --button-background: #004b9f;
+}
+
+/* =========================================================
+   BUTTONS — SPECIAL ACTIVE STATES
+========================================================= */
+
+.btn--contorno:active,
+.btn--contorno-branco:active,
+.btn-outline:active {
+    transform: none;
+}
+
+/* =========================================================
+   BUTTONS — ACCESSIBILITY
+========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+    .btn,
+    .btn-secondary,
+    .btn-link,
+    .auth-submit-button,
+    .profile-button,
+    .home-button,
+    .botao-whatsapp,
+    .botao-voluntario,
+    .botao-participar-mutirao,
+    .botao-participar,
+    .public-announcement-back,
+    .comunicado-modal-mais-tarde {
+        transition: none;
+    }
+
+    .btn:active,
+    .profile-button:active,
+    .home-button:active,
+    .botao-whatsapp:active,
+    .botao-voluntario:active,
+    .botao-participar-mutirao:active,
+    .botao-participar:active,
+    .public-announcement-back:active,
+    .comunicado-modal-mais-tarde:active {
+        transform: none;
+    }
+}

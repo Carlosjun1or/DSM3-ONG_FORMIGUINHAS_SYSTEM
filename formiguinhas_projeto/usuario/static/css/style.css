@@ -516,38 +516,6 @@ main {
     white-space: nowrap;
 }
 
-.btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: 12px 18px;
-    border-radius: 10px;
-    text-decoration: none;
-    font-weight: 700;
-    cursor: pointer;
-    border: none;
-    transition: 0.2s ease;
-}
-
-.btn-primary {
-    background: #1d785d;
-    color: #fff;
-}
-
-.btn-primary:hover {
-    background: #155642;
-}
-
-.btn-outline {
-    border: 1px solid #d0dad6;
-    background: #fff;
-    color: #123a2d;
-}
-
-.btn-outline:hover {
-    background: #f1f8f4;
-}
-
 .alert-box {
     display: flex;
     align-items: flex-start;
@@ -1019,26 +987,7 @@ details summary {
 }
 
 .table-actions .btn {
-    border: 1px solid transparent;
-    font-weight: 700;
-}
-
-.table-actions .btn {
     vertical-align: middle;
-}
-
-.btn-small {
-    padding: 8px 11px;
-    font-size: 0.8rem;
-}
-
-.btn-danger {
-    background: #b42318;
-    color: #fff;
-}
-
-.btn-danger:hover {
-    background: #8f1c13;
 }
 
 .user-edit-summary {
@@ -1921,59 +1870,6 @@ details summary {
     line-height: 1.45;
 }
 
-.profile-button {
-    min-height: 44px;
-    padding: 9px 14px;
-    border: 0;
-    border-radius: 28px;
-    font-family: var(--fonte-corpo);
-    font-size: 14px;
-    font-weight: 700;
-    white-space: nowrap;
-    transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
-}
-
-.profile-button:hover {
-    transform: translateY(2px);
-}
-
-.profile-button:focus-visible {
-    outline: 3px solid rgba(0, 88, 185, 0.28);
-    outline-offset: 3px;
-}
-
-.profile-button--save {
-    background: var(--amarelo);
-    box-shadow: 0 4px 0 #d99a24;
-    color: var(--azul);
-}
-
-.profile-button--save:hover {
-    background: #f7e949;
-    box-shadow: 0 2px 0 #d99a24;
-}
-
-.profile-button--password {
-    background: var(--azul);
-    box-shadow: 0 4px 0 var(--azul-profundo);
-    color: var(--papel);
-}
-
-.profile-button--password:hover {
-    background: #004b9f;
-    box-shadow: 0 2px 0 var(--azul-profundo);
-}
-
-.profile-button--cancel {
-    border: 2px solid var(--azul);
-    background: transparent;
-    color: var(--azul);
-}
-
-.profile-button--cancel:hover {
-    background: rgba(0, 88, 185, 0.06);
-}
-
 .system-page.password-page-body {
     background: var(--papel);
 }
@@ -2799,55 +2695,6 @@ select.select-control:disabled {
         linear-gradient(135deg, var(--layout-blue) 50%, transparent 50%);
 }
 
-.system-page .btn {
-    min-height: 56px;
-    padding: 0 24px;
-    border: 0;
-    border-radius: 999px;
-    font-family: var(--fonte-corpo);
-    font-size: 1rem;
-    font-weight: 700;
-    text-decoration: none;
-    transition: transform 0.08s ease, box-shadow 0.08s ease, background 0.2s ease;
-}
-
-.system-page .btn-primary {
-    box-shadow: 0 7px 0 var(--layout-navy);
-    background: var(--layout-blue);
-    color: #fff;
-}
-
-.system-page .btn-primary:hover {
-    background: var(--layout-navy);
-}
-
-.system-page .btn-primary:active {
-    transform: translateY(4px);
-    box-shadow: 0 3px 0 var(--layout-navy);
-}
-
-.system-page .btn-outline {
-    min-height: 44px;
-    padding: 0 14px;
-    border: 3px solid var(--layout-blue);
-    border-color: var(--layout-blue);
-    border-radius: 999px;
-    background: transparent;
-    color: var(--layout-blue);
-    box-shadow: none;
-}
-
-.system-page .btn-outline:active {
-    transform: none;
-    background: var(--selecionado-fundo);
-}
-
-.system-page .btn-small {
-    min-height: 44px;
-    padding: 0 14px;
-    font-size: 0.875rem;
-}
-
 .system-page .data-table th {
     color: var(--layout-purple);
 }
@@ -3110,13 +2957,6 @@ select.select-control:disabled {
 
     .system-page .section-heading {
         align-items: flex-start;
-    }
-
-    .system-page .section-heading > .btn,
-    .system-page .section-heading-actions > .btn {
-        min-height: 44px;
-        padding-inline: 16px;
-        font-size: 0.875rem;
     }
 
     .system-page .section-heading-actions {
@@ -3801,25 +3641,6 @@ select.select-control:disabled {
     gap: 10px;
     justify-content: flex-end;
     padding-top: 24px;
-}
-
-.btn-secondary {
-    border: 1px solid #a4c5b3;
-    color: #176146;
-    background: #eaf6ef;
-}
-
-.btn-link {
-    border: 0;
-    padding: 5px 0;
-    color: #176146;
-    background: transparent;
-    font-weight: 700;
-    cursor: pointer;
-}
-
-.btn-link:hover {
-    text-decoration: underline;
 }
 
 @media (max-width: 700px) {
@@ -6042,73 +5863,6 @@ select.select-control:disabled {
     margin-top: 2px;
 }
 
-.auth-login-actions .btn {
-    min-height: 50px;
-    border-radius: 999px;
-    font-family: var(--fonte-corpo);
-    font-size: 1rem;
-    font-weight: 700;
-    transition: background-color 180ms ease, border-color 180ms ease, color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
-}
-
-.auth-login-actions .btn-primary,
-.auth-submit-button {
-    min-width: 144px;
-    border: 0;
-    background: var(--azul);
-    box-shadow: 0 4px 0 var(--azul-profundo);
-    color: var(--papel);
-}
-
-.auth-login-actions .btn-primary:hover,
-.auth-login-actions .btn-primary:focus-visible,
-.auth-submit-button:hover,
-.auth-submit-button:focus-visible {
-    background: #004a9d;
-    box-shadow: 0 2px 0 var(--azul-profundo);
-    transform: translateY(2px);
-}
-
-.auth-login-actions .btn-primary:active,
-.auth-submit-button:active {
-    box-shadow: 0 0 0 var(--azul-profundo);
-    transform: translateY(4px);
-}
-
-.auth-login-actions .auth-reset-link {
-    min-width: 206px;
-}
-
-.auth-login-actions .auth-reset-link,
-.auth-recovery-actions .auth-recovery-back {
-    border: 2px solid var(--azul);
-    background: #fff;
-    color: var(--azul);
-    box-shadow: none;
-    transition: background-color 180ms ease, border-color 180ms ease, color 180ms ease, transform 180ms ease;
-}
-
-.auth-login-actions .auth-reset-link:hover,
-.auth-login-actions .auth-reset-link:focus-visible,
-.auth-recovery-actions .auth-recovery-back:hover,
-.auth-recovery-actions .auth-recovery-back:focus-visible {
-    background: #f0f6ff;
-    border-color: var(--azul-profundo);
-    color: var(--azul-profundo);
-    transform: translateY(-1px);
-}
-
-.auth-login-actions .auth-reset-link:active,
-.auth-recovery-actions .auth-recovery-back:active {
-    transform: translateY(1px);
-}
-
-.auth-login-actions .btn:focus-visible,
-.auth-submit-button:focus-visible {
-    outline: 3px solid rgba(118, 87, 203, 0.4);
-    outline-offset: 3px;
-}
-
 .auth-login-note {
     color: #586273;
     font-family: var(--fonte-corpo);
@@ -6147,42 +5901,13 @@ select.select-control:disabled {
     background: var(--alerta-erro-fundo);
 }
 
-.auth-login-card .auth-submit-button {
-    min-height: 50px;
-    border-radius: 44px;
-    cursor: pointer;
-    font: inherit;
-    font-weight: 700;
-}
-
 .auth-back-link {
     justify-self: start;
     color: var(--azul);
 }
 
 .auth-site-link {
-    display: inline-flex;
-    min-height: 44px;
-    align-items: center;
     justify-self: center;
-    justify-content: center;
-    gap: 8px;
-    padding: 9px 18px;
-    border: 2px solid var(--azul);
-    border-radius: 44px;
-    background: #fff;
-    color: var(--azul);
-    font-family: var(--fonte-corpo);
-    font-size: 0.875rem;
-    font-weight: 700;
-    text-decoration: none;
-    transition: background-color 160ms ease, color 160ms ease;
-}
-
-.auth-site-link:hover,
-.auth-site-link:focus-visible {
-    background: var(--azul);
-    color: #fff;
 }
 
 .auth-site-link-icon {
@@ -6195,11 +5920,6 @@ select.select-control:disabled {
     stroke-linecap: round;
     stroke-linejoin: round;
     stroke-width: 1.8;
-}
-
-.auth-site-link:focus-visible {
-    outline: 3px solid rgba(118, 87, 203, 0.35);
-    outline-offset: 3px;
 }
 
 .auth-recovery-instruction {
@@ -6219,19 +5939,8 @@ select.select-control:disabled {
     min-height: 300px;
 }
 
-.auth-recovery-actions .auth-submit-button {
-    min-width: 192px;
-}
-
-.auth-recovery-actions .auth-recovery-back {
-    min-width: 144px;
-}
-
 .auth-login-card .auth-confirmation-link {
     width: fit-content;
-    min-width: 170px;
-    min-height: 50px;
-    font-family: var(--fonte-corpo);
     text-align: center;
 }
 
@@ -6246,18 +5955,7 @@ select.select-control:disabled {
 }
 
 .auth-logout-actions .auth-submit-button {
-    display: inline-flex;
     width: fit-content;
-    min-width: 220px;
-    min-height: 50px;
-    align-items: center;
-    justify-content: center;
-    padding: 12px 20px;
-    border-radius: 44px;
-    color: var(--papel);
-    font-family: var(--fonte-corpo);
-    font-weight: 700;
-    text-decoration: none;
 }
 
 .login-page .error-box {
@@ -6311,12 +6009,6 @@ select.select-control:disabled {
     gap: 12px;
 }
 
-.donation-dashboard > .section-heading .btn-primary,
-.donation-dashboard > .section-heading .btn-outline {
-    min-height: 44px;
-    padding-inline: 20px;
-}
-
 .stats-grid {
     gap: 14px;
     margin-bottom: 18px;
@@ -6367,11 +6059,6 @@ select.select-control:disabled {
     border: 0;
     border-radius: 0;
     background: transparent;
-}
-
-.donation-dashboard .donor-search-form .btn-primary {
-    min-height: 44px;
-    padding-inline: 22px;
 }
 
 .donation-dashboard .donor-search-form label,
@@ -6467,11 +6154,6 @@ select.select-control:disabled {
     color: #6f7075;
 }
 
-.system-page .system-list > .section-heading .btn {
-    min-height: 44px;
-    padding-inline: 20px;
-}
-
 .system-page .system-list .volunteer-filters {
     display: flex;
     flex-wrap: wrap;
@@ -6513,11 +6195,6 @@ select.select-control:disabled {
     justify-content: flex-start;
     gap: 12px;
     padding: 0;
-}
-
-.system-page .system-list .volunteer-filters .filter-actions .btn {
-    min-height: 44px;
-    padding-inline: 22px;
 }
 
 .system-page .volunteer-card-grid {
@@ -6732,10 +6409,6 @@ select.select-control:disabled {
     margin: 0;
 }
 
-.system-page .volunteer-card-actions .btn {
-    min-height: 40px;
-}
-
 .system-page .table-wrap {
     overflow: auto;
     border: 1px solid var(--layout-border);
@@ -6817,13 +6490,6 @@ select.select-control:disabled {
 
 .system-page .data-table .table-actions {
     min-width: 145px;
-}
-
-.system-page .data-table .table-actions .btn,
-.system-page .data-table .btn-small {
-    min-height: 40px;
-    padding-inline: 14px;
-    font-size: 0.875rem;
 }
 
 .system-page .system-list .record-pagination {
@@ -7139,12 +6805,6 @@ select.select-control:disabled {
     margin: 0;
 }
 
-.system-page .record-table-card-actions .btn,
-.system-page .record-table-card .btn-small {
-    min-height: 40px;
-    padding-inline: 12px;
-}
-
 .system-page .table-wrap.has-record-table-cards {
     height: auto;
     max-height: none;
@@ -7331,10 +6991,6 @@ select.select-control:disabled {
 
 .system-page .record-card-actions form {
     margin: 0;
-}
-
-.system-page .record-card-actions .btn {
-    min-height: 40px;
 }
 
 .system-page .record-card-summary {
@@ -8101,33 +7757,6 @@ select.select-control:disabled {
     width: 152px;
 }
 
-.system-page .form-shell .form-actions .btn-primary,
-.system-page .system-form .form-actions .btn-primary,
-.system-page .donation-form-actions .btn-primary,
-.system-page .communication-form .btn-primary,
-.system-page .communication-topic-form .btn-primary {
-    border: 0;
-    background: #ffdf00;
-    box-shadow: 0 6px 0 #e9a51a;
-    color: var(--layout-navy);
-}
-
-.system-page .form-shell .form-actions .btn-primary:hover,
-.system-page .system-form .form-actions .btn-primary:hover,
-.system-page .donation-form-actions .btn-primary:hover,
-.system-page .communication-form .btn-primary:hover,
-.system-page .communication-topic-form .btn-primary:hover {
-    background: #f4cf00;
-}
-
-.system-page .form-shell .form-actions .btn-primary:active,
-.system-page .system-form .form-actions .btn-primary:active,
-.system-page .donation-form-actions .btn-primary:active,
-.system-page .communication-form .btn-primary:active,
-.system-page .communication-topic-form .btn-primary:active {
-    box-shadow: 0 2px 0 #e9a51a;
-}
-
 @media (max-width: 700px) {
     .system-page .form-shell > .form-card,
     .system-page .main-panel > .form-card,
@@ -8202,19 +7831,6 @@ select.select-control:disabled {
         transform: none;
     }
 
-    .auth-login-actions .btn,
-    .auth-submit-button {
-        transition: none;
-    }
-
-    .auth-login-actions .btn:hover,
-    .auth-login-actions .btn:focus-visible,
-    .auth-login-actions .btn:active,
-    .auth-submit-button:hover,
-    .auth-submit-button:focus-visible,
-    .auth-submit-button:active {
-        transform: none;
-    }
 }
 
 .system-page .record-table-card-event {
@@ -8428,54 +8044,6 @@ select.select-control:disabled {
 .system-page .main-content .member-form-panel form .form-actions > .btn-primary,
 .system-page .main-content .member-form-panel form .form-actions > button[type="submit"] {
     order: 2;
-}
-
-.system-page .main-content .form-shell form .form-actions > .btn-primary,
-.system-page .main-content .form-shell form .form-actions > button[type="submit"],
-.system-page .main-content .form-card:not(.profile-card):not(.password-card) form .form-actions > .btn-primary,
-.system-page .main-content .form-card:not(.profile-card):not(.password-card) form .form-actions > button[type="submit"],
-.system-page .main-content form.form-card .form-actions > .btn-primary,
-.system-page .main-content form.form-card .form-actions > button[type="submit"],
-.system-page .main-content .communication-form-card form .form-actions > .btn-primary,
-.system-page .main-content .communication-form-card form .form-actions > button[type="submit"],
-.system-page .main-content .communication-topic-form-card form .form-actions > .btn-primary,
-.system-page .main-content .communication-topic-form-card form .form-actions > button[type="submit"],
-.system-page .main-content .member-form-panel form .form-actions > .btn-primary,
-.system-page .main-content .member-form-panel form .form-actions > button[type="submit"] {
-    border: 0;
-    background: #ffdf00;
-    box-shadow: 0 6px 0 #e9a51a;
-    color: var(--layout-navy);
-}
-
-.system-page .main-content .form-shell form .form-actions > .btn-primary:hover,
-.system-page .main-content .form-shell form .form-actions > button[type="submit"]:hover,
-.system-page .main-content .form-card:not(.profile-card):not(.password-card) form .form-actions > .btn-primary:hover,
-.system-page .main-content .form-card:not(.profile-card):not(.password-card) form .form-actions > button[type="submit"]:hover,
-.system-page .main-content form.form-card .form-actions > .btn-primary:hover,
-.system-page .main-content form.form-card .form-actions > button[type="submit"]:hover,
-.system-page .main-content .communication-form-card form .form-actions > .btn-primary:hover,
-.system-page .main-content .communication-form-card form .form-actions > button[type="submit"]:hover,
-.system-page .main-content .communication-topic-form-card form .form-actions > .btn-primary:hover,
-.system-page .main-content .communication-topic-form-card form .form-actions > button[type="submit"]:hover,
-.system-page .main-content .member-form-panel form .form-actions > .btn-primary:hover,
-.system-page .main-content .member-form-panel form .form-actions > button[type="submit"]:hover {
-    background: #f4cf00;
-}
-
-.system-page .main-content .form-shell form .form-actions > .btn-primary:active,
-.system-page .main-content .form-shell form .form-actions > button[type="submit"]:active,
-.system-page .main-content .form-card:not(.profile-card):not(.password-card) form .form-actions > .btn-primary:active,
-.system-page .main-content .form-card:not(.profile-card):not(.password-card) form .form-actions > button[type="submit"]:active,
-.system-page .main-content form.form-card .form-actions > .btn-primary:active,
-.system-page .main-content form.form-card .form-actions > button[type="submit"]:active,
-.system-page .main-content .communication-form-card form .form-actions > .btn-primary:active,
-.system-page .main-content .communication-form-card form .form-actions > button[type="submit"]:active,
-.system-page .main-content .communication-topic-form-card form .form-actions > .btn-primary:active,
-.system-page .main-content .communication-topic-form-card form .form-actions > button[type="submit"]:active,
-.system-page .main-content .member-form-panel form .form-actions > .btn-primary:active,
-.system-page .main-content .member-form-panel form .form-actions > button[type="submit"]:active {
-    box-shadow: 0 2px 0 #e9a51a;
 }
 
 @media (max-width: 700px) {

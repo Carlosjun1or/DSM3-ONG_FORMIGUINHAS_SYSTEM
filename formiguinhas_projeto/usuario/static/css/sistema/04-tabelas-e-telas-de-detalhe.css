@@ -164,26 +164,7 @@ details summary {
 }
 
 .table-actions .btn {
-    border: 1px solid transparent;
-    font-weight: 700;
-}
-
-.table-actions .btn {
     vertical-align: middle;
-}
-
-.btn-small {
-    padding: 8px 11px;
-    font-size: 0.8rem;
-}
-
-.btn-danger {
-    background: #b42318;
-    color: #fff;
-}
-
-.btn-danger:hover {
-    background: #8f1c13;
 }
 
 .user-edit-summary {
@@ -514,4 +495,3 @@ details summary {
         padding: 16px;
     }
 }
-

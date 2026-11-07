@@ -160,73 +160,6 @@
     margin-top: 2px;
 }
 
-.auth-login-actions .btn {
-    min-height: 50px;
-    border-radius: 999px;
-    font-family: var(--fonte-corpo);
-    font-size: 1rem;
-    font-weight: 700;
-    transition: background-color 180ms ease, border-color 180ms ease, color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
-}
-
-.auth-login-actions .btn-primary,
-.auth-submit-button {
-    min-width: 144px;
-    border: 0;
-    background: var(--azul);
-    box-shadow: 0 4px 0 var(--azul-profundo);
-    color: var(--papel);
-}
-
-.auth-login-actions .btn-primary:hover,
-.auth-login-actions .btn-primary:focus-visible,
-.auth-submit-button:hover,
-.auth-submit-button:focus-visible {
-    background: #004a9d;
-    box-shadow: 0 2px 0 var(--azul-profundo);
-    transform: translateY(2px);
-}
-
-.auth-login-actions .btn-primary:active,
-.auth-submit-button:active {
-    box-shadow: 0 0 0 var(--azul-profundo);
-    transform: translateY(4px);
-}
-
-.auth-login-actions .auth-reset-link {
-    min-width: 206px;
-}
-
-.auth-login-actions .auth-reset-link,
-.auth-recovery-actions .auth-recovery-back {
-    border: 2px solid var(--azul);
-    background: #fff;
-    color: var(--azul);
-    box-shadow: none;
-    transition: background-color 180ms ease, border-color 180ms ease, color 180ms ease, transform 180ms ease;
-}
-
-.auth-login-actions .auth-reset-link:hover,
-.auth-login-actions .auth-reset-link:focus-visible,
-.auth-recovery-actions .auth-recovery-back:hover,
-.auth-recovery-actions .auth-recovery-back:focus-visible {
-    background: #f0f6ff;
-    border-color: var(--azul-profundo);
-    color: var(--azul-profundo);
-    transform: translateY(-1px);
-}
-
-.auth-login-actions .auth-reset-link:active,
-.auth-recovery-actions .auth-recovery-back:active {
-    transform: translateY(1px);
-}
-
-.auth-login-actions .btn:focus-visible,
-.auth-submit-button:focus-visible {
-    outline: 3px solid rgba(118, 87, 203, 0.4);
-    outline-offset: 3px;
-}
-
 .auth-login-note {
     color: #586273;
     font-family: var(--fonte-corpo);
@@ -255,42 +188,13 @@
     background: var(--alerta-erro-fundo);
 }
 
-.auth-login-card .auth-submit-button {
-    min-height: 50px;
-    border-radius: 44px;
-    cursor: pointer;
-    font: inherit;
-    font-weight: 700;
-}
-
 .auth-back-link {
     justify-self: start;
     color: var(--azul);
 }
 
 .auth-site-link {
-    display: inline-flex;
-    min-height: 44px;
-    align-items: center;
     justify-self: center;
-    justify-content: center;
-    gap: 8px;
-    padding: 9px 18px;
-    border: 2px solid var(--azul);
-    border-radius: 44px;
-    background: #fff;
-    color: var(--azul);
-    font-family: var(--fonte-corpo);
-    font-size: 0.875rem;
-    font-weight: 700;
-    text-decoration: none;
-    transition: background-color 160ms ease, color 160ms ease;
-}
-
-.auth-site-link:hover,
-.auth-site-link:focus-visible {
-    background: var(--azul);
-    color: #fff;
 }
 
 .auth-site-link-icon {
@@ -303,11 +207,6 @@
     stroke-linecap: round;
     stroke-linejoin: round;
     stroke-width: 1.8;
-}
-
-.auth-site-link:focus-visible {
-    outline: 3px solid rgba(118, 87, 203, 0.35);
-    outline-offset: 3px;
 }
 
 .auth-recovery-instruction {
@@ -327,19 +226,8 @@
     min-height: 300px;
 }
 
-.auth-recovery-actions .auth-submit-button {
-    min-width: 192px;
-}
-
-.auth-recovery-actions .auth-recovery-back {
-    min-width: 144px;
-}
-
 .auth-login-card .auth-confirmation-link {
     width: fit-content;
-    min-width: 170px;
-    min-height: 50px;
-    font-family: var(--fonte-corpo);
     text-align: center;
 }
 
@@ -354,18 +242,7 @@
 }
 
 .auth-logout-actions .auth-submit-button {
-    display: inline-flex;
     width: fit-content;
-    min-width: 220px;
-    min-height: 50px;
-    align-items: center;
-    justify-content: center;
-    padding: 12px 20px;
-    border-radius: 44px;
-    color: var(--papel);
-    font-family: var(--fonte-corpo);
-    font-weight: 700;
-    text-decoration: none;
 }
 
 .login-page .error-box {
@@ -428,12 +305,6 @@
     gap: 12px;
 }
 
-.donation-dashboard > .section-heading .btn-primary,
-.donation-dashboard > .section-heading .btn-outline {
-    min-height: 44px;
-    padding-inline: 20px;
-}
-
 .stats-grid {
     gap: 14px;
     margin-bottom: 18px;
@@ -486,13 +357,7 @@
     background: transparent;
 }
 
-.donation-dashboard .donor-search-form .btn-primary {
-    min-height: 44px;
-    padding-inline: 22px;
-}
-
 .donation-dashboard .donor-search-form label,
 .donation-records .filter-field label {
     color: var(--layout-navy);
 }
-

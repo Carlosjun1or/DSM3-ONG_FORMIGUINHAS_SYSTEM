@@ -151,16 +151,12 @@ main h4 {
     color: inherit;
 }
 
-main a:not(.botao-whatsapp):not(.botao-participar):not(.botao-participar-mutirao) {
+main a:not(.btn):not(.botao-whatsapp):not(.botao-participar):not(.botao-participar-mutirao):not(.public-announcement-back) {
     color: inherit;
 }
 
 main .container {
     width: min(100% - 2rem, 1300px);
-}
-
-.btn {
-    --btn-cor: var(--site-azul-profundo) !important;
 }
 
 #inicio {
@@ -461,31 +457,6 @@ header .acoes-cabecalho {
     gap: 0.65rem;
 }
 
-header .acoes-cabecalho .btn {
-    min-height: 42px;
-    padding: 0.35rem 1rem;
-    font-size: 0.85rem;
-}
-
-header .acoes-cabecalho .btn--contorno {
-    border: 1px solid #fff;
-    color: #fff;
-    transition: background-color 220ms ease, border-color 220ms ease, color 220ms ease;
-}
-
-header .acoes-cabecalho .btn--contorno:hover,
-header .acoes-cabecalho .btn--contorno:focus-visible {
-    border-color: var(--site-amarelo);
-    background: var(--site-amarelo);
-    color: var(--site-azul-profundo);
-}
-
-header .acoes-cabecalho .btn:not(.btn--contorno) {
-    --btn-bg: var(--site-amarelo);
-    --btn-base: #de8c1a;
-    --btn-cor: var(--site-azul-profundo);
-}
-
 header .menu-navegacao a[aria-current="page"],
 header .menu-navegacao a:hover,
 header .menu-navegacao a:focus-visible {
@@ -494,23 +465,6 @@ header .menu-navegacao a:focus-visible {
 
 main {
     gap: 0;
-}
-
-main .btn {
-    color: var(--btn-cor) !important;
-}
-
-#multiroes .button-multiroes .btn--azul {
-    --btn-bg: var(--site-azul) !important;
-    --btn-base: var(--site-azul-profundo) !important;
-    --btn-cor: #fff !important;
-}
-
-#multiroes-pagina .multiroes-filtros .btn--azul,
-.public-announcements .btn--azul {
-    --btn-bg: var(--site-azul) !important;
-    --btn-base: var(--site-azul-profundo) !important;
-    --btn-cor: #fff !important;
 }
 
 #inicio {
@@ -572,41 +526,6 @@ main .btn {
 #inicio .referencias {
     flex-wrap: wrap;
     gap: 0.7rem;
-}
-
-#inicio .referencias .btn {
-    min-height: 44px;
-    padding-inline: 1.5rem;
-    font-size: 0.9rem;
-}
-
-#inicio .referencias .btn--contorno {
-    border-color: var(--site-azul-profundo);
-    color: var(--site-azul-profundo) !important;
-    transition: background-color 180ms ease, border-color 180ms ease, color 180ms ease, transform 180ms ease;
-}
-
-#inicio .referencias .btn--contorno:hover,
-#inicio .referencias .btn--contorno:focus-visible {
-    border-color: #00306b;
-    background: #f0f6ff;
-    color: #00306b !important;
-    filter: none;
-    transform: translateY(-1px);
-}
-
-#inicio .referencias .btn--contorno:active {
-    background: #fff;
-    box-shadow: none;
-    filter: none;
-    transform: translateY(1px);
-}
-
-#inicio .referencias .btn--contorno:hover:active,
-#inicio .referencias .btn--contorno:focus-visible:active {
-    border-color: #00306b;
-    background: #f0f6ff;
-    color: #00306b !important;
 }
 
 #inicio .indicadores {
@@ -1042,38 +961,6 @@ main .btn {
     padding: 0;
 }
 
-#multiroes .button-multiroes .btn--contorno {
-    min-height: 44px;
-    padding-inline: 1.5rem;
-    border-color: var(--site-azul-profundo);
-    color: var(--site-azul-profundo) !important;
-    font-size: 0.9rem;
-    transition: background-color 180ms ease, border-color 180ms ease, color 180ms ease, transform 180ms ease;
-}
-
-#multiroes .button-multiroes .btn--contorno:hover,
-#multiroes .button-multiroes .btn--contorno:focus-visible {
-    border-color: #00306b;
-    background: #f0f6ff;
-    color: #00306b !important;
-    filter: none;
-    transform: translateY(-1px);
-}
-
-#multiroes .button-multiroes .btn--contorno:active {
-    background: #fff;
-    box-shadow: none;
-    filter: none;
-    transform: translateY(1px);
-}
-
-#multiroes .button-multiroes .btn--contorno:hover:active,
-#multiroes .button-multiroes .btn--contorno:focus-visible:active {
-    border-color: #00306b;
-    background: #f0f6ff;
-    color: #00306b !important;
-}
-
 #praias {
     padding: clamp(2rem, 4vw, 3rem) 0;
     background: var(--site-azul-profundo);
@@ -1338,11 +1225,6 @@ main .btn {
     color: rgb(255 255 255 / 82%);
 }
 
-#praias .praias-localizador .botao-participar {
-    min-height: 52px;
-    padding-inline: 1.25rem;
-}
-
 #praias .praias-localizador .localizacao-status {
     margin: 0.85rem 0 0;
     font-size: 0.85rem;
@@ -1589,30 +1471,6 @@ body.menu-aberto-trava {
         text-align: center;
         justify-content: center;
         width: 100%;
-        min-height: 48px;
-        font-size: 1rem;
-        font-weight: 700;
-    }
-
-    .acoes-cabecalho-mobile .btn--contorno {
-        border: 2px solid #fff;
-        background: transparent;
-        color: #fff;
-        box-shadow: none;
-    }
-
-    .acoes-cabecalho-mobile .btn--contorno:hover,
-    .acoes-cabecalho-mobile .btn--contorno:focus-visible {
-        background: var(--site-amarelo, #f4e01e);
-        border-color: var(--site-amarelo, #f4e01e);
-        color: var(--site-azul-profundo, #00306b);
-    }
-
-    .acoes-cabecalho-mobile .btn:not(.btn--contorno) {
-        --btn-bg: var(--site-amarelo, #f4e01e);
-        --btn-base: #de8c1a;
-        --btn-cor: var(--site-azul-profundo, #00306b);
-        color: var(--site-azul-profundo, #00306b);
     }
 
     header .logo {
@@ -1810,7 +1668,7 @@ body.menu-aberto-trava {
     color: var(--papel);
 }
 
-/* .botao-participar em contextos de praias: overrides de margem e tamanho */
+/* Contextual spacing for the beach action. */
 .praias-cabecalho .botao-participar,
 #praias .botao-participar {
     margin-top: 0.5rem;
@@ -1952,60 +1810,6 @@ body.menu-aberto-trava {
 .chamada-conteudo p {
     margin-bottom: 1.25rem;
     color: var(--papel);
-}
-
-/* .botao-whatsapp, .botao-voluntario, .botao-participar-mutirao e
-   .botao-participar foram migrados para .btn do template.css.
-   Mantidos apenas os overrides contextuais necessários. */
-.botao-whatsapp,
-.botao-voluntario,
-.botao-participar-mutirao,
-.botao-participar {
-    /* Garante retrocompatibilidade para eventuais usos ainda não migrados */
-    display: inline-flex;
-    min-height: var(--botao-altura);
-    align-items: center;
-    justify-content: center;
-    gap: 0.55rem;
-    padding: 0.6rem 1.5rem;
-    border: 0;
-    border-radius: var(--raio-botao);
-    background: var(--amarelo);
-    box-shadow: 0 var(--botao-relevo) 0 var(--amarelo-botao-base);
-    color: var(--azul-profundo) !important;
-    font-family: var(--fonte-corpo);
-    font-weight: 700;
-    text-align: center;
-    text-decoration: none;
-    cursor: pointer;
-    transition: filter 180ms ease, transform 180ms ease, box-shadow 180ms ease;
-}
-
-.botao-whatsapp:hover,
-.botao-whatsapp:focus-visible,
-.botao-voluntario:hover,
-.botao-voluntario:focus-visible,
-.botao-participar-mutirao:hover,
-.botao-participar-mutirao:focus-visible,
-.botao-participar:hover,
-.botao-participar:focus-visible {
-    filter: brightness(1.05);
-}
-
-.botao-whatsapp:active,
-.botao-voluntario:active,
-.botao-participar-mutirao:active,
-.botao-participar:active {
-    transform: translateY(4px);
-    box-shadow: 0 3px 0 var(--amarelo-botao-base);
-}
-
-.botao-whatsapp:focus-visible,
-.botao-voluntario:focus-visible,
-.botao-participar-mutirao:focus-visible,
-.botao-participar:focus-visible {
-    outline: 3px solid var(--papel);
-    outline-offset: 3px;
 }
 
 .multiroes-lista > h2,
@@ -2428,19 +2232,6 @@ body.menu-aberto-trava {
     color: var(--azul-profundo);
 }
 
-.mutiroes-vazio .botao-participar {
-    display: inline-flex;
-    min-height: var(--area-clique);
-    align-items: center;
-    padding: 0.6rem 1.25rem;
-    border-radius: var(--raio-botao);
-    background: var(--amarelo);
-    box-shadow: 0 4px 0 var(--amarelo-botao-base);
-    color: var(--azul-profundo) !important;
-    font-weight: 700;
-    text-decoration: none;
-}
-
 .mutiroes-calendario-lista {
     display: flex;
     flex-direction: column;
@@ -2657,19 +2448,7 @@ body.menu-aberto-trava {
 }
 
 .public-announcement-back {
-    display: inline-flex;
-    min-height: 44px;
-    align-items: center;
     margin-bottom: 1.5rem;
-    color: var(--azul) !important;
-    font-weight: 700;
-    text-decoration: none;
-}
-
-.public-announcement-back:hover,
-.public-announcement-back:focus-visible {
-    text-decoration: underline;
-    text-underline-offset: 3px;
 }
 
 .public-announcement-header {
@@ -2874,7 +2653,6 @@ body.menu-aberto-trava {
         transform: none;
     }
 
-    .public-announcement-back,
     .public-announcement-relations a {
         transition: none;
     }
@@ -3036,28 +2814,12 @@ body.menu-aberto-trava {
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .botao-whatsapp,
-    .botao-voluntario,
-    .botao-participar-mutirao,
     .mutirao-calendario-card {
         transition: none;
     }
 
-    .botao-whatsapp:active,
-    .botao-voluntario:active,
-    .botao-participar-mutirao:active,
     .mutirao-calendario-card:hover,
     .mutirao-calendario-card:focus-within {
-        transform: none;
-    }
-
-    .praias-cabecalho .botao-participar,
-    #praias .botao-participar {
-        transition: none;
-    }
-
-    .praias-cabecalho .botao-participar:active,
-    #praias .botao-participar:active {
         transform: none;
     }
 
@@ -3087,28 +2849,10 @@ body.menu-aberto-trava {
         transition: none;
     }
 
-    header .acoes-cabecalho .btn--contorno {
-        transition: none;
-    }
-
-    #inicio .referencias .btn--contorno,
-    #multiroes .button-multiroes .btn--contorno {
-        transition: none;
-    }
-
     header .menu-navegacao a:hover,
     header .menu-navegacao a:focus-visible,
     header .marca:hover .marca-icone,
     header .marca:focus-visible .marca-icone,
-    #inicio .referencias .btn--contorno:hover,
-    #inicio .referencias .btn--contorno:focus-visible,
-    #inicio .referencias .btn--contorno:active,
-    #multiroes .button-multiroes .btn--contorno:hover,
-    #multiroes .button-multiroes .btn--contorno:focus-visible,
-    #multiroes .button-multiroes .btn--contorno:active {
-        transform: none;
-    }
-
     .multirao-foto-abrir img {
         transition: none;
     }
@@ -3275,31 +3019,7 @@ body.menu-aberto-trava {
     border-top: 1px solid var(--borda-neutra);
 }
 
-.comunicado-modal-acoes .btn {
-    min-height: 48px;
-}
-
-.comunicado-modal-mais-tarde {
-    display: inline-flex;
-    min-height: 44px;
-    align-items: center;
-    justify-content: center;
-    padding: 0.5rem 1rem;
-    border: 2px solid var(--azul);
-    border-radius: var(--raio-botao);
-    background: transparent;
-    color: var(--azul-profundo);
-    font: 700 0.95rem var(--fonte-corpo);
-    cursor: pointer;
-    transition: background-color 150ms ease;
-}
-
-.comunicado-modal-mais-tarde:hover {
-    background: #eaf1f8;
-}
-
-.comunicado-modal-fechar:focus-visible,
-.comunicado-modal-mais-tarde:focus-visible {
+.comunicado-modal-fechar:focus-visible {
     outline: var(--foco);
     outline-offset: var(--foco-offset);
 }
@@ -3751,6 +3471,7 @@ body.menu-aberto-trava {
 }
 
 .apoie-chave-linha .btn {
+    align-self: center;
     gap: 0.45rem;
 }
 

@@ -175,38 +175,6 @@
     white-space: nowrap;
 }
 
-.btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: 12px 18px;
-    border-radius: 10px;
-    text-decoration: none;
-    font-weight: 700;
-    cursor: pointer;
-    border: none;
-    transition: 0.2s ease;
-}
-
-.btn-primary {
-    background: #1d785d;
-    color: #fff;
-}
-
-.btn-primary:hover {
-    background: #155642;
-}
-
-.btn-outline {
-    border: 1px solid #d0dad6;
-    background: #fff;
-    color: #123a2d;
-}
-
-.btn-outline:hover {
-    background: #f1f8f4;
-}
-
 .alert-box {
     display: flex;
     align-items: flex-start;

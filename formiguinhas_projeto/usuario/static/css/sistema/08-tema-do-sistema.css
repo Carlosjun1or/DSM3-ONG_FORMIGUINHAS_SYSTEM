@@ -127,55 +127,6 @@
         linear-gradient(135deg, var(--layout-blue) 50%, transparent 50%);
 }
 
-.system-page .btn {
-    min-height: 56px;
-    padding: 0 24px;
-    border: 0;
-    border-radius: 999px;
-    font-family: var(--fonte-corpo);
-    font-size: 1rem;
-    font-weight: 700;
-    text-decoration: none;
-    transition: transform 0.08s ease, box-shadow 0.08s ease, background 0.2s ease;
-}
-
-.system-page .btn-primary {
-    box-shadow: 0 7px 0 var(--layout-navy);
-    background: var(--layout-blue);
-    color: #fff;
-}
-
-.system-page .btn-primary:hover {
-    background: var(--layout-navy);
-}
-
-.system-page .btn-primary:active {
-    transform: translateY(4px);
-    box-shadow: 0 3px 0 var(--layout-navy);
-}
-
-.system-page .btn-outline {
-    min-height: 44px;
-    padding: 0 14px;
-    border: 3px solid var(--layout-blue);
-    border-color: var(--layout-blue);
-    border-radius: 999px;
-    background: transparent;
-    color: var(--layout-blue);
-    box-shadow: none;
-}
-
-.system-page .btn-outline:active {
-    transform: none;
-    background: var(--selecionado-fundo);
-}
-
-.system-page .btn-small {
-    min-height: 44px;
-    padding: 0 14px;
-    font-size: 0.875rem;
-}
-
 .system-page .data-table th {
     color: var(--layout-purple);
 }
@@ -386,13 +337,6 @@
 
     .system-page .section-heading {
         align-items: flex-start;
-    }
-
-    .system-page .section-heading > .btn,
-    .system-page .section-heading-actions > .btn {
-        min-height: 44px;
-        padding-inline: 16px;
-        font-size: 0.875rem;
     }
 
     .system-page .section-heading-actions {
@@ -1038,25 +982,6 @@
     padding-top: 24px;
 }
 
-.btn-secondary {
-    border: 1px solid #a4c5b3;
-    color: #176146;
-    background: #eaf6ef;
-}
-
-.btn-link {
-    border: 0;
-    padding: 5px 0;
-    color: #176146;
-    background: transparent;
-    font-weight: 700;
-    cursor: pointer;
-}
-
-.btn-link:hover {
-    text-decoration: underline;
-}
-
 @media (max-width: 700px) {
     .form-grid.two-columns,
     .material-grid {
@@ -1104,4 +1029,3 @@
         align-items: flex-start;
     }
 }
-

@@ -254,59 +254,6 @@
     line-height: 1.45;
 }
 
-.profile-button {
-    min-height: 44px;
-    padding: 9px 14px;
-    border: 0;
-    border-radius: 28px;
-    font-family: var(--fonte-corpo);
-    font-size: 14px;
-    font-weight: 700;
-    white-space: nowrap;
-    transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
-}
-
-.profile-button:hover {
-    transform: translateY(2px);
-}
-
-.profile-button:focus-visible {
-    outline: 3px solid rgba(0, 88, 185, 0.28);
-    outline-offset: 3px;
-}
-
-.profile-button--save {
-    background: var(--amarelo);
-    box-shadow: 0 4px 0 #d99a24;
-    color: var(--azul);
-}
-
-.profile-button--save:hover {
-    background: #f7e949;
-    box-shadow: 0 2px 0 #d99a24;
-}
-
-.profile-button--password {
-    background: var(--azul);
-    box-shadow: 0 4px 0 var(--azul-profundo);
-    color: var(--papel);
-}
-
-.profile-button--password:hover {
-    background: #004b9f;
-    box-shadow: 0 2px 0 var(--azul-profundo);
-}
-
-.profile-button--cancel {
-    border: 2px solid var(--azul);
-    background: transparent;
-    color: var(--azul);
-}
-
-.profile-button--cancel:hover {
-    background: rgba(0, 88, 185, 0.06);
-}
-
 .system-page.password-page-body {
     background: var(--papel);
 }
@@ -447,4 +394,3 @@
     color: #5b6f68;
     margin-bottom: 24px;
 }
-

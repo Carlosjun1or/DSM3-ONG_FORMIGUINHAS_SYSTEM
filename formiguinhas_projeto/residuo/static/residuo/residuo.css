@@ -106,7 +106,6 @@
 .unified-collections-table .data-table th:nth-child(5) { width: 12%; }
 
 .unified-collections .table-scroll-hint { margin: 5px 0 0; }
-.unified-collections .btn-small { padding: 5px 7px; font-size: 0.875rem; }
 .unified-collections .collection-items { max-height: 34px; overflow: hidden; }
 .unified-collections .collection-items span,
 .unified-collections .collection-items small { padding: 2px 5px; font-size: 0.8125rem; }

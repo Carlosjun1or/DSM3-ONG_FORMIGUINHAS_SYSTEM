@@ -35,7 +35,7 @@
             </p>
             <div class="comunicado-modal-acoes">
                 <a class="btn" href="{% url 'comunicado_publico_detalhe' ultimo_comunicado.id_comunicado %}">Ler comunicado</a>
-                <button type="button" class="comunicado-modal-mais-tarde" data-fechar-comunicado>Ver mais tarde</button>
+                <button type="button" class="btn btn--contorno comunicado-modal-mais-tarde" data-fechar-comunicado>Ver mais tarde</button>
             </div>
         </div>
     </section>
@@ -403,7 +403,7 @@
         </span>
         <h3>Encontre uma praia perto de você</h3>
         <p>Use sua localização para ordenar as praias por proximidade.</p>
-        <button type="button" id="localizar-praias-index" class="botao-participar">
+        <button type="button" id="localizar-praias-index" class="btn botao-participar">
             Ver praia mais próxima
         </button>
         <p id="localizacao-status-index" class="localizacao-status" role="status">

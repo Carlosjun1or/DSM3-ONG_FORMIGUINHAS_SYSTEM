@@ -81,13 +81,6 @@
     min-width: 145px;
 }
 
-.system-page .data-table .table-actions .btn,
-.system-page .data-table .btn-small {
-    min-height: 40px;
-    padding-inline: 14px;
-    font-size: 0.875rem;
-}
-
 .system-page .system-list .record-pagination {
     border-color: var(--layout-border);
     border-radius: 10px;
@@ -389,12 +382,6 @@
     margin: 0;
 }
 
-.system-page .record-table-card-actions .btn,
-.system-page .record-table-card .btn-small {
-    min-height: 40px;
-    padding-inline: 12px;
-}
-
 .system-page .table-wrap.has-record-table-cards {
     height: auto;
     max-height: none;
@@ -581,10 +568,6 @@
 
 .system-page .record-card-actions form {
     margin: 0;
-}
-
-.system-page .record-card-actions .btn {
-    min-height: 40px;
 }
 
 .system-page .record-card-summary {
@@ -868,4 +851,3 @@
         width: 100%;
     }
 }
-

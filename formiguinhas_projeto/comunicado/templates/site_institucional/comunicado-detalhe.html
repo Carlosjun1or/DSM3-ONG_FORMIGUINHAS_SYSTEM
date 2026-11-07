@@ -1,6 +1,6 @@
 {% extends 'site_institucional/base.html' %}
 {% load static %}
-{% block style %}<link rel="stylesheet" href="{% static 'css/site-layout.css' %}?v=81"><link rel="stylesheet" href="{% static 'acao/acao-detalhe.css' %}?v=2">{% endblock %}
+{% block style %}<link rel="stylesheet" href="{% static 'css/site-layout.css' %}?v=86"><link rel="stylesheet" href="{% static 'acao/acao-detalhe.css' %}?v=4">{% endblock %}
 {% block conteudo %}
 <article class="public-announcement-detail acao-detalhe" aria-labelledby="public-announcement-title">
     <section class="public-announcement-header acao-topo" id="resumo" aria-labelledby="public-announcement-title">
@@ -16,7 +16,7 @@
         </p>
         {% if comunicado.resumo %}<p class="public-announcement-summary">{{ comunicado.resumo }}</p>{% endif %}
         </div>
-        <div class="acao-topo__acoes"><a class="public-announcement-back btn--contorno" href="{% url 'comunicados_publicos' %}">Todas as notícias e avisos</a></div>
+        <div class="acao-topo__acoes"><a class="btn public-announcement-back btn--contorno" href="{% url 'comunicados_publicos' %}">Todas as notícias e avisos</a></div>
     </section>
     <nav class="acao-nav" aria-label="Seções deste comunicado">
         <a href="#mensagem">Mensagem</a>

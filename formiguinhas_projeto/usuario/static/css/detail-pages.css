@@ -624,15 +624,6 @@
     color: var(--azul-profundo);
 }
 
-.bag-detail-page .bag-detail-table .btn-small,
-.collection-detail-page .collection-detail-table .btn-small,
-.condominium-detail-page .condominium-detail-table .btn-small {
-    min-height: 36px;
-    padding: 0 12px;
-    border-width: 1px;
-    font-size: 0.8125rem;
-}
-
 .bag-detail-page .bag-collection-item {
     margin: 2px 4px 4px 0;
     border-color: #d7e2f0;
@@ -652,15 +643,6 @@
 .collection-detail-page .record-table-card .record-table-card-label,
 .condominium-detail-page .record-table-card .record-table-card-label {
     color: var(--roxo);
-}
-
-.bag-detail-page .record-table-card-actions .btn,
-.collection-detail-page .record-table-card-actions .btn,
-.condominium-detail-page .record-table-card-actions .btn {
-    min-height: 36px;
-    padding: 0 12px;
-    border-width: 1px;
-    font-size: 0.8125rem;
 }
 
 @media (max-width: 900px) {
