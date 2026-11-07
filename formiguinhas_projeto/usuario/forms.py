@@ -263,6 +263,9 @@ class PerfilForm(forms.ModelForm):
         })
     )
 
+    def clean_dt_nascimento(self):
+        return validar_maioridade(self.cleaned_data['dt_nascimento'])
+
     class Meta:
         model = Voluntario
         fields = ['nome', 'dt_nascimento', 'endereco', 'telefone', 'email']

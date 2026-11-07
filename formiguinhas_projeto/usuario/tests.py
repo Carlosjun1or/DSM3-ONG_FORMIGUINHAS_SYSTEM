@@ -473,6 +473,27 @@ class PermissoesStatusVoluntarioTests(TestCase):
         self.voluntario.refresh_from_db()
         self.assertEqual(self.voluntario.status, 'INATIVO')
 
+    def test_admin_nao_salva_tipo_de_usuario_invalido_enviado_diretamente(self):
+        usuario_alvo = Usuario.objects.create(
+            id_voluntario=self.voluntario,
+            tipo='COORDENADOR',
+            senha='senha',
+        )
+        self.autenticar_como_admin()
+
+        resposta = self.client.post(
+            reverse('atualizar_tipo_usuario', args=[usuario_alvo.id_usuario]),
+            {'tipo': 'TIPO_INVALIDO'},
+            follow=True,
+        )
+
+        usuario_alvo.refresh_from_db()
+        self.assertEqual(usuario_alvo.tipo, 'COORDENADOR')
+        self.assertContains(
+            resposta,
+            'Não foi possível atualizar o tipo de acesso. Selecione um tipo válido.',
+        )
+
     def test_admin_recebe_feedback_ao_excluir_voluntario_com_vinculo_protegido(self):
         equipe = Equipe.objects.create(nome='Equipe com histórico')
         EquipeMembro.objects.create(equipe=equipe, voluntario=self.voluntario)
@@ -515,6 +536,23 @@ class PermissoesStatusVoluntarioTests(TestCase):
         )
         self.assertTrue(
             Usuario.objects.filter(pk=self.coordenador.pk).exists(),
+        )
+
+    def test_admin_nao_pode_excluir_a_propria_conta_por_post_direto(self):
+        self.autenticar_como_admin()
+
+        resposta = self.client.post(
+            reverse('excluir_usuario', args=[self.coordenador.id_usuario]),
+        )
+
+        self.assertRedirects(resposta, reverse('usuarios'))
+        self.assertTrue(
+            Usuario.objects.filter(pk=self.coordenador.pk).exists(),
+        )
+        self.assertTrue(
+            Voluntario.objects.filter(
+                pk=self.coordenador_voluntario.pk,
+            ).exists(),
         )
 
     def test_admin_exclui_voluntario_e_usuario_vinculado(self):
