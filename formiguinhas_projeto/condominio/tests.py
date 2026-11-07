@@ -494,7 +494,8 @@ class ControleCondominioPermissoesTests(TestCase):
         )
 
         self.assertIn(
-            'Status da bag atualizado com movimentação registrada.',
+            'O status da bag "BAG-TESTE-001" foi atualizado para Cheia, '
+            'e a movimentação foi registrada.',
             [str(mensagem) for mensagem in response.wsgi_request._messages],
         )
         self.assertRedirects(
