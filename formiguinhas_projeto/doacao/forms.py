@@ -11,7 +11,13 @@ from estoque.forms import MaterialCategoriaSelect
 from estoque.models import Material
 from praia.models import Praia
 
-from .models import Doador, Doacao, DoacaoFinanceira, ItemDoacaoMaterial
+from .models import (
+    Doador,
+    Doacao,
+    DoacaoFinanceira,
+    ItemDoacaoMaterial,
+    normalizar_telefone,
+)
 
 
 class MaterialDoacaoChoiceField(forms.ModelChoiceField):
@@ -31,6 +37,9 @@ class DoadorForm(forms.ModelForm):
             'telefone': 'Telefone',
             'voluntario': 'Voluntário relacionado',
             'ativo': 'Doador ativo',
+        }
+        error_messages = {
+            'nome': {'required': 'Informe o nome do doador.'},
         }
         help_texts = {
             'tipo': 'Escolha se o cadastro representa uma pessoa ou uma empresa.',
@@ -92,11 +101,7 @@ class DoadorForm(forms.ModelForm):
         if cleaned.get('email'):
             cleaned['email'] = cleaned['email'].strip().lower()
         if cleaned.get('telefone'):
-            cleaned['telefone'] = cleaned['telefone'].strip()
-        if not cleaned.get('nome', '').strip():
-            self.add_error('nome', 'Informe o nome do doador.')
-        if not cleaned.get('email', '').strip() and not cleaned.get('telefone', '').strip():
-            self.add_error('email', 'Informe o e-mail ou o telefone do doador.')
+            cleaned['telefone'] = normalizar_telefone(cleaned['telefone'])
         return cleaned
 
 
@@ -112,10 +117,12 @@ class DoadorInlineForm(forms.ModelForm):
             'telefone': 'Telefone',
             'voluntario': 'Voluntário relacionado',
         }
+        error_messages = {
+            'nome': {'required': 'Informe o nome do doador.'},
+        }
         help_texts = {
             'tipo': 'Escolha pessoa física ou jurídica.',
             'nome': 'Informe o nome que aparecerá no histórico da doação.',
-            'email': 'Informe pelo menos um contato: e-mail ou telefone.',
             'telefone': 'Opcional quando houver um e-mail informado.',
             'voluntario': 'Opcional. Busque por nome ou e-mail para preencher o contato com os dados cadastrados.',
         }
@@ -173,11 +180,7 @@ class DoadorInlineForm(forms.ModelForm):
         if cleaned.get('email'):
             cleaned['email'] = cleaned['email'].strip().lower()
         if cleaned.get('telefone'):
-            cleaned['telefone'] = cleaned['telefone'].strip()
-        if not cleaned.get('nome', '').strip():
-            self.add_error('nome', 'Informe o nome do doador.')
-        if not cleaned.get('email', '').strip() and not cleaned.get('telefone', '').strip():
-            self.add_error('email', 'Informe o e-mail ou o telefone do doador.')
+            cleaned['telefone'] = normalizar_telefone(cleaned['telefone'])
         return cleaned
 
 
@@ -311,15 +314,9 @@ class DoacaoForm(forms.ModelForm):
 
     def clean(self):
         cleaned = super().clean()
-        anonima = cleaned.get('anonima')
-        doador = cleaned.get('doador')
-        if anonima:
+        if cleaned.get('anonima'):
             self.fields['doador'].disabled = True
             cleaned['doador'] = None
-        elif not doador:
-            self.add_error('doador', 'Informe o doador ou marque a doação como anônima.')
-        if cleaned.get('data_recebimento') and cleaned['data_recebimento'] > timezone.localdate():
-            self.add_error('data_recebimento', 'A data de recebimento não pode ser futura.')
         return cleaned
 
 
@@ -338,6 +335,12 @@ class DoacaoFinanceiraForm(forms.ModelForm):
     class Meta:
         model = DoacaoFinanceira
         fields = ['valor', 'forma_recebimento']
+        error_messages = {
+            'valor': {'required': 'Informe o valor da doação.'},
+            'forma_recebimento': {
+                'required': 'Selecione a forma de recebimento.',
+            },
+        }
         labels = {
             'valor': 'Valor recebido',
             'forma_recebimento': 'Forma de recebimento',
@@ -439,6 +442,7 @@ class ItemDoacaoMaterialForm(forms.ModelForm):
             self.fields['material'].widget.unidades_por_material[material_id] = material.unidade
         self.fields['material'].empty_label = 'Selecione o material do estoque'
         self.fields['material'].required = False
+        self.fields['nome'].required = False
         self.fields['unidade_nova'].choices = [
             ('', 'Selecione a unidade'),
             *Material.UNIDADE_CHOICES,
@@ -469,6 +473,7 @@ class ItemDoacaoMaterialForm(forms.ModelForm):
         cleaned = super().clean()
         material = cleaned.get('material')
         if material:
+            cleaned['nome'] = material.nome
             cleaned['categoria'] = material.categoria
         else:
             nome = ' '.join((cleaned.get('nome') or '').split())
@@ -477,6 +482,11 @@ class ItemDoacaoMaterialForm(forms.ModelForm):
             cleaned['categoria'] = self.categorias_existentes.get(
                 categoria.casefold(), categoria
             )
+            if not nome:
+                self.add_error(
+                    'nome',
+                    'Selecione um material existente ou informe o nome de um novo.',
+                )
             if nome:
                 if len(nome) > 100:
                     self.add_error('nome', 'O nome de um novo material deve ter até 100 caracteres.')
@@ -589,7 +599,11 @@ class ItemDoacaoMaterialFormSetBase(forms.BaseInlineFormSet):
             material = form.cleaned_data.get('material')
             quantidade = form.cleaned_data.get('quantidade')
             condicao = form.cleaned_data.get('condicao')
-            if not material and not form.cleaned_data.get('nome'):
+            if (
+                not material
+                and not form.cleaned_data.get('nome')
+                and not form.has_error('nome')
+            ):
                 form.add_error('nome', 'Selecione um material existente ou informe o nome de um novo.')
             if quantidade is not None and quantidade != quantidade.to_integral_value():
                 form.add_error(

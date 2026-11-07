@@ -4,6 +4,7 @@ from datetime import datetime
 from django.contrib import messages
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError, transaction
+from django.db.models.deletion import ProtectedError
 from django.db.models import Q, Sum, Value, DecimalField
 from django.db.models.functions import Coalesce
 from django.shortcuts import get_object_or_404, redirect, render
@@ -290,13 +291,19 @@ def cadastro_doacao_view(request):
             else:
                 messages.success(
                     request,
-                    f'A doação #{doacao.pk} foi cadastrada com sucesso.',
+                    (
+                        f'O doador "{doacao.doador.nome}" foi cadastrado e vinculado à '
+                        f'doação #{doacao.pk} com sucesso.'
+                        if _novo_doador_informado(request)
+                        else f'A doação #{doacao.pk} foi cadastrada com sucesso.'
+                    ),
                 )
                 return redirect('doacao_detalhe', doacao_id=doacao.pk)
+        tipo_label = dict(Doacao.TIPO_CHOICES).get(request.POST.get('tipo'))
+        tipo_descricao = f' {tipo_label.lower()}' if tipo_label else ''
         messages.error(
             request,
-            'Não foi possível cadastrar a doação. Confira os erros informados; '
-            'nenhuma alteração foi gravada.',
+            f'A doação{tipo_descricao} não foi cadastrada.',
         )
     return render(request, 'sistema/cadastro-doacao.html', {
         'usuario': usuario,
@@ -305,6 +312,7 @@ def cadastro_doacao_view(request):
         'itens_formset': itens_formset,
         'categorias_materiais': _categorias_materiais(),
         'doador_inline_form': doador_inline_form,
+        'exibir_form_doador_inline': _novo_doador_informado(request),
         'modo': 'cadastro',
     })
 
@@ -370,8 +378,7 @@ def editar_doacao_view(request, doacao_id):
                 return redirect('doacao_detalhe', doacao_id=doacao.pk)
         messages.error(
             request,
-            f'Não foi possível atualizar a doação #{doacao.pk}. Confira os erros informados; '
-            'nenhuma alteração foi gravada.',
+            f'As alterações da doação #{doacao.pk} não foram salvas.',
         )
     return render(request, 'sistema/cadastro-doacao.html', {
         'usuario': usuario,
@@ -380,6 +387,7 @@ def editar_doacao_view(request, doacao_id):
         'itens_formset': itens_formset,
         'categorias_materiais': _categorias_materiais(),
         'doador_inline_form': doador_inline_form,
+        'exibir_form_doador_inline': _novo_doador_informado(request),
         'doacao': doacao,
         'modo': 'edicao',
         'estoque_bloqueado': bool(doacao.movimentacoes_estoque.exists()),
@@ -427,6 +435,57 @@ def doacao_detalhe_view(request, doacao_id):
         'auditorias': auditorias,
         'tem_movimentacoes_estoque': tem_movimentacoes_estoque,
     })
+
+
+@transaction.atomic
+def excluir_doacao_view(request, doacao_id):
+    usuario = _usuario_com_acesso(request, somente_admin=True)
+    if usuario is None:
+        return redirect('login')
+    if usuario is False:
+        return render_acesso_bloqueado(request)
+
+    doacao = get_object_or_404(Doacao, pk=doacao_id)
+    if request.method != 'POST':
+        return redirect('doacao_detalhe', doacao_id=doacao.pk)
+    if doacao.status != Doacao.CANCELADA:
+        messages.error(
+            request,
+            f'Não foi possível excluir a doação #{doacao.pk}. '
+            'Somente doações canceladas podem ser excluídas.',
+        )
+        return redirect('doacao_detalhe', doacao_id=doacao.pk)
+    if doacao.movimentacoes_estoque.exists():
+        messages.error(
+            request,
+            f'Não foi possível excluir a doação cancelada #{doacao.pk}. '
+            'Existem movimentações de estoque vinculadas que precisam ser preservadas.',
+        )
+        return redirect('doacao_detalhe', doacao_id=doacao.pk)
+
+    doacao_id = doacao.pk
+    valores_anteriores = _snapshot_doacao_completa(doacao)
+    resumo = f'Doação cancelada #{doacao_id} excluída.'
+    try:
+        doacao.delete()
+    except ProtectedError:
+        messages.error(
+            request,
+            f'Não foi possível excluir a doação cancelada #{doacao_id}. '
+            'Existem registros vinculados que precisam ser preservados.',
+        )
+        return redirect('doacao_detalhe', doacao_id=doacao_id)
+
+    registrar_evento(
+        entidade='DOACAO',
+        id_registro=doacao_id,
+        acao='EXCLUSAO',
+        usuario=usuario,
+        resumo=resumo,
+        valores_anteriores=valores_anteriores,
+    )
+    messages.success(request, f'A doação cancelada #{doacao_id} foi excluída com sucesso.')
+    return redirect('doacoes')
 
 
 
@@ -515,6 +574,8 @@ def doadores_view(request):
     if usuario is False:
         return render_acesso_bloqueado(request)
     busca = request.GET.get('busca', '').strip()
+    tipo = request.GET.get('tipo', '').strip()
+    status = request.GET.get('status', '').strip()
     doadores = Doador.objects.select_related('voluntario').all()
     if busca:
         doadores = doadores.filter(
@@ -522,6 +583,10 @@ def doadores_view(request):
             | Q(documento__icontains=busca)
             | Q(email__icontains=busca)
         )
+    if tipo in dict(Doador.TIPO_CHOICES):
+        doadores = doadores.filter(tipo=tipo)
+    if status in ('ATIVO', 'INATIVO'):
+        doadores = doadores.filter(ativo=(status == 'ATIVO'))
     doadores = doadores.order_by('-dt_cadastro', '-id_doador')
     pagina, filtros_query = paginar_queryset(request, doadores)
 
@@ -535,6 +600,9 @@ def doadores_view(request):
         'pagina': pagina,
         'filtros_query': filtros_query,
         'busca': busca,
+        'tipo_selecionado': tipo,
+        'tipo_choices': Doador.TIPO_CHOICES,
+        'status_selecionado': status,
         'doador': {
             'total_doadores': total_doadores,
             'total_ativos': total_ativos,
@@ -577,8 +645,7 @@ def atualizar_status_doador_view(request, doador_id):
     if usuario.tipo != 'ADMIN':
         messages.error(
             request,
-            'Você não tem permissão para alterar a situação de doadores. '
-            'Esta ação é restrita a administradores.',
+            'Ação não permitida. Somente administradores podem alterar a situação dos doadores.',
         )
         return redirect('doadores')
 
@@ -590,14 +657,14 @@ def atualizar_status_doador_view(request, doador_id):
         messages.error(
             request,
             f'Não foi possível atualizar a situação do doador "{doador.nome}". '
-            'Selecione uma situação válida.',
+            'Selecione uma situação válida e tente novamente.',
         )
         return redirect(destino, **({'doador_id': doador.pk} if retornar_aos_detalhes else {}))
     if (novo_status == 'ATIVO') == doador.ativo:
         messages.info(
             request,
-            f'O doador "{doador.nome}" já está '
-            f'{"ativo" if doador.ativo else "inativo"}.',
+            f'O doador "{doador.nome}" já está com a situação '
+            f'{"Ativo" if doador.ativo else "Inativo"}.',
         )
         return redirect(destino, **({'doador_id': doador.pk} if retornar_aos_detalhes else {}))
 
@@ -623,7 +690,7 @@ def atualizar_status_doador_view(request, doador_id):
     messages.success(
         request,
         f'A situação do doador "{doador.nome}" foi atualizada para '
-        f'{"ativo" if doador.ativo else "inativo"}.',
+        f'{"Ativo" if doador.ativo else "Inativo"}.',
     )
     return redirect(destino, **({'doador_id': doador.pk} if retornar_aos_detalhes else {}))
 
@@ -638,8 +705,7 @@ def cadastro_doador_view(request):
     if usuario.tipo != 'ADMIN':
         messages.error(
             request,
-            'Você não tem permissão para cadastrar doadores. '
-            'Esta ação é restrita a administradores.',
+            'Ação não permitida. Somente administradores podem cadastrar doadores.',
         )
         return redirect('doacoes')
     form = DoadorForm(request.POST or None)
@@ -660,7 +726,8 @@ def cadastro_doador_view(request):
     if request.method == 'POST':
         messages.error(
             request,
-            'Não foi possível cadastrar o doador. Confira os erros informados e tente novamente.',
+            'Não foi possível cadastrar o doador. '
+            'Corrija os campos destacados no formulário e tente novamente.',
         )
     return render(request, 'sistema/cadastro-doador.html', {
         'usuario': usuario,
@@ -679,8 +746,7 @@ def editar_doador_view(request, doador_id):
     if usuario.tipo != 'ADMIN':
         messages.error(
             request,
-            'Você não tem permissão para editar doadores. '
-            'Esta ação é restrita a administradores.',
+            'Ação não permitida. Somente administradores podem editar doadores.',
         )
         return redirect('doacoes')
     doador = get_object_or_404(Doador, pk=doador_id)
@@ -705,8 +771,8 @@ def editar_doador_view(request, doador_id):
     if request.method == 'POST':
         messages.error(
             request,
-            f'Não foi possível atualizar o doador "{doador.nome}". '
-            'Confira os erros informados e tente novamente.',
+            f'Não foi possível atualizar o cadastro do doador "{doador.nome}". '
+            'Corrija os campos destacados no formulário e tente novamente.',
         )
     return render(request, 'sistema/cadastro-doador.html', {
         'usuario': usuario,

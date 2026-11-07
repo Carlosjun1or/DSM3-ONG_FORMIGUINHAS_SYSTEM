@@ -24,7 +24,15 @@
         </div>
         <div class="acao-topo__acoes">
             <a class="btn btn-outline" href="{% url 'doacoes' %}">Voltar às doações</a>
-            {% if usuario.tipo == 'ADMIN' %}<a class="btn btn-outline" href="{% url 'editar_doacao' doacao.id_doacao %}">Editar doação</a>{% endif %}
+            {% if usuario.tipo == 'ADMIN' %}
+            <a class="btn btn-outline" href="{% url 'editar_doacao' doacao.id_doacao %}">Editar doação</a>
+            {% if doacao.status == 'CANCELADA' %}
+            <form method="post" action="{% url 'excluir_doacao' doacao.id_doacao %}" onsubmit="return confirm('Excluir permanentemente a doação cancelada #{{ doacao.id_doacao }}?');">
+                {% csrf_token %}
+                <button class="btn btn-danger" type="submit">Excluir</button>
+            </form>
+            {% endif %}
+            {% endif %}
         </div>
 
         <div class="acao-metricas acao-metricas--compactas">

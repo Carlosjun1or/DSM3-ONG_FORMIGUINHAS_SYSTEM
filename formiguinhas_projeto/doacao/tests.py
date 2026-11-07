@@ -284,6 +284,159 @@ class DoacaoTestCase(TestCase):
         self.assertEqual(doacao.registrado_por, self.usuario)
         self.assertEqual(doacao.financeira.valor, Decimal('125.50'))
 
+    def test_cadastro_financeiro_disponibiliza_doador_ativo(self):
+        resposta_lista = self.client.get(reverse('cadastro_doacao'))
+        self.assertContains(resposta_lista, f'data-id="{self.doador.pk}"')
+
+        resposta_cadastro = self.client.post(reverse('cadastro_doacao'), {
+            'tipo': Doacao.FINANCEIRA,
+            'doador': self.doador.pk,
+            'anonima': '',
+            'data_recebimento': timezone.localdate().isoformat(),
+            'status': Doacao.CONFIRMADA,
+            'finalidade': Doacao.FINALIDADE_GERAL,
+            'descricao_finalidade': '',
+            'praia': '',
+            'acao': '',
+            'observacoes': '',
+            'referencia_comprovante': '',
+            'financeira-valor': '25.00',
+            'financeira-forma_recebimento': DoacaoFinanceira.PIX,
+            'itens-TOTAL_FORMS': '1',
+            'itens-INITIAL_FORMS': '0',
+            'itens-MIN_NUM_FORMS': '1',
+            'itens-MAX_NUM_FORMS': '1000',
+        })
+
+        self.assertEqual(resposta_cadastro.status_code, 302)
+        self.assertEqual(Doacao.objects.get().doador, self.doador)
+        self.assertEqual(Doador.objects.count(), 1)
+
+    def test_cadastro_financeiro_nao_disponibiliza_doador_inativo(self):
+        self.doador.ativo = False
+        self.doador.save()
+
+        resposta_lista = self.client.get(reverse('cadastro_doacao'))
+        self.assertNotIn(
+            self.doador,
+            resposta_lista.context['form'].fields['doador'].queryset,
+        )
+        resposta_cadastro = self.client.post(reverse('cadastro_doacao'), {
+            'tipo': Doacao.FINANCEIRA,
+            'doador': self.doador.pk,
+            'anonima': '',
+            'data_recebimento': timezone.localdate().isoformat(),
+            'status': Doacao.CONFIRMADA,
+            'finalidade': Doacao.FINALIDADE_GERAL,
+            'descricao_finalidade': '',
+            'praia': '',
+            'acao': '',
+            'observacoes': '',
+            'referencia_comprovante': '',
+            'financeira-valor': '25.00',
+            'financeira-forma_recebimento': DoacaoFinanceira.PIX,
+            'itens-TOTAL_FORMS': '1',
+            'itens-INITIAL_FORMS': '0',
+            'itens-MIN_NUM_FORMS': '1',
+            'itens-MAX_NUM_FORMS': '1000',
+        })
+
+        self.assertEqual(resposta_cadastro.status_code, 200)
+        self.assertTrue(resposta_cadastro.context['form'].has_error('doador'))
+        self.assertEqual(Doacao.objects.count(), 0)
+
+    def test_cadastro_financeiro_reutiliza_doador_de_doacao_material(self):
+        Doacao.objects.create(
+            tipo=Doacao.MATERIAL,
+            doador=self.doador,
+            data_recebimento=timezone.localdate(),
+            status=Doacao.CONFIRMADA,
+            registrado_por=self.usuario,
+            registrado_por_nome='Administrador',
+            registrado_por_tipo='ADMIN',
+        )
+
+        resposta = self.client.post(reverse('cadastro_doacao'), {
+            'tipo': Doacao.FINANCEIRA,
+            'doador': self.doador.pk,
+            'anonima': '',
+            'data_recebimento': timezone.localdate().isoformat(),
+            'status': Doacao.CONFIRMADA,
+            'finalidade': Doacao.FINALIDADE_GERAL,
+            'descricao_finalidade': '',
+            'praia': '',
+            'acao': '',
+            'observacoes': '',
+            'referencia_comprovante': '',
+            'financeira-valor': '40.00',
+            'financeira-forma_recebimento': DoacaoFinanceira.PIX,
+            'itens-TOTAL_FORMS': '1',
+            'itens-INITIAL_FORMS': '0',
+            'itens-MIN_NUM_FORMS': '1',
+            'itens-MAX_NUM_FORMS': '1000',
+        })
+
+        self.assertEqual(resposta.status_code, 302)
+        doacao_financeira = Doacao.objects.get(tipo=Doacao.FINANCEIRA)
+        self.assertEqual(doacao_financeira.doador, self.doador)
+        self.assertEqual(Doador.objects.count(), 1)
+
+    def test_formulario_novo_doador_fica_fechado_sem_dados_inline(self):
+        resposta = self.client.post(reverse('cadastro_doacao'), {
+            'tipo': Doacao.FINANCEIRA,
+            'doador': self.doador.pk,
+            'anonima': '',
+            'data_recebimento': timezone.localdate().isoformat(),
+            'status': Doacao.CONFIRMADA,
+            'finalidade': Doacao.FINALIDADE_GERAL,
+            'descricao_finalidade': '',
+            'praia': '',
+            'acao': '',
+            'observacoes': '',
+            'referencia_comprovante': '',
+            'financeira-valor': '',
+            'financeira-forma_recebimento': DoacaoFinanceira.PIX,
+            'itens-TOTAL_FORMS': '1',
+            'itens-INITIAL_FORMS': '0',
+            'itens-MIN_NUM_FORMS': '1',
+            'itens-MAX_NUM_FORMS': '1000',
+        })
+
+        self.assertEqual(resposta.status_code, 200)
+        self.assertFalse(resposta.context['exibir_form_doador_inline'])
+        self.assertContains(resposta, 'id="novo-doador-fields" class="inline-donor-card" hidden')
+
+    def test_cadastro_financeiro_exige_valor_e_forma_de_recebimento(self):
+        dados_base = {
+            'tipo': Doacao.FINANCEIRA,
+            'doador': self.doador.pk,
+            'anonima': '',
+            'data_recebimento': timezone.localdate().isoformat(),
+            'status': Doacao.CONFIRMADA,
+            'finalidade': Doacao.FINALIDADE_GERAL,
+            'descricao_finalidade': '',
+            'praia': '',
+            'acao': '',
+            'observacoes': '',
+            'referencia_comprovante': '',
+            'financeira-valor': '25.00',
+            'financeira-forma_recebimento': DoacaoFinanceira.PIX,
+            'itens-TOTAL_FORMS': '1',
+            'itens-INITIAL_FORMS': '0',
+            'itens-MIN_NUM_FORMS': '1',
+            'itens-MAX_NUM_FORMS': '1000',
+        }
+
+        for campo in ('financeira-valor', 'financeira-forma_recebimento'):
+            with self.subTest(campo=campo):
+                dados = dados_base.copy()
+                dados[campo] = ''
+                resposta = self.client.post(reverse('cadastro_doacao'), dados)
+
+                self.assertEqual(resposta.status_code, 200)
+                self.assertIn(campo.removeprefix('financeira-'), resposta.context['financeira_form'].errors)
+                self.assertEqual(Doacao.objects.count(), 0)
+
     def test_total_do_painel_considera_apenas_confirmadas(self):
         for status, valor in [
             (Doacao.CONFIRMADA, '10.00'),
@@ -307,6 +460,46 @@ class DoacaoTestCase(TestCase):
         self.assertContains(response, '10.00')
         self.assertNotContains(response, '100.00')
 
+    def test_filtro_de_data_em_doacoes_preserva_datas_e_permite_seletor_nativo(self):
+        hoje = timezone.localdate()
+        datas = (hoje - timedelta(days=2), hoje, hoje + timedelta(days=2))
+        doacoes = [
+            Doacao.objects.create(
+                tipo=Doacao.FINANCEIRA,
+                doador=self.doador,
+                data_recebimento=data,
+                status=Doacao.PENDENTE,
+                registrado_por=self.usuario,
+                registrado_por_nome='Administrador',
+                registrado_por_tipo='ADMIN',
+            )
+            for data in datas
+        ]
+
+        resposta = self.client.get(
+            reverse('doacoes'),
+            {
+                'inicio': datas[0].isoformat(),
+                'fim': datas[1].isoformat(),
+            },
+        )
+
+        self.assertEqual(resposta.status_code, 200)
+        self.assertEqual(
+            {doacao.pk for doacao in resposta.context['doacoes']},
+            {doacoes[0].pk, doacoes[1].pk},
+        )
+        self.assertContains(
+            resposta,
+            f'<input id="filtro-inicio" class="form-control" type="date" '
+            f'name="inicio" value="{datas[0].isoformat()}">',
+        )
+        self.assertContains(
+            resposta,
+            f'<input id="filtro-fim" class="form-control" type="date" '
+            f'name="fim" value="{datas[1].isoformat()}">',
+        )
+
     def test_menu_lateral_marca_apenas_controle_de_doadores(self):
         resposta_doadores = self.client.get(reverse('doadores'))
         self.assertContains(
@@ -329,30 +522,92 @@ class DoacaoTestCase(TestCase):
         )
 
     def test_controle_de_doacoes_pagina_e_preserva_filtros(self):
-        for indice in range(21):
+        hoje = timezone.localdate()
+        inicio = hoje - timedelta(days=10)
+        fim = hoje - timedelta(days=1)
+        for indice in range(23):
             Doacao.objects.create(
                 tipo=Doacao.MATERIAL,
                 doador=self.doador,
-                data_recebimento=timezone.localdate(),
+                data_recebimento=inicio + timedelta(days=indice % 10),
                 status=Doacao.PENDENTE,
+                finalidade=Doacao.FINALIDADE_GERAL,
                 registrado_por=self.usuario,
                 registrado_por_nome='Administrador',
                 registrado_por_tipo='ADMIN',
             )
+        Doacao.objects.create(
+            tipo=Doacao.FINANCEIRA,
+            doador=self.doador,
+            data_recebimento=inicio - timedelta(days=1),
+            status=Doacao.PENDENTE,
+            finalidade=Doacao.FINALIDADE_GERAL,
+            registrado_por=self.usuario,
+            registrado_por_nome='Administrador',
+            registrado_por_tipo='ADMIN',
+        )
+        Doacao.objects.create(
+            tipo=Doacao.MATERIAL,
+            doador=self.doador,
+            data_recebimento=fim + timedelta(days=1),
+            status=Doacao.CONFIRMADA,
+            finalidade=Doacao.FINALIDADE_ESPECIFICA,
+            descricao_finalidade='Material escolar',
+            registrado_por=self.usuario,
+            registrado_por_nome='Administrador',
+            registrado_por_tipo='ADMIN',
+        )
+        filtros = {
+            'inicio': inicio.isoformat(),
+            'fim': fim.isoformat(),
+            'tipo': Doacao.MATERIAL,
+            'status': Doacao.PENDENTE,
+            'finalidade': Doacao.FINALIDADE_GERAL,
+        }
 
         response = self.client.get(
             reverse('doacoes'),
-            {'tipo': Doacao.MATERIAL, 'status': Doacao.PENDENTE, 'page': '2'},
+            {**filtros, 'page': '1'},
         )
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.context['pagina'].number, 2)
-        self.assertEqual(response.context['pagina'].paginator.count, 21)
+        self.assertEqual(response.context['pagina'].number, 1)
+        self.assertEqual(response.context['pagina'].paginator.count, 23)
+        self.assertEqual(len(response.context['doacoes']), 20)
         self.assertEqual(
             response.context['filtros_query'],
-            'tipo=MATERIAL&status=PENDENTE',
+            (
+                f'inicio={inicio.isoformat()}&fim={fim.isoformat()}'
+                f'&tipo={Doacao.MATERIAL}&status={Doacao.PENDENTE}'
+                f'&finalidade={Doacao.FINALIDADE_GERAL}'
+            ),
         )
-        self.assertContains(response, 'tipo=MATERIAL&amp;status=PENDENTE&amp;page=1')
+        self.assertContains(
+            response,
+            f'inicio={inicio.isoformat()}&amp;fim={fim.isoformat()}'
+            f'&amp;tipo={Doacao.MATERIAL}&amp;status={Doacao.PENDENTE}'
+            f'&amp;finalidade={Doacao.FINALIDADE_GERAL}&amp;page=2',
+        )
+        self.assertContains(response, f'value="{inicio.isoformat()}"')
+        self.assertContains(response, f'value="{fim.isoformat()}"')
+
+        segunda_pagina = self.client.get(
+            reverse('doacoes'),
+            {**filtros, 'page': '2'},
+        )
+
+        self.assertEqual(segunda_pagina.status_code, 200)
+        self.assertEqual(segunda_pagina.context['pagina'].number, 2)
+        self.assertEqual(segunda_pagina.context['pagina'].paginator.count, 23)
+        self.assertEqual(len(segunda_pagina.context['doacoes']), 3)
+        self.assertEqual(segunda_pagina.context['inicio'], inicio.isoformat())
+        self.assertEqual(segunda_pagina.context['fim'], fim.isoformat())
+        self.assertEqual(segunda_pagina.context['tipo_selecionado'], Doacao.MATERIAL)
+        self.assertEqual(segunda_pagina.context['status_selecionado'], Doacao.PENDENTE)
+        self.assertEqual(
+            segunda_pagina.context['finalidade_selecionada'],
+            Doacao.FINALIDADE_GERAL,
+        )
 
     def test_data_futura_e_rejeitada(self):
         form = DoacaoForm(data={
@@ -369,6 +624,7 @@ class DoacaoTestCase(TestCase):
         })
         self.assertFalse(form.is_valid())
         self.assertIn('data_recebimento', form.errors)
+        self.assertEqual(len(form.errors['data_recebimento']), 1)
 
     def test_cadastro_material_aceita_varios_itens(self):
         luvas = Material.objects.create(
@@ -599,7 +855,169 @@ class DoacaoTestCase(TestCase):
         self.assertEqual(MovimentacaoEstoque.objects.filter(item_doacao=item).count(), 1)
         self.assertContains(response, 'Não é possível retirar a confirmação')
 
-    def test_coordenador_nao_pode_cancelar_doacao(self):
+    def test_doacao_cancelada_pode_ser_excluida_e_a_exclusao_e_auditada(self):
+        doacao = Doacao.objects.create(
+            tipo=Doacao.FINANCEIRA,
+            doador=self.doador,
+            data_recebimento=timezone.localdate(),
+            status=Doacao.CANCELADA,
+            registrado_por=self.usuario,
+            registrado_por_nome='Administrador',
+            registrado_por_tipo='ADMIN',
+        )
+        financeira = DoacaoFinanceira.objects.create(
+            doacao=doacao,
+            valor='25.00',
+            forma_recebimento=DoacaoFinanceira.PIX,
+        )
+
+        listagem = self.client.get(reverse('doacoes'))
+        self.assertContains(listagem, 'Excluir')
+        self.assertContains(
+            listagem,
+            reverse('excluir_doacao', args=[doacao.pk]),
+        )
+        self.assertContains(listagem, f'doação cancelada #{doacao.pk}?')
+        detalhe = self.client.get(reverse('doacao_detalhe', args=[doacao.pk]))
+        self.assertContains(detalhe, 'Excluir')
+        self.assertContains(
+            detalhe,
+            reverse('excluir_doacao', args=[doacao.pk]),
+        )
+
+        resposta = self.client.post(
+            reverse('excluir_doacao', args=[doacao.pk]),
+            follow=True,
+        )
+
+        self.assertRedirects(resposta, reverse('doacoes'))
+        self.assertFalse(Doacao.objects.filter(pk=doacao.pk).exists())
+        self.assertFalse(DoacaoFinanceira.objects.filter(pk=financeira.pk).exists())
+        self.assertIn(
+            f'A doação cancelada #{doacao.pk} foi excluída com sucesso.',
+            [str(mensagem) for mensagem in resposta.wsgi_request._messages],
+        )
+        self.assertTrue(EventoAuditoria.objects.filter(
+            entidade='DOACAO',
+            id_registro=doacao.pk,
+            acao='EXCLUSAO',
+        ).exists())
+
+    def test_nao_permite_excluir_doacao_que_nao_esteja_cancelada(self):
+        doacao = Doacao.objects.create(
+            tipo=Doacao.FINANCEIRA,
+            doador=self.doador,
+            data_recebimento=timezone.localdate(),
+            status=Doacao.PENDENTE,
+            registrado_por=self.usuario,
+            registrado_por_nome='Administrador',
+            registrado_por_tipo='ADMIN',
+        )
+
+        resposta = self.client.post(
+            reverse('excluir_doacao', args=[doacao.pk]),
+            follow=True,
+        )
+
+        self.assertRedirects(
+            resposta,
+            reverse('doacao_detalhe', args=[doacao.pk]),
+        )
+        self.assertTrue(Doacao.objects.filter(pk=doacao.pk).exists())
+        self.assertContains(
+            resposta,
+            f'Não foi possível excluir a doação #{doacao.pk}. '
+            'Somente doações canceladas podem ser excluídas.',
+        )
+
+    def test_nao_permite_excluir_doacao_cancelada_com_movimentacao_de_estoque(self):
+        material = Material.objects.create(
+            nome='Cestas protegidas',
+            codigo='CESTAS-PROTEGIDAS',
+            categoria='Alimentos',
+            unidade='UNIDADE',
+        )
+        doacao = Doacao.objects.create(
+            tipo=Doacao.MATERIAL,
+            doador=self.doador,
+            data_recebimento=timezone.localdate(),
+            status=Doacao.CANCELADA,
+            registrado_por=self.usuario,
+            registrado_por_nome='Administrador',
+            registrado_por_tipo='ADMIN',
+        )
+        item = ItemDoacaoMaterial.objects.create(
+            doacao=doacao,
+            material=material,
+            nome='Cestas protegidas',
+            categoria='Alimentos',
+            quantidade=2,
+            unidade='unidades',
+            condicao=ItemDoacaoMaterial.CONDICAO_NOVO,
+        )
+        movimentacao = MovimentacaoEstoque.objects.create(
+            material=material,
+            tipo='ENTRADA',
+            quantidade=2,
+            origem='DOACAO',
+            doacao=doacao,
+            item_doacao=item,
+        )
+
+        resposta = self.client.post(
+            reverse('excluir_doacao', args=[doacao.pk]),
+            follow=True,
+        )
+
+        self.assertRedirects(
+            resposta,
+            reverse('doacao_detalhe', args=[doacao.pk]),
+        )
+        self.assertTrue(Doacao.objects.filter(pk=doacao.pk).exists())
+        self.assertTrue(MovimentacaoEstoque.objects.filter(pk=movimentacao.pk).exists())
+        self.assertContains(
+            resposta,
+            f'Não foi possível excluir a doação cancelada #{doacao.pk}. '
+            'Existem movimentações de estoque vinculadas que precisam ser preservadas.',
+        )
+
+    def test_coordenador_nao_pode_excluir_doacao_cancelada(self):
+        doacao = Doacao.objects.create(
+            tipo=Doacao.FINANCEIRA,
+            doador=self.doador,
+            data_recebimento=timezone.localdate(),
+            status=Doacao.CANCELADA,
+            registrado_por=self.usuario,
+            registrado_por_nome='Administrador',
+            registrado_por_tipo='ADMIN',
+        )
+        voluntario = Voluntario.objects.create(
+            nome='Coordenador',
+            dt_nascimento='1991-01-01',
+            endereco='Rua B',
+            telefone='11988888888',
+            email='coordenador@example.com',
+        )
+        coordenador = Usuario.objects.create(
+            id_voluntario=voluntario,
+            tipo='COORDENADOR',
+            senha='hash',
+        )
+        session = self.client.session
+        session['usuario_id'] = coordenador.id_usuario
+        session['usuario_tipo'] = coordenador.tipo
+        session['usuario_nome'] = voluntario.nome
+        session.save()
+        self.client.cookies['sessionid'] = session.session_key
+
+        resposta = self.client.post(
+            reverse('excluir_doacao', args=[doacao.pk]),
+        )
+
+        self.assertEqual(resposta.status_code, 403)
+        self.assertTrue(Doacao.objects.filter(pk=doacao.pk).exists())
+
+    def test_coordenador_consulta_doacoes_mas_nao_pode_criar_editar_ou_cancelar(self):
         voluntario = Voluntario.objects.create(
             nome='Coordenador',
             dt_nascimento='1991-01-01',
@@ -621,6 +1039,7 @@ class DoacaoTestCase(TestCase):
             registrado_por_nome='Administrador',
             registrado_por_tipo='ADMIN',
         )
+
         session = self.client.session
         session['usuario_id'] = coordenador.id_usuario
         session['usuario_tipo'] = coordenador.tipo
@@ -628,13 +1047,33 @@ class DoacaoTestCase(TestCase):
         session.save()
         self.client.cookies['sessionid'] = session.session_key
 
-        response = self.client.post(
-            reverse('atualizar_status_doacao', args=[doacao.pk]),
-            {'status': Doacao.CANCELADA},
+        listagem = self.client.get(reverse('doacoes'))
+        self.assertEqual(listagem.status_code, 200)
+        self.assertContains(listagem, f'href="{reverse("doacao_detalhe", args=[doacao.pk])}"')
+        self.assertNotContains(listagem, reverse('cadastro_doacao'))
+
+        detalhe = self.client.get(reverse('doacao_detalhe', args=[doacao.pk]))
+        self.assertEqual(detalhe.status_code, 200)
+        self.assertContains(detalhe, f'Registro #{doacao.pk}')
+        self.assertNotContains(detalhe, reverse('editar_doacao', args=[doacao.pk]))
+
+        tentativas_bloqueadas = (
+            self.client.get(reverse('cadastro_doacao')),
+            self.client.post(reverse('cadastro_doacao'), {}),
+            self.client.get(reverse('editar_doacao', args=[doacao.pk])),
+            self.client.post(reverse('editar_doacao', args=[doacao.pk]), {}),
+            self.client.post(
+                reverse('atualizar_status_doacao', args=[doacao.pk]),
+                {'status': Doacao.CANCELADA},
+            ),
         )
-        self.assertEqual(response.status_code, 403)
+        for resposta in tentativas_bloqueadas:
+            with self.subTest(path=resposta.wsgi_request.path, method=resposta.wsgi_request.method):
+                self.assertEqual(resposta.status_code, 403)
+
         doacao.refresh_from_db()
         self.assertEqual(doacao.status, Doacao.PENDENTE)
+        self.assertEqual(Doacao.objects.count(), 1)
 
     def test_alterar_status_na_tela_de_detalhes_permanece_nela(self):
         doacao = Doacao.objects.create(
@@ -712,9 +1151,82 @@ class DoacaoTestCase(TestCase):
         self.doador.refresh_from_db()
         self.assertFalse(self.doador.ativo)
         self.assertIn(
-            f'A situação do doador "{self.doador.nome}" foi atualizada para inativo.',
+            f'A situação do doador "{self.doador.nome}" foi atualizada para Inativo.',
             [str(mensagem) for mensagem in response.wsgi_request._messages],
         )
+
+    def test_coordenador_nao_acessa_dados_pessoais_dos_doadores(self):
+        self.doador.documento = '12345678901'
+        self.doador.email = 'doador-privado@example.com'
+        self.doador.telefone = '13988887777'
+        self.doador.save()
+        dados_pessoais = (
+            self.doador.documento,
+            self.doador.email,
+            self.doador.telefone,
+        )
+
+        voluntario = Voluntario.objects.create(
+            nome='Coordenador',
+            dt_nascimento='1991-01-01',
+            endereco='Rua B',
+            telefone='11988888888',
+            email='coordenador@example.com',
+        )
+        coordenador = Usuario.objects.create(
+            id_voluntario=voluntario,
+            tipo='COORDENADOR',
+            senha='hash',
+        )
+        session = self.client.session
+        session['usuario_id'] = coordenador.id_usuario
+        session['usuario_tipo'] = coordenador.tipo
+        session['usuario_nome'] = voluntario.nome
+        session.save()
+        self.client.cookies['sessionid'] = session.session_key
+
+        requisicoes = (
+            ('get', reverse('doadores'), None),
+            ('get', reverse('doador_detalhe', args=[self.doador.pk]), None),
+            ('get', reverse('cadastro_doador'), None),
+            ('post', reverse('cadastro_doador'), {
+                'tipo': Doador.PESSOA_FISICA,
+                'nome': 'Doador não autorizado',
+                'documento': '98765432100',
+                'email': 'nao-autorizado@example.com',
+                'telefone': '11977776666',
+                'voluntario': '',
+                'ativo': 'on',
+            }),
+            ('get', reverse('editar_doador', args=[self.doador.pk]), None),
+            ('post', reverse('editar_doador', args=[self.doador.pk]), {
+                'tipo': Doador.PESSOA_FISICA,
+                'nome': 'Doador alterado sem permissão',
+                'documento': '98765432100',
+                'email': 'nao-autorizado@example.com',
+                'telefone': '11977776666',
+                'voluntario': '',
+                'ativo': 'on',
+            }),
+            ('post', reverse('atualizar_status_doador', args=[self.doador.pk]), {
+                'status': 'INATIVO',
+            }),
+        )
+
+        for metodo, url, dados in requisicoes:
+            with self.subTest(metodo=metodo, url=url):
+                resposta = getattr(self.client, metodo)(url, dados or {})
+                self.assertEqual(resposta.status_code, 403)
+                conteudo = resposta.content.decode()
+                for dado_pessoal in dados_pessoais:
+                    self.assertNotIn(dado_pessoal, conteudo)
+
+        self.doador.refresh_from_db()
+        self.assertEqual(self.doador.documento, dados_pessoais[0])
+        self.assertEqual(self.doador.email, dados_pessoais[1])
+        self.assertEqual(self.doador.telefone, dados_pessoais[2])
+        self.assertTrue(self.doador.ativo)
+        self.assertEqual(Doador.objects.count(), 1)
 
     def test_detalhe_doador_exibe_breadcrumb_com_nome(self):
         response = self.client.get(
@@ -729,6 +1241,120 @@ class DoacaoTestCase(TestCase):
         self.assertContains(
             response,
             '<span aria-current="page">Detalhes do Doador(a) - Doador Teste</span>',
+        )
+
+    def test_detalhe_doador_usa_cores_de_status_das_doacoes(self):
+        for status in (
+            Doacao.PENDENTE,
+            Doacao.CONFIRMADA,
+            Doacao.CANCELADA,
+        ):
+            Doacao.objects.create(
+                tipo=Doacao.FINANCEIRA,
+                doador=self.doador,
+                data_recebimento=timezone.localdate(),
+                status=status,
+                registrado_por=self.usuario,
+                registrado_por_nome='Administrador',
+                registrado_por_tipo='ADMIN',
+            )
+
+        response = self.client.get(
+            reverse('doador_detalhe', args=[self.doador.pk])
+        )
+
+        for status, rotulo in Doacao.STATUS_CHOICES:
+            self.assertContains(
+                response,
+                f'class="status-badge status-{status.lower()}">{rotulo}</span>',
+            )
+
+    def test_lista_de_doadores_filtra_por_tipo_e_preserva_filtros_na_paginacao(self):
+        Doador.objects.bulk_create([
+            Doador(
+                tipo=Doador.PESSOA_FISICA,
+                nome=f'Doador de teste {indice:02d}',
+                cadastrado_por_nome='Administrador',
+            )
+            for indice in range(21)
+        ])
+        Doador.objects.create(
+            tipo=Doador.PESSOA_JURIDICA,
+            nome='Doador de teste pessoa jurídica',
+            cadastrado_por_nome='Administrador',
+        )
+        Doador.objects.create(
+            tipo=Doador.PESSOA_FISICA,
+            nome='Doador de teste inativo PF',
+            ativo=False,
+            cadastrado_por_nome='Administrador',
+        )
+        Doador.objects.create(
+            tipo=Doador.PESSOA_JURIDICA,
+            nome='Doador de teste inativo PJ',
+            ativo=False,
+            cadastrado_por_nome='Administrador',
+        )
+        filtros = {
+            'busca': 'Doador de teste',
+            'tipo': Doador.PESSOA_FISICA,
+            'status': 'ATIVO',
+        }
+
+        primeira_pagina = self.client.get(reverse('doadores'), filtros)
+
+        self.assertEqual(primeira_pagina.status_code, 200)
+        self.assertEqual(primeira_pagina.context['pagina'].paginator.count, 21)
+        self.assertEqual(primeira_pagina.context['pagina'].number, 1)
+        self.assertEqual(len(primeira_pagina.context['doadores']), 20)
+        self.assertEqual(
+            {doador.tipo for doador in primeira_pagina.context['doadores']},
+            {Doador.PESSOA_FISICA},
+        )
+        self.assertContains(
+            primeira_pagina,
+            '?busca=Doador+de+teste&amp;tipo=PF&amp;status=ATIVO&amp;page=2',
+        )
+
+        segunda_pagina = self.client.get(
+            reverse('doadores'),
+            {**filtros, 'page': '2'},
+        )
+
+        self.assertEqual(segunda_pagina.status_code, 200)
+        self.assertEqual(segunda_pagina.context['pagina'].number, 2)
+        self.assertEqual(segunda_pagina.context['pagina'].paginator.count, 21)
+        self.assertEqual(len(segunda_pagina.context['doadores']), 1)
+        self.assertEqual(
+            segunda_pagina.context['doadores'][0].tipo,
+            Doador.PESSOA_FISICA,
+        )
+        self.assertEqual(segunda_pagina.context['tipo_selecionado'], Doador.PESSOA_FISICA)
+        self.assertEqual(segunda_pagina.context['status_selecionado'], 'ATIVO')
+        self.assertContains(
+            segunda_pagina,
+            '?busca=Doador+de+teste&amp;tipo=PF&amp;status=ATIVO&amp;page=1',
+        )
+
+        juridicas = self.client.get(
+            reverse('doadores'),
+            {'tipo': Doador.PESSOA_JURIDICA},
+        )
+        self.assertEqual(juridicas.context['pagina'].paginator.count, 2)
+        self.assertEqual(
+            {doador.tipo for doador in juridicas.context['doadores']},
+            {Doador.PESSOA_JURIDICA},
+        )
+
+        inativos = self.client.get(
+            reverse('doadores'),
+            {'busca': 'Doador de teste inativo', 'status': 'INATIVO'},
+        )
+        self.assertEqual(inativos.context['pagina'].paginator.count, 2)
+        self.assertEqual(inativos.context['status_selecionado'], 'INATIVO')
+        self.assertEqual(
+            {doador.tipo for doador in inativos.context['doadores']},
+            {Doador.PESSOA_FISICA, Doador.PESSOA_JURIDICA},
         )
 
     def test_cadastro_doador_exibe_breadcrumb_hierarquico(self):
@@ -827,6 +1453,11 @@ class DoacaoTestCase(TestCase):
         self.assertEqual(doador.email, 'voluntario.doador@example.com')
         self.assertEqual(doador.telefone, '13988887777')
         self.assertEqual(Doacao.objects.get().doador, doador)
+        self.assertIn(
+            f'O doador "{doador.nome}" foi cadastrado e vinculado à '
+            f'doação #{Doacao.objects.get().pk} com sucesso.',
+            [str(mensagem) for mensagem in response.wsgi_request._messages],
+        )
         self.assertNotIn(
             voluntario,
             DoadorInlineForm().fields['voluntario'].queryset,
@@ -848,8 +1479,129 @@ class DoacaoTestCase(TestCase):
             'itens-MAX_NUM_FORMS': '1000',
         })
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'Não foi possível salvar a doação.')
-        self.assertContains(response, 'Informe o doador ou marque a doação como anônima.')
+        self.assertTrue(response.context['financeira_form'].errors)
+        conteudo = response.content.decode()
+        inicio_form = conteudo.index('<form method="post" class="form-card donation-form"')
+        inicio_resumo = conteudo.index('class="form-error-summary"')
+        self.assertLess(inicio_form, inicio_resumo)
+        self.assertEqual(
+            conteudo.count('Informe o doador ou marque a doação como anônima.'),
+            1,
+        )
+        self.assertContains(response, 'Informe o valor da doação.')
+        self.assertContains(response, 'Selecione a forma de recebimento.')
+        self.assertTrue(response.context['form'].errors)
+        self.assertEqual(response.content.decode().count('data-toast'), 1)
+        self.assertIn(
+            'A doação financeira não foi cadastrada.',
+            [str(mensagem) for mensagem in response.wsgi_request._messages],
+        )
+
+    def test_cadastro_de_doacao_material_invalido_exibe_feedback_unico(self):
+        response = self.client.post(reverse('cadastro_doacao'), {
+            'tipo': Doacao.MATERIAL,
+            'doador': self.doador.pk,
+            'anonima': '',
+            'data_recebimento': timezone.localdate().isoformat(),
+            'status': Doacao.PENDENTE,
+            'finalidade': Doacao.FINALIDADE_GERAL,
+            'descricao_finalidade': '',
+            'praia': '',
+            'acao': '',
+            'observacoes': '',
+            'referencia_comprovante': '',
+            'financeira-valor': '',
+            'financeira-forma_recebimento': '',
+            'itens-TOTAL_FORMS': '1',
+            'itens-INITIAL_FORMS': '0',
+            'itens-MIN_NUM_FORMS': '1',
+            'itens-MAX_NUM_FORMS': '1000',
+            'itens-0-material': '',
+            'itens-0-nome': 'Arroz',
+            'itens-0-categoria': 'Alimentos',
+            'itens-0-unidade_nova': 'UNIDADE',
+            'itens-0-quantidade': '0',
+            'itens-0-condicao': ItemDoacaoMaterial.CONDICAO_NOVO,
+            'itens-0-observacoes': '',
+        })
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.context['itens_formset'].forms[0].errors)
+        self.assertEqual(response.content.decode().count('data-toast'), 1)
+        self.assertIn(
+            'A doação material não foi cadastrada.',
+            [str(mensagem) for mensagem in response.wsgi_request._messages],
+        )
+        self.assertEqual(Doacao.objects.count(), 0)
+
+    def test_cadastro_inline_de_doador_mostra_cada_erro_uma_vez(self):
+        response = self.client.post(reverse('cadastro_doacao'), {
+            'tipo': Doacao.FINANCEIRA,
+            'doador': '',
+            'anonima': '',
+            'data_recebimento': timezone.localdate().isoformat(),
+            'status': Doacao.CONFIRMADA,
+            'finalidade': Doacao.FINALIDADE_GERAL,
+            'descricao_finalidade': '',
+            'praia': '',
+            'acao': '',
+            'observacoes': '',
+            'referencia_comprovante': '',
+            'novo_doador-tipo': Doador.PESSOA_FISICA,
+            'novo_doador-nome': '',
+            'novo_doador-documento': '',
+            'novo_doador-email': '',
+            'novo_doador-telefone': '',
+            'novo_doador-voluntario': '',
+            'financeira-valor': '25.00',
+            'financeira-forma_recebimento': DoacaoFinanceira.PIX,
+            'itens-TOTAL_FORMS': '1',
+            'itens-INITIAL_FORMS': '0',
+            'itens-MIN_NUM_FORMS': '1',
+            'itens-MAX_NUM_FORMS': '1000',
+        })
+
+        conteudo = response.content.decode()
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(conteudo.count('Informe o nome do doador.'), 1)
+        self.assertEqual(
+            conteudo.count('Informe o e-mail ou o telefone do doador.'),
+            1,
+        )
+        self.assertEqual(conteudo.count('data-toast'), 1)
+
+    def test_item_material_sem_nome_exibe_uma_orientacao_clara(self):
+        response = self.client.post(reverse('cadastro_doacao'), {
+            'tipo': Doacao.MATERIAL,
+            'doador': self.doador.pk,
+            'anonima': '',
+            'data_recebimento': timezone.localdate().isoformat(),
+            'status': Doacao.CONFIRMADA,
+            'finalidade': Doacao.FINALIDADE_GERAL,
+            'descricao_finalidade': '',
+            'praia': '',
+            'acao': '',
+            'observacoes': '',
+            'referencia_comprovante': '',
+            'financeira-valor': '',
+            'financeira-forma_recebimento': '',
+            'itens-TOTAL_FORMS': '1',
+            'itens-INITIAL_FORMS': '0',
+            'itens-MIN_NUM_FORMS': '1',
+            'itens-MAX_NUM_FORMS': '1000',
+            'itens-0-material': '',
+            'itens-0-nome': '',
+            'itens-0-categoria': 'Alimentos',
+            'itens-0-unidade_nova': '',
+            'itens-0-quantidade': '1',
+            'itens-0-condicao': ItemDoacaoMaterial.CONDICAO_NOVO,
+            'itens-0-observacoes': '',
+        })
+
+        mensagem_nome = 'Selecione um material existente ou informe o nome de um novo.'
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.content.decode().count(mensagem_nome), 1)
+        self.assertEqual(Doacao.objects.count(), 0)
 
     def test_doador_exige_nome_e_email_ou_telefone(self):
         form = DoadorForm(data={
@@ -865,7 +1617,7 @@ class DoacaoTestCase(TestCase):
         self.assertIn('nome', form.errors)
         self.assertIn('email', form.errors)
 
-    def test_doador_nao_aceita_documento_ou_email_repetido(self):
+    def test_doador_nao_aceita_documento_email_ou_telefone_repetido(self):
         self.doador.documento = '12345678901'
         self.doador.email = 'doador@example.com'
         self.doador.telefone = '11999999999'
@@ -874,6 +1626,7 @@ class DoacaoTestCase(TestCase):
         for field, value in (
             ('documento', '123.456.789-01'),
             ('email', 'DOADOR@EXAMPLE.COM'),
+            ('telefone', '(11) 99999-9999'),
         ):
             data = {
                 'tipo': Doador.PESSOA_FISICA,
@@ -889,7 +1642,111 @@ class DoacaoTestCase(TestCase):
             self.assertFalse(form.is_valid())
             self.assertIn(field, form.errors)
 
-    def test_cadastro_doador_invalido_exibe_mensagem(self):
+    def test_doador_inline_nao_aceita_telefone_repetido_com_mascara(self):
+        self.doador.telefone = '11999999999'
+        self.doador.save()
+
+        form = DoadorInlineForm(data={
+            'tipo': Doador.PESSOA_FISICA,
+            'nome': 'Outro doador',
+            'documento': '',
+            'email': 'outro@example.com',
+            'telefone': '(11) 99999-9999',
+            'voluntario': '',
+        })
+
+        self.assertFalse(form.is_valid())
+        self.assertIn('telefone', form.errors)
+        self.assertEqual(
+            str(form.errors['telefone'][0]),
+            'Já existe um doador cadastrado com este telefone.',
+        )
+
+    def test_edicao_doador_nao_permite_repetir_email_ou_telefone(self):
+        self.doador.email = 'doador@example.com'
+        self.doador.telefone = '11999999999'
+        self.doador.save()
+        outro_doador = Doador.objects.create(
+            tipo=Doador.PESSOA_JURIDICA,
+            nome='Outro doador',
+            email='outro@example.com',
+            telefone='13988887777',
+            cadastrado_por=self.usuario,
+            cadastrado_por_nome='Administrador',
+        )
+
+        for campo, valor, mensagem in (
+            (
+                'email',
+                ' OUTRO@example.com ',
+                'Já existe um doador cadastrado com este e-mail.',
+            ),
+            (
+                'telefone',
+                '(13) 98888-7777',
+                'Já existe um doador cadastrado com este telefone.',
+            ),
+        ):
+            with self.subTest(campo=campo):
+                dados = {
+                    'tipo': Doador.PESSOA_FISICA,
+                    'nome': 'Doador Teste editado',
+                    'documento': '',
+                    'email': 'doador@example.com',
+                    'telefone': '(11) 99999-9999',
+                    'voluntario': '',
+                    'ativo': 'on',
+                }
+                dados[campo] = valor
+                resposta = self.client.post(
+                    reverse('editar_doador', args=[self.doador.pk]),
+                    dados,
+                )
+
+                self.assertEqual(resposta.status_code, 200)
+                self.assertContains(resposta, mensagem)
+                self.assertIn(
+                    'Não foi possível atualizar o cadastro do doador "Doador Teste editado". '
+                    'Corrija os campos destacados no formulário e tente novamente.',
+                    [str(mensagem) for mensagem in resposta.wsgi_request._messages],
+                )
+                self.doador.refresh_from_db()
+                outro_doador.refresh_from_db()
+                self.assertEqual(self.doador.nome, 'Doador Teste')
+                self.assertEqual(self.doador.email, 'doador@example.com')
+                self.assertEqual(self.doador.telefone, '11999999999')
+                self.assertEqual(outro_doador.email, 'outro@example.com')
+                self.assertEqual(outro_doador.telefone, '13988887777')
+
+    def test_edicao_doador_permite_manter_proprio_email_e_telefone(self):
+        self.doador.email = 'doador@example.com'
+        self.doador.telefone = '11999999999'
+        self.doador.save()
+
+        resposta = self.client.post(
+            reverse('editar_doador', args=[self.doador.pk]),
+            {
+                'tipo': Doador.PESSOA_FISICA,
+                'nome': 'Doador Teste atualizado',
+                'documento': '',
+                'email': ' DOADOR@example.com ',
+                'telefone': '(11) 99999-9999',
+                'voluntario': '',
+                'ativo': 'on',
+            },
+        )
+
+        self.assertEqual(resposta.status_code, 302)
+        self.doador.refresh_from_db()
+        self.assertEqual(self.doador.nome, 'Doador Teste atualizado')
+        self.assertEqual(self.doador.email, 'doador@example.com')
+        self.assertEqual(self.doador.telefone, '11999999999')
+        self.assertIn(
+            'O doador "Doador Teste atualizado" foi atualizado com sucesso.',
+            [str(mensagem) for mensagem in resposta.wsgi_request._messages],
+        )
+
+    def test_cadastro_doador_invalido_exibe_erros_e_toast_sem_repetir_mensagens(self):
         response = self.client.post(reverse('cadastro_doador'), {
             'tipo': Doador.PESSOA_FISICA,
             'nome': '',
@@ -900,7 +1757,39 @@ class DoacaoTestCase(TestCase):
             'ativo': 'on',
         })
         self.assertEqual(response.status_code, 200)
+        conteudo = response.content.decode()
+        self.assertEqual(conteudo.count('Informe o nome do doador.'), 1)
+        self.assertEqual(
+            conteudo.count('Informe o e-mail ou o telefone do doador.'),
+            1,
+        )
+        self.assertEqual(
+            conteudo.count(
+                'Não foi possível cadastrar o doador. '
+                'Corrija os campos destacados no formulário e tente novamente.'
+            ),
+            1,
+        )
+        self.assertEqual(conteudo.count('data-toast'), 1)
+
+    def test_cadastro_doador_valido_exibe_toast_de_sucesso(self):
+        response = self.client.post(
+            reverse('cadastro_doador'),
+            {
+                'tipo': Doador.PESSOA_FISICA,
+                'nome': 'Nova doadora',
+                'documento': '',
+                'email': 'nova-doadora@example.com',
+                'telefone': '',
+                'voluntario': '',
+                'ativo': 'on',
+            },
+            follow=True,
+        )
+
+        self.assertRedirects(response, reverse('doadores'))
         self.assertContains(
             response,
-            'Não foi possível cadastrar o doador. Confira os erros informados e tente novamente.',
+            'O doador &quot;Nova doadora&quot; foi cadastrado com sucesso.',
         )
+        self.assertEqual(response.content.decode().count('data-toast'), 1)

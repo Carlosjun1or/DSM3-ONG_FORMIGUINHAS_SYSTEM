@@ -86,7 +86,7 @@
                     <tr>
                         <td><strong>{{ doacao.data_recebimento|date:"d/m/Y" }}</strong></td>
                         <td>{{ doacao.get_tipo_display }}</td>
-                        <td><span class="audit-action audit-action-{{ doacao.status|lower }}">{{ doacao.get_status_display }}</span></td>
+                        <td><span class="status-badge status-{{ doacao.status|lower }}">{{ doacao.get_status_display }}</span></td>
                         <td>{{ doacao.get_finalidade_display }}{% if doacao.descricao_finalidade %}<small class="table-secondary">{{ doacao.descricao_finalidade }}</small>{% endif %}</td>
                         <td><a class="btn btn-outline btn-small" href="{% url 'doacao_detalhe' doacao.id_doacao %}">Ver doação</a></td>
                     </tr>

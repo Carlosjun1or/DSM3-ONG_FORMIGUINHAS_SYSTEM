@@ -7,6 +7,10 @@ from django.db.models import Q
 from django.utils import timezone
 
 
+def normalizar_telefone(telefone):
+    return ''.join(char for char in (telefone or '') if char.isdigit())
+
+
 class Doador(models.Model):
     """
     Pessoa física ou jurídica que realizou uma doação.
@@ -76,10 +80,8 @@ class Doador(models.Model):
         self.nome = self.nome.strip()
         self.documento = ''.join(char for char in self.documento if char.isalnum())
         self.email = self.email.strip().lower()
-        self.telefone = self.telefone.strip()
+        self.telefone = normalizar_telefone(self.telefone)
         errors = {}
-        if not self.nome:
-            errors['nome'] = 'Informe o nome do doador.'
         if not self.email and not self.telefone:
             errors['email'] = 'Informe o e-mail ou o telefone do doador.'
         if self.documento and Doador.objects.filter(
@@ -90,13 +92,20 @@ class Doador(models.Model):
             email=self.email,
         ).exclude(pk=self.pk).exists():
             errors['email'] = 'Já existe um doador cadastrado com este e-mail.'
+        if self.telefone and any(
+            normalizar_telefone(telefone) == self.telefone
+            for telefone in Doador.objects.exclude(pk=self.pk)
+            .exclude(telefone='')
+            .values_list('telefone', flat=True)
+        ):
+            errors['telefone'] = 'Já existe um doador cadastrado com este telefone.'
         if errors:
             raise ValidationError(errors)
 
     def save(self, *args, **kwargs):
         self.documento = ''.join(char for char in (self.documento or '') if char.isalnum())
         self.email = (self.email or '').strip().lower()
-        self.telefone = (self.telefone or '').strip()
+        self.telefone = normalizar_telefone(self.telefone)
         return super().save(*args, **kwargs)
 
     def __str__(self):

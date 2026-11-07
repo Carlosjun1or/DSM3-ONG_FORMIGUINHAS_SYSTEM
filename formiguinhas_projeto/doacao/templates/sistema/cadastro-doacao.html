@@ -6,17 +6,6 @@
 
 {% block conteudo %}
 <section class="page-section donation-page donation-form-shell">
-    {% if form.errors or financeira_form.errors or itens_formset.errors or itens_formset.non_form_errors or doador_inline_form.errors %}
-    <div class="form-error-summary" role="alert">
-        <strong>Não foi possível salvar a doação.</strong>
-        <span>Revise os campos destacados abaixo:</span>
-        {% if form.non_field_errors %}{{ form.non_field_errors }}{% endif %}
-        {% if financeira_form.non_field_errors %}{{ financeira_form.non_field_errors }}{% endif %}
-        {% if itens_formset.non_form_errors %}{{ itens_formset.non_form_errors }}{% endif %}
-        {% if doador_inline_form.non_field_errors %}{{ doador_inline_form.non_field_errors }}{% endif %}
-    </div>
-    {% endif %}
-
     <form method="post" class="form-card donation-form" novalidate>
         {% csrf_token %}
         <div class="section-heading donor-form-heading donation-form-heading">
@@ -27,6 +16,14 @@
             </div>
             <a class="btn btn-outline" href="{% if modo == 'edicao' %}{% url 'doacao_detalhe' doacao.id_doacao %}{% else %}{% url 'doacoes' %}{% endif %}">Cancelar</a>
         </div>
+        {% if form.non_field_errors or financeira_form.non_field_errors or itens_formset.non_form_errors or doador_inline_form.non_field_errors %}
+        <div class="form-error-summary" role="alert">
+            {% if form.non_field_errors %}{{ form.non_field_errors }}{% endif %}
+            {% if financeira_form.non_field_errors %}{{ financeira_form.non_field_errors }}{% endif %}
+            {% if itens_formset.non_form_errors %}{{ itens_formset.non_form_errors }}{% endif %}
+            {% if doador_inline_form.non_field_errors %}{{ doador_inline_form.non_field_errors }}{% endif %}
+        </div>
+        {% endif %}
         <div class="form-section">
             <div class="form-section-heading"><span class="form-section-number">1</span><div><h3>Dados da doação</h3><p>Identifique o tipo, a situação e a destinação.</p></div></div>
             <div class="form-grid two-columns donation-primary-grid">
@@ -53,8 +50,8 @@
                     </small>
                 </div>
             </div>
-            <button type="button" class="btn btn-link" id="mostrar-novo-doador" aria-controls="novo-doador-fields" aria-expanded="{% if doador_inline_form.errors %}true{% else %}false{% endif %}" {% if doador_inline_form.errors %}hidden{% endif %}>+ Cadastrar novo doador nesta tela</button>
-            <div id="novo-doador-fields" class="inline-donor-card" {% if not doador_inline_form.errors %}hidden{% endif %}>
+            <button type="button" class="btn btn-link" id="mostrar-novo-doador" aria-controls="novo-doador-fields" aria-expanded="{% if exibir_form_doador_inline %}true{% else %}false{% endif %}" {% if exibir_form_doador_inline %}hidden{% endif %}>+ Cadastrar novo doador nesta tela</button>
+            <div id="novo-doador-fields" class="inline-donor-card" {% if not exibir_form_doador_inline %}hidden{% endif %}>
                 <div class="inline-donor-heading">
                     <div><span class="inline-donor-eyebrow">Cadastro rápido</span><strong>Novo doador</strong><small>Preencha os dados do cadastro de doador sem sair desta tela. Ele será vinculado à doação ao salvar.</small></div>
                     <button type="button" class="btn btn-link" id="ocultar-novo-doador">Cancelar</button>
@@ -98,7 +95,7 @@
                             {% endif %}
                         {% endfor %}
                     </div>
-                    <p class="form-help inline-donor-contact-note">Informe pelo menos um contato. Os dados preenchidos pelo voluntário permanecem editáveis.</p>
+                    <p class="form-help inline-donor-contact-note">Os dados preenchidos pelo voluntário permanecem editáveis.</p>
                 </section>
             </div>
             <div class="form-grid two-columns">

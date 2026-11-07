@@ -34,9 +34,26 @@
             <label for="busca-doador">Buscar</label>
             <input id="busca-doador" name="busca" value="{{ busca }}" class="form-control" type="search" placeholder="Nome, CPF/CNPJ ou e-mail">
         </div>
+        <div class="form-group">
+            <label for="tipo-doador">Tipo de pessoa</label>
+            <select id="tipo-doador" name="tipo" class="form-control">
+                <option value="">Todos os tipos</option>
+                {% for valor, rotulo in tipo_choices %}
+                    <option value="{{ valor }}" {% if tipo_selecionado == valor %}selected{% endif %}>{{ rotulo }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="status-doador">Situação</label>
+            <select id="status-doador" name="status" class="form-control">
+                <option value="">Todas as situações</option>
+                <option value="ATIVO" {% if status_selecionado == 'ATIVO' %}selected{% endif %}>Ativo</option>
+                <option value="INATIVO" {% if status_selecionado == 'INATIVO' %}selected{% endif %}>Inativo</option>
+            </select>
+        </div>
         <div class="filter-actions">
             <button class="btn btn-primary" type="submit">Filtrar</button>
-            {% if busca %}<a class="form-link" href="{% url 'doadores' %}">Limpar</a>{% endif %}
+            {% if busca or tipo_selecionado or status_selecionado %}<a class="form-link" href="{% url 'doadores' %}">Limpar</a>{% endif %}
         </div>
     </form>
 
@@ -96,9 +113,9 @@
     {% include 'sistema/includes/paginacao.html' %}
     {% else %}
     <div class="empty-state table-empty">
-        <h3>{% if busca %}Nenhum doador encontrado{% else %}Nenhum doador cadastrado{% endif %}</h3>
-        <p class="form-subtitle">{% if busca %}Tente outro nome, documento ou e-mail.{% else %}Cadastre um doador para associá-lo às doações.{% endif %}</p>
-        {% if not busca and usuario.tipo == 'ADMIN' %}<a class="btn btn-primary" href="{% url 'cadastro_doador' %}">Novo doador</a>{% endif %}
+        <h3>{% if busca or tipo_selecionado or status_selecionado %}Nenhum doador encontrado{% else %}Nenhum doador cadastrado{% endif %}</h3>
+        <p class="form-subtitle">{% if busca or tipo_selecionado or status_selecionado %}Ajuste os filtros e tente novamente.{% else %}Cadastre um doador para associá-lo às doações.{% endif %}</p>
+        {% if not busca and not tipo_selecionado and not status_selecionado and usuario.tipo == 'ADMIN' %}<a class="btn btn-primary" href="{% url 'cadastro_doador' %}">Novo doador</a>{% endif %}
     </div>
     {% endif %}
 </section>

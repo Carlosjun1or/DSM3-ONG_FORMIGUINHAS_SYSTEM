@@ -40,11 +40,11 @@
     <form method="get" class="volunteer-filters donation-filters">
         <div class="form-group">
             <label for="filtro-inicio">Data inicial</label>
-            <input id="filtro-inicio" class="form-control data-doacao-input" type="text" name="inicio" value="{{ inicio|date:'d/m/Y' }}" placeholder="dd/mm/aaaa" inputmode="numeric" maxlength="10">
+            <input id="filtro-inicio" class="form-control" type="date" name="inicio" value="{{ inicio }}">
         </div>
         <div class="form-group">
             <label for="filtro-fim">Data final</label>
-            <input id="filtro-fim" class="form-control data-doacao-input" type="text" name="fim" value="{{ fim|date:'d/m/Y' }}" placeholder="dd/mm/aaaa" inputmode="numeric" maxlength="10">
+            <input id="filtro-fim" class="form-control" type="date" name="fim" value="{{ fim }}">
         </div>
         <div class="form-group">
             <label for="filtro-tipo">Tipo</label>
@@ -69,6 +69,9 @@
         </div>
         <div class="filter-actions">
             <button class="btn btn-primary" type="submit">Filtrar</button>
+            {% if inicio or fim or tipo_selecionado or status_selecionado or finalidade_selecionada %}
+            <a class="form-link" href="{% url 'doacoes' %}">Limpar</a>
+            {% endif %}
         </div>
     </form>
 
@@ -134,6 +137,12 @@
 
             <div class="volunteer-card-actions">
                 <a class="btn btn-outline btn-small" href="{% url 'doacao_detalhe' doacao.id_doacao %}">Detalhes</a>
+                {% if usuario.tipo == 'ADMIN' and doacao.status == 'CANCELADA' %}
+                <form method="post" action="{% url 'excluir_doacao' doacao.id_doacao %}" onsubmit="return confirm('Excluir permanentemente a doação cancelada #{{ doacao.id_doacao }}?');">
+                    {% csrf_token %}
+                    <button class="btn btn-danger btn-small" type="submit">Excluir</button>
+                </form>
+                {% endif %}
             </div>
 
         </article>
