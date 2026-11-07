@@ -116,7 +116,11 @@ def adicionar_item_coleta_view(request, coleta_id):
     if usuario is None:
         return redirect('login')
     if usuario is False:
-        messages.error(request, 'Somente administradores podem adicionar itens.')
+        messages.error(
+            request,
+            f'Você não tem permissão para adicionar itens à coleta #{coleta_id}. '
+            'Esta ação é restrita a administradores.',
+        )
         return render_acesso_bloqueado(request)
     coleta = get_object_or_404(ColetaResiduo, id_coleta=coleta_id)
     if request.method == 'POST':
@@ -132,7 +136,16 @@ def adicionar_item_coleta_view(request, coleta_id):
                 entidade='ITEM_COLETA_RESIDUO', instancia=item, acao='CRIACAO',
                 usuario=usuario, resumo=f'Item de resíduo #{item.pk} adicionado à coleta #{coleta.pk}.',
             )
-            messages.success(request, 'Tipo de resíduo adicionado à coleta.')
+            messages.success(
+                request,
+                f'O item "{item.get_tipo_display()}" foi adicionado à coleta #{coleta.pk}.',
+            )
+        else:
+            messages.error(
+                request,
+                f'Não foi possível adicionar um item à coleta #{coleta.pk}. '
+                'Confira os dados informados e tente novamente.',
+            )
     return redirect('detalhe_coleta_residuo', coleta_id=coleta_id)
 
 
@@ -142,7 +155,11 @@ def registrar_residuo_view(request, acao_id):
     if usuario is None:
         return redirect('login')
     if usuario is False:
-        messages.error(request, 'Somente administradores podem registrar resíduos.')
+        messages.error(
+            request,
+            f'Você não tem permissão para registrar resíduos na ação #{acao_id}. '
+            'Esta ação é restrita a administradores.',
+        )
         return render_acesso_bloqueado(request)
 
     # Ação vive no MongoDB; busca o proxy sem tocar no SQLite
@@ -206,9 +223,16 @@ def registrar_residuo_view(request, acao_id):
                 usuario=usuario,
                 resumo=f'Item de resíduo #{item.pk} registrado na coleta #{coleta.pk}.',
             )
-            messages.success(request, 'Resíduo registrado com sucesso.')
+            messages.success(
+                request,
+                f'O resíduo #{residuo.pk} foi registrado na ação #{acao.pk} com sucesso.',
+            )
         else:
-            messages.error(request, 'Não foi possível registrar o resíduo. Verifique os dados informados.')
+            messages.error(
+                request,
+                f'Não foi possível registrar o resíduo na ação #{acao.pk}. '
+                'Confira os dados informados e tente novamente.',
+            )
     return redirect('acao_detalhe', acao_id=acao_id)
 
 
@@ -218,7 +242,11 @@ def registrar_destinacao_view(request, acao_id, residuo_id):
     if usuario is None:
         return redirect('login')
     if usuario is False:
-        messages.error(request, 'Somente administradores podem registrar destinações.')
+        messages.error(
+            request,
+            f'Você não tem permissão para registrar a destinação do resíduo #{residuo_id}. '
+            'Esta ação é restrita a administradores.',
+        )
         return render_acesso_bloqueado(request)
 
     residuo = get_object_or_404(
@@ -242,10 +270,18 @@ def registrar_destinacao_view(request, acao_id, residuo_id):
                 usuario=usuario,
                 resumo=f'Destinação #{destinacao.pk} registrada para o resíduo #{residuo.pk}.',
             )
-            messages.success(request, 'Destinação registrada com sucesso.')
+            messages.success(
+                request,
+                f'A destinação #{destinacao.pk} do resíduo #{residuo.pk} '
+                'foi registrada com sucesso.',
+            )
             return redirect('acao_detalhe', acao_id=acao_id)
         else:
-            messages.error(request, 'Não foi possível registrar a destinação. Verifique os dados informados.')
+            messages.error(
+                request,
+                f'Não foi possível registrar a destinação do resíduo #{residuo.pk}. '
+                'Confira os dados informados e tente novamente.',
+            )
             return redirect('acao_detalhe', acao_id=acao_id)
     else:
         form = DestinacaoResiduoForm()
@@ -263,7 +299,11 @@ def editar_residuo_view(request, acao_id, residuo_id):
     if usuario is None:
         return redirect('login')
     if usuario is False:
-        messages.error(request, 'Somente administradores podem editar resíduos.')
+        messages.error(
+            request,
+            f'Você não tem permissão para editar o resíduo #{residuo_id}. '
+            'Esta ação é restrita a administradores.',
+        )
         return redirect('acao_detalhe', acao_id=acao_id)
     residuo = get_object_or_404(ResiduoColetado, id_residuo=residuo_id, acao_id=acao_id)
     form = ResiduoColetadoForm(request.POST or None, instance=residuo)
@@ -278,7 +318,7 @@ def editar_residuo_view(request, acao_id, residuo_id):
         registrar_evento(entidade='RESIDUO', instancia=residuo, acao='EDICAO',
                          usuario=usuario, resumo=f'Resíduo #{residuo.pk} editado.',
                          valores_anteriores=anteriores)
-        messages.success(request, 'Resíduo atualizado com sucesso.')
+        messages.success(request, f'O resíduo #{residuo.pk} foi atualizado com sucesso.')
         return redirect('acao_detalhe', acao_id=acao_id)
     return render(request, 'sistema/editar-residuo.html', {
         'usuario': usuario, 'acao': residuo.acao, 'residuo': residuo, 'form': form,
@@ -291,7 +331,11 @@ def excluir_residuo_view(request, acao_id, residuo_id):
     if usuario is None:
         return redirect('login')
     if usuario is False:
-        messages.error(request, 'Somente administradores podem excluir resíduos.')
+        messages.error(
+            request,
+            f'Você não tem permissão para excluir o resíduo #{residuo_id}. '
+            'Esta ação é restrita a administradores.',
+        )
         return redirect('acao_detalhe', acao_id=acao_id)
     residuo = get_object_or_404(ResiduoColetado, id_residuo=residuo_id, acao_id=acao_id)
     if request.method == 'POST':
@@ -300,7 +344,7 @@ def excluir_residuo_view(request, acao_id, residuo_id):
                          usuario=usuario, resumo=f'Resíduo #{registro_id} excluído.',
                          valores_anteriores=snapshot(residuo))
         residuo.delete()
-        messages.success(request, 'Resíduo excluído com sucesso.')
+        messages.success(request, f'O resíduo #{registro_id} foi excluído com sucesso.')
     return redirect('acao_detalhe', acao_id=acao_id)
 
 
@@ -310,7 +354,11 @@ def editar_destinacao_view(request, acao_id, residuo_id, destinacao_id):
     if usuario is None:
         return redirect('login')
     if usuario is False:
-        messages.error(request, 'Somente administradores podem editar destinações.')
+        messages.error(
+            request,
+            f'Você não tem permissão para editar a destinação #{destinacao_id}. '
+            'Esta ação é restrita a administradores.',
+        )
         return redirect('acao_detalhe', acao_id=acao_id)
     destinacao = get_object_or_404(
         DestinacaoResiduo,
@@ -330,7 +378,10 @@ def editar_destinacao_view(request, acao_id, residuo_id, destinacao_id):
         registrar_evento(entidade='DESTINACAO_RESIDUO', instancia=destinacao, acao='EDICAO',
                          usuario=usuario, resumo=f'Destinação #{destinacao.pk} editada.',
                          valores_anteriores=anteriores)
-        messages.success(request, 'Destinação atualizada com sucesso.')
+        messages.success(
+            request,
+            f'A destinação #{destinacao.pk} do resíduo #{residuo_id} foi atualizada com sucesso.',
+        )
         return redirect('acao_detalhe', acao_id=acao_id)
     return render(request, 'sistema/destinacao-residuo.html', {
         'usuario': usuario, 'acao': destinacao.residuo.acao,
@@ -344,7 +395,11 @@ def excluir_destinacao_view(request, acao_id, residuo_id, destinacao_id):
     if usuario is None:
         return redirect('login')
     if usuario is False:
-        messages.error(request, 'Somente administradores podem excluir destinações.')
+        messages.error(
+            request,
+            f'Você não tem permissão para excluir a destinação #{destinacao_id}. '
+            'Esta ação é restrita a administradores.',
+        )
         return redirect('acao_detalhe', acao_id=acao_id)
     destinacao = get_object_or_404(
         DestinacaoResiduo,
@@ -358,5 +413,8 @@ def excluir_destinacao_view(request, acao_id, residuo_id, destinacao_id):
                          usuario=usuario, resumo=f'Destinação #{registro_id} excluída.',
                          valores_anteriores=snapshot(destinacao))
         destinacao.delete()
-        messages.success(request, 'Destinação excluída com sucesso.')
+        messages.success(
+            request,
+            f'A destinação #{registro_id} foi excluída do resíduo #{residuo_id} com sucesso.',
+        )
     return redirect('acao_detalhe', acao_id=acao_id)

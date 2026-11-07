@@ -156,7 +156,7 @@ class AcaoDetalheBreadcrumbTests(TestCase):
 
         self.assertContains(
             resposta,
-            'Status da ação atualizado de Planejada para Cancelada.',
+            f'O status da ação #{acao.id_acao} foi atualizado de Planejada para Cancelada.',
         )
         acao.refresh_from_db()
         self.assertEqual(acao.status, Acao.STATUS_CANCELADA)

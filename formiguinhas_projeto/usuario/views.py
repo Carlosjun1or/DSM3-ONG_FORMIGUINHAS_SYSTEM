@@ -424,7 +424,10 @@ def editar_voluntario_view(request, voluntario_id):
                     from equipe.services import encerrar_vinculos_voluntario
 
                     encerrar_vinculos_voluntario(voluntario, usuario)
-                messages.success(request, f'Dados de {voluntario.nome} atualizados com sucesso.')
+                messages.success(
+                    request,
+                    f'Os dados do voluntário "{voluntario.nome}" foram atualizados com sucesso.',
+                )
                 return redirect('voluntarios')
     else:
         form = VoluntarioEdicaoForm(instance=voluntario)
@@ -493,19 +496,32 @@ def atualizar_status_voluntario_view(request, voluntario_id):
                 encerrar_vinculos_voluntario(voluntario, usuario)
             messages.success(
                 request,
-                f'Status de {voluntario.nome} atualizado para {voluntario.get_status_display()}.',
+                f'O status do voluntário "{voluntario.nome}" foi atualizado para '
+                f'{voluntario.get_status_display()}.',
             )
         elif status not in status_validos:
-            messages.error(request, 'Selecione um status válido para o voluntário.')
+            messages.error(
+                request,
+                f'Não foi possível atualizar o status de "{voluntario.nome}". '
+                'Selecione um status válido.',
+            )
         elif status_proibido_para_coordenador or status_proibido_para_admin:
-            messages.error(request, 'Você não tem permissão para alterar esse status.')
+            messages.error(
+                request,
+                f'Você não tem permissão para alterar o status do voluntário "{voluntario.nome}".',
+            )
         elif status == voluntario.status:
             messages.info(
                 request,
-                f'{voluntario.nome} já está com status {voluntario.get_status_display()}.',
+                f'O voluntário "{voluntario.nome}" já está com status '
+                f'{voluntario.get_status_display()}.',
             )
         else:
-            messages.error(request, 'Não foi possível atualizar o status do voluntário.')
+            messages.error(
+                request,
+                f'Não foi possível atualizar o status do voluntário "{voluntario.nome}". '
+                'Tente novamente.',
+            )
 
     return redirect('voluntarios')
 
@@ -530,7 +546,8 @@ def excluir_voluntario_view(request, voluntario_id):
         if voluntario.pk == usuario.id_voluntario_id:
             messages.error(
                 request,
-                'Não é possível excluir o voluntário vinculado à sua própria conta.',
+                f'Não é possível excluir o voluntário "{voluntario.nome}", pois ele está '
+                'vinculado à sua própria conta de acesso.',
             )
             return redirect('voluntarios')
 
@@ -545,7 +562,7 @@ def excluir_voluntario_view(request, voluntario_id):
         except ProtectedError:
             messages.error(
                 request,
-                f'Não foi possível excluir {voluntario.nome}: existem vínculos ou '
+                f'Não foi possível excluir o voluntário "{voluntario.nome}", pois existem vínculos ou '
                 'registros históricos protegidos. Inative o voluntário para '
                 'preservar esse histórico.',
             )
@@ -597,6 +614,7 @@ def usuarios_view(request):
             queryset=EquipeMembro.objects.filter(
                 papel=EquipeMembro.PAPEL_COORDENADOR,
                 status='ATIVO',
+                equipe__status='ATIVA',
             ).select_related('equipe__praia').order_by(
                 'equipe__praia__nome',
                 'equipe__nome',
@@ -645,7 +663,11 @@ def atualizar_tipo_usuario_view(request, usuario_id):
         return render_acesso_bloqueado(request)
 
     if request.method == 'POST' and usuario_id == usuario_logado.id_usuario:
-        messages.error(request, 'Não é permitido alterar o próprio tipo de usuário.')
+        messages.error(
+            request,
+            f'Não é possível alterar o tipo de acesso da própria conta '
+            f'de "{usuario_logado.id_voluntario.nome}".',
+        )
     elif request.method == 'POST':
         novo_tipo = request.POST.get('tipo')
         if novo_tipo in dict(Usuario.TIPO_CHOICES):
@@ -674,19 +696,19 @@ def atualizar_tipo_usuario_view(request, usuario_id):
                 )
                 messages.success(
                     request,
-                    f'Tipo de usuário de {usuario_editado.id_voluntario.nome} atualizado para '
+                    f'O tipo de acesso de "{usuario_editado.id_voluntario.nome}" foi atualizado para '
                     f'{usuario_editado.get_tipo_display()}.',
                 )
             elif usuario_editado:
                 messages.info(
                     request,
-                    f'{usuario_editado.id_voluntario.nome} já possui o tipo '
+                    f'"{usuario_editado.id_voluntario.nome}" já possui o tipo de acesso '
                     f'{usuario_editado.get_tipo_display()}.',
                 )
             elif usuario_editado is None:
-                messages.error(request, 'Usuário não encontrado.')
+                messages.error(request, 'Não foi possível localizar a conta de usuário para atualizar.')
         else:
-            messages.error(request, 'Tipo de usuário inválido.')
+            messages.error(request, 'Não foi possível atualizar o tipo de acesso. Selecione um tipo válido.')
 
     return redirect('usuarios')
 
@@ -769,7 +791,7 @@ def editar_usuario_view(request, usuario_id):
                 )
                 messages.success(
                     request,
-                    f'Dados de {voluntario.nome} atualizados com sucesso.',
+                    f'Os dados de acesso de "{voluntario.nome}" foram atualizados com sucesso.',
                 )
                 return redirect('usuarios')
     else:
@@ -994,6 +1016,10 @@ def cadastro_voluntario_view(request):
                 usuario=usuario_logado,
                 resumo=f'Voluntário "{voluntario.nome}" cadastrado.',
             )
+            messages.success(
+                request,
+                f'O voluntário "{voluntario.nome}" foi cadastrado com sucesso.',
+            )
             return redirect('voluntarios')
     else:
         form = VoluntarioForm()
@@ -1056,7 +1082,8 @@ def cadastro_usuario_view(request):
             else:
                 messages.success(
                     request,
-                    f'Usuário criado e e-mail de acesso enviado para {voluntario.email}.',
+                    f'A conta de "{voluntario.nome}" foi criada e os dados de acesso '
+                    f'foram enviados para {voluntario.email}.',
                 )
                 return redirect('usuarios')
     else:
@@ -1110,7 +1137,8 @@ def cadastro_view(request):
             else:
                 messages.success(
                     request,
-                    f'Cadastro concluído e e-mail de acesso enviado para {voluntario.email}.',
+                    f'O cadastro de "{voluntario.nome}" foi concluído e os dados de acesso '
+                    f'foram enviados para {voluntario.email}.',
                 )
                 return redirect('usuarios')
     else:
@@ -1162,7 +1190,10 @@ def perfil_view(request):
                     valores_anteriores=valores_anteriores,
                 )
                 usuario = Usuario.objects.get(id_usuario=usuario_id)
-                messages.success(request, 'Dados do perfil atualizados com sucesso!')
+                messages.success(
+                    request,
+                    f'Os dados do seu perfil, "{voluntario.nome}", foram atualizados com sucesso.',
+                )
                 return render(request, 'sistema/perfil.html', {
                     'usuario': usuario,
                     'form': form,
@@ -1191,19 +1222,22 @@ def alterar_senha_view(request):
         confirmar_nova_senha = request.POST.get('confirmar_nova_senha')
 
         if not senha_atual or not nova_senha or not confirmar_nova_senha:
-            messages.error(request, 'Preencha a senha atual, a nova senha e a confirmação.')
+            messages.error(
+                request,
+                'Não foi possível alterar a senha. Preencha a senha atual, a nova senha e a confirmação.',
+            )
             return render(request, 'sistema/alterar-senha.html')
 
         if not usuario.check_password(senha_atual):
-            messages.error(request, 'A senha atual está incorreta.')
+            messages.error(request, 'Não foi possível alterar a senha porque a senha atual está incorreta.')
             return render(request, 'sistema/alterar-senha.html')
 
         if nova_senha != confirmar_nova_senha:
-            messages.error(request, 'As novas senhas não coincidem.')
+            messages.error(request, 'Não foi possível alterar a senha: a nova senha e a confirmação não coincidem.')
             return render(request, 'sistema/alterar-senha.html')
 
         if nova_senha == senha_atual:
-            messages.error(request, 'A nova senha deve ser diferente da senha atual.')
+            messages.error(request, 'Escolha uma nova senha diferente da senha atual.')
             return render(request, 'sistema/alterar-senha.html')
 
         usuario.set_password(nova_senha)
@@ -1216,7 +1250,7 @@ def alterar_senha_view(request):
             resumo='Senha do usuário alterada; credenciais não são armazenadas na auditoria.',
             valores_novos={'senha_alterada': True},
         )
-        messages.success(request, 'Senha alterada com sucesso!')
+        messages.success(request, 'A senha da sua conta foi alterada com sucesso.')
         return redirect('alterar_senha')
 
     return render(request, 'sistema/alterar-senha.html')

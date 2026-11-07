@@ -163,7 +163,10 @@ def cadastrar_material_view(request):
                 entidade='MATERIAL', instancia=material, acao='CRIACAO', usuario=usuario,
                 resumo=f'Material "{material.nome}" cadastrado.',
             )
-            messages.success(request, 'Material cadastrado com sucesso.')
+            messages.success(
+                request,
+                f'O material "{material.nome}" foi cadastrado com sucesso.',
+            )
             return redirect('materiais')
     else:
         form = MaterialForm()
@@ -200,7 +203,10 @@ def editar_material_view(request, material_id):
                 resumo=f'Material "{material.nome}" editado.',
                 valores_anteriores=valores_anteriores,
             )
-            messages.success(request, 'Material atualizado com sucesso.')
+            messages.success(
+                request,
+                f'O material "{material.nome}" foi atualizado com sucesso.',
+            )
             return redirect('materiais')
     else:
         form = MaterialForm(instance=material)
@@ -231,7 +237,10 @@ def cadastrar_movimentacao_estoque_view(request):
             except ValidationError as erro:
                 form.add_error(None, erro)
             else:
-                messages.success(request, 'Movimentação registrada com sucesso.')
+                messages.success(
+                    request,
+                    f'A movimentação de "{form.instance.material.nome}" foi registrada com sucesso.',
+                )
                 return redirect('movimentacoes_estoque')
     else:
         form = MovimentacaoEstoqueForm()

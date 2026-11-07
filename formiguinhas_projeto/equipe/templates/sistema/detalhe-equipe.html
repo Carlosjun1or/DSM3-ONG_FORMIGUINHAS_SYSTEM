@@ -126,18 +126,19 @@
                 </thead>
                 <tbody>
                     {% for membro in membros %}
-                    <tr id="voluntario-{{ membro.voluntario.id_voluntario }}">
+                    <tr id="voluntario-{{ membro.voluntario.id_voluntario }}"{% if membro.papel == 'COORDENADOR' %} class="equipe-membro--coordenador{% if usuario.tipo == 'COORDENADOR' and membro.voluntario_id == usuario.id_voluntario_id %} equipe-membro--atual-coordenador{% endif %}"{% endif %}>
                         <td>
                             <div class="acao-pessoa">
                                 <span class="acao-avatar" aria-hidden="true">{{ membro.voluntario.nome|slice:":1"|upper }}</span>
                                 <div>
                                     <a class="table-link" href="{% url 'voluntarios' %}?voluntario={{ membro.voluntario.id_voluntario }}"><strong>{{ membro.voluntario.nome }}</strong></a>
                                     <small>{{ membro.voluntario.email }}</small>
+                                    {% if membro.papel == 'COORDENADOR' %}<span class="equipe-papel-badge">Coordenador{% if usuario.tipo == 'COORDENADOR' and membro.voluntario_id == usuario.id_voluntario_id %} · Você{% endif %}</span>{% endif %}
                                 </div>
                             </div>
                         </td>
                         <td>
-                            {% if usuario.tipo == 'ADMIN' %}
+                            {% if usuario.tipo == 'ADMIN' and pode_adicionar %}
                             <form method="post" action="{% url 'atualizar_funcao_membro' equipe.id_equipe membro.id_equipe_membro %}" class="inline-status-form">
                                 {% csrf_token %}
                                 <select name="papel" class="status-select funcao-select funcao-{{ membro.papel|lower }}" aria-label="Função de {{ membro.voluntario.nome }}" onchange="this.form.submit()">
@@ -159,10 +160,14 @@
                         {% if pode_adicionar or pode_editar_equipe %}
                         <td class="table-actions">
                             {% if pode_adicionar %}
-                            <form method="post" action="{% url 'remover_membro_equipe' equipe.id_equipe membro.id_equipe_membro %}" onsubmit="return confirm('Remover este membro da equipe?');">
+                            {% if usuario.tipo == 'COORDENADOR' and membro.papel == 'COORDENADOR' and membro.voluntario_id != usuario.id_voluntario_id %}
+                            <span class="equipe-remocao-bloqueada" title="Você não pode remover outro coordenador.">Outro coordenador</span>
+                            {% else %}
+                            <form method="post" action="{% url 'remover_membro_equipe' equipe.id_equipe membro.id_equipe_membro %}" onsubmit="return confirm('{% if usuario.tipo == 'COORDENADOR' and membro.papel == 'COORDENADOR' and membro.voluntario_id == usuario.id_voluntario_id %}Sair desta equipe?{% else %}Remover este membro da equipe?{% endif %}');">
                                 {% csrf_token %}
-                                <button type="submit" class="btn btn-danger btn-small">Remover</button>
+                                <button type="submit" class="btn btn-danger btn-small">{% if usuario.tipo == 'COORDENADOR' and membro.papel == 'COORDENADOR' and membro.voluntario_id == usuario.id_voluntario_id %}Sair{% else %}Remover{% endif %}</button>
                             </form>
+                            {% endif %}
                             {% else %}
                             <span class="field-hint">Somente leitura</span>
                             {% endif %}
@@ -214,7 +219,7 @@
                         <td>{{ membro.dt_entrada|date:'d/m/Y H:i' }}</td>
                         <td>{{ membro.dt_saida|date:'d/m/Y H:i' }}</td>
                         <td>{% if membro.ultimo_editado_por_nome %}{{ membro.ultimo_editado_por_nome }}{% elif membro.ultimo_editado_por %}{{ membro.ultimo_editado_por.id_voluntario.nome }}{% else %}-{% endif %}</td>
-                        {% if usuario.tipo == 'ADMIN' %}
+                        {% if usuario.tipo == 'ADMIN' and pode_adicionar %}
                         <td class="table-actions">
                             <form method="post" action="{% url 'excluir_historico_membro' equipe.id_equipe membro.id_equipe_membro %}" onsubmit="return confirm('Excluir este registro do histórico? Esta ação não pode ser desfeita.');">
                                 {% csrf_token %}

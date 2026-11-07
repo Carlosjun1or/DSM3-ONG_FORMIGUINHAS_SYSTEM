@@ -288,11 +288,15 @@ def cadastro_doacao_view(request):
                     'O registro não pôde ser gravado por uma inconsistência nos dados.',
                 )
             else:
-                messages.success(request, 'Doação cadastrada com sucesso.')
+                messages.success(
+                    request,
+                    f'A doação #{doacao.pk} foi cadastrada com sucesso.',
+                )
                 return redirect('doacao_detalhe', doacao_id=doacao.pk)
         messages.error(
             request,
-            'Não foi possível salvar a doação. Nenhuma alteração foi gravada.',
+            'Não foi possível cadastrar a doação. Confira os erros informados; '
+            'nenhuma alteração foi gravada.',
         )
     return render(request, 'sistema/cadastro-doacao.html', {
         'usuario': usuario,
@@ -359,11 +363,15 @@ def editar_doacao_view(request, doacao_id):
                     'A alteração não pôde ser gravada por uma inconsistência nos dados.',
                 )
             else:
-                messages.success(request, 'Doação atualizada com sucesso.')
+                messages.success(
+                    request,
+                    f'A doação #{doacao.pk} foi atualizada com sucesso.',
+                )
                 return redirect('doacao_detalhe', doacao_id=doacao.pk)
         messages.error(
             request,
-            'Não foi possível atualizar a doação. Nenhuma alteração foi gravada.',
+            f'Não foi possível atualizar a doação #{doacao.pk}. Confira os erros informados; '
+            'nenhuma alteração foi gravada.',
         )
     return render(request, 'sistema/cadastro-doacao.html', {
         'usuario': usuario,
@@ -434,20 +442,31 @@ def atualizar_status_doacao_view(request, doacao_id):
     destino = 'doacao_detalhe' if retornar_aos_detalhes else 'doacoes'
     novo_status = request.POST.get('status', '')
     if request.method != 'POST' or novo_status not in dict(Doacao.STATUS_CHOICES):
-        messages.error(request, 'Situação de doação inválida.')
+        messages.error(
+            request,
+            f'Não foi possível atualizar a situação da doação #{doacao.pk}. '
+            'Selecione uma situação válida.',
+        )
         return redirect(destino, **({'doacao_id': doacao.pk} if retornar_aos_detalhes else {}))
     if novo_status == Doacao.CANCELADA and usuario.tipo != 'ADMIN':
-        messages.error(request, 'Somente administradores podem cancelar doações.')
+        messages.error(
+            request,
+            f'Você não tem permissão para cancelar a doação #{doacao.pk}.',
+        )
         return redirect(destino, **({'doacao_id': doacao.pk} if retornar_aos_detalhes else {}))
     if novo_status != Doacao.CONFIRMADA and doacao.movimentacoes_estoque.exists():
         messages.error(
             request,
-            'Não é possível retirar a confirmação: a doação já gerou movimentações no estoque.',
+            f'Não é possível alterar a situação da doação #{doacao.pk}, pois ela já gerou '
+            'movimentações no estoque.',
         )
         return redirect(destino, **({'doacao_id': doacao.pk} if retornar_aos_detalhes else {}))
     status_alterado = novo_status != doacao.status
     if not status_alterado:
-        messages.info(request, 'A doação já está com essa situação.')
+        messages.info(
+            request,
+            f'A doação #{doacao.pk} já está com situação {doacao.get_status_display()}.',
+        )
         return redirect(destino, **({'doacao_id': doacao.pk} if retornar_aos_detalhes else {}))
     valores_anteriores = _snapshot_doacao_completa(doacao)
     status_anterior = doacao.get_status_display()
@@ -475,9 +494,17 @@ def atualizar_status_doacao_view(request, doacao_id):
                 valores_novos=_snapshot_doacao_completa(doacao),
             )
     except ValidationError as erro:
-        messages.error(request, 'Não foi possível confirmar a doação: ' + ' '.join(erro.messages))
+        messages.error(
+            request,
+            f'Não foi possível atualizar a situação da doação #{doacao.pk}: '
+            + ' '.join(erro.messages),
+        )
         return redirect(destino, **({'doacao_id': doacao.pk} if retornar_aos_detalhes else {}))
-    messages.success(request, 'Situação da doação atualizada.')
+    messages.success(
+        request,
+        f'A situação da doação #{doacao.pk} foi atualizada para '
+        f'{doacao.get_status_display()}.',
+    )
     return redirect(destino, **({'doacao_id': doacao.pk} if retornar_aos_detalhes else {}))
 
 
@@ -548,7 +575,11 @@ def atualizar_status_doador_view(request, doador_id):
     if usuario is False:
         return render_acesso_bloqueado(request)
     if usuario.tipo != 'ADMIN':
-        messages.error(request, 'Somente administradores podem alterar a situação de doadores.')
+        messages.error(
+            request,
+            'Você não tem permissão para alterar a situação de doadores. '
+            'Esta ação é restrita a administradores.',
+        )
         return redirect('doadores')
 
     doador = get_object_or_404(Doador, pk=doador_id)
@@ -556,12 +587,17 @@ def atualizar_status_doador_view(request, doador_id):
     destino = 'doador_detalhe' if retornar_aos_detalhes else 'doadores'
     novo_status = request.POST.get('status', '')
     if request.method != 'POST' or novo_status not in ('ATIVO', 'INATIVO'):
-        messages.error(request, 'Situação de doador inválida.')
+        messages.error(
+            request,
+            f'Não foi possível atualizar a situação do doador "{doador.nome}". '
+            'Selecione uma situação válida.',
+        )
         return redirect(destino, **({'doador_id': doador.pk} if retornar_aos_detalhes else {}))
     if (novo_status == 'ATIVO') == doador.ativo:
         messages.info(
             request,
-            f'O doador já está {"ativo" if doador.ativo else "inativo"}.',
+            f'O doador "{doador.nome}" já está '
+            f'{"ativo" if doador.ativo else "inativo"}.',
         )
         return redirect(destino, **({'doador_id': doador.pk} if retornar_aos_detalhes else {}))
 
@@ -584,7 +620,11 @@ def atualizar_status_doador_view(request, doador_id):
         f'{"Ativo" if doador.ativo else "Inativo"}.',
         valores_anteriores=valores_anteriores,
     )
-    messages.success(request, 'Situação do doador atualizada.')
+    messages.success(
+        request,
+        f'A situação do doador "{doador.nome}" foi atualizada para '
+        f'{"ativo" if doador.ativo else "inativo"}.',
+    )
     return redirect(destino, **({'doador_id': doador.pk} if retornar_aos_detalhes else {}))
 
 
@@ -596,7 +636,11 @@ def cadastro_doador_view(request):
     if usuario is False:
         return render_acesso_bloqueado(request)
     if usuario.tipo != 'ADMIN':
-        messages.error(request, 'Somente administradores podem gerenciar doadores.')
+        messages.error(
+            request,
+            'Você não tem permissão para cadastrar doadores. '
+            'Esta ação é restrita a administradores.',
+        )
         return redirect('doacoes')
     form = DoadorForm(request.POST or None)
     if request.method == 'POST' and form.is_valid():
@@ -611,12 +655,12 @@ def cadastro_doador_view(request):
             usuario=usuario,
             resumo=f'Doador #{doador.pk} cadastrado.',
         )
-        messages.success(request, 'Doador cadastrado com sucesso.')
+        messages.success(request, f'O doador "{doador.nome}" foi cadastrado com sucesso.')
         return redirect('doadores')
     if request.method == 'POST':
         messages.error(
             request,
-            'Não foi possível cadastrar o doador. Verifique os erros informados.',
+            'Não foi possível cadastrar o doador. Confira os erros informados e tente novamente.',
         )
     return render(request, 'sistema/cadastro-doador.html', {
         'usuario': usuario,
@@ -633,7 +677,11 @@ def editar_doador_view(request, doador_id):
     if usuario is False:
         return render_acesso_bloqueado(request)
     if usuario.tipo != 'ADMIN':
-        messages.error(request, 'Somente administradores podem gerenciar doadores.')
+        messages.error(
+            request,
+            'Você não tem permissão para editar doadores. '
+            'Esta ação é restrita a administradores.',
+        )
         return redirect('doacoes')
     doador = get_object_or_404(Doador, pk=doador_id)
     valores_anteriores = snapshot(doador)
@@ -652,12 +700,13 @@ def editar_doador_view(request, doador_id):
             resumo=f'Doador #{doador.pk} editado.',
             valores_anteriores=valores_anteriores,
         )
-        messages.success(request, 'Doador atualizado com sucesso.')
+        messages.success(request, f'O doador "{doador.nome}" foi atualizado com sucesso.')
         return redirect('doadores')
     if request.method == 'POST':
         messages.error(
             request,
-            'Não foi possível atualizar o doador. Verifique os erros informados.',
+            f'Não foi possível atualizar o doador "{doador.nome}". '
+            'Confira os erros informados e tente novamente.',
         )
     return render(request, 'sistema/cadastro-doador.html', {
         'usuario': usuario,

@@ -316,6 +316,11 @@ def cadastro_acao_view(request):
                 sincronizar_relacionamentos_mutirao(acao, usuario)
 
             salvar_acao_mongo(acao)
+            messages.success(
+                request,
+                f'A ação "{acao.get_tipo_display()}" de {acao.data:%d/%m/%Y} '
+                'foi cadastrada com sucesso.',
+            )
             return redirect('acao_detalhe', acao_id=acao.id_acao)
     else:
         form = AcaoForm(initial={'status': Acao.STATUS_PLANEJADA})
@@ -348,7 +353,11 @@ def editar_acao_view(request, acao_id):
             if acao.tipo == Acao.TIPO_MUTIRAO:
                 sincronizar_relacionamentos_mutirao(acao, usuario)
             salvar_acao_mongo(acao)
-            messages.success(request, 'Ação atualizada com sucesso.')
+            messages.success(
+                request,
+                f'A ação "{acao.get_tipo_display()}" de {acao.data:%d/%m/%Y} '
+                'foi atualizada com sucesso.',
+            )
             return redirect('acao_detalhe', acao_id=acao.id_acao)
     else:
         form = AcaoForm(instance=acao)
@@ -550,7 +559,11 @@ def adicionar_material_utilizado_view(request, acao_id):
         except ValidationError as erro:
             erros.extend(erro.messages)
         else:
-            messages.success(request, 'Material utilizado registrado e saldo atualizado.')
+            messages.success(
+                request,
+                f'O uso de {quantidade} unidade(s) do material "{material.nome}" na ação '
+                f'#{acao.pk} foi registrado, e o saldo atualizado.',
+            )
             return redirect('acao_detalhe', acao_id=acao.pk)
 
     if not formulario_valido:
@@ -591,14 +604,18 @@ def adicionar_participante_view(request, acao_id):
             salvar_acao_mongo(acao)
             messages.success(
                 request,
-                f'{participante.voluntario.nome} vinculado à ação com sucesso.',
+                f'O voluntário "{participante.voluntario.nome}" foi vinculado à ação '
+                f'#{acao.pk} com sucesso.',
             )
         else:
             erros = '; '.join(
                 f'{campo}: {", ".join(msgs)}'
                 for campo, msgs in form.errors.items()
             )
-            messages.error(request, f'Não foi possível vincular o participante. {erros}')
+            messages.error(
+                request,
+                f'Não foi possível vincular o participante à ação #{acao.pk}. {erros}',
+            )
 
     return redirecionar_apos_acao_participante(request, acao.id_acao)
 
@@ -628,10 +645,15 @@ def adicionar_responsavel_view(request, acao_id):
             salvar_acao_mongo(acao)
             messages.success(
                 request,
-                f'{responsavel.voluntario.nome} vinculado como responsável com sucesso.',
+                f'"{responsavel.voluntario.nome}" foi vinculado como responsável '
+                f'pela ação #{acao.pk} com sucesso.',
             )
         else:
-            messages.error(request, 'Não foi possível vincular o responsável. Verifique os dados informados.')
+            messages.error(
+                request,
+                f'Não foi possível vincular o responsável à ação #{acao.pk}. '
+                'Confira os dados informados e tente novamente.',
+            )
     return redirect('acao_detalhe', acao_id=acao.id_acao)
 
 
@@ -661,10 +683,18 @@ def adicionar_imagens_acao_view(request, acao_id):
                     usuario=usuario,
                     resumo=f'Imagem adicionada à ação #{acao.pk}.',
                 )
-            messages.success(request, 'Imagens adicionadas à ação com sucesso.')
+            quantidade_imagens = len(form.cleaned_data['imagens'])
+            messages.success(
+                request,
+                f'{quantidade_imagens} imagem(ns) foram adicionadas à ação #{acao.pk} com sucesso.',
+            )
             salvar_acao_mongo(acao)
         else:
-            messages.error(request, 'Não foi possível adicionar as imagens. Verifique os arquivos selecionados.')
+            messages.error(
+                request,
+                f'Não foi possível adicionar imagens à ação #{acao.pk}. '
+                'Confira os arquivos selecionados e tente novamente.',
+            )
     return redirect('acao_detalhe', acao_id=acao.id_acao)
 
 
@@ -697,7 +727,7 @@ def excluir_imagem_acao_view(request, acao_id, imagem_id):
         acao = Acao.objects.filter(pk=acao_id).first()
         if acao:
             salvar_acao_mongo(acao)
-        messages.success(request, 'Imagem excluída com sucesso.')
+        messages.success(request, f'Uma imagem foi excluída da ação #{acao_id} com sucesso.')
     return redirect('acao_detalhe', acao_id=acao_id)
 
 
@@ -735,14 +765,25 @@ def atualizar_status_acao_view(request, acao_id):
             salvar_acao_mongo(acao)
             messages.success(
                 request,
-                f'Status da ação atualizado de {status_anterior} para {acao.get_status_display()}.',
+                f'O status da ação #{acao.pk} foi atualizado de {status_anterior} para '
+                f'{acao.get_status_display()}.',
             )
         elif novo_status not in dict(Acao.STATUS_CHOICES):
-            messages.error(request, 'Status de ação inválido.')
+            messages.error(
+                request,
+                f'Não foi possível atualizar o status da ação #{acao.pk}. '
+                'Selecione um status válido.',
+            )
         else:
-            messages.info(request, 'A ação já está com esse status.')
+            messages.info(
+                request,
+                f'A ação #{acao.pk} já está com status {acao.get_status_display()}.',
+            )
     else:
-        messages.error(request, 'Atualização de status inválida.')
+        messages.error(
+            request,
+            f'Não foi possível atualizar o status da ação #{acao.pk} com esta solicitação.',
+        )
     return redirect('acoes')
 
 
@@ -783,10 +824,15 @@ def confirmar_participacao_view(request, acao_id, participante_id):
                 salvar_acao_mongo(participante.acao)
             messages.success(
                 request,
-                f'Situação de {participante.voluntario.nome} atualizada na ação.',
+                f'A situação de "{participante.voluntario.nome}" na ação #{acao_id} '
+                'foi atualizada com sucesso.',
             )
         else:
-            messages.error(request, 'Selecione uma situação válida para o participante.')
+            messages.error(
+                request,
+                f'Não foi possível atualizar a situação de "{participante.voluntario.nome}" '
+                f'na ação #{acao_id}. Selecione uma situação válida.',
+            )
 
     return redirecionar_apos_acao_participante(request, acao_id)
 
@@ -828,7 +874,8 @@ def registrar_comparecimento_view(request, acao_id, participante_id):
             mover_participante_para_historico(participante, usuario, novo_status)
         messages.success(
             request,
-            f'Situação de presença de {participante.voluntario.nome} atualizada.',
+            f'A presença de "{participante.voluntario.nome}" na ação #{acao_id} '
+            'foi atualizada com sucesso.',
         )
 
     return redirecionar_apos_acao_participante(request, acao_id)
@@ -888,10 +935,13 @@ def restaurar_participante_view(request, acao_id, historico_id):
         salvar_acao_mongo(participante.acao)
         messages.success(
             request,
-            f'{participante.voluntario.nome} restaurado na ação com sucesso.',
+            f'"{participante.voluntario.nome}" foi restaurado na ação #{acao_id} com sucesso.',
         )
     elif historico.restaurado:
-        messages.info(request, 'Esse participante já foi restaurado na ação.')
+        messages.info(
+            request,
+            f'"{historico.voluntario.nome}" já foi restaurado na ação #{acao_id}.',
+        )
 
     return redirecionar_apos_acao_participante(request, acao_id)
 

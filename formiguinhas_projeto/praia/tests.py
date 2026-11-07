@@ -88,7 +88,7 @@ class PraiaViewsTests(TestCase):
 
         self.assertRedirects(response, reverse('praias'))
         self.assertFalse(Praia.objects.filter(pk=praia.pk).exists())
-        self.assertContains(response, 'Praia para excluir excluída com sucesso.')
+        self.assertContains(response, 'A praia &quot;Praia para excluir&quot; foi excluída com sucesso.')
 
     def test_nao_exclui_praia_vinculada_a_acao(self):
         praia = Praia.objects.create(
@@ -112,7 +112,8 @@ class PraiaViewsTests(TestCase):
         self.assertTrue(Praia.objects.filter(pk=praia.pk).exists())
         self.assertContains(
             response,
-            'Não é possível excluir Praia com ação: ela está vinculada a ações ou equipes.',
+            'Não é possível excluir a praia &quot;Praia com ação&quot;, pois ela está vinculada '
+            'a ações ou equipes. Remova os vínculos ou mantenha a praia cadastrada.',
         )
 
     def test_nao_exclui_praia_vinculada_a_equipe(self):
@@ -133,7 +134,8 @@ class PraiaViewsTests(TestCase):
         self.assertTrue(Praia.objects.filter(pk=praia.pk).exists())
         self.assertContains(
             response,
-            'Não é possível excluir Praia com equipe: ela está vinculada a ações ou equipes.',
+            'Não é possível excluir a praia &quot;Praia com equipe&quot;, pois ela está vinculada '
+            'a ações ou equipes. Remova os vínculos ou mantenha a praia cadastrada.',
         )
 
     def test_filtro_de_cidade_ignora_case_e_nao_repete_opcoes(self):
@@ -282,7 +284,8 @@ class PraiaViewsTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(
             response,
-            'Praia não cadastrada. Já existe uma praia cadastrada com esse nome e cidade.',
+            'Não foi possível cadastrar a praia &quot;Praia Central&quot;, pois já existe uma '
+            'praia com esse nome em Santos.',
             count=1,
         )
         self.assertEqual(Praia.objects.filter(nome='Praia Central', cidade='Santos').count(), 1)
@@ -332,7 +335,7 @@ class PraiaViewsTests(TestCase):
             follow=True,
         )
 
-        self.assertContains(response, 'Praia Atualizada atualizada com sucesso.')
+        self.assertContains(response, 'A praia &quot;Praia Atualizada&quot; foi atualizada com sucesso.')
         self.assertEqual(Praia.objects.count(), 1)
         praia.refresh_from_db()
         self.assertEqual(praia.nome, 'Praia Atualizada')
@@ -369,7 +372,8 @@ class PraiaViewsTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(
             response,
-            'Praia não atualizada. Já existe uma praia cadastrada com esse nome e cidade.',
+            'Não foi possível atualizar a praia &quot;Praia Central&quot;, pois já existe uma '
+            'praia com esse nome em Santos.',
             count=1,
         )
         self.assertEqual(Praia.objects.count(), 2)
@@ -393,7 +397,7 @@ class PraiaViewsTests(TestCase):
 
         self.assertContains(
             resposta,
-            'Status de Praia Central atualizado para Inativa.',
+            'O status da praia &quot;Praia Central&quot; foi atualizado para Inativa.',
         )
         praia.refresh_from_db()
         self.assertEqual(praia.praia_ativa, 'INATIVA')

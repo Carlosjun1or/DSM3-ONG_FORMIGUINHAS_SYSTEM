@@ -1,10 +1,11 @@
 from django.contrib import messages
-from django.db import transaction
+from django.db import IntegrityError, transaction
 from django.db.models import Count, Q
 from django.db.models.deletion import ProtectedError
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 
+from usuario.models import Voluntario
 from usuario.views import get_session_usuario, render_acesso_bloqueado
 from usuario.paginacao import paginar_queryset
 
@@ -54,6 +55,16 @@ def usuario_pode_gerenciar_equipe(usuario, equipe):
 
 def usuario_pode_adicionar_membro(usuario, equipe):
     return usuario_pode_gerenciar_equipe(usuario, equipe) and equipe.status == 'ATIVA'
+
+
+def usuario_pode_remover_membro(usuario, equipe, membro):
+    if not usuario_pode_adicionar_membro(usuario, equipe):
+        return False
+    return not (
+        usuario.tipo == 'COORDENADOR'
+        and membro.papel == EquipeMembro.PAPEL_COORDENADOR
+        and membro.voluntario_id != usuario.id_voluntario_id
+    )
 
 
 def equipes_view(request):
@@ -122,6 +133,7 @@ def cadastro_equipe_view(request):
             equipe.save()
             registrar_evento(entidade='EQUIPE', instancia=equipe, acao='CRIACAO', usuario=usuario,
                              resumo=f'Equipe "{equipe.nome}" cadastrada.')
+            messages.success(request, f'A equipe "{equipe.nome}" foi cadastrada com sucesso.')
             return redirect('equipe_detalhe', equipe_id=equipe.id_equipe)
     else:
         form = EquipeForm(initial={'status': 'ATIVA'})
@@ -155,7 +167,7 @@ def editar_equipe_view(request, equipe_id):
             registrar_evento(entidade='EQUIPE', instancia=equipe, acao='EDICAO', usuario=usuario,
                              resumo=f'Equipe "{equipe.nome}" editada.',
                              valores_anteriores=valores_anteriores)
-            messages.success(request, f'Equipe {equipe.nome} atualizada com sucesso.')
+            messages.success(request, f'A equipe "{equipe.nome}" foi atualizada com sucesso.')
             return redirect('equipe_detalhe', equipe_id=equipe.id_equipe)
     else:
         form = EquipeForm(instance=equipe)
@@ -230,8 +242,42 @@ def adicionar_membro_view(request, equipe_id):
     if request.method != 'POST':
         return redirect('equipe_detalhe', equipe_id=equipe.id_equipe)
     if not usuario_pode_adicionar_membro(usuario, equipe):
-        messages.error(request, 'Você não tem permissão para adicionar membros a esta equipe.')
+        messages.error(
+            request,
+            f'Você não tem permissão para adicionar membros à equipe "{equipe.nome}".',
+        )
         return redirect('equipe_detalhe', equipe_id=equipe.id_equipe)
+
+    try:
+        voluntario_id = int(request.POST.get('voluntario', ''))
+    except (TypeError, ValueError):
+        voluntario_id = None
+    if voluntario_id is not None:
+        status_voluntario = Voluntario.objects.filter(
+            id_voluntario=voluntario_id,
+        ).values_list('status', flat=True).first()
+        if status_voluntario and status_voluntario != 'ATIVO':
+            voluntario = Voluntario.objects.get(id_voluntario=voluntario_id)
+            messages.error(
+                request,
+                f'Não foi possível adicionar "{voluntario.nome}" à equipe "{equipe.nome}", '
+                'pois o cadastro do voluntário não está ativo.',
+            )
+            return redirect('equipe_detalhe', equipe_id=equipe.id_equipe)
+
+    if voluntario_id is not None:
+        membro_existente = EquipeMembro.objects.select_related('voluntario').filter(
+            equipe=equipe,
+            voluntario_id=voluntario_id,
+            status='ATIVO',
+        ).first()
+        if membro_existente:
+            messages.error(
+                request,
+                f'"{membro_existente.voluntario.nome}" já possui vínculo ativo '
+                f'com a equipe "{equipe.nome}".',
+            )
+            return redirect('equipe_detalhe', equipe_id=equipe.id_equipe)
 
     form = EquipeMembroForm(
         request.POST,
@@ -244,7 +290,22 @@ def adicionar_membro_view(request, equipe_id):
         if usuario.tipo != 'ADMIN':
             membro.papel = 'VOLUNTARIO'
         preencher_auditoria(membro, usuario, criacao=True)
-        membro.save()
+        try:
+            with transaction.atomic():
+                membro.save()
+        except IntegrityError:
+            if not EquipeMembro.objects.filter(
+                equipe=equipe,
+                voluntario=membro.voluntario,
+                status='ATIVO',
+            ).exists():
+                raise
+            messages.error(
+                request,
+                f'"{membro.voluntario.nome}" já possui vínculo ativo '
+                f'com a equipe "{equipe.nome}".',
+            )
+            return redirect('equipe_detalhe', equipe_id=equipe.id_equipe)
         registrar_evento(entidade='EQUIPE_MEMBRO', instancia=membro, acao='VINCULO', usuario=usuario,
                          resumo=f'{membro.voluntario.nome} vinculado à equipe "{equipe.nome}".')
         preencher_auditoria(equipe, usuario)
@@ -256,10 +317,15 @@ def adicionar_membro_view(request, equipe_id):
         ])
         messages.success(
             request,
-            f'{membro.voluntario.nome} vinculado à equipe {equipe.nome}.',
+            f'O vínculo de "{membro.voluntario.nome}" com a equipe "{equipe.nome}" '
+            'foi criado com sucesso.',
         )
     else:
-        messages.error(request, 'Não foi possível vincular o membro. Verifique os dados informados.')
+        messages.error(
+            request,
+            f'Não foi possível adicionar o membro à equipe "{equipe.nome}". '
+            'Verifique os dados e tente novamente.',
+        )
     return redirect('equipe_detalhe', equipe_id=equipe.id_equipe)
 
 
@@ -279,6 +345,13 @@ def atualizar_funcao_membro_view(request, equipe_id, membro_id):
         status='ATIVO',
     )
     if request.method == 'POST':
+        if not usuario_pode_adicionar_membro(usuario, equipe):
+            messages.error(
+                request,
+                f'Não é possível alterar funções de membros na equipe inativa '
+                f'"{equipe.nome}".',
+            )
+            return redirect('equipe_detalhe', equipe_id=equipe.id_equipe)
         papel = request.POST.get('papel')
         if papel in dict(EquipeMembro.PAPEL_CHOICES) and papel != membro.papel:
             valores_anteriores = snapshot(membro)
@@ -308,14 +381,20 @@ def atualizar_funcao_membro_view(request, equipe_id, membro_id):
             )
             messages.success(
                 request,
-                f'Função de {membro.voluntario.nome} atualizada na equipe {equipe.nome}.',
+                f'A função de "{membro.voluntario.nome}" na equipe "{equipe.nome}" '
+                'foi atualizada com sucesso.',
             )
         elif papel not in dict(EquipeMembro.PAPEL_CHOICES):
-            messages.error(request, 'Selecione uma função válida para o membro.')
+            messages.error(
+                request,
+                f'Não foi possível atualizar a função na equipe "{equipe.nome}". '
+                'Selecione uma função válida.',
+            )
         else:
             messages.info(
                 request,
-                f'{membro.voluntario.nome} já está com essa função na equipe.',
+                f'"{membro.voluntario.nome}" já está como {membro.get_papel_display()} '
+                f'na equipe "{equipe.nome}".',
             )
     return redirect('equipe_detalhe', equipe_id=equipe.id_equipe)
 
@@ -333,7 +412,7 @@ def remover_membro_view(request, equipe_id, membro_id):
         equipe=equipe,
         status='ATIVO',
     )
-    if request.method == 'POST' and usuario_pode_adicionar_membro(usuario, equipe):
+    if request.method == 'POST' and usuario_pode_remover_membro(usuario, equipe, membro):
         valores_anteriores = snapshot(membro)
         membro.status = 'INATIVO'
         membro.dt_saida = timezone.now()
@@ -358,15 +437,42 @@ def remover_membro_view(request, equipe_id, membro_id):
             instancia=membro,
             acao='MUDANCA_STATUS',
             usuario=usuario,
-            resumo=f'{membro.voluntario.nome} removido da equipe "{equipe.nome}".',
+            resumo=(
+                f'{membro.voluntario.nome} saiu da equipe "{equipe.nome}".'
+                if usuario.tipo == 'COORDENADOR'
+                and membro.voluntario_id == usuario.id_voluntario_id
+                else f'{membro.voluntario.nome} removido da equipe "{equipe.nome}".'
+            ),
             valores_anteriores=valores_anteriores,
         )
         messages.success(
             request,
-            f'{membro.voluntario.nome} removido da equipe {equipe.nome}.',
+            (
+                f'Você saiu da equipe "{equipe.nome}".'
+                if usuario.tipo == 'COORDENADOR'
+                and membro.voluntario_id == usuario.id_voluntario_id
+                else (
+                    f'O vínculo de "{membro.voluntario.nome}" com a equipe '
+                    f'"{equipe.nome}" foi encerrado com sucesso.'
+                )
+            ),
+        )
+    elif (
+        request.method == 'POST'
+        and usuario_pode_adicionar_membro(usuario, equipe)
+        and usuario.tipo == 'COORDENADOR'
+        and membro.papel == EquipeMembro.PAPEL_COORDENADOR
+        and membro.voluntario_id != usuario.id_voluntario_id
+    ):
+        messages.error(
+            request,
+            f'Você não pode remover outro coordenador da equipe "{equipe.nome}".',
         )
     elif request.method == 'POST':
-        messages.error(request, 'Você não tem permissão para remover membros desta equipe.')
+        messages.error(
+            request,
+            f'Você não tem permissão para remover membros da equipe "{equipe.nome}".',
+        )
     return redirect('equipe_detalhe', equipe_id=equipe.id_equipe)
 
 
@@ -386,8 +492,16 @@ def excluir_historico_membro_view(request, equipe_id, membro_id):
         status='INATIVO',
     )
     if request.method == 'POST':
+        if equipe.status != 'ATIVA':
+            messages.error(
+                request,
+                f'Não é possível excluir registros de membros da equipe inativa '
+                f'"{equipe.nome}".',
+            )
+            return redirect('equipe_detalhe', equipe_id=equipe.id_equipe)
         valores_anteriores = snapshot(membro)
         membro_id_registro = membro.pk
+        nome_membro = membro.voluntario.nome
         membro.delete()
         registrar_evento(
             entidade='EQUIPE_MEMBRO',
@@ -404,7 +518,11 @@ def excluir_historico_membro_view(request, equipe_id, membro_id):
             'ultimo_editado_por_tipo',
             'dt_ultima_edicao',
         ])
-        messages.success(request, 'Histórico de membro removido com sucesso.')
+        messages.success(
+            request,
+            f'O registro de participação de "{nome_membro}" na equipe '
+            f'"{equipe.nome}" foi excluído do histórico com sucesso.',
+        )
     return redirect('equipe_detalhe', equipe_id=equipe.id_equipe)
 
 
@@ -440,12 +558,20 @@ def atualizar_status_equipe_view(request, equipe_id):
             )
             messages.success(
                 request,
-                f'Status da equipe {equipe.nome} atualizado para {equipe.get_status_display()}.',
+                f'O status da equipe "{equipe.nome}" foi atualizado para '
+                f'{equipe.get_status_display()}.',
             )
         elif status not in dict(Equipe.STATUS_CHOICES):
-            messages.error(request, 'Selecione um status válido para a equipe.')
+            messages.error(
+                request,
+                f'Não foi possível atualizar o status da equipe "{equipe.nome}". '
+                'Selecione um status válido.',
+            )
         else:
-            messages.info(request, f'A equipe {equipe.nome} já está com esse status.')
+            messages.info(
+                request,
+                f'A equipe "{equipe.nome}" já está com status {equipe.get_status_display()}.',
+            )
     return redirect('equipes')
 
 
@@ -462,7 +588,8 @@ def excluir_equipe_view(request, equipe_id):
         if equipe.membros.exists():
             messages.error(
                 request,
-                'Não é possível excluir uma equipe que possui membros ou histórico. Inative-a para preservar os registros.',
+                f'Não é possível excluir a equipe "{equipe.nome}", pois ela possui '
+                'membros ou histórico. Inative-a para preservar os registros.',
             )
         else:
             try:
@@ -477,10 +604,14 @@ def excluir_equipe_view(request, equipe_id):
                     resumo=f'Equipe "{valores_anteriores.get("nome", equipe_id_registro)}" excluída.',
                     valores_anteriores=valores_anteriores,
                 )
-                messages.success(request, 'Equipe excluída com sucesso.')
+                messages.success(
+                    request,
+                    f'A equipe "{equipe.nome}" foi excluída com sucesso.',
+                )
             except ProtectedError:
                 messages.error(
                     request,
-                    'Não é possível excluir esta equipe. Inative-a para preservar os registros.',
+                    f'Não foi possível excluir a equipe "{equipe.nome}". '
+                    'Inative-a para preservar os registros relacionados.',
                 )
     return redirect('equipes')

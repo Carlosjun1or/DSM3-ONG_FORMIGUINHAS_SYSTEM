@@ -237,12 +237,13 @@ def cadastrar_praia_view(request):
             praia_duplicada = Praia.objects.filter(
                 nome__iexact=nome,
                 cidade__iexact=cidade,
-            ).exists()
+            ).first()
 
             if praia_duplicada:
                 messages.error(
                     request,
-                    'Praia não cadastrada. Já existe uma praia cadastrada com esse nome e cidade.'
+                    f'Não foi possível cadastrar a praia "{praia_duplicada.nome}", pois '
+                    f'já existe uma praia com esse nome em {praia_duplicada.cidade}.',
                 )
                 return render(request, 'sistema/cadastro-praia.html', {
                     'usuario': usuario,
@@ -261,6 +262,10 @@ def cadastrar_praia_view(request):
             praia.save()
             registrar_evento(entidade='PRAIA', instancia=praia, acao='CRIACAO', usuario=usuario,
                              resumo=f'Praia "{praia.nome}" cadastrada.')
+            messages.success(
+                request,
+                f'A praia "{praia.nome}" foi cadastrada com sucesso.',
+            )
             return redirect('praias')
     else:
         form = PraiaForm()
@@ -290,12 +295,13 @@ def editar_praia_view(request, praia_id):
             praia_duplicada = Praia.objects.filter(
                 nome__iexact=nome,
                 cidade__iexact=cidade,
-            ).exclude(pk=praia.pk).exists()
+            ).exclude(pk=praia.pk).first()
 
             if praia_duplicada:
                 messages.error(
                     request,
-                    'Praia não atualizada. Já existe uma praia cadastrada com esse nome e cidade.',
+                    f'Não foi possível atualizar a praia "{praia_duplicada.nome}", pois '
+                    f'já existe uma praia com esse nome em {praia_duplicada.cidade}.',
                 )
                 return render(request, 'sistema/cadastro-praia.html', {
                     'usuario': usuario,
@@ -313,7 +319,7 @@ def editar_praia_view(request, praia_id):
             registrar_evento(entidade='PRAIA', instancia=praia, acao='EDICAO', usuario=usuario,
                              resumo=f'Praia "{praia.nome}" editada.',
                              valores_anteriores=valores_anteriores)
-            messages.success(request, f'{praia.nome} atualizada com sucesso.')
+            messages.success(request, f'A praia "{praia.nome}" foi atualizada com sucesso.')
             return redirect('praias')
     else:
         form = PraiaForm(instance=praia)
@@ -339,11 +345,16 @@ def atualizar_status_praia_view(request, praia_id):
         anterior = snapshot(praia)
         status = request.POST.get('praia_ativa')
         if status not in dict(Praia.STATUS_CHOICES):
-            messages.error(request, 'Status de praia inválido.')
+            messages.error(
+                request,
+                f'Não foi possível atualizar o status da praia "{praia.nome}". '
+                'Selecione um status válido.',
+            )
         elif status == praia.praia_ativa:
             messages.info(
                 request,
-                f'{praia.nome} já está com status {praia.get_praia_ativa_display()}.',
+                f'A praia "{praia.nome}" já está com status '
+                f'{praia.get_praia_ativa_display()}.',
             )
         else:
             praia.praia_ativa = status
@@ -357,7 +368,8 @@ def atualizar_status_praia_view(request, praia_id):
                              valores_anteriores=anterior)
             messages.success(
                 request,
-                f'Status de {praia.nome} atualizado para {praia.get_praia_ativa_display()}.',
+                f'O status da praia "{praia.nome}" foi atualizado para '
+                f'{praia.get_praia_ativa_display()}.',
             )
 
     return redirect('praias')
@@ -376,7 +388,8 @@ def excluir_praia_view(request, praia_id):
         if praia.acoes.exists() or praia.equipes.exists():
             messages.error(
                 request,
-                f'Não é possível excluir {praia.nome}: ela está vinculada a ações ou equipes.',
+                f'Não é possível excluir a praia "{praia.nome}", pois ela está vinculada '
+                'a ações ou equipes. Remova os vínculos ou mantenha a praia cadastrada.',
             )
         else:
             anterior = snapshot(praia)
@@ -385,12 +398,13 @@ def excluir_praia_view(request, praia_id):
             except ProtectedError:
                 messages.error(
                     request,
-                    f'Não é possível excluir {praia.nome}: ela está vinculada a ações ou equipes.',
+                    f'Não foi possível excluir a praia "{praia.nome}", pois existem '
+                    'vínculos com ações ou equipes.',
                 )
             else:
                 registrar_evento(entidade='PRAIA', id_registro=praia_id, acao='EXCLUSAO', usuario=usuario,
                                   resumo=f'Praia "{anterior.get("nome", praia_id)}" excluída.',
                                   valores_anteriores=anterior)
-                messages.success(request, f'{praia.nome} excluída com sucesso.')
+                messages.success(request, f'A praia "{praia.nome}" foi excluída com sucesso.')
 
     return redirect('praias')

@@ -158,7 +158,11 @@ def exigir_admin(request):
     if not usuario:
         return None
     if usuario.tipo != 'ADMIN':
-        messages.error(request, 'Somente administradores podem alterar o controle de bags.')
+        messages.error(
+            request,
+            'Você não tem permissão para alterar o controle de bags. '
+            'Esta ação é restrita a administradores.',
+        )
         return False
     return usuario
 
@@ -419,7 +423,10 @@ def cadastrar_condominio_view(request):
         )
         # Persistencia Poliglota: salvar no MongoDB Atlas
         salvar_condominio_mongo(condominio)
-        messages.success(request, 'Condomínio cadastrado com sucesso.')
+        messages.success(
+            request,
+            f'O condomínio "{condominio.nome}" foi cadastrado com sucesso.',
+        )
         return redirect('detalhe_condominio', condominio_id=condominio.id_condominio)
     return render(request, 'sistema/cadastro-condominio.html', {'usuario': usuario, 'form': form})
 
@@ -451,7 +458,10 @@ def editar_condominio_view(request, condominio_id):
         )
         # Persistencia Poliglota: salvar no MongoDB Atlas
         salvar_condominio_mongo(condominio)
-        messages.success(request, 'Condomínio atualizado com sucesso.')
+        messages.success(
+            request,
+            f'O condomínio "{condominio.nome}" foi atualizado com sucesso.',
+        )
         return redirect('detalhe_condominio', condominio_id=condominio.id_condominio)
     return render(request, 'sistema/cadastro-condominio.html', {
         'usuario': usuario,
@@ -512,7 +522,7 @@ def cadastrar_bag_view(request):
         )
         # Persistencia Poliglota: salvar no MongoDB Atlas
         salvar_condominio_por_bag(bag)
-        messages.success(request, 'Bag grande cadastrada com sucesso.')
+        messages.success(request, f'A bag "{bag.codigo}" foi cadastrada com sucesso.')
         return redirect('detalhe_bag', bag_id=bag.id_bag)
     return render(request, 'sistema/cadastro-bag.html', {'usuario': usuario, 'form': form})
 
@@ -544,7 +554,7 @@ def editar_bag_view(request, bag_id):
         )
         # Persistencia Poliglota: salvar no MongoDB Atlas
         salvar_condominio_por_bag(bag)
-        messages.success(request, 'Bag atualizada com sucesso.')
+        messages.success(request, f'A bag "{bag.codigo}" foi atualizada com sucesso.')
         return redirect('detalhe_bag', bag_id=bag.id_bag)
     return render(request, 'sistema/cadastro-bag.html', {
         'usuario': usuario,
@@ -576,7 +586,11 @@ def atualizar_status_bag_view(request, bag_id):
 
     novo_status = request.POST.get('status', '')
     if novo_status not in dict(Bag.STATUS_CHOICES):
-        messages.error(request, 'Selecione um status válido para a bag.')
+        messages.error(
+            request,
+            f'Não foi possível atualizar o status da bag "{bag.codigo}". '
+            'Selecione um status válido.',
+        )
     elif novo_status != bag.status:
         status_anterior = bag.get_status_display()
         valores_anteriores = snapshot(bag)
@@ -619,9 +633,16 @@ def atualizar_status_bag_view(request, bag_id):
         )
         # Persistencia Poliglota: salvar no MongoDB Atlas
         salvar_condominio_por_bag(bag)
-        messages.success(request, 'Status da bag atualizado com movimentação registrada.')
+        messages.success(
+            request,
+            f'O status da bag "{bag.codigo}" foi atualizado para '
+            f'{bag.get_status_display()}, e a movimentação foi registrada.',
+        )
     else:
-        messages.info(request, f'A bag {bag.codigo} já está com esse status.')
+        messages.info(
+            request,
+            f'A bag "{bag.codigo}" já está com status {bag.get_status_display()}.',
+        )
     return redirect(f'{reverse("bags")}?{urlencode(filtros)}' if filtros else destino)
 
 
@@ -651,7 +672,10 @@ def detalhe_bag_view(request, bag_id):
         if formulario == 'registrar-movimentacao':
             if movimentacao_form.is_valid():
                 _salvar_movimentacao_bag(movimentacao_form, bag, usuario)
-                messages.success(request, 'Movimentação registrada e status da bag atualizado.')
+                messages.success(
+                    request,
+                    f'A movimentação da bag "{bag.codigo}" foi registrada e o status atualizado.',
+                )
                 return redirect(f'{reverse("detalhe_bag", args=[bag.pk])}#movimentacoes')
         elif formulario != 'registrar-coleta':
             return redirect('detalhe_bag', bag_id=bag.pk)
@@ -686,7 +710,10 @@ def detalhe_bag_view(request, bag_id):
                 usuario=usuario,
                 resumo=f'Item de resíduo #{item.pk} registrado na coleta #{coleta.pk}.',
             )
-            messages.success(request, 'Coleta da bag registrada com sucesso.')
+            messages.success(
+                request,
+                f'A coleta de resíduos da bag "{bag.codigo}" foi registrada com sucesso.',
+            )
             return redirect(f'{reverse("detalhe_bag", args=[bag.pk])}#coletas')
     movimentacoes = bag.movimentacoes.select_related('registrado_por').all()
     return render(request, 'sistema/detalhe-bag.html', {

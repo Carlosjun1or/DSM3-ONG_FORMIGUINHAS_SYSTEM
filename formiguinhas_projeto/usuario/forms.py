@@ -98,14 +98,19 @@ class LoginForm(forms.Form):
                 usuario = Usuario.objects.get(id_voluntario=voluntario)
 
                 if not usuario.check_password(senha):
-                    raise forms.ValidationError('Email ou senha incorretos')
+                    raise forms.ValidationError(
+                        'E-mail ou senha incorretos. Confira os dados e tente novamente.'
+                    )
 
                 if voluntario.status != 'ATIVO':
-                    raise forms.ValidationError('Usuário inativo')
-
+                    raise forms.ValidationError(
+                        'E-mail ou senha incorretos. Confira os dados e tente novamente.'
+                    )
                 self.usuario = usuario
             except (Voluntario.DoesNotExist, Usuario.DoesNotExist):
-                raise forms.ValidationError('Email ou senha incorretos')
+                raise forms.ValidationError(
+                    'E-mail ou senha incorretos. Confira os dados e tente novamente.'
+                )
 
         return self.cleaned_data
 

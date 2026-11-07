@@ -432,8 +432,11 @@ def admin_form(request, comunicado_id=None):
         salvar_comunicado_mongo(item)
         messages.success(
             request,
-            'Comunicado atualizado com sucesso.' if comunicado
-            else 'Comunicado criado com sucesso.',
+            (
+                f'O comunicado "{item.titulo}" foi atualizado com sucesso.'
+                if comunicado
+                else f'O comunicado "{item.titulo}" foi criado com sucesso.'
+            ),
         )
         return redirect('comunicados_admin')
     return render(request, 'sistema/comunicado-form.html', {'form': form, 'comunicado': comunicado})
@@ -521,7 +524,11 @@ def admin_status(request, comunicado_id, acao):
         return resposta
     comunicado = get_object_or_404(Comunicado, id_comunicado=comunicado_id)
     if request.method != 'POST':
-        messages.error(request, 'Não foi possível alterar o status do comunicado.')
+        messages.error(
+            request,
+            f'Não foi possível atualizar o status do comunicado "{comunicado.titulo}". '
+            'A solicitação enviada é inválida.',
+        )
         return redirect('comunicados_admin')
 
     filtros = {
@@ -545,10 +552,18 @@ def admin_status(request, comunicado_id, acao):
         novo_status = request.POST.get('status')
         status_validos = {valor for valor, _ in Comunicado.STATUS_CHOICES}
         if novo_status not in status_validos:
-            messages.error(request, 'Selecione um status válido para o comunicado.')
+            messages.error(
+                request,
+                f'Não foi possível atualizar o status do comunicado "{comunicado.titulo}". '
+                'Selecione um status válido.',
+            )
             return redirect(url_lista)
         if novo_status == comunicado.status:
-            messages.info(request, 'O comunicado já está com esse status.')
+            messages.info(
+                request,
+                f'O comunicado "{comunicado.titulo}" já está com status '
+                f'{comunicado.get_status_display()}.',
+            )
             return redirect(url_lista)
 
         operacao = {
@@ -563,15 +578,27 @@ def admin_status(request, comunicado_id, acao):
     else:
         operacao = operacoes.get(acao)
         if operacao is None:
-            messages.error(request, 'Não foi possível alterar o status do comunicado.')
+            messages.error(
+                request,
+                f'Não foi possível atualizar o status do comunicado "{comunicado.titulo}". '
+                'Selecione uma ação válida.',
+            )
             return redirect(url_lista)
 
     try:
         operacao(comunicado, usuario)
     except ValidationError as erro:
-        messages.error(request, ' '.join(erro.messages))
+        messages.error(
+            request,
+            f'Não foi possível atualizar o comunicado "{comunicado.titulo}". '
+            + ' '.join(erro.messages),
+        )
     else:
-        messages.success(request, 'Status do comunicado atualizado com sucesso.')
+        messages.success(
+            request,
+            f'O status do comunicado "{comunicado.titulo}" foi atualizado para '
+            f'{comunicado.get_status_display()}.',
+        )
     return redirect(url_lista)
 
 
@@ -612,7 +639,11 @@ def tema_form(request, tema_id=None):
                          valores_anteriores=valores_anteriores)
         messages.success(
             request,
-            'Tema atualizado com sucesso.' if tema else 'Tema criado com sucesso.',
+            (
+                f'O tema "{item.nome}" foi atualizado com sucesso.'
+                if tema
+                else f'O tema "{item.nome}" foi criado com sucesso.'
+            ),
         )
         return redirect('temas_comunicados')
     return render(request, 'sistema/tema-form.html', {'form': form, 'tema': tema})
